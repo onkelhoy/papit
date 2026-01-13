@@ -1,0 +1,80 @@
+{
+    "name": "@papit/signal-server",
+    "description": "Signaling server mainly for webrtc handshake",
+    "keywords": [
+        "papit",
+        "node",
+        "typescript",
+        "signal-server"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npm run build -- --dev && node ./lib/bundle.js",
+        "test": "node --test tests/**/*.test.js",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component"
+    },
+    "bin": {
+        "papit-signal-server": "./lib/bundle.js"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/network/signal-server"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "ws": "8.19.0"
+    },
+    "devDependencies": {
+        "@types/node": "22.10.2",
+        "@types/ws": "8.18.1",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "node",
+        "main": "signal-server",
+        "components": {
+            "signal-server": {
+                "className": "Signal-server",
+                "htmlprefix": "pap"
+            }
+        }
+    }
+}

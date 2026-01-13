@@ -1,0 +1,81 @@
+{
+    "name": "VARIABLE_FULL_NAME",
+    "description": "VARIABLE_DESCRIPTION",
+    "keywords": [
+        "papit",
+        "web-component",
+        "typescript",
+        "VARIABLE_NAME"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/server",
+        "test": "npx playwright test -c tests/playwright.config.ts",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "VARIABLE_USER",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "VARIABLE_PROJECTLICENSE",
+    "homepage": "VARIABLE_GITHUB_REPO/tree/main/VARIABLE_LOCAL_DESTINATION",
+    "bugs": {
+        "url": "VARIABLE_GITHUB_REPO/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "VARIABLE_GITHUB_REPO.git",
+        "directory": "VARIABLE_LOCAL_DESTINATION"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3",
+        
+        "@papit/translator": "*",
+        "@papit/card": "*",
+        "@papit/codeblock": "*",
+        "@papit/typography": "*",
+        "@papit/arguments": "*",
+        "@papit/information": "*",
+        "@papit/terminal": "*"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "browser",
+        "main": "VARIABLE_NAME",
+        "htmlprefix": "VARIABLE_HTML_PREFIX",
+        "components": {}
+    }
+}

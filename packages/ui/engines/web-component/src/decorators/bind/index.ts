@@ -1,0 +1,3 @@
+export {
+  bind,
+} from "./decorator";

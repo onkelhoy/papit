@@ -1,0 +1,18 @@
+# directories
+node_modules/
+packages/**/lib/
+packages/**/.papit/
+isolated/
+.temp/
+.npm/
+temp/
+.papit/
+
+bin/version/.config
+
+# Ignore OS-specific files
+Thumbs.db
+.DS_Store
+
+# Ignore any configuration files that may contain sensitive data
+.env.*

@@ -12,10 +12,10 @@
         "publish": "to come",
         "prebuild": "node bin/prebuild.mjs",
         "clean": "node bin/clean.mjs",
-        "build": "npx @papit/build --run --all",
-        "test": "npx @papit/",
+        "build": "npx @papit/build",
+        "test": "node bin/test.mjs",
         "create": "npm create @papit -- --package",
-        "start": "npx @papit/server --serve --port=8080 --info"
+        "start": "npx @papit/server --serve --info"
     },
     "keywords": [
         "typescript"
@@ -31,83 +31,18 @@
         "!packages/**/asset/**"
     ],
     "devDependencies": {
-        "@papit/version": "0.0.1",
-        "@papit/util": "0.0.1",
+        "@microsoft/api-extractor": "7.55.2",
+        "esbuild": "0.27.2",
+        "typescript": "5.9.3",
+        "@papit/arguments": "0.0.1",
+        "@papit/terminal": "0.0.1",
+        "@papit/information": "0.0.1",
         "@papit/build": "0.0.1",
+        "@papit/server": "0.0.1",
         "@papit/create": "0.0.1",
-        "@microsoft/api-extractor": "^7.55.2",
-        "esbuild": "^0.27.2",
-        "typescript": "^5.9.3"
+        "@papit/version": "0.0.1"
     },
     "papit": {
-        "layers": {
-            "packages/runtime": {
-                "include": "false",
-                "name": "runtime",
-                "priority": 2
-            },
-            "packages/runtime/cli": {
-                "include": "false",
-                "name": "cli",
-                "priority": 1
-            },
-            "packages/design-system": {
-                "include": false,
-                "name": "design-system"
-            },
-            "packages/design-system/atomic-design": {
-                "include": false,
-                "name": "atomic-design"
-            },
-            "packages/design-system/atomic-design/atoms": {
-                "include": false,
-                "name": "atoms"
-            },
-            "packages/design-system/atomic-design/molecules": {
-                "include": false,
-                "name": "molecules"
-            },
-            "packages/design-system/atomic-design/organisms": {
-                "include": false,
-                "name": "organisms"
-            },
-            "packages/design-system/atomic-design/pages": {
-                "include": "suffix",
-                "name": "pages"
-            },
-            "packages/design-system/atomic-design/templates": {
-                "include": "suffix",
-                "name": "templates"
-            },
-            "packages/design-system/themes": {
-                "include": "suffix",
-                "name": "themes"
-            },
-            "packages/network": {
-                "include": false,
-                "name": "network"
-            },
-            "packages/game": {
-                "include": "prefix",
-                "name": "game"
-            },
-            "packages/math": {
-                "include": false,
-                "name": "math"
-            },
-            "packages/math/algebra": {
-                "include": false,
-                "name": "math:algebra"
-            },
-            "packages/math/geometry": {
-                "include": "prefix",
-                "name": "geometry"
-            },
-            "packages/math/algorithms": {
-                "include": "prefix",
-                "name": "algorithms"
-            }
-        },
         "htmlprefix": "pap"
     }
 }

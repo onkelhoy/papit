@@ -1,0 +1,72 @@
+{
+    "name": "@papit/create",
+    "description": "",
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npm run build -- --dev && node ./lib/bundle.js",
+        "test": "node --test tests/**/*.test.js",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "lib/",
+        "asset/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/create",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "author": "Henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "Papit-1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/runtime/cli/create"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "bin": {
+        "papit-create": "./lib/bundle.js"
+    },
+    "dependencies": {
+        "@papit/arguments": "0.0.1",
+        "@papit/information": "0.0.1",
+        "@papit/terminal": "0.0.1"
+    },
+    "devDependencies": {
+        "@types/node": "22.10.2",
+        "typescript": "5.9.3"
+    },
+    "keywords": [
+        "node",
+        "typescript"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "node",
+        "main": {
+            "name": "create",
+            "className": "Create"
+        },
+        "components": {}
+    }
+}

@@ -1,0 +1,40 @@
+{
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "noEmitOnError": true,
+        "lib": [
+            "es2020",
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "jsx": "react-jsx",
+        "strict": true,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "outDir": "lib",
+        "sourceMap": true,
+        "inlineSources": true,
+        "rootDir": "./",
+        "allowJs": true,
+        "declarationDir": "lib/types",
+        "declaration": true,
+        "incremental": true,
+        "resolveJsonModule": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "baseUrl": "src",
+        "paths": {
+            "VARIABLE_FULL_NAME": [
+                "./index"
+            ],
+        }
+    },
+    "include": [
+        "src",
+        "views",
+        "tests"
+    ]
+}
