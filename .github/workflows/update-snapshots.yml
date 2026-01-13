@@ -1,0 +1,80 @@
+name: Update Snapshots 
+
+on:
+  workflow_dispatch: 
+    inputs:
+      update_snapshots:
+        description: 'Force update of snapshots?'
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  initialise:
+    uses: ./.github/workflows/initialise.yml
+
+  build:
+    needs: initialise
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+        # setup node
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+        # caching: node_modules
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: 'node_modules'
+          key: ${{ runner.os }}-modules
+          restore-keys: ${{ runner.os }}-modules
+
+        # caching: package builds
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: packages/**/lib
+          key: ${{ runner.os }}-build
+          restore-keys: ${{ runner.os }}-build
+
+        # caching: package builds
+      - name: Cache Playwright binaries
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright
+          restore-keys: ${{ runner.os }}-playwright
+
+      # this should still respect the cached binary files for playwright but also just "install" them
+      - name: Installing Playwright
+        run: npx playwright install --with-deps 
+        
+      - name: Conditionally Update Screenshots
+        if: ${{ github.event.inputs.update_snapshots == 'true' }}
+        run: npm test -- --update-snapshots
+
+        # Run tests
+      - name: Running Tests 
+        run: npm test
+
+      - name: Commit and Push Changes
+        continue-on-error: true
+        run: |
+          git fetch origin
+          git checkout main
+          git add ./packages/**/*/tests/snapshots
+
+          if [[ -n $(git status -s) ]]; then
+            git status -s 
+
+            git config user.name "GitHub Actions"
+            git config user.email "actions@github.com"
+            git commit -m "add: github-runner snapshots"
+
+            git push --force-with-lease
+          fi

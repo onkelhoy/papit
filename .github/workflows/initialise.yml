@@ -1,0 +1,49 @@
+name: Initialise Packages
+
+on:
+  workflow_call:
+    inputs:
+      force_build:
+        description: 'Force build?'
+        required: false
+        default: false
+        type: boolean 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+        # setup node
+      - name: Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+        # caching: node_modules
+      - name: Cache node modules
+        uses: actions/cache@v4
+        with:
+          path: 'node_modules'
+          key: ${{ runner.os }}-modules
+          restore-keys: ${{ runner.os }}-modules
+
+        # caching: package builds
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: packages/**/lib
+          key: ${{ runner.os }}-build
+          restore-keys: ${{ runner.os }}-build
+
+      # Building and Installing packages
+      - name: Build & Install Packages
+        id: build-and-install
+        env:
+          CI: true 
+          FORCE: ${{ inputs.force_build || false }}
+        run: npm run build -- --packages --verbose
+
+        # install packages to make sure they are propperly added to node_modules
+      - run: npm ci 

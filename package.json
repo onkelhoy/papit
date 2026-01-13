@@ -1,0 +1,62 @@
+{
+  "name": "@papit/root",
+  "version": "0.0.0",
+  "description": "A ecosystem designed to be generic and easy to extend. Intended use for creating packages in a monorepo setup",
+  "private": true,
+  "scripts": {
+    "analyse": "to come",
+    "publish": "to come",
+    
+    "clean": "node bin/clean.mjs",
+    "build": "npx @papit build",
+    "test": "npx @papit/test",
+    "create": "npm create @papit -- --package",
+    "start": "npx @papit/server --serve --port=8080"
+  },
+  "keywords": [
+    "typescript"
+  ],
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "henry",
+  "license": "LicenseRef-Papit-1.0",
+  "workspaces": [
+    "packages/**/*",
+    "!packages/**/asset/**"
+  ],
+  "devDependencies": {
+    "@papit/version": "0.0.1",
+    "@papit/util": "0.0.1",
+    "@papit/build": "0.0.1",
+    "@papit/create": "0.0.1",
+    "@microsoft/api-extractor": "^7.55.2",
+    "esbuild": "^0.27.2",
+    "typescript": "^5.9.3"
+  },
+  "papit": {
+    "layers": {
+      "packages/atoms": {
+        "include": "false",
+        "name": "atom"
+      },
+      "packages/molecules": {
+        "include": "false",
+        "name": "molecule"
+      },
+      "packages/organisms": {
+        "include": "false",
+        "name": "organism"
+      },
+      "packages/pages": {
+        "include": "suffix",
+        "name": "page"
+      },
+      "packages/templates": {
+        "include": "suffix",
+        "name": "template"
+      }
+    }
+  }
+}
