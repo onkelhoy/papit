@@ -1,0 +1,3 @@
+export {
+  generateUUID,
+} from "./function";

@@ -1,0 +1,25 @@
+{
+    "folders": [
+        {
+            "path": "../"
+        }
+    ],
+    "settings": {
+        "files.exclude": {
+            "**/node_modules": true,
+            "**/.git": true,
+            "**/.temp": true,
+            "**/lib": true,
+            "**/.gitignore": true,
+            "**/tsconfig*.json": true,
+            ".vscode": true,
+            ".github": true,
+            "*-temp/": true,
+            ".eslintrc": true,
+            "asset": true,
+            "docs": true,
+            "CONTRIBUTING.md": true,
+            "LICENSE": true,
+        },
+    }
+}

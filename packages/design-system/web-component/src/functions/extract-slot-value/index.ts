@@ -1,0 +1,4 @@
+export {
+  ExtractSlotValue,
+} from "./function";
+

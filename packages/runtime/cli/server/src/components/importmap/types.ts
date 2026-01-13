@@ -1,0 +1,1 @@
+export type Importmap = { imports: Record<string, string> };

@@ -1,0 +1,17 @@
+/* TEAM */
+Developer: Henry Pap
+Role: Architect / Engineer
+Location: Sweden
+
+Designer: Phuong Dao
+Role: Design / UX / Creative Direction
+Location: Sweden
+
+/* THANKS */
+Inspired by open-source communities
+Built with curiosity, care, and stubbornness
+
+/* SITE */
+Standards: HTML, CSS, JavaScript
+Language: English
+Tools: Custom tooling, modern web standards

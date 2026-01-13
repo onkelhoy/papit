@@ -1,0 +1,3 @@
+export {
+  CumulativeOffset,
+} from "./function";

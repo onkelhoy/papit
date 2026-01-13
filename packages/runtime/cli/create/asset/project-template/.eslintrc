@@ -1,0 +1,26 @@
+{
+  "parserOptions": {
+    "ecmaVersion": 2021, // or a later version
+    "sourceType": "module", // if you're using ES6 modules
+    "ecmaFeatures": {
+      "experimentalObjectRestSpread": true // Enable support for class properties
+    }
+  },
+  "env": {
+    "es6": true, // Make sure ES6 globals are enabled,
+    "node": true
+  },
+  "rules": {
+    "brace-style": [
+      "error",
+      "allman",
+      {
+        "allowSingleLine": true
+      }
+    ],
+    "indent": [
+      "error",
+      2
+    ]
+  }
+}

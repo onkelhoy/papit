@@ -1,0 +1,77 @@
+{
+  "name": "@papit/version",
+  "description": "monorepo version flood helper, making sure descendants get patched",
+  "keywords": [
+    "papit",
+    "node",
+    "typescript",
+    "version"
+  ],
+  "version": "0.0.1",
+  "scripts": {
+    "build": "npx @papit/build -- --run",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "test": "node --test",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "bin": {
+    "papit-version": "./lib/bundle.js"
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/web-components/tree/main/packages/runtime/cli/version",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/web-components/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/onkelhoy/web-components.git",
+    "directory": "packages/runtime/cli/version"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/util": "^0.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": {
+      "name": "version",
+      "className": "Version"
+    },
+    "components": {}
+  }
+}
