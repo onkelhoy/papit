@@ -1,73 +1,66 @@
-name: Tests
+name: pull-request
 
 on:
   pull_request:
-    branches: [ main, master ]
+    branches: [main, master]
+
+concurrency:
+  group: pr-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  initialise:
-    if: "!contains(github.event.pull_request.title, 'wip:')"
-    uses: ./.github/workflows/initialise.yml
-    with:
-      force_build: ${{ github.event.inputs.force_build  || false }}
-
   test:
-    needs: initialise
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-        # setup node
-      - name: Setup Node.js environment
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
 
-        # caching: node_modules
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: 'node_modules'
-          key: ${{ runner.os }}-modules
-          restore-keys: ${{ runner.os }}-modules
-
-        # caching: package builds
-      - name: Cache build artifacts
+      # Short-lived build cache (retry helper only)
+      - name: Cache build output
         uses: actions/cache@v4
         with:
           path: packages/**/lib
-          key: ${{ runner.os }}-build
-          restore-keys: ${{ runner.os }}-build
+          key: build-${{ runner.os }}-${{ github.run_attempt }}
+          restore-keys: |
+            build-${{ runner.os }}-
 
-        # caching: package builds
-      - name: Cache Playwright binaries
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        env: 
+          CI: true
+        run: npm run build -- --ci --run-build
+
+      # Long-lived Playwright cache (read-only in PRs)
+      - name: Restore Playwright cache
         uses: actions/cache@v4
-        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright
-          restore-keys: ${{ runner.os }}-playwright
+          restore-keys: |
+            ${{ runner.os }}-playwright
 
-      # this should still respect the cached binary files for playwright but also just "install" them
-      - name: Installing Playwright
-        run: npx playwright install --with-deps 
-        
-      - name: Conditionally Update Screenshots
-        if: ${{ github.event.inputs.update_snapshots == 'true' }}
-        run: npm test -- --update-snapshots
+      - name: Install Playwright
+        run: npx playwright install --with-deps
 
-        # Run tests
-      - name: Running Tests 
-        run: npm test
+      - name: Run tests
+        env: 
+          CI: true
+        run: npm test -- --ci --remote
 
       - name: Upload Playwright artifacts
         if: failure()
-        # continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: playwright-artifacts
-          overwrite: true  # Allow overwriting of artifacts with the same name
           path: |
-            ./packages/**/*/tests/test-results
-            ./packages/**/*/tests/snapshots
-          retention-days: 3  # Optional: specify how long to keep artifacts
+            packages/**/tests/test-results
+            packages/**/tests/snapshots
+          retention-days: 3

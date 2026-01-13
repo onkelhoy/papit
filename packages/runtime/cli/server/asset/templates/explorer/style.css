@@ -1,0 +1,43 @@
+:root {
+  color-scheme: dark light;
+
+  --color: light-dark(black, white);
+  --inverse-color: light-dark(white, black);
+  --lighter-color: light-dark(#686868, #b7b7b7);
+}
+
+ul {
+  list-style: none;
+  padding-left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+
+  li {
+    font-size: 12pt;
+    font-family: monospace;
+    color: var(--color);
+
+    &.hidden {
+      color: var(--lighter-color);
+    }
+
+    a {
+      color: inherit;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      text-underline-offset: 2px;
+      text-decoration: none;
+
+      &:hover {
+        text-decoration: underline;
+      }
+
+      svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+    }
+  }
+}

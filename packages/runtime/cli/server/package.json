@@ -1,0 +1,102 @@
+{
+    "name": "@papit/server",
+    "description": "a simple but powerful dev server that can locate locale assets and package and even dependency assets",
+    "keywords": [
+        "papit",
+        "node",
+        "typescript",
+        "dev-server"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/build -- --no-install --info --live --execute ./lib/bundle.js",
+        "test": "node --test tests/**/*.test.js",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "generate-explorer-icons": "npx @papit/svg-spritesheet --input ./explorer-icons --output ./asset/icons/explorer-spritesheet.svg"
+    },
+    "bin": {
+        "papit-server": "./lib/bundle.js"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/dev-server",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/network/dev-server"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@papit/arguments": "0.0.1",
+        "@papit/build": "0.0.1",
+        "@papit/html": "0.0.1",
+        "@papit/information": "0.0.1",
+        "@papit/terminal": "0.0.1",
+        "esbuild": "0.27.2"
+    },
+    "devDependencies": {
+        "@types/node": "22.10.2",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "node",
+        "main": {
+            "name": "dev-server",
+            "className": "Dev-server"
+        },
+        "components": {
+            "dev-server": {
+                "className": "Dev-server"
+            },
+            "socket": {
+                "className": "Socket"
+            },
+            "request": {
+                "className": "Request"
+            },
+            "server": {
+                "className": "Server"
+            },
+            "translation": {
+                "className": "Translation"
+            },
+            "util": {
+                "className": "Util"
+            }
+        }
+    }
+}

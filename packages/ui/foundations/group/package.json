@@ -1,0 +1,81 @@
+{
+    "name": "@papit/foundations-group",
+    "description": "Behavioral grouping primitives for managing focus and keyboard navigation across related DOM elements, independent of visual layout or rendering framework.",
+    "keywords": [
+        "papit",
+        "web-component",
+        "typescript",
+        "group"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/server --live",
+        "test": "npx playwright test -c tests/playwright.config.ts",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium",
+        "build:react": "bash ./bin/_utils/react.sh"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/design-system/foundations/group",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/design-system/foundations/group"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@papit/web-component": "*"
+    },
+    "devDependencies": {
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "web-component",
+        "main": "group",
+        "htmlprefix": "pap",
+        "components": {
+            "group": {
+                "className": "Group",
+                "htmlprefix": "pap"
+            }
+        }
+    }
+}

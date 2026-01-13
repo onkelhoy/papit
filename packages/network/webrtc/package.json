@@ -1,0 +1,102 @@
+{
+    "name": "@papit/webrtc",
+    "description": "peer-to-peer implementation with rich topology configuration",
+    "keywords": [
+        "papit",
+        "web-component",
+        "typescript",
+        "webrtc"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/server",
+        "test": "npx playwright test -c tests/playwright.config.ts",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/webrtc",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/network/webrtc"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@papit/information": "^0.0.1",
+        "@papit/meta-json": "0.0.1"
+    },
+    "devDependencies": {
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "skip": true,
+        "publish": true,
+        "type": "browser",
+        "main": "webrtc",
+        "htmlprefix": "",
+        "components": {
+            "webrtc": {
+                "className": "Webrtc",
+                "htmlprefix": "pap"
+            },
+            "socket": {
+                "className": "Socket",
+                "htmlprefix": "pap"
+            },
+            "peer": {
+                "className": "Peer",
+                "htmlprefix": "pap"
+            },
+            "network": {
+                "className": "Network",
+                "htmlprefix": "pap"
+            },
+            "handshake": {
+                "className": "Handshake",
+                "htmlprefix": "pap"
+            },
+            "message": {
+                "className": "Message",
+                "htmlprefix": "pap"
+            }
+        }
+    }
+}

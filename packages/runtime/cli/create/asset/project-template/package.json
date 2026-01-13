@@ -1,0 +1,41 @@
+{
+    "name": "VARIABLE_NAME",
+    "version": "0.0.0",
+    "description": "VARIABLE_DESCRIPTION",
+    "private": true,
+    "scripts": {
+        "analyse": "to come",
+        "publish": "to come",
+        "clean": "node bin/clean.mjs",
+        "build": "npx @papit/build",
+        "test": "node bin/test.mjs",
+        "create": "npm create @papit -- --package",
+        "start": "npx @papit/server --serve --info"
+    },
+    "keywords": [
+        "typescript"
+    ],
+    "packageManager": "npm@11.6.2",
+    "engines": {
+        "node": ">=20"
+    },
+    "author": "VARIABLE_USER",
+    "license": "VARIABLE_PROJECTLICENSE",
+    "workspaces": [
+        "packages/**/*",
+        "!packages/**/asset/**"
+    ],
+    "devDependencies": {
+        "@microsoft/api-extractor": "7.55.2",
+        "esbuild": "0.27.2",
+        "typescript": "5.9.3",
+        "@papit/arguments": "0.0.1",
+        "@papit/terminal": "0.0.1",
+        "@papit/information": "0.0.1",
+        "@papit/build": "0.0.1",
+        "@papit/server": "0.0.1",
+        "@papit/create": "0.0.1",
+        "@papit/version": "0.0.1"
+    },
+    "papit": {}
+}
