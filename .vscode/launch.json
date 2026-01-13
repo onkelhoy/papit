@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug create @papit",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["create", "@papit"],
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "console": "integratedTerminal"
+    }
+  ]
+}

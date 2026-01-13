@@ -1,62 +1,113 @@
 {
-  "name": "@papit/root",
-  "version": "0.0.0",
-  "description": "A ecosystem designed to be generic and easy to extend. Intended use for creating packages in a monorepo setup",
-  "private": true,
-  "scripts": {
-    "analyse": "to come",
-    "publish": "to come",
-    
-    "clean": "node bin/clean.mjs",
-    "build": "npx @papit build",
-    "test": "npx @papit/test",
-    "create": "npm create @papit -- --package",
-    "start": "npx @papit/server --serve --port=8080"
-  },
-  "keywords": [
-    "typescript"
-  ],
-  "packageManager": "npm@11.6.2",
-  "engines": {
-    "node": ">=20"
-  },
-  "author": "henry",
-  "license": "LicenseRef-Papit-1.0",
-  "workspaces": [
-    "packages/**/*",
-    "!packages/**/asset/**"
-  ],
-  "devDependencies": {
-    "@papit/version": "0.0.1",
-    "@papit/util": "0.0.1",
-    "@papit/build": "0.0.1",
-    "@papit/create": "0.0.1",
-    "@microsoft/api-extractor": "^7.55.2",
-    "esbuild": "^0.27.2",
-    "typescript": "^5.9.3"
-  },
-  "papit": {
-    "layers": {
-      "packages/atoms": {
-        "include": "false",
-        "name": "atom"
-      },
-      "packages/molecules": {
-        "include": "false",
-        "name": "molecule"
-      },
-      "packages/organisms": {
-        "include": "false",
-        "name": "organism"
-      },
-      "packages/pages": {
-        "include": "suffix",
-        "name": "page"
-      },
-      "packages/templates": {
-        "include": "suffix",
-        "name": "template"
-      }
+    "name": "@papit/root",
+    "version": "0.0.0",
+    "description": "A ecosystem designed to be generic and easy to extend. Intended use for creating packages in a monorepo setup",
+    "private": true,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git"
+    },
+    "scripts": {
+        "analyse": "to come",
+        "publish": "to come",
+        "prebuild": "node bin/prebuild.mjs",
+        "clean": "node bin/clean.mjs",
+        "build": "npx @papit/build --run --all",
+        "test": "npx @papit/",
+        "create": "npm create @papit -- --package",
+        "start": "npx @papit/server --serve --port=8080 --info"
+    },
+    "keywords": [
+        "typescript"
+    ],
+    "packageManager": "npm@11.6.2",
+    "engines": {
+        "node": ">=20"
+    },
+    "author": "Henry Pap",
+    "license": "LicenseRef-Papit-1.0",
+    "workspaces": [
+        "packages/**/*",
+        "!packages/**/asset/**"
+    ],
+    "devDependencies": {
+        "@papit/version": "0.0.1",
+        "@papit/util": "0.0.1",
+        "@papit/build": "0.0.1",
+        "@papit/create": "0.0.1",
+        "@microsoft/api-extractor": "^7.55.2",
+        "esbuild": "^0.27.2",
+        "typescript": "^5.9.3"
+    },
+    "papit": {
+        "layers": {
+            "packages/runtime": {
+                "include": "false",
+                "name": "runtime",
+                "priority": 2
+            },
+            "packages/runtime/cli": {
+                "include": "false",
+                "name": "cli",
+                "priority": 1
+            },
+            "packages/design-system": {
+                "include": false,
+                "name": "design-system"
+            },
+            "packages/design-system/atomic-design": {
+                "include": false,
+                "name": "atomic-design"
+            },
+            "packages/design-system/atomic-design/atoms": {
+                "include": false,
+                "name": "atoms"
+            },
+            "packages/design-system/atomic-design/molecules": {
+                "include": false,
+                "name": "molecules"
+            },
+            "packages/design-system/atomic-design/organisms": {
+                "include": false,
+                "name": "organisms"
+            },
+            "packages/design-system/atomic-design/pages": {
+                "include": "suffix",
+                "name": "pages"
+            },
+            "packages/design-system/atomic-design/templates": {
+                "include": "suffix",
+                "name": "templates"
+            },
+            "packages/design-system/themes": {
+                "include": "suffix",
+                "name": "themes"
+            },
+            "packages/network": {
+                "include": false,
+                "name": "network"
+            },
+            "packages/game": {
+                "include": "prefix",
+                "name": "game"
+            },
+            "packages/math": {
+                "include": false,
+                "name": "math"
+            },
+            "packages/math/algebra": {
+                "include": false,
+                "name": "math:algebra"
+            },
+            "packages/math/geometry": {
+                "include": "prefix",
+                "name": "geometry"
+            },
+            "packages/math/algorithms": {
+                "include": "prefix",
+                "name": "algorithms"
+            }
+        },
+        "htmlprefix": "pap"
     }
-  }
 }

@@ -1,45 +1,56 @@
-# @papit/root
+# @papit
 
-![Logo](VARIABLE_GITHUB_REPO/blob/main/asset/logo.svg)
+![papIT Logo](/asset/logo.svg)
 
-## Introduction
+![GitHub contributors](https://img.shields.io/github/contributors/onkelhoy/papit)
+![GitHub Release Date](https://img.shields.io/github/release-date/onkelhoy/papit)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/onkelhoy/papit)
 
-[Provide a brief description of your project. Explain what it does and what makes it unique or valuable. Mention the key features and any important technologies used.]
+[![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 
-## Getting Started
+![GitHub Repo stars](https://img.shields.io/github/stars/onkelhoy/papit)
 
-### Prerequisites
+## Ecosystem: An Overview
 
-- [List any prerequisites needed to run your project, like Node.js, npm, etc.]
-- [Include any other requirements, like a specific browser or environment.]
+Welcome to the `@papit` ecosystem, an innovative framework designed to revolutionize the development and deployment of web components. Developed by me (Henry Pap), this ecosystem is built on a zero-dependency philosophy in production environments, promoting modular development, performance enhancement, and security. It offers a comprehensive toolkit for developers, encouraging efficiency and creativity in web application development.
 
-### Installation
+**Author**: Henry Pap\
+**GitHub**: [onkelhoy](https://github.com/onkelhoy/papit)\
+**License**: @Papit License 1.0
 
-1. Clone the repo:
-2. Install NPM packages:
+Figma link: [figma - papit](https://www.figma.com/design/axw69RwkUPkh5uW0kUvQu8/papit---WebComponents?node-id=1-3&t=9HXN5GBVYtbvCmi6-1)
 
-## Usage
+### Ready, Set, Code
 
-[Provide instructions on how to use your project. This could include steps to run it, how to navigate the interface, or examples of its functionality.]
+You are all set to begin developing with the framework. The setup has taken care of the necessary tooling and dependencies. Dive into creating, developing, and managing your components within our innovative ecosystem.
 
-## Important Commands
+For further guidance on developing components, managing assets, and utilizing framework commands, refer to the detailed documentation provided with the framework. Happy coding!
 
-- `command1`: [Explain what this command does.]
-- `command2`: [Explain what this command does.]
-- [Include as many commands as necessary, providing clear explanations for each.]
+## Abstract
 
-## Contributing
+By minimizing external dependencies, papIT ensures lean and efficient applications while providing developers the freedom to build, customize, and extend web components effortlessly. This document aims to be your detailed guide through the `@papit` landscape, from understanding its structure to creating, developing, and publishing your web components.
 
-[If you're open to contributions, explain how others can contribute to your project. Provide any guidelines or rules for contributing.]
+Dive into the following sections for a deep dive into `@papit`, and join us in shaping the future of web development.
+
+## Contributions
+
+We welcome community contributions, including bug reports, suggestions for improvements, and code contributions. Your involvement is highly valued. For more details on how to contribute, please visit our [Contributions page](./CONTRIBUTING.md).
 
 ## License
 
-[Specify the type of license under which your project is released, if applicable.]
+`@papit` is licensed under the @Papit License 1.0. This permissive license allows for maximum flexibility in using, modifying, and buildributing the software, provided attribution is given, and liability is not assumed. See the [LICENSE file](./LICENSE) for details.
 
-## Contact
+## Core Documentation
 
-[Provide your contact information or the contact information of the project maintainer.]
+The **[`@papit/core`](./packages/system/core/README.md)** package is the heart of the ecosystem — it contains all the major building blocks: decorators, HTML rendering utilities, reactive base classes, and standalone functions.
+If you want to understand how to build, extend, and optimize components, start here.
 
----
+## Further Reading
 
-[Feel free to include any additional sections that are relevant to your project, such as 'Acknowledgements', 'Credits', 'Known Issues', etc.]
+Enhance your understanding and utilization of the `@papit` ecosystem with these resources:
+
+1. [How to Use `@papit`](./docs/how-to-use.md)
+2. [A Closer Look at `@papit`](./docs/global.md)
+3. [Individual Packages Overview](./docs/package.md)
+4. [Theming with `@papit`](./themes/README.md)
+5. [Understanding Versioning in `@papit`](./scripts/versioning/README.md)
