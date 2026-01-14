@@ -1,7 +1,8 @@
 import path from 'node:path';
+import fs from 'node:fs';
 
 import { Arguments } from "../arguments";
-import { getRemotePackages, LocalPackage, RemotePackages, } from "../get-package";
+import { getLockfilePackagePath, getRemotePackages, LocalPackage, RemotePackages, } from "../get-package";
 import { Batch, Config, getBasicConfig, getPriority, MinimalMap } from './util';
 import { Terminal } from '../terminal';
 import { getJSON } from '../get-json';
@@ -37,10 +38,10 @@ export async function init({
 
     if (!name.startsWith(scope)) continue;
     if (pkg.workspaces) continue;
-    if (!Arguments.args.flags['include-root'] && name === `${scope}/root`) continue;
+    if (!Arguments.has('include-root') && name === `${scope}/root`) continue;
     if (acceptance && !acceptance.has(name)) continue;
 
-    if (Arguments.args.flags.remote)
+    if (Arguments.has("remote"))
     {
 
       if (remotePackages)
@@ -48,8 +49,24 @@ export async function init({
         const find = remotePackages.objects.find(p => p.package.name === pkg.name);
         if (find) 
         {
-          changedversion = find.package.version !== pkg.version;
-          map[name].remoteversion = find.package.version;
+            changedversion = find.package.version !== pkg.version;
+            if (!map[name]) map[name] = { dep: [], has: [], changedversion };
+            map[name].remoteversion = find.package.version;
+
+            if (!Arguments.has("ci"))
+            {
+                const location = getLockfilePackagePath(name, lockfile);
+                if (location)
+                {
+                    const packagePATH = path.join(location, "package.json");
+                    const packageJSON = getJSON<LocalPackage>(packagePATH);
+                    if (packageJSON)
+                    {
+                        packageJSON.remoteVersion = find.package.version;
+                        fs.writeFileSync(packagePATH, JSON.stringify(packageJSON, null, 2), "utf-8");
+                    }
+                }
+            }
         }
         else 
         {
@@ -71,7 +88,7 @@ export async function init({
         Terminal.write(Terminal.blue(`"${pkg.name}" version ${changedversion ? "changed" : "same"}`));
       }
 
-      if (!changedversion && !Arguments.args.flags['version-change']) 
+      if (!changedversion && !Arguments.has('version-change')) 
       {
         continue;
       }
