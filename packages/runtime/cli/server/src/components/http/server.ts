@@ -33,8 +33,7 @@ export async function start(
 ) {
     PORT = await getPort(PORT);
     server = http.createServer();
-
-    const lockfile = getJSON
+    // const lockfile = getJSON
 
     const filecache = new Cache("file");
     filecache.maxSize = Arguments.number("cache-file") ?? 50; // MB
@@ -43,7 +42,7 @@ export async function start(
     const bundlecache = new Cache("bundle");
     bundlecache.maxSize = Arguments.number("cache-bundle") ?? 150; // MB
 
-    if (packageJSON.name !== "@papit/server" && !Arguments.args.flags.serve)
+    if (packageJSON.name !== "@papit/server" && !Arguments.has("serve"))
     {
         if (Arguments.info) Terminal.write(Terminal.blue("listening to file changes"), packageJSON.name)
         Arguments.args.flags['no-bundle'] = true;
@@ -133,7 +132,6 @@ export async function start(
             {
                 // we put this into its own cache (bundlecache)
                 const bundle = await bundler(url, bundlecache);
-                console.log('bundle?', url, bundle)
                 res.statusCode = 200;
                 res.setHeader('Content-Type', "text/javascript");
                 res.end(bundle);

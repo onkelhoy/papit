@@ -43,7 +43,7 @@ jobs:
         env:
           CI: true 
           FORCE: ${{ inputs.force_build || false }}
-        run: npm run build -- --packages --verbose
+        run: npm run build
 
         # install packages to make sure they are propperly added to node_modules
       - run: npm ci 

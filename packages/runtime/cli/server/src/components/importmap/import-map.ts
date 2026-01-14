@@ -12,7 +12,7 @@ export function extractImportmap(
   mapFolder: string,
 ) {
   
-  function append(packagepath: string) {
+  const append = (packagepath: string) => {
     const name = packageJSON.name;
     if (map.imports[name]) return;
     
@@ -20,9 +20,10 @@ export function extractImportmap(
     let destination:string;
     if (info.root !== info.local)
     {
-      destination = path.join(mapFolder, path.relative(info.root, packagepath));
-      fs.mkdirSync(path.dirname(destination), { recursive: true });
-      fs.copyFileSync(packagepath, destination);
+        if (!fs.existsSync(packagepath)) return;
+        destination = path.join(mapFolder, path.relative(info.root, packagepath));
+        fs.mkdirSync(path.dirname(destination), { recursive: true });
+        fs.copyFileSync(packagepath, destination);
     }
     else 
     {

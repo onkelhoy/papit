@@ -20,7 +20,12 @@ import { extractImportmap } from "./components/importmap/import-map";
     }
 
     const lockfile = getJSON<Lockfile>(path.join(info.package, "package-lock.json"));
-    const packageJSON = getJSON<LocalPackage>(path.join(info.package, "package.json"));
+    let packageJSON = getJSON<LocalPackage>(path.join(info.package, "package.json"));
+    if (!packageJSON)
+    {
+        packageJSON = getJSON<LocalPackage>(path.join(info.root, "package.json"));
+    }
+
     if (!packageJSON)
     {
         Terminal.error("location is not a package, missing package.json");
@@ -51,11 +56,12 @@ import { extractImportmap } from "./components/importmap/import-map";
         importmapFolder = path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies");
     }
     // !Arguments.has("bundle") ? path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies") : null;
+    let createdImportMapFolder = false;
     if (importmapFolder && !fs.existsSync(importmapFolder))
     {
+        createdImportMapFolder = true;
         fs.mkdirSync(importmapFolder, { recursive: true });
     }
-
 
     async function runBatch(batch: DependencyBatch[]) {
         for (const b of batch) 
@@ -94,6 +100,10 @@ import { extractImportmap } from "./components/importmap/import-map";
     }
 
     const shutdown = () => {
+        if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))
+        {
+            fs.rmSync(path.join(info.local, ".temp"), { force: true, recursive: true });
+        }
         console.log(); // spacing for Ctrl+C
         httpExit();
         process.exit(0);
