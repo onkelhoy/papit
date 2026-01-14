@@ -75,7 +75,9 @@ export async function componentRunner(
       });
   }
   catch { }
+
   let template: option = { index: templateFolders.findIndex(f => f === localPackage.papit?.type), text: "" };
+  template.text = templateFolders[template.index];
 
   if (template.index < 0)
   {
@@ -168,6 +170,7 @@ export async function componentRunner(
   const shouldCommit = packageInfo?.shouldCommit === undefined ? ('agree' in Arguments.args.flags || 'commit' in Arguments.args.flags || await Terminal.confirm("git commit", true)) : packageInfo.shouldCommit;
   Terminal.clearSession();
 
+  console.log({template})
   const templateSrc = localRunnerSet.has(template.text) ? path.join(info.root, "bin/runners/component", template.text) : path.join(_info.script!, "asset/component-templates", template.text);
   const folders = getFolders(templateSrc)
 

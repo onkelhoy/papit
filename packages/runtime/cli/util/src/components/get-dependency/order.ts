@@ -41,7 +41,7 @@ export async function init({
     if (!Arguments.has('include-root') && name === `${scope}/root`) continue;
     if (acceptance && !acceptance.has(name)) continue;
 
-    if (Arguments.has("remote"))
+    if (Arguments.has("remote") || Arguments.has("ci"))
     {
 
       if (remotePackages)

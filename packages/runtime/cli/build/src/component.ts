@@ -73,17 +73,17 @@ export async function executor(options?: Partial<ExecutorOptions>) {
       break;
 
     case "individual": {
-      const packageJSON = getPackage(originalinfo.local);
-      try 
-      {
-        const shouldinstall = await runner(mode, originalinfo, packageJSON, originalinfo);
-        if (shouldinstall && !Arguments.args.flags['no-install']) await npmInstall(originalinfo);
-      }
-      catch (e)
-      {
-        console.log(e);
-      }
-      break;
+        try 
+        {
+            const packageJSON = getPackage(originalinfo.local);
+            const shouldinstall = await runner(mode, originalinfo, packageJSON, originalinfo);
+            if (shouldinstall && !Arguments.args.flags['no-install']) await npmInstall(originalinfo);
+        }
+        catch (e)
+        {
+            if (Arguments.error) console.log(e);
+        }
+        break;
     }
     case "bloodline":
     case "ancestors":
@@ -123,7 +123,7 @@ function getPackage(local: string, name?: string) {
   const packageJSON = getJSON<LocalPackage>(path.join(local, "package.json"));
   if (!packageJSON)
   {
-    Terminal.error(name ? `${name}'s package.json missing` : "package.json missing");
+    if (Arguments.error) Terminal.error(name ? `${name}'s package.json missing` : "package.json missing");
     throw new Error("package.json missing");
   }
 
@@ -356,7 +356,7 @@ async function runner(
     }
     catch (e)
     {
-      Terminal.error(Terminal.red(packageJSON.name), 'build failed');
+      Terminal.error(Terminal.dim(packageJSON.name), Terminal.brightYellow('build failed'));
       if (Arguments.verbose)
       {
         console.log(e);

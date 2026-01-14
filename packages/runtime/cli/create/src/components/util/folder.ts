@@ -1,7 +1,6 @@
 import { Terminal, RootPackage, getPathInfo, Arguments } from "@papit/util";
 import fs from "node:fs";
 import path from "node:path";
-import { stripRootPath } from "./helper";
 
 export function getFolders(dir: string): string[] {
   return fs.readdirSync(dir).filter(name => fs.statSync(path.join(dir, name)).isDirectory());
@@ -15,7 +14,7 @@ function getLayerFolders(
   return fs.readdirSync(dir).filter(name => {
     const joined = path.join(dir, name);
     if (!fs.statSync(joined).isDirectory()) return false;
-    const replaced = stripRootPath(info.root, joined);
+    const replaced = path.relative(info.root, joined);
 
     return !!rootPackage.papit.layers[replaced]
   });
@@ -45,15 +44,15 @@ export async function selectFolder(
       }
       if (option.index === 1)
       {
-        const answer = await Terminal.prompt("Folder path");
-        const basename = path.basename(answer.path);
+        const answer = await Terminal.prompt("folder name", false, target);
+        const basename = path.basename(answer.input);
 
-        const url = path.join(target, answer.path);
+        const url = path.join(target, answer.input);
         const created = await createFolder(url, basename, info, rootPackage);
 
         if (created)
         {
-          target = path.join(target, answer.path);
+          target = path.join(target, answer.input);
         }
       }
       else if (option.index === 2 && target !== original)
@@ -105,12 +104,13 @@ export async function createFolderConfig(
     const mode = await Terminal.option(prefixSuffix, `include "${overrideName.input}" in packages`);
 
     if (!rootPackage.papit) rootPackage.papit = { layers: {} };
-    const localFolder = stripRootPath(info.root, url);
+    const localFolder = path.relative(info.root, url);
     rootPackage.papit.layers[localFolder] = {
       include: mode.text === "false" ? false : mode.text as "prefix" | "suffix",
       name,
     }
 
+    
     // its create new mode 
     fs.mkdirSync(url, { recursive: true, });
     fs.writeFileSync(path.join(info.root, "package.json"), JSON.stringify(rootPackage, null, 2), { encoding: "utf-8" });

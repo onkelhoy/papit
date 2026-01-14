@@ -29,7 +29,8 @@ let suggestions: Array<{ name: string, location: string }> = [];
 export async function prompt(
   instance: typeof Terminal,
   promptText: string,
-  inline?: boolean
+  inline?: boolean,
+  cwd?: string,
 ) {
   input = "";
   cursor = 0;
@@ -221,7 +222,7 @@ export async function prompt(
       }
       else if (/tab/i.test(key.name))
       {
-        handleTab();
+        handleTab(cwd);
       }
       else if (!key.meta && !key.ctrl && (str || str === " "))
       {
@@ -241,14 +242,14 @@ let suggestion_index = 0;
 let tab_timestamp = performance.now();
 let base_path = ""; // Track the directory we're completing in
 
-const normalizeInputPath = (input: string): string => {
+const normalizeInputPath = (input: string, cwd?: string): string => {
   if (input.startsWith("~")) return input.replace(/^\~/, os.homedir());
-  if (!/^[\.|\/]/.test(input)) return path.join(process.cwd(), input);
+  if (!/^[\.|\/]/.test(input)) return path.join(cwd ?? process.cwd(), input);
   return input;
 };
 
-function getSuggestions() {
-  const currentpath = normalizeInputPath(input);
+function getSuggestions(cwd?: string) {
+  const currentpath = normalizeInputPath(input, cwd);
   suggestion_index = 0;
 
   // Determine the base directory to search
@@ -306,7 +307,7 @@ function getSuggestions() {
     .filter(v => v !== null);
 };
 
-function handleTab() {
+function handleTab(cwd?: string) {
   const now = performance.now();
   const isRecentTab = now - tab_timestamp < 1500;
   const basename = path.basename(input);
@@ -327,7 +328,7 @@ function handleTab() {
   if (suggestions.length === 0)
   {
     tab_timestamp = now;
-    getSuggestions();
+    getSuggestions(cwd);
     return;
   }
 
@@ -349,7 +350,7 @@ function handleTab() {
   // If input is now a directory, drill into it
   if (fs.existsSync(currentpath) && fs.statSync(currentpath).isDirectory())
   {
-    getSuggestions();
+    getSuggestions(cwd);
     return;
   }
 
@@ -363,6 +364,6 @@ function handleTab() {
   } else
   {
     // No matches, refresh suggestions
-    getSuggestions();
+    getSuggestions(cwd);
   }
 };

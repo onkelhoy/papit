@@ -130,8 +130,8 @@ export class Terminal extends Colors {
     this.createSession();
   }
   
-  static prompt(promptText: string, inline?: boolean) {
-    return prompt(Terminal, promptText, inline);
+  static prompt(promptText: string, inline?: boolean, cwd?: string) {
+    return prompt(Terminal, promptText, inline, cwd);
   }
 
   static async option(options: string[] | string[][], promptText = "↑↓ select • Enter confirm", currentMarker = "●", defaultMarker = "◯") {

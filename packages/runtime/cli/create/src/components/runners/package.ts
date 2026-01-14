@@ -19,7 +19,6 @@ import {
 import { componentRunner } from "./component";
 
 import { createFolderConfig, getFolders, selectFolder } from "../util";
-import { stripRootPath } from "../util";
 import { getName } from "../util/name";
 
 const execAsync = promisify(exec);
@@ -61,6 +60,8 @@ export async function packageRunner(
 
   const argType = Arguments.args.flags.package ?? Arguments.args.flags.type;
   let template: option = { index: templateFolders.findIndex(t => t === argType), text: "" };
+  template.text = templateFolders[template.index];
+  
   if (template.index < 0)
   {
     Terminal.write("type of package");
@@ -120,7 +121,7 @@ export async function packageRunner(
     Terminal.clearSession();
   }
 
-  const localFolder = stripRootPath(info.root, layer);
+  const localFolder = path.relative(info.root, layer);
 
   const layerBasename = path.basename(layer);
   let layerConfig = rootPackage.papit.layers[localFolder]
@@ -251,6 +252,7 @@ export async function packageRunner(
   const shouldCommit = 'agree' in Arguments.args.flags || 'commit' in Arguments.args.flags || await Terminal.confirm("git commit", true);
 
   await componentRunner(info, { destination, nameInfo, htmlPrefix, shouldCommit });
+  return;
 
   if (shouldCommit)
   {
