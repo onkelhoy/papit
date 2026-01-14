@@ -6,7 +6,7 @@
         "build": "npx @papit/build -- --run --error --ancestors",
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
-        "test": "node --test",
+        "test": "node --test tests/**/*.test.js",
         "preversion": "papit-version",
         "postversion": "papit-version",
         "component": "npm create @papit -- --component"

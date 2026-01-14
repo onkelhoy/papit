@@ -7,7 +7,9 @@ import { close as httpExit, start as httpStart } from "./components/http";
 import { Importmap } from "./components/importmap/types";
 import { extractImportmap } from "./components/importmap/import-map";
 
-(async function () {
+export * from "./components/http"
+
+export async function setup() {
     const info = getPathInfo(
         typeof Arguments.args.flags.location === "string" ? Arguments.args.flags.location : undefined,
         import.meta.url
@@ -47,13 +49,13 @@ import { extractImportmap } from "./components/importmap/import-map";
         imports: {}
     }
 
-    let importmapFolder:string|null = null; 
+    let importmapFolder: string | null = null;
     if (!Arguments.has("bundle")) 
     {
-      if (info.root === info.local)
-        importmapFolder = path.join(info.root, "node_modules");
-      else 
-        importmapFolder = path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies");
+        if (info.root === info.local)
+            importmapFolder = path.join(info.root, "node_modules");
+        else
+            importmapFolder = path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies");
     }
     // !Arguments.has("bundle") ? path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies") : null;
     let createdImportMapFolder = false;
@@ -115,5 +117,12 @@ import { extractImportmap } from "./components/importmap/import-map";
 
     if (!Arguments.has("serve")) Arguments.args.flags.live = true;
     await httpStart(info, translations, assets, packageJSON, importmap);
-}());
+};
+
+(async function () {
+    if (process.env.npm_lifecycle_event === "npx")
+    {
+        setup();
+    }
+}())
 

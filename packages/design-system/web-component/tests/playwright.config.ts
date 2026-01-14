@@ -4,7 +4,6 @@ import path from "node:path";
 
 const info = getPathInfo();
 const dirname = path.join(info.package, "tests");
-const relative = path.relative(info.root, info.package);
 
 export default defineConfig({
     // Look for test files in the "tests" directory, relative to this configuration file.
@@ -14,17 +13,17 @@ export default defineConfig({
     fullyParallel: true,
 
     // Fail the build on CI if you accidentally left test.only in the source code.
-    forbidOnly: Arguments.has("ci"),
+    forbidOnly: !!process.env.CI,
 
     // Retry on CI only.
     retries: 0,
 
     // Opt out of parallel tests on CI.
-    workers: Arguments.has("ci") ? 1 : undefined,
+    workers: !!process.env.CI ? 1 : undefined,
 
     // reporter, with output path for HTML reports.
     reporter: [[
-        Arguments.has("ci") ? "github" : "html",
+        !!process.env.CI ? "github" : "html",
         {
             open: "never",
             outputFolder: path.join(dirname, "test-reports"),
@@ -37,7 +36,7 @@ export default defineConfig({
 
     use: {
         // Base URL to use in actions like `await page.goto('/')`.
-        baseURL: Arguments.has("ci") ? `http://localhost:3500/${relative}/tests/` : 'http://localhost:3500/',
+        baseURL: process.env.LOCATION ? `http://localhost:3500/${process.env.LOCATION}/` : 'http://localhost:3500/',
 
         // Collect trace when retrying the failed test.
         trace: 'on-first-retry',

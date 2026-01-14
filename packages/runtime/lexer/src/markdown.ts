@@ -53,7 +53,6 @@ const blockRules: StateRules<BlockCtx, MarkdownToken> = {
     // Quote: >
     { condition: ">", next: "quote", action: ctx => {
       ctx.quote = true;
-      console.log('quote found')
     } },
     
     // Table: |
