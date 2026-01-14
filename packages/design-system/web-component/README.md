@@ -5,7 +5,7 @@ the root component for @papit web components, this package deals with all the he
 ---
 
 ![Type](https://img.shields.io/badge/Type-design-system-orange)
-[![Tests](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml)
+[![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/web-component.svg?logo=npm)](https://www.npmjs.com/package/@papit/web-component)
 
 ---
@@ -153,12 +153,12 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 - ✅ Attribution required
 - ❌ Cannot resell the component itself as a standalone product
 
-See the [LICENSE](https://github.com/onkelhoy/web-components/blob/main/LICENSE) file for full details.
+See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/web-components/tree/main/packages/system/core): Core utilities, decorators, and base component class
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/web-components).
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

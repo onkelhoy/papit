@@ -2,7 +2,7 @@
 
 Low-level CLI utilities for building consistent, interactive Papit command-line tools.
 
-![Logo](https://github.com/onkelhoy/web-components/blob/main/asset/logo.svg)
+![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
 Shared CLI utilities for Papit tooling — focused on **argument parsing**, **terminal interaction**, **workspace introspection**, and **dependency graph execution** inside monorepos.
 
@@ -12,7 +12,7 @@ It provides opinionated primitives so all Papit tools behave consistently in ter
 ---
 
 ![Type](https://img.shields.io/badge/Type-cli-orange)
-[![Tests](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml)
+[![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/util.svg?logo=npm)](https://www.npmjs.com/package/@papit/util)
 
 ---
@@ -246,8 +246,8 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 - ✅ Attribution required
 - ❌ Cannot resell the component itself as a standalone product
 
-See the [LICENSE](https://github.com/onkelhoy/web-components/blob/main/LICENSE) file for full details.
+See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/web-components).
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

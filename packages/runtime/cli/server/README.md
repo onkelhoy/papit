@@ -2,7 +2,7 @@
 
 A simple but powerful development server for modern JavaScript/TypeScript projects.
 
-![Logo](https://github.com/onkelhoy/web-components/blob/main/asset/logo.svg)
+![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
 `@papit/server` can serve your **local assets, package files, dependency assets**, and automatically handle **live updates, bundling, and caching**. It’s ideal for developers who want a **fast, flexible dev environment** with **asset localization, HTML/JS bundling, import maps, and dependency-aware serving**.
 
@@ -20,7 +20,7 @@ A simple but powerful development server for modern JavaScript/TypeScript projec
 ---
 
 ![Type](https://img.shields.io/badge/Type-network-orange)
-[![Tests](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml)
+[![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/server.svg?logo=npm)](https://www.npmjs.com/package/@papit/server)
 
 ---
@@ -70,7 +70,7 @@ All runtime flags are centralized here for easy reference. Flags can be passed v
 | `--mode`         | string          | "dev"                         | Server mode (`dev`/`prod`)            |
 | `--buildMode`    | string          | "ancestors"                   | Build mode (`ancestors`/`workspaces`) |
 
-> **Note:** Some flags (like `--prod`, `--watch`, `--callback`) are inherited from [@papit/build](https://github.com/onkelhoy/web-components/tree/main/packages/runtime/build/README.md). Please check the build README for advanced options.
+> **Note:** Some flags (like `--prod`, `--watch`, `--callback`) are inherited from [@papit/build](https://github.com/onkelhoy/papit/tree/main/packages/runtime/build/README.md). Please check the build README for advanced options.
 
 ---
 
@@ -91,10 +91,10 @@ Licensed under the **@Papit License 1.0** – Copyright (c) 2024 Henry Pap (@onk
 * ✅ Attribution required
 * ❌ Cannot resell the component itself as a standalone product
 
-See the [LICENSE](https://github.com/onkelhoy/web-components/blob/main/LICENSE) file for full details.
+See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
 ---
 
 ## Support
 
-For issues, questions, or contributions, visit the [GitHub repository](https://github.com/onkelhoy/web-components).
+For issues, questions, or contributions, visit the [GitHub repository](https://github.com/onkelhoy/papit).

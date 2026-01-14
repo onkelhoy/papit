@@ -1,67 +1,67 @@
 {
-  "name": "@papit/util",
-  "description": "",
-  "version": "0.0.1",
-  "scripts": {
-    "prebuild": "node ./bin/build.cjs",
-    "build": "npx @papit/build -- --run",
-    "watch": "tsc -w",
-    "start": "npm run build -- --dev && node ./lib/bundle.js",
-    "test": "node --test",
-    "preversion": "papit-version",
-    "postversion": "papit-version",
-    "component": "npm create @papit -- --component"
-  },
-  "main": "./lib/bundle.js",
-  "types": "./lib/index.d.ts",
-  "type": "module",
-  "files": [
-    "lib/"
-  ],
-  "exports": {
-    ".": {
-      "import": "./lib/bundle.js",
-      "types": "./lib/index.d.ts"
-    }
-  },
-  "homepage": "https://github.com/onkelhoy/web-components/tree/main/packages/runtime/cli/util",
-  "bugs": {
-    "url": "https://github.com/onkelhoy/web-components/issues"
-  },
-  "author": "Henry",
-  "private": false,
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "license": "Papit-1.0",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/onkelhoy/web-components.git",
-    "directory": "packages/runtime/cli/util"
-  },
-  "sideEffects": false,
-  "engines": {
-    "node": ">=18"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2"
-  },
-  "peerDependencies": {
-    "typescript": "^5.9.3"
-  },
-  "keywords": [
-    "node",
-    "typescript"
-  ],
-  "papit": {
-    "priority": 1,
-    "publish": true,
-    "type": "node",
-    "main": {
-      "name": "util",
-      "className": "Util"
+    "name": "@papit/util",
+    "description": "",
+    "version": "0.0.1",
+    "scripts": {
+        "prebuild": "node ./bin/build.cjs",
+        "build": "npx @papit/build -- --run",
+        "watch": "tsc -w",
+        "start": "npm run build -- --dev && node ./lib/bundle.js",
+        "test": "node --test",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component"
     },
-    "components": {}
-  }
+    "main": "./lib/bundle.js",
+    "types": "./lib/index.d.ts",
+    "type": "module",
+    "files": [
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/index.d.ts"
+        }
+    },
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/util",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "author": "Henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "Papit-1.0",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/runtime/cli/util"
+    },
+    "sideEffects": false,
+    "engines": {
+        "node": ">=18"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2"
+    },
+    "peerDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "keywords": [
+        "node",
+        "typescript"
+    ],
+    "papit": {
+        "priority": 1,
+        "publish": true,
+        "type": "node",
+        "main": {
+            "name": "util",
+            "className": "Util"
+        },
+        "components": {}
+    }
 }

@@ -33,8 +33,8 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 - ✅ Attribution required
 - ❌ Cannot resell the component itself as a standalone product
 
-See the [LICENSE](https://github.com/onkelhoy/web-components/blob/main/LICENSE) file for full details.
+See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
 ## Support
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/web-components).
+For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

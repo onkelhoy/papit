@@ -2,7 +2,7 @@
 
 A lightweight, deterministic HTML and DOM-like implementation for Node.js.
 
-![Logo](https://github.com/onkelhoy/web-components/blob/main/asset/logo.svg)
+![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
 This library provides a minimal, predictable subset of the DOM focused on:
 
@@ -15,7 +15,7 @@ This library provides a minimal, predictable subset of the DOM focused on:
 It is **not** a browser DOM and does not aim to be one.
 
 ![Type](https://img.shields.io/badge/Type-runtime-orange)
-[![Tests](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/web-components/actions/workflows/pull-request.yml)
+[![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/html.svg?logo=npm)](https://www.npmjs.com/package/@papit/html)
 
 ## Features
@@ -238,4 +238,4 @@ Copyright (c) 2024 Henry Pap (@onkelhoy)
 - ✅ Attribution required
 - ❌ Cannot resell as a standalone product
 
-See the [LICENSE](https://github.com/onkelhoy/web-components/blob/main/LICENSE) file for full details.
+See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.

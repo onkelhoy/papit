@@ -1,83 +1,83 @@
 {
-  "name": "@papit/build",
-  "description": "build tool for @papit packages",
-  "keywords": [
-    "papit",
-    "node",
-    "typescript",
-    "build"
-  ],
-  "version": "0.0.1",
-  "scripts": {
-    "prebuild": "node ./bin/build.cjs",
-    "build": "node .temp/bundle.js -- --run",
-    "watch": "tsc -w",
-    "start": "npm run build -- --run --dev && node ./lib/bundle.js",
-    "test": "node --test",
-    "preversion": "papit-version",
-    "postversion": "papit-version",
-    "component": "npm create @papit -- --component"
-  },
-  "main": "./lib/bundle.js",
-  "types": "./lib/types/index.d.ts",
-  "type": "module",
-  "files": [
-    "asset/",
-    "lib/"
-  ],
-  "exports": {
-    ".": {
-      "import": "./lib/bundle.js",
-      "types": "./lib/bundle.d.ts"
-    }
-  },
-  "bin": {
-    "papit-build": "./lib/bundle.js"
-  },
-  "author": "henry",
-  "private": false,
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "license": "LicenseRef-Papit-1.0",
-  "homepage": "https://github.com/onkelhoy/web-components/tree/main/packages/runtime/cli/build",
-  "bugs": {
-    "url": "https://github.com/onkelhoy/web-components/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/onkelhoy/web-components.git",
-    "directory": "packages/runtime/cli/build"
-  },
-  "sideEffects": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@papit/util": "^0.0.1"
-  },
-  "peerDependencies": {
-    "esbuild": "^0.27.2",
-    "typescript": "^5.9.3",
-    "@microsoft/api-extractor": "^7.55.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.10.2"
-  },
-  "browserslist": [
-    "defaults",
-    "not IE 11",
-    "not dead"
-  ],
-  "papit": {
-    "priority": 2,
-    "publish": true,
-    "type": "node",
-    "main": {
-      "name": "build",
-      "className": "Build"
+    "name": "@papit/build",
+    "description": "build tool for @papit packages",
+    "keywords": [
+        "papit",
+        "node",
+        "typescript",
+        "build"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "prebuild": "node ./bin/build.cjs",
+        "build": "node .temp/bundle.js -- --run",
+        "watch": "tsc -w",
+        "start": "npm run build -- --run --dev && node ./lib/bundle.js",
+        "test": "node --test",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component"
     },
-    "components": {}
-  }
+    "main": "./lib/bundle.js",
+    "types": "./lib/types/index.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "bin": {
+        "papit-build": "./lib/bundle.js"
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/build",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/runtime/cli/build"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@papit/util": "^0.0.1"
+    },
+    "peerDependencies": {
+        "esbuild": "^0.27.2",
+        "typescript": "^5.9.3",
+        "@microsoft/api-extractor": "^7.55.2"
+    },
+    "devDependencies": {
+        "@types/node": "^22.10.2"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "priority": 2,
+        "publish": true,
+        "type": "node",
+        "main": {
+            "name": "build",
+            "className": "Build"
+        },
+        "components": {}
+    }
 }

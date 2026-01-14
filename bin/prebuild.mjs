@@ -1,0 +1,17 @@
+import fs from "node:fs";
+import path from "node:path";
+import { spawnCommand } from "./spawn-command.mjs";
+
+const root = process.cwd();
+
+if (fs.existsSync(path.join(root, "node_modules/.bin/papit-build")))
+  process.exit(0);
+
+(async function () {
+  await spawnCommand("npm run prebuild", path.join(root, "packages/runtime/cli/build"));
+  await spawnCommand("npm run prebuild", path.join(root, "packages/runtime/cli/util"));
+  await spawnCommand("npm run build -- --force", path.join(root, "packages/runtime/cli/build"));
+
+  await spawnCommand("npm install", root);
+}());
+
