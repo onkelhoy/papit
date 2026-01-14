@@ -2,11 +2,22 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug create @papit",
+      "name": "CREATE - debugger",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["create", "@papit"],
+      "env": {
+        "NODE_OPTIONS": "--enable-source-maps"
+      },
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "BUILD - debugger",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "build", "--", "--remote"],
       "env": {
         "NODE_OPTIONS": "--enable-source-maps"
       },
