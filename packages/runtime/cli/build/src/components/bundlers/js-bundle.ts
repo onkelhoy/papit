@@ -115,7 +115,14 @@ async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>
             return;
           }
 
-          if (!Arguments.silent) Terminal.write(Terminal.blue("  ↳ rebuild"), "-", String(counter++));
+            if (Arguments.info) 
+            {
+                counter++;
+                if (counter > 1)
+                {
+                    Terminal.write(Terminal.blue("  ↳ rebuild"), "-", String(counter++));
+                }
+            }
 
           let executables = Arguments.args.flags.execute;
           if (typeof executables === "string") executables = [executables];

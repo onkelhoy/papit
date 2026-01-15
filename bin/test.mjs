@@ -1,12 +1,21 @@
 import path from "node:path";
-import {Arguments, Terminal, getDependencyOrder, getPathInfo} from "@papit/util";
-import {setup, close} from "@papit/server";
+import { Arguments, Terminal, getDependencyOrder, getPathInfo } from "@papit/util";
+import { setup, close } from "@papit/server";
 
 function runner(b, info) {
     return new Promise(resolve => {
+        const { close, update } = Terminal.loading(
+            `${Terminal.dim("testing")} ${b.name}`,
+            80,
+            frame => {
+                if (frame === 50) update(`${Terminal.dim("testing")} ${b.name} ${Terminal.dim("- so slow..")}`)
+                if (frame === 100) update(`${Terminal.dim("testing")} ${b.name} ${Terminal.dim("- jeez")}`)
+                if (frame === 250) update(`${Terminal.dim("testing")} ${b.name} ${Terminal.dim("- yeah this is borked")}`)
+            }
+        );
+
         let buffer = "";
         process.env.LOCATION = path.relative(info.root, b.location);
-        console.log({loc: process.env.LOCATION})
         const child = Terminal.spawn("npm test", {
             cwd: b.location,
             args: process.argv.slice(2),
@@ -14,7 +23,10 @@ function runner(b, info) {
             onError: text => (buffer += text),
         });
 
-        child.on("close", code => resolve({code, buffer}));
+        child.on("close", code => {
+            close();
+            resolve({ code, buffer });
+        });
     });
 }
 
@@ -24,22 +36,20 @@ function runner(b, info) {
     const info = getPathInfo();
     if (Arguments.has("ci")) process.env.CI = true;
 
-    console.log(Arguments.args.flags)
-
     await setup();
     const secondchance = [];
     await getDependencyOrder(async batch => {
         for (const b of batch)
         {
-            const {code, buffer} = await runner(b, info);
+            const { code } = await runner(b, info);
 
             if (code === 0)
             {
-                Terminal.write(Terminal.yellow("test"), b.name, Terminal.green("passed"));
+                Terminal.write(Terminal.yellow("✅"), b.name, Terminal.green("passed"));
             }
             else 
             {
-                Terminal.write(Terminal.yellow("test"), b.name, Terminal.red("failed"));
+                Terminal.write(Terminal.yellow("❌"), b.name, Terminal.red("failed"));
                 secondchance.push(b);
             }
         }
@@ -51,10 +61,16 @@ function runner(b, info) {
     }
     for (const b of secondchance)
     {
-        const {code, buffer} = await runner(b, info);
-        if (code !== 0) 
+        const { code, buffer } = await runner(b, info);
+
+        if (code === 0)
         {
-            Terminal.write(Terminal.yellow("test"), b.name, Terminal.red("failed"));
+            Terminal.write(Terminal.yellow("✅"), b.name, Terminal.green("passed"));
+        }
+        else 
+        {
+            Terminal.write(Terminal.yellow("❌"), b.name, Terminal.red("failed"));
+            Terminal.write(buffer)
             process.exit(1);
         }
     }

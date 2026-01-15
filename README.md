@@ -40,9 +40,9 @@ We welcome community contributions, including bug reports, suggestions for impro
 
 `@papit` is licensed under the @Papit License 1.0. This permissive license allows for maximum flexibility in using, modifying, and buildributing the software, provided attribution is given, and liability is not assumed. See the [LICENSE file](./LICENSE) for details.
 
-## Core Documentation
+## Web Component Documentation
 
-The **[`@papit/core`](./packages/system/core/README.md)** package is the heart of the ecosystem — it contains all the major building blocks: decorators, HTML rendering utilities, reactive base classes, and standalone functions.
+The **[`@papit/web-component`](./packages/design-system/web-component/README.md)** package is the heart of the ecosystem — it contains all the major building blocks: decorators, HTML rendering utilities, reactive base classes, and standalone functions.
 If you want to understand how to build, extend, and optimize components, start here.
 
 ## Further Reading

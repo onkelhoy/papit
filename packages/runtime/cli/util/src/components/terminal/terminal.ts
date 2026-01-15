@@ -19,10 +19,54 @@ process.stderr.write = (chunk: any, encoding?: any, cb?: any) => {
   return originalStderrWrite(chunk, encoding, cb);
 };
 
+const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
+
 export class Terminal extends Colors {
 
   static lines: number = 0;
   static session: number | null = null;
+
+  static loading(text = "Loading", duration = 80, callback?: (frame: number) => void) {
+    let frame = 0;
+    let active = true;
+    let interval: NodeJS.Timeout|undefined;
+    let label = text;
+    
+    const close = () => {
+        if (!active) return;
+        active = false;
+
+        clearInterval(interval);
+
+        // Clear spinner line completely
+        process.stdout.write("\x1b[2K\r");
+    }
+    const update = (text: string) => {
+        label = text;
+    }
+    const render = () => {
+        const icon = SPINNER_FRAMES[frame % SPINNER_FRAMES.length];
+        frame++;
+
+        callback?.(frame);
+
+        // Clear line + carriage return
+        process.stdout.write("\x1b[2K\r");
+        process.stdout.write(`${icon} ${label}`);
+    };
+
+    if (!process.stdout.isTTY)
+    {
+        this.printLine(`${label}...`);
+    }
+    else 
+    {
+        interval = setInterval(render, duration);
+        render();
+    }
+
+    return {close, update};
+  }
 
   static write(...values: any[]) {
     this.printLine(this.getString(" ", values));

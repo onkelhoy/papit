@@ -16,7 +16,7 @@ export function getURL(
   for (const potential of potentials)
   {
     const absolute = path.join(potential, ...rest);
-    if (fs.existsSync(absolute)) return { absolute, relative: path.relative(potential, absolute) || path.relative(info.local, info.root) || "/" };
+    if (fs.existsSync(absolute)) return { absolute, relative: path.relative(potential, absolute) || path.relative(info.root, info.local) || "/" };
   }
 
   return { absolute: info.package, relative: request.url ?? "/" };

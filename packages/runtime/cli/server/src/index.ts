@@ -22,6 +22,11 @@ export async function setup() {
     }
 
     const lockfile = getJSON<Lockfile>(path.join(info.package, "package-lock.json"));
+    if (info.root === info.local && !lockfile)
+    {
+        Terminal.error("could not find package-lock.json file, try running \"npm install\”")
+        process.exit(1);
+    }
     let packageJSON = getJSON<LocalPackage>(path.join(info.package, "package.json"));
     if (!packageJSON)
     {

@@ -4,7 +4,6 @@ dist/
 lib/
 isolated/
 web/
-types/
 .temp/
 .npm/
 .papit/

@@ -1,6 +1,6 @@
 import path from "node:path";
 import fs from "node:fs";
-import { getPackage, getPathInfo, LocalPackage, Lockfile } from "@papit/util";
+import { getLockfilePackagePath, getPackage, getPathInfo, LocalPackage, Lockfile } from "@papit/util";
 import { Importmap } from "./types";
 
 export function extractImportmap(
@@ -27,9 +27,14 @@ export function extractImportmap(
     }
     else 
     {
-      const packagePath = `node_modules/${name}`
-      if (!lockfile?.packages[packagePath]) return;
-      destination = packagePath;
+        const _packagepath = getLockfilePackagePath(name, lockfile!);
+        if (!_packagepath) return;
+        
+        const outputfile = path.relative(path.join(info.root, _packagepath), packagepath);
+        const final = `node_modules/${name}/${outputfile}`
+
+        if (!lockfile?.packages[`node_modules/${name}`]) return;
+        destination = final;
     }
 
     map.imports[name] = "/" + path.relative(info.local, destination);

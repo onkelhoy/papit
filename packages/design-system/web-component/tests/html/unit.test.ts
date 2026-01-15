@@ -6,13 +6,6 @@ test.beforeEach(async ({ page }) => {
     await page.waitForTimeout(1); // wait for wc to load
 });
 
-test('debug url', async ({ page }) => {
-    console.log('BASE URL:', test.info().project.use?.baseURL);
-
-    await page.goto('tests/html/');
-    console.log('FINAL PAGE URL:', page.url());
-});
-
 test.describe("attribute cases", () => {
 
     test("update should reflected content", async ({ page }) => {
