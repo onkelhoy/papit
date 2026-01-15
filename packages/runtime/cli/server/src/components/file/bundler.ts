@@ -1,12 +1,12 @@
+import fs from "node:fs";
 import { Arguments, Terminal } from "@papit/util";
-// import { getFile } from "./get";
 import { getMeta, jsBundler } from "@papit/build";
-import { BuildContext } from "esbuild";
+import { BuildResult, BuildContext } from "esbuild";
+
 import { getPACKAGE, getURL } from "../http/url";
-import { Cache } from "./cache";
 import { error, update } from "../http/socket";
-import { BuildResult } from "esbuild";
 import { InternalServerError, NotFoundError } from "../errors";
+import { Cache } from "./cache";
 import { FileConstants } from "./types";
 
 export async function bundler(
@@ -29,6 +29,8 @@ export async function bundler(
         packageJSON,
         {
             callback(counter, result) {
+                if (counter === 1) return; // in live mode we called the build once before 
+
                 if (result.errors.length > 0)
                 {
                     return void error(url.absolute, result.errors);
@@ -50,11 +52,11 @@ export async function bundler(
     );
 
     let result: BuildResult;
-    if (!Arguments.has("serve"))
+    if (Arguments.has("live"))
     {
         // we should store the context so we can dispose of it?
         const context = bundle as BuildContext;
-        result = await context.rebuild();
+        result = await context.rebuild(); // we call the rebuild so we can return on this call 
         // should we do something with it?
     }
     else 
@@ -75,7 +77,7 @@ export async function bundler(
             url,
             Buffer.from(content, "utf8"),
             FileConstants.MimeTypes[".js"],
-            null,
+            fs.statSync(url.absolute)?.mtimeMs ?? null,
         );
 
         return content;

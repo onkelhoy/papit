@@ -109,6 +109,19 @@ export function start(
                 }
                 catch { }
 
+                const stat = fs.statSync(url.absolute);
+
+                // we have to check for a file so cache can be happy, otherwise it fails to do stat lookup and thus fails to give cache file
+                if (stat.isDirectory()) 
+                {
+                    const potential = path.join(url.absolute, "index.html");
+                    if (fs.existsSync(potential))
+                    {
+                        url.absolute = potential;
+                        url.relative = path.join(url.relative, "index.html");
+                    }
+                }
+                
                 const cached = htmlcache.get(url) ?? bundlecache.get(url) ?? filecache.get(url);
 
                 if (cached)
@@ -122,7 +135,6 @@ export function start(
 
                 res.setHeader('X-Cache', "MISS");
 
-                const stat = fs.statSync(url.absolute);
                 if (stat.isDirectory() || path.extname(url.absolute) === ".html")
                 {
                     const document = await getHTML(url, assets, importmap, info.script!, htmlcache);

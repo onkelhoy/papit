@@ -8,18 +8,18 @@ export function getURL(
   request: IncomingMessage,
   info: ReturnType<typeof getPathInfo>,
 ) {
-  if (request.url && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) return { absolute: request.url, relative: path.relative(request.url, info.package) }; // this might bite later
-
-  const rest = [Arguments.string("folder"), request.url].filter(v => v !== undefined);
-
-  const potentials = [info.local, info.package, info.root];
-  for (const potential of potentials)
-  {
-    const absolute = path.join(potential, ...rest);
-    if (fs.existsSync(absolute)) return { absolute, relative: path.relative(potential, absolute) || path.relative(info.root, info.local) || "/" };
-  }
-
-  return { absolute: info.package, relative: request.url ?? "/" };
+    if (request.url && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) return { absolute: request.url, relative: path.relative(request.url, info.package) }; // this might bite later
+    
+    const rest = [Arguments.string("folder"), request.url].filter(v => v !== undefined);
+    
+    const potentials = [info.local, info.package, info.root];
+    for (const potential of potentials)
+    {
+        const absolute = path.join(potential, ...rest);
+        if (fs.existsSync(absolute)) return { absolute, relative: path.relative(potential, absolute) || path.relative(info.root, info.local) || "/" };
+    }
+    
+    return { absolute: info.package, relative: request.url ?? "/" };
 }
 
 export function getPACKAGE(url: ReturnType<typeof getURL>) {

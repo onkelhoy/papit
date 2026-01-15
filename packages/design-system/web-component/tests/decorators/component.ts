@@ -85,4 +85,3 @@ class Component extends CustomElement {
 }
 
 window.customElements.define("core-decorators", Component);
-console.log('hello from compnent.ts')

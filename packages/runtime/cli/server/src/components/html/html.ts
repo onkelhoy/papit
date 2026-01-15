@@ -7,7 +7,6 @@ import { Cache } from "../file/cache";
 import { getPACKAGE, getURL } from "../http/url";
 import { FileConstants } from "../file/types";
 
-
 export async function getHTML(
   url: ReturnType<typeof getURL>,
   assets: Record<string, string[]>,

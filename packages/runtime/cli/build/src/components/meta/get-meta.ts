@@ -23,10 +23,10 @@ export async function getMeta(
   const devTSconfig = path.join(info.package, "tsconfig.json");
   const prodTSconfig = path.join(info.package, "tsconfig.prod.json");
 
-  let tsconfigFilePath = devTSconfig;
-  if (mode === "prod" && fs.existsSync(prodTSconfig) && fs.statSync(prodTSconfig).isFile())
+  let tsconfigFilePath = prodTSconfig;
+  if (!fs.existsSync(tsconfigFilePath))
   {
-    tsconfigFilePath = prodTSconfig;
+    tsconfigFilePath = devTSconfig;
   }
 
   if (!tsconfig) tsconfig = getPackageTsconfig(tsconfigFilePath);
