@@ -13,7 +13,7 @@
         "component": "npm create @papit -- --component"
     },
     "main": "./lib/bundle.js",
-    "types": "./lib/index.d.ts",
+    "types": "./lib/bundle.d.ts",
     "type": "module",
     "files": [
         "lib/"
@@ -21,7 +21,7 @@
     "exports": {
         ".": {
             "import": "./lib/bundle.js",
-            "types": "./lib/index.d.ts"
+            "types": "./lib/bundle.d.ts"
         }
     },
     "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/util",

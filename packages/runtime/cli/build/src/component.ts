@@ -279,11 +279,11 @@ async function runner(
     console.log();
   }
 
-  if (meta.tsconfig.info.outDir && Arguments.has("clean"))
+  if (meta.tsconfig.info.outDir)
   {
     if (Arguments.debug)
     {
-      console.log(`removing "${meta.tsconfig.info.outDir}"`)
+      Terminal.write(Terminal.red(`removing "${meta.tsconfig.info.outDir}"`))
     }
     fs.rmSync(meta.tsconfig.info.outDir, { recursive: true, force: true });
     fs.mkdirSync(meta.tsconfig.info.outDir, { recursive: true });
