@@ -33,6 +33,8 @@ function runner(b, info) {
 (async function () {
     Arguments.args.flags.port = "3500";
     Arguments.args.flags.root = true;
+    if (Arguments.has("ci")) Arguments.args.flags.remote = true;
+
     const info = getPathInfo();
     if (Arguments.has("ci")) process.env.CI = true;
 

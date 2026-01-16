@@ -29,7 +29,7 @@ export class SocketServer extends ws.WebSocketServer {
   public sockets!: Map<string, Socket>;
   public networks!: Map<string, NetworkInfo>;
   public hosts!: Map<string, string[]>;
-  public options!: ServerOptions;
+  declare public options: ServerOptions;
 
   constructor(options: ServerOptions, callback?: (() => void) | undefined) {
     super(options, callback);

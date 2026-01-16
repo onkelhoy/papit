@@ -123,8 +123,10 @@ export class Arguments {
     return this.get(name).at(0);
   }
 
-  static number(name: string) {
-    return Number(this.string(name));
+  static number(name: string, fallback?: number) {
+    const value = Number(this.string(name));
+    if (Number.isNaN(value)) return fallback ?? value;
+    return value;
   }
 
   static has(name: string) {
