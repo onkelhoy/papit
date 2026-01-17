@@ -1,4 +1,5 @@
 :host {
-  color: var(--pap-color-text);
-  background-color: var(--pap-color-background);
+    color: var(--pap-color-text);
+    background-color: rgb(167, 73, 73);
+
 }

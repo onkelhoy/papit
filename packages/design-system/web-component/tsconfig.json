@@ -1,56 +1,37 @@
 {
-  "compilerOptions": {
-    "target": "es2018",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "noEmitOnError": true,
-    "lib": [
-      "es2020",
-      "dom",
-      "dom.iterable",
-      "esnext"
+    "compilerOptions": {
+        "target": "es2018",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "noEmitOnError": true,
+        "lib": [
+            "es2020",
+            "dom",
+            "dom.iterable",
+            "esnext"
+        ],
+        "jsx": "react-jsx",
+        "strict": true,
+        "esModuleInterop": false,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "outDir": "lib",
+        "sourceMap": true,
+        "inlineSources": true,
+        "rootDir": "./",
+        "allowJs": true,
+        "declarationDir": "lib/types",
+        "declaration": true,
+        "incremental": true,
+        "resolveJsonModule": true,
+    },
+    "exclude": [
+        "lib"
     ],
-    "jsx": "react-jsx",
-    "strict": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "outDir": "lib",
-    "sourceMap": true,
-    "inlineSources": true,
-    "rootDir": "./",
-    "allowJs": true,
-    "declarationDir": "lib/types",
-    "declaration": true,
-    "incremental": true,
-    "resolveJsonModule": true,
-    "paths": {
-      "@decorators/*": [
-        "./decorators/*"
-      ],
-      "@html": [
-        "./html/index"
-      ],
-      "@html/*": [
-        "./html/*"
-      ],
-      "@element/*": [
-        "./element/*"
-      ],
-      "@element": [
-        "./element/index"
-      ],
-      "@functions/*": [
-        "./functions/*"
-      ],
-      "@papit/web-component": [
-        "./index"
-      ],
-    }
-  },
-  "include": [
-    "src",
-    "views",
-    "tests"
-  ]
+    "include": [
+        "src",
+        "views",
+        "global-css.d.ts",
+        "tests"
+    ]
 }

@@ -6,6 +6,7 @@ import { getAssetFolders, handleAsset, Translation } from "./components/asset";
 import { close as httpExit, start as httpStart } from "./components/http";
 import { Importmap } from "./components/importmap/types";
 import { extractImportmap } from "./components/importmap/import-map";
+import { getMeta } from "@papit/build";
 
 export * from "./components/http"
 
@@ -28,9 +29,14 @@ export async function setup() {
         process.exit(1);
     }
     let packageJSON = getJSON<LocalPackage>(path.join(info.package, "package.json"));
+    let meta: Awaited<ReturnType<typeof getMeta>>;
     if (!packageJSON)
     {
         packageJSON = getJSON<LocalPackage>(path.join(info.root, "package.json"));
+    }
+    else 
+    {
+        meta = await getMeta(Arguments.has("prod") ? "prod" : "dev", info, packageJSON);
     }
 
     if (!packageJSON)
@@ -70,7 +76,7 @@ export async function setup() {
         fs.mkdirSync(importmapFolder, { recursive: true });
     }
 
-    async function runBatch(batch: DependencyBatch[]) {
+    const runBatch = async (batch: DependencyBatch[]) => {
         for (const b of batch) 
         {
             if (!b.location) continue;
@@ -79,7 +85,7 @@ export async function setup() {
 
             if (importmapFolder)
             {
-                extractImportmap(info, _pkgJSON, lockfile, b.location, importmap, importmapFolder);
+                extractImportmap(info, _pkgJSON, lockfile, b.location, importmap, importmapFolder, packageJSON, meta);
             }
 
             if (!Arguments.args.flags["include-node"] && _pkgJSON?.papit.type === "node") continue;

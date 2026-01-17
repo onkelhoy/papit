@@ -42,7 +42,7 @@ import { debounceFn } from "../functions/debounce";
 import { PropertyMeta, QueryMeta, Setting } from "./types";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
-  mode: "open",
+    mode: "open",
 }
 
 /**
@@ -52,217 +52,246 @@ const defaultSetting: ShadowRootInit & Partial<Setting> = {
  */
 export class CustomElement extends HTMLElement {
 
-  /**
-   * List of attributes to observe for changes.
-   * Should be populated by decorators or subclasses.
-   */
-  static get observedAttributes() {
-    return [];
-  };
+    /**
+     * List of attributes to observe for changes.
+     * Should be populated by decorators or subclasses.
+     */
+    static get observedAttributes() {
+        return [];
+    };
 
-  /**
-   * Style string(s)
-   */
-  static style: string;
-  static styles: string[];
+    /**
+     * Style string(s)
+     */
+    static sheet: CSSStyleSheet;
+    // static style: string;
+    // static styles: string[];
 
-  /**
-   * Returns the root node into which content is rendered:
-   * - If `templateInstance` exists, returns its root element
-   * - Else, if the element has a shadow root, returns it
-   * - Else, returns the element itself
-   */
-  get root() {
-    if (this.shadowRoot) return this.shadowRoot;
-    return this as HTMLElement;
-  }
-
-  private styleElement: HTMLStyleElement | null = null;
-
-  originalHTML: string;
-
-  /**
-   * Creates a new custom element.
-   * @param shadowRootInit Options for `attachShadow`, merged with defaults.
-   *                       Can also include custom settings such as `requestUpdateTimeout`.
-   */
-  constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<Setting>) {
-    super();
-    const settings = {
-      ...defaultSetting,
-      ...(shadowRootInit ?? {})
+    /**
+     * Returns the root node into which content is rendered:
+     * - If `templateInstance` exists, returns its root element
+     * - Else, if the element has a shadow root, returns it
+     * - Else, returns the element itself
+     */
+    get root() {
+        if (this.shadowRoot) return this.shadowRoot;
+        return this as HTMLElement;
     }
 
-    this.attachShadow(settings);
-    this.requestUpdate = debounceFn(this.update, settings.requestUpdateTimeout ?? 50);
-    this.originalHTML = this.outerHTML;
-  }
+    // private styleElement: HTMLStyleElement | null = null;
 
+    originalHTML: string;
 
-  /**
-   * Lifecycle: called when element is added to the DOM.
-   * Triggers the first update/render.
-   */
-  connectedCallback() {
-    this.update();
-  }
+    /**
+     * Creates a new custom element.
+     * @param shadowRootInit Options for `attachShadow`, merged with defaults.
+     *                       Can also include custom settings such as `requestUpdateTimeout`.
+     */
+    constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<Setting>) {
+        super();
+        const settings = {
+            ...defaultSetting,
+            ...(shadowRootInit ?? {})
+        }
 
-  /**
-   * Lifecycle: called when element is removed from the DOM.
-   * Empty by default, but subclasses can override.
-   */
-  disconnectedCallback() { }
-
-  /**
-   * Lifecycle: called when an observed attribute changes.
-   * Forwards changes to any registered property update handlers.
-   * @param name The attribute name
-   * @param oldValue Previous attribute value
-   * @param newValue New attribute value
-   */
-  attributeChangedCallback(name: string, oldValue: any, newValue: any) {
-    if (!this.propertyMeta) return;
-
-    const update = this.propertyMeta.get(name);
-    if (update) update.call(this, newValue, oldValue);
-  }
-
-  /**
-   * Hook called after the first render completes.
-   * Subclasses should call super.firstRender to get styling to work 
-   */
-  firstRender() {
-    this.renderStyle();
-  }
-
-  /**
-   * Renders (or updates) the component's DOM inside its root.
-   *
-   * **Behavior:**
-   * - If `render()` returns a raw HTML string, it is parsed into a DOM `Element` via {@link html}.
-   * - On first render:
-   *   - Appends the rendered element to `this.root`.
-   *   - Wraps it in a `TemplateInstance` for marker-based updates (if it came from a tagged template).
-   *   - Calls `firstRender()` and dispatches the `"first-render"` event.
-   * - On subsequent renders:
-   *   - If the render output was from a tagged template, retrieves its dynamic values with {@link getValues} and calls `TemplateInstance.update()` to patch the DOM.
-   *   - If the render output was a string-based template, no diffing occurs (it’s treated as static DOM).
-   * - Always resolves any `@query`-decorated properties after rendering.
-   *
-   * @throws {Error} If `render()` returns `null`, `undefined`, or any falsy value.
-   */
-  update() {
-    let newRoot = this.render();
-    let isString = typeof newRoot === "string";
-    if (typeof newRoot === "string") newRoot = html(newRoot);
-
-    if (!newRoot) throw new Error("[error] core: no element returned from render");
-
-    if (this.templateInstance == null)
-    {
-      this.root.appendChild(newRoot);
-      this.templateInstance = new TemplateInstance(this.root, partFactory);
-      this.firstRender();
-      this.dispatchEvent(new Event("first-render"));
+        this.attachShadow(settings);
+        this.requestUpdate = debounceFn(this.update, settings.requestUpdateTimeout ?? 50);
+        this.originalHTML = this.outerHTML;
     }
 
-    if (!isString) 
-    {
-      const newValues = getValues(newRoot);
-      if (!newValues) return void console.error("[error] values could not be found")
 
-      if (this.templateInstance) this.templateInstance.update(newValues);
+    /**
+     * Lifecycle: called when element is added to the DOM.
+     * Triggers the first update/render.
+     */
+    connectedCallback() {
+        this.update();
     }
 
-    this.findQueries();
-  }
+    /**
+     * Lifecycle: called when element is removed from the DOM.
+     * Empty by default, but subclasses can override.
+     */
+    disconnectedCallback() { }
 
-  /**
-   * Requests an update to the DOM.
-   * The update is debounced according to `requestUpdateTimeout`.
-   */
-  requestUpdate() { }
+    /**
+     * Lifecycle: called when an observed attribute changes.
+     * Forwards changes to any registered property update handlers.
+     * @param name The attribute name
+     * @param oldValue Previous attribute value
+     * @param newValue New attribute value
+     */
+    attributeChangedCallback(name: string, oldValue: any, newValue: any) {
+        if (!this.propertyMeta) return;
 
-  /**
-   * Queries for the first matching element within this element's render root.
-   * @param selectors A valid CSS selector string
-   */
-  querySelector<T extends Element>(selectors: string) {
-    return this.root.querySelector<T>(selectors);
-  }
-  /**
-   * Queries for all matching elements within this element's render root.
-   * @param selectors A valid CSS selector string
-   */
-  querySelectorAll<T extends Element>(selectors: string) {
-    return this.root.querySelectorAll<T>(selectors);
-  }
-
-  /**
-   * Returns the template to render.
-   * Can return either:
-   * - A string (will be converted to a template)
-   * - An Element (template root)
-   * @returns string|Element
-   */
-  render(): string | Node {
-    return "Phuong is so kool"
-  }
-
-  // helper variables & private functions 
-  private templateInstance: TemplateInstance | null = null;
-
-  // decorator query 
-  private queryMeta?: QueryMeta[];
-
-  /**
-   * Resolves `@query`-decorated properties by querying the render root.
-   * If a `load` callback exists, it is invoked with the found element.
-   */
-  private findQueries() {
-    if (!this.queryMeta) return;
-    for (let meta of this.queryMeta)
-    {
-      if ((this as any)[meta.propertyKey]) continue;
-      const elm = this.root.querySelector(meta.selector);
-      if (meta.load) meta.load.call(this, elm);
-      (this as any)[meta.propertyKey] = elm;
-    }
-  }
-
-  /**
-   * Calls getStyle and populates to the styleElement 
-   * it will create the element if null
-   */
-  renderStyle() {
-    if (!this.shadowRoot) return;
-    const styles = this.getStyle();
-    if (this.styleElement == null)
-    {
-      this.styleElement = document.createElement("style");
-      this.shadowRoot.appendChild(this.styleElement);
+        const update = this.propertyMeta.get(name);
+        if (update) update.call(this, newValue, oldValue);
     }
 
-    this.styleElement.innerHTML = styles;
-  }
+    /**
+     * Hook called after the first render completes.
+     * Subclasses should call super.firstRender to get styling to work 
+     */
+    firstRender() {
+        // inside firstRender() or constructor
+        const sheet = (this.constructor as any).sheet;
+        console.log('hello?', this.shadowRoot, sheet)
+        if (this.shadowRoot && sheet)
+        {
+            // this.shadowRoot.adoptedStyleSheets = [
+            //     ...(this.shadowRoot.adoptedStyleSheets ?? []),
+            //     (this.constructor as any).sheet
+            // ];
 
-  /**
-   * combines both the static style together with the styles to form one big style 
-   * @returns string
-   */
-  getStyle() {
-    // Get the constructor of the child class
-    const childConstructor = (this.constructor as any) as typeof CustomElement & { style?: string; styles?: string[]; };
+            if (sheet instanceof CSSStyleSheet)
+            {
+                console.log('styleobject');
+                this.shadowRoot.adoptedStyleSheets = [sheet];
+            }
+            else if (typeof sheet === "string")
+            {
+                console.log('string BAJS');
+                const s = new CSSStyleSheet();
+                s.replaceSync(sheet);
+                this.shadowRoot.adoptedStyleSheets = [s];
+            }
+            else 
+            {
+                console.log("ELSE CASE", Object.keys(sheet));
+            }
+        }
 
-    // Access the static property on the child class
-    const styles = [
-      ...(childConstructor.styles ?? []),
-      ...(typeof childConstructor.style === "string" ? [childConstructor.style] : []),
-    ];
 
-    return styles.join(' ');
-  }
+    }
 
-  // decorator property 
-  private propertyMeta?: PropertyMeta;
+    /**
+     * Renders (or updates) the component's DOM inside its root.
+     *
+     * **Behavior:**
+     * - If `render()` returns a raw HTML string, it is parsed into a DOM `Element` via {@link html}.
+     * - On first render:
+     *   - Appends the rendered element to `this.root`.
+     *   - Wraps it in a `TemplateInstance` for marker-based updates (if it came from a tagged template).
+     *   - Calls `firstRender()` and dispatches the `"first-render"` event.
+     * - On subsequent renders:
+     *   - If the render output was from a tagged template, retrieves its dynamic values with {@link getValues} and calls `TemplateInstance.update()` to patch the DOM.
+     *   - If the render output was a string-based template, no diffing occurs (it’s treated as static DOM).
+     * - Always resolves any `@query`-decorated properties after rendering.
+     *
+     * @throws {Error} If `render()` returns `null`, `undefined`, or any falsy value.
+     */
+    update() {
+        let newRoot = this.render();
+        let isString = typeof newRoot === "string";
+        if (typeof newRoot === "string") newRoot = html(newRoot);
+
+        if (!newRoot) throw new Error("[error] core: no element returned from render");
+
+        if (this.templateInstance == null)
+        {
+            this.root.appendChild(newRoot);
+            this.templateInstance = new TemplateInstance(this.root, partFactory);
+            this.firstRender();
+            this.dispatchEvent(new Event("first-render"));
+        }
+
+        if (!isString) 
+        {
+            const newValues = getValues(newRoot);
+            if (!newValues) return void console.error("[error] values could not be found")
+
+            if (this.templateInstance) this.templateInstance.update(newValues);
+        }
+
+        this.findQueries();
+    }
+
+    /**
+     * Requests an update to the DOM.
+     * The update is debounced according to `requestUpdateTimeout`.
+     */
+    requestUpdate() { }
+
+    /**
+     * Queries for the first matching element within this element's render root.
+     * @param selectors A valid CSS selector string
+     */
+    querySelector<T extends Element>(selectors: string) {
+        return this.root.querySelector<T>(selectors);
+    }
+    /**
+     * Queries for all matching elements within this element's render root.
+     * @param selectors A valid CSS selector string
+     */
+    querySelectorAll<T extends Element>(selectors: string) {
+        return this.root.querySelectorAll<T>(selectors);
+    }
+
+    /**
+     * Returns the template to render.
+     * Can return either:
+     * - A string (will be converted to a template)
+     * - An Element (template root)
+     * @returns string|Element
+     */
+    render(): string | Node {
+        return "Phuong is so kool"
+    }
+
+    // helper variables & private functions 
+    private templateInstance: TemplateInstance | null = null;
+
+    // decorator query 
+    private queryMeta?: QueryMeta[];
+
+    /**
+     * Resolves `@query`-decorated properties by querying the render root.
+     * If a `load` callback exists, it is invoked with the found element.
+     */
+    private findQueries() {
+        if (!this.queryMeta) return;
+        for (let meta of this.queryMeta)
+        {
+            if ((this as any)[meta.propertyKey]) continue;
+            const elm = this.root.querySelector(meta.selector);
+            if (meta.load) meta.load.call(this, elm);
+            (this as any)[meta.propertyKey] = elm;
+        }
+    }
+
+    /**
+     * Calls getStyle and populates to the styleElement 
+     * it will create the element if null
+     */
+    // renderStyle() {
+    //     if (!this.shadowRoot) return;
+    //     const styles = this.getStyle();
+    //     if (this.styleElement == null)
+    //     {
+    //         this.styleElement = document.createElement("style");
+    //         this.shadowRoot.appendChild(this.styleElement);
+    //     }
+
+    //     this.styleElement.innerHTML = styles;
+    // }
+
+    /**
+     * combines both the static style together with the styles to form one big style 
+     * @returns string
+     */
+    // getStyle() {
+    //     // Get the constructor of the child class
+    //     const childConstructor = (this.constructor as any) as typeof CustomElement & { style?: string; styles?: string[]; };
+
+    //     // Access the static property on the child class
+    //     const styles = [
+    //         ...(childConstructor.styles ?? []),
+    //         ...(typeof childConstructor.style === "string" ? [childConstructor.style] : []),
+    //     ];
+
+    //     return styles.join(' ');
+    // }
+
+    // decorator property 
+    private propertyMeta?: PropertyMeta;
 }
