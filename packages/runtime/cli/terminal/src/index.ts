@@ -1,3 +1,3 @@
 // exports
-export * from "./component";
-export * from "./types";
+export * from "./terminal";
+export { option } from "./types";

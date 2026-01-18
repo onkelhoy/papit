@@ -1,15 +1,15 @@
 {
-    "name": "VARIABLE_FULL_NAME",
-    "description": "VARIABLE_DESCRIPTION",
+    "name": "@papit/data-structure",
+    "description": "A collection of data models not existing in JavaScript",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "VARIABLE_NAME"
+        "data-structure"
     ],
     "version": "0.0.1",
     "scripts": {
-        "build": "npx @papit/build --run --error --ancestors",
+        "build": "npx @papit/build -- --run --error --ancestors",
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
@@ -31,21 +31,21 @@
             "types": "./lib/bundle.d.ts"
         }
     },
-    "author": "VARIABLE_USER",
+    "author": "henry",
     "private": false,
     "publishConfig": {
         "access": "public",
         "registry": "https://registry.npmjs.org/"
     },
-    "license": "VARIABLE_PROJECTLICENSE",
-    "homepage": "VARIABLE_GITHUB_REPO/tree/main/VARIABLE_LOCAL_DESTINATION",
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/algorithms/data-structure",
     "bugs": {
-        "url": "VARIABLE_GITHUB_REPO/issues"
+        "url": "https://github.com/onkelhoy/papit/issues"
     },
     "repository": {
         "type": "git",
-        "url": "VARIABLE_GITHUB_REPO.git",
-        "directory": "VARIABLE_LOCAL_DESTINATION"
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/algorithms/data-structure"
     },
     "sideEffects": true,
     "engines": {
@@ -64,7 +64,12 @@
     "papit": {
         "publish": true,
         "type": "node",
-        "main": "VARIABLE_NAME",
-        "components": {}
+        "main": "data-structure",
+        "components": {
+            "data-structure": {
+                "className": "DataModels",
+                "htmlprefix": "pap"
+            }
+        }
     }
 }

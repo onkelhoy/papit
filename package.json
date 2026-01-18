@@ -52,7 +52,11 @@
                 "name": "cli",
                 "priority": 1
             },
-            "packages/design": {
+            "packages/algorithms": {
+                "include": false,
+                "name": "algorithms"
+            },
+            "packages/ui": {
                 "include": false,
                 "name": "design"
             },
