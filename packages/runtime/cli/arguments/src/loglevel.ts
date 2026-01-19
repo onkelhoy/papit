@@ -1,5 +1,5 @@
 export type Level = "verbose" | "debug" | "info" | "error" | "warning" | "silent";
-export class LogLevelInstance {
+export class Instance {
     level: Level = "silent";
 
     get silent() {
@@ -48,7 +48,7 @@ export class LogLevelInstance {
 }
 
 export class Loglevel {
-    private static instance = new LogLevelInstance();
+    private static instance = new Instance();
 
     static get level() { return this.instance.level }
     static get silent() { return this.instance.silent }

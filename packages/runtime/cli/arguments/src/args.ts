@@ -1,7 +1,7 @@
-export class Args {
-    private static instance: ArgInstance;
+export class Arguments {
+    private static instance: Instance;
     static setInstance(input: Input, islands: string[] = []) {
-        if (!this.instance) this.instance = new ArgInstance(input, islands);
+        if (!this.instance) this.instance = new Instance(input, islands);
         return this.instance;
     }
 
@@ -16,7 +16,7 @@ export class Args {
 
 type Primitive = string | number | boolean;
 type Input = Primitive | Primitive[];
-export class ArgInstance {
+export class Instance {
     flags: Record<string, string[]> = {};
     values: string[] = [];
 
