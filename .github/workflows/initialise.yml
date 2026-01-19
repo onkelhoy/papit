@@ -26,8 +26,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: 'node_modules'
-          key: ${{ runner.os }}-modules
-          restore-keys: ${{ runner.os }}-modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-modules-
 
         # caching: package builds
       - name: Cache build artifacts
@@ -36,14 +36,25 @@ jobs:
           path: packages/**/lib
           key: ${{ runner.os }}-build
           restore-keys: ${{ runner.os }}-build
+      
+      # install packages to make sure they are propperly added to node_modules
+      - name: Clean Install 
+        run: npm ci 
 
-      # Building and Installing packages
-      - name: Build & Install Packages
-        id: build-and-install
-        env:
+      - name: (pre) build 
+        id: prebuild 
+        env: 
           CI: true 
-          FORCE: ${{ inputs.force_build || false }}
-        run: npm run build
+        run: |
+          if npm pkg get scripts.prebuild >/dev/null 2>&1; then
+            npm run prebuild &> /dev/null
+          fi
 
-        # install packages to make sure they are propperly added to node_modules
-      - run: npm ci 
+      - name: build
+        id: build
+        env:
+          FORCE: ${{ inputs.force_build || false }}
+        run: npm run build -- --ci --remote 
+
+      - name: Final install
+        run: npm install

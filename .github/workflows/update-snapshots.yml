@@ -30,8 +30,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: 'node_modules'
-          key: ${{ runner.os }}-modules
-          restore-keys: ${{ runner.os }}-modules
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-modules-
 
         # caching: package builds
       - name: Cache build artifacts
