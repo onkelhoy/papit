@@ -6,31 +6,19 @@ import { Remote } from "./remote";
 import { Arguments, Loglevel } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 import ts from "typescript";
-import { deepMerge } from "@papit/deep-merge";
+// import { deepMerge } from "@papit/deep-merge";
 
 type DepedencyType = "dependencies" | "devDependencies" | "peerDependencies";
 
 export class Dependency {
     root!: Node;
-    private dictionary = new Map<string, Node>();
-    static remote = new Remote();
-    private initruners: Array<Function> = [];
-    private initrunning = false;
+    private nodes = new Map<string, Node>();
 
     get(name: string) {
-        return new Promise<Node | undefined>(res => {
-            if (this.initrunning)
-            {
-                this.initruners.push(() => res(this.dictionary.get(name)));
-            }
-            else 
-            {
-                res(this.dictionary.get(name))
-            }
-        });
+        return this.nodes.get(name);
     }
 
-    async build(location: string, entrypoints: string[] = []) {
+    constructor(location: string = process.cwd(), entrypoints: string[] = []) {
         let close: Function | undefined;
         let update: ((text: string) => void) | undefined;
         if (Loglevel.info)
@@ -41,91 +29,75 @@ export class Dependency {
         }
         const session = Terminal.createSession();
 
-        this.initrunning = true;
-        const leftovers = new Map<string, [LocalPackage | RootPackage, DepedencyType]>();
+        const leftovers = new Map<string, string[]>();
         const rootPATH = findWorkspaceRoot(location);
         const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
         const scope = rootJSON.name.split("/").at(0);
-        this.root = await this.createNode(scope, rootJSON, rootPATH, "root", leftovers);
+        this.root = this.createNode(scope, rootJSON, rootPATH, "root", leftovers);
 
-        if (Arguments.has("remote"))
-        {
-            await Dependency.remote.init(scope);
-        }
+        fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
+            .filter(loc => {
+                if (!loc.endsWith("package.json")) return false;
+                if (/\/asset\//i.test(loc)) return false;
 
-        const files = fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" }).filter(loc => {
-            if (!loc.endsWith("package.json")) return false;
-            if (/\/asset\//i.test(loc)) return false;
-            // if (entrypoints.length > 0 && !entrypoints.includes(path.dirname(loc))) return false;
+                return true;
+            })
+            .forEach((localFilePath, index, array) => {
+                if (update) update(`setting up dependency-graph (${index + 1} / ${array.length})`);
+                const location = path.join(rootPATH, "packages", localFilePath);
+                const packageJSON = JSON.parse(fs.readFileSync(location, { encoding: "utf-8" }));
+                const dirname = path.dirname(location);
+                this.createNode(
+                    scope,
+                    packageJSON,
+                    dirname,
+                    "local",
+                    leftovers,
+                );
+            });
 
-            return true;
+        leftovers.forEach((dependants, name) => {
+            const node = this.get(name);
+            if (!node) return;
+            dependants.forEach(dep => {
+                const dnode = this.get(dep);
+                if (!dnode) return;
+                node.children.push(dnode);
+                dnode.parents.push(node);
+            })
         });
 
-        for (let i = 0; i < files.length; i++)
-        {
-            const loc = files[i];
-            if (update) update(`setting up dependency-graph (${i+1} / ${files.length})`);
-            const location = path.join(rootPATH, "packages", loc);
-            const packageJSON = JSON.parse(fs.readFileSync(location, { encoding: "utf-8" }));
-            await this.createNode(scope, packageJSON, path.dirname(location), "local", leftovers);
-        }
-
-        for (const name of leftovers.keys())
-        {
-            console.log('running leftover', name)
-            const [packageJSON, type] = leftovers.get(name) ?? [];
-            if (!packageJSON) continue;
-            await this.createNode(
-                scope,
-                packageJSON,
-                path.dirname(location),
-                name.startsWith(scope) ? "local" : "external",
-                leftovers
-            );
-
-
-        }
-
-        if (this.initruners.length > 0)
-        {
-            this.initruners.forEach(runner => runner());
-            this.initruners = [];
-        }
-        this.initrunning = false;
-
-        // Terminal.clearSession(session);
+        Terminal.clearSession(session);
         if (close) close();
 
-        // console.log(leftovers)
+        Remote.init(scope, this.nodes.size);
     }
 
-    private async createNode(
+    private createNode(
         scope: string,
         packageJSON: LocalPackage | RootPackage,
         location: string,
         type: "external" | "root" | "local",
-        leftovers: Map<string, [LocalPackage | RootPackage, DepedencyType]>,
+        leftovers: Map<string, string[]>,
     ) {
-        if (!this.dictionary.has(packageJSON.name))
+        if (!this.nodes.has(packageJSON.name))
         {
-            const remoteversion = await Dependency.remote.get(packageJSON.name);
             const node = new Node(
                 packageJSON,
                 type,
                 location,
-                remoteversion,
             );
-    
-            this.dictionary.set(packageJSON.name, node);
+
+            this.nodes.set(packageJSON.name, node);
         }
 
-        const node = this.dictionary.get(packageJSON.name)!;
+        const node = this.nodes.get(packageJSON.name)!;
 
-        if (leftovers.has(packageJSON.name))
-        {
-            // should we address this one?
-            leftovers.delete(packageJSON.name);
-        }
+        // if (leftovers.has(packageJSON.name))
+        // {
+        //     // should we address this one?
+        //     leftovers.delete(packageJSON.name);
+        // }
 
         for (const dependencyType of ["dependencies", "devDependencies", "peerDependencies"] as const)
         {
@@ -133,7 +105,17 @@ export class Dependency {
             {
                 if (!key.startsWith(scope)) continue;
 
-                const existingNode = 
+                const existingNode = this.nodes.get(key); // ?? this.createNode(scope, );
+                if (existingNode)
+                {
+                    node.parents.push(existingNode);
+                    existingNode.children.push(node);
+                }
+                else 
+                {
+                    if (leftovers.has(key)) leftovers.get(key)?.push(node.name);
+                    else leftovers.set(key, [node.name]);
+                }
             }
         }
 
@@ -146,7 +128,7 @@ export class Dependency {
     //     type: DepedencyType,
     //     leftovers: Map<string, [LocalPackage | RootPackage, DepedencyType]>,
     // ) {
-    //     const stored = this.dictionary.get(dependency);
+    //     const stored = this.nodes.get(dependency);
     //     if (stored)
     //     {
     //         console.log('it happened', node.name, stored.name)
@@ -171,18 +153,22 @@ class Node {
         private _packageJSON: LocalPackage | RootPackage,
         private _type: "external" | "root" | "local",
         private _location: string,
-        private _remote: string | null | undefined,
+        // private _remote: string | null | undefined,
     ) { }
 
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
     get location() { return this._location }
-    get remote() { return this._remote }
     get sourceFolders() { return this.tsconfig.options.baseUrl ?? path.join(this.location, "src") }
     get outFolder() { return this.tsconfig.options.outDir ?? path.dirname(this.tsconfig.options.outFile ?? "") ?? path.join(this.location, "lib") }
     get name() { return this._packageJSON.name }
+    private _remote: string | null | undefined;
+    async remote() {
+        if (!this._remote) this._remote = await Remote.get(this.name);
+        return this._remote;
+    }
 
-    private _tsconfig: ts.ParsedCommandLine | undefined; 
+    private _tsconfig: ts.ParsedCommandLine | undefined;
     get tsconfig() {
         if (this._tsconfig) return this._tsconfig;
 
@@ -210,7 +196,8 @@ class Node {
         const visited = new Set<Node>();
         const stack = [...this.children];
 
-        while (stack.length) {
+        while (stack.length)
+        {
             const node = stack.pop()!;
             if (visited.has(node)) continue;
 
@@ -226,7 +213,8 @@ class Node {
         const visited = new Set<Node>();
         const stack = [...this.parents];
 
-        while (stack.length) {
+        while (stack.length)
+        {
             const node = stack.pop()!;
             if (visited.has(node)) 
             {
