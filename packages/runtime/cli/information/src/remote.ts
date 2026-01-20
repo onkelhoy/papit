@@ -1,10 +1,12 @@
+import { Terminal } from "@papit/terminal";
 import { RemotePackage, RemotePackages } from "./types";
 
 export class Remote {
     map = new Map<string, string>();
 
-    private async init(scope: string, size: number = 100, from = 0) {
-        try {
+    async init(scope: string, size: number = 100, from = 0) {
+        try
+        {
             const res = await fetch(`https://registry.npmjs.org/-/v1/search?text=${scope}&size=${size}&from=${from}`)
             if (!res.ok) throw null; // data will get undefined 
 
@@ -23,11 +25,12 @@ export class Remote {
     async get(name: string) {
         const version = this.map.get(name);
         if (version) return version;
-        
-        try {
+
+        try
+        {
             const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`)
             if (!res.ok) return null;
-        
+
             const data = await res.json() as RemotePackage;
             this.map.set(data.name, data["dist-tags"].latest);
 
@@ -38,9 +41,4 @@ export class Remote {
             return null;
         }
     }
-
-    constructor(scope: string, size: number = 400, from = 0) {
-        this.init(scope, size, from);
-    }
-}   
 }

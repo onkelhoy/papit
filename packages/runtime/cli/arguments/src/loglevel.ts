@@ -51,6 +51,7 @@ export class Loglevel {
     private static instance = new Instance();
 
     static get level() { return this.instance.level }
+    static set level(value: Level) { this.instance.level = value }
     static get silent() { return this.instance.silent }
     static get debug() { return this.instance.debug }
     static get verbose() { return this.instance.verbose }

@@ -1,18 +1,4 @@
-export class Arguments {
-    private static instance: Instance;
-    static setInstance(input: Input, islands: string[] = []) {
-        if (!this.instance) this.instance = new Instance(input, islands);
-        return this.instance;
-    }
-
-    static toggle(key: string) { this.instance.toggle(key) }
-    static get(key: string) { this.instance.get(key) }
-    static set(key: string, value: Input) { this.instance.set(key, value) }
-    static add(key: string, value: Input) { this.instance.add(key, value) }
-    static has(key: string) { this.instance.has(key) }
-    static string(key: string) { this.instance.string(key) }
-    static number(key: string) { this.instance.number(key) }
-}
+import { Loglevel } from "./loglevel";
 
 type Primitive = string | number | boolean;
 type Input = Primitive | Primitive[];
@@ -81,3 +67,30 @@ export class Instance {
         });
     }
 }
+
+export class Arguments {
+    private static instance: Instance;
+    static init(input: Input, islands: string[] = []) {
+        if (!this.instance) this.instance = new Instance(input, islands);
+        if (this.instance.has("debug")) Loglevel.level = "debug";
+        if (this.instance.has("verbose")) Loglevel.level = "verbose";
+        if (this.instance.has("info")) Loglevel.level = "info";
+        if (this.instance.has("warning")) Loglevel.level = "warning";
+        if (this.instance.has("error")) Loglevel.level = "error";
+        if (this.instance.has("silent")) Loglevel.level = "silent";
+
+        return this.instance;
+    }
+
+    static toggle(key: string) { return this.instance.toggle(key) }
+    static get(key: string) { return this.instance.get(key) }
+    static set(key: string, value: Input) { return this.instance.set(key, value) }
+    static add(key: string, value: Input) { return this.instance.add(key, value) }
+    static has(key: string) { return this.instance.has(key) }
+    static string(key: string) { return this.instance.string(key) }
+    static number(key: string) { return this.instance.number(key) }
+}
+
+(function () {
+    Arguments.init(process.argv);
+}())

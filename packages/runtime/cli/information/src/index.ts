@@ -4,4 +4,9 @@ export * from "./types";
 
 import { Dependency } from "./dependency";
 
-const dep = new Dependency();
+(async function () {
+    const dep = new Dependency();
+    const data = await dep.get("@papit/build");
+
+    console.log("data", data?.tsconfig);
+}())
