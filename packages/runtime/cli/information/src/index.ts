@@ -5,8 +5,12 @@ export * from "./types";
 import { Dependency } from "./dependency";
 
 (async function () {
-    const dep = new Dependency();
-    const data = await dep.get("@papit/build");
+    const graph = new Dependency();
+    
+    
+    await graph.build(process.cwd(), ["runtime/cli/build"]);
 
-    console.log("data", data?.tsconfig);
+    const node = await graph.get("@papit/build");
+
+    console.log("data", node?.ancestors().map(a => a.name));
 }())

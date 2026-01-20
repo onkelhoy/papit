@@ -21,9 +21,9 @@
     "incremental": true,
     "resolveJsonModule": true,
     "paths": {
-      "@papit/information": [
+      "@papit/deep-merge": [
         "./index"
-      ]
+      ],
     }
   },
   "include": [
