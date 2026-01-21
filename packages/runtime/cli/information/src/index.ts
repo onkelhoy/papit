@@ -23,8 +23,8 @@ import { PackageGraph } from "./graph";
 import { Information } from "./information";
 
 (async function () {
-
     if (!Arguments.isCLI) return;
+    if (Arguments.has("location")) return console.log({ local: Information.local, root: Information.root, package: Information.package });
 
     while (true)
     {

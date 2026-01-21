@@ -55,12 +55,15 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/arguments": "^0.0.1",
+        "@papit/information": "^0.0.1",
+        "@papit/terminal": "^0.0.1",
         "@papit/util": "^0.0.1"
     },
     "peerDependencies": {
+        "@microsoft/api-extractor": "^7.55.2",
         "esbuild": "^0.27.2",
-        "typescript": "^5.9.3",
-        "@microsoft/api-extractor": "^7.55.2"
+        "typescript": "^5.9.3"
     },
     "devDependencies": {
         "@types/node": "^22.10.2"

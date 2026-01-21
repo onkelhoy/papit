@@ -5,6 +5,7 @@ import { Arguments } from "@papit/arguments";
 
 import { Remote } from "./remote";
 import { LocalPackage, RootPackage } from "./types";
+import { getEntryPoints } from "./entrypoint";
 
 export class Node {
     parents: Node[] = [];
@@ -20,13 +21,23 @@ export class Node {
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
     get location() { return this._location }
-    get sourceFolders() { return this.tsconfig.options.baseUrl ?? path.join(this.location, "src") }
+    get sourceFolder() { return this.tsconfig.options.baseUrl ?? path.join(this.location, "src") }
     get outFolder() { return this.tsconfig.options.outDir ?? path.dirname(this.tsconfig.options.outFile ?? "") ?? path.join(this.location, "lib") }
     get name() { return this._packageJSON.name }
     private _remote: string | null | undefined;
     async remote() {
         if (!this._remote) this._remote = await Remote.get(this.name);
         return this._remote;
+    }
+
+    private _entrypoints: ReturnType<typeof getEntryPoints>|undefined;
+    get entrypoints() {
+        if (!this._entrypoints)
+        {
+            this._entrypoints = getEntryPoints(this)
+        }
+
+        return this._entrypoints;
     }
 
     private _tsconfig: ts.ParsedCommandLine | undefined;
