@@ -7,9 +7,9 @@ import { Remote } from "./remote";
 import { LocalPackage, RootPackage } from "./types";
 import { getEntryPoints } from "./entrypoint";
 
-export class Node {
-    parents: Node[] = [];
-    children: Node[] = [];
+export class PackageNode {
+    parents: PackageNode[] = [];
+    children: PackageNode[] = [];
 
     constructor(
         private _packageJSON: LocalPackage | RootPackage,
@@ -64,8 +64,8 @@ export class Node {
     }
 
     get descendants() {
-        const output: Node[] = [];
-        const visited = new Set<Node>();
+        const output: PackageNode[] = [];
+        const visited = new Set<PackageNode>();
         const stack = [...this.children];
 
         while (stack.length)
@@ -81,8 +81,8 @@ export class Node {
         return output;
     }
     get ancestors() {
-        const output: Node[] = [];
-        const visited = new Set<Node>();
+        const output: PackageNode[] = [];
+        const visited = new Set<PackageNode>();
         const stack = [...this.parents];
 
         while (stack.length)

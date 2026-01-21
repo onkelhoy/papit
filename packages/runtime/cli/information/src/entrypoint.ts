@@ -1,13 +1,13 @@
 // import statements 
-import { type Node } from "./node";
+import { type PackageNode } from "./node";
 
 type Entry<T = {output:string, input:string}> = {import:T|undefined,require:T|undefined,types:T|undefined};
 type Entries = Record<string, Entry>;
-function getOutputInput(output: string, node: Node) 
+function getOutputInput(output: string, node: PackageNode) 
 {
     return { output, input: output.replace(node.sourceFolder+"/", node.outFolder+"/") };
 }
-function add(entries: Entries, key: string, node: Node, entry: Partial<Entry<string>>) 
+function add(entries: Entries, key: string, node: PackageNode, entry: Partial<Entry<string>>) 
 {
     if (!entries[key]) entries[key] = { import: undefined, types: undefined, require: undefined };
 
@@ -17,12 +17,12 @@ function add(entries: Entries, key: string, node: Node, entry: Partial<Entry<str
         if (output) entries[key][e as keyof Entry] = getOutputInput(output, node);
     }
 }
-function addString(entries: Entries, key: string, node: Node, output: string) {
+function addString(entries: Entries, key: string, node: PackageNode, output: string) {
     const entry = node.packageJSON.type === "commonjs" ? "require" : "import";
     add(entries, key, node, { [entry]: output });
 }
 
-function extract(node:Node, property: "bin"|"entryPoints", entries: Entries) 
+function extract(node:PackageNode, property: "bin"|"entryPoints", entries: Entries) 
 {
     if (!node.packageJSON[property]) return
 
@@ -38,7 +38,7 @@ function extract(node:Node, property: "bin"|"entryPoints", entries: Entries)
     }
 }
 
-export function getEntryPoints(node: Node) {
+export function getEntryPoints(node: PackageNode) {
     const entries: Entries = {};
     
     if (node.packageJSON.main) addString(entries, "bundle", node, node.packageJSON.main);

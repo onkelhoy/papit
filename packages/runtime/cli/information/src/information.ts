@@ -1,8 +1,8 @@
 import { PackageGraph } from "./graph";
-import { Node } from "./node";
+import { PackageNode } from "./node";
 
 export class Information {
-    private static _package: Node|undefined;
+    private static _package: PackageNode|undefined;
     private static _local: string|undefined;
     private static _scope: string|undefined;
 

@@ -1,11 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { LocalPackage, RootPackage } from "./types";
-import { Node } from "./node";
+import { PackageNode } from "./node";
 
 export class Graph {
-    root!: Node;
-    private _nodes = new Map<string, Node>();
+    root!: PackageNode;
+    private _nodes = new Map<string, PackageNode>();
 
     get nodes() { return Array.from(this._nodes.values()) }
     get(name: string) { return this._nodes.get(name) }
@@ -60,7 +60,7 @@ export class Graph {
     ) {
         if (!this._nodes.has(packageJSON.name))
         {
-            const node = new Node(
+            const node = new PackageNode(
                 packageJSON,
                 type,
                 location,
@@ -93,6 +93,42 @@ export class Graph {
 
         return node;
     }
+
+    public order(packages: PackageNode[]) 
+    {
+        const map = new Map<string, string[]>();
+        const batches:PackageNode[][] = [];
+
+        for (const node of packages)
+        {
+            map.set(node.name, node.ancestors.map(n => n.name));
+        }
+
+        while (map.size > 0)
+        {
+            const batch: PackageNode[] = [];
+
+            const sorted = Array.from(map.keys()).map(name => {
+                const deps = map.get(name)!;
+
+                return { name, count: deps.filter(dep => map.has(dep)).length };
+            }).sort((a, b) => b.count - a.count);
+
+            let current:number|undefined;
+            for (const item of sorted)
+            {
+                if (current === undefined) current = item.count;
+                if (current !== item.count) break;
+                
+                map.delete(item.name);
+                batch.push(this.get(item.name)!);
+            }
+
+            batches.push(batch);
+        }
+
+        return batches.reverse();
+    }
 }
 
 export class PackageGraph {
@@ -103,13 +139,7 @@ export class PackageGraph {
     static get root() { return this.instance.root }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
-    /** returns the current node based on process.cwk */
-    // static get current() {
-    //     const local = 
-    //     return this.instance.nodes.find(node => {
-
-    //     })
-    // }
+    static order(packages: PackageNode[]) { return this.instance.order(packages) }
 }
 
 
