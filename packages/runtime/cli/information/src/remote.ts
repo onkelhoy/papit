@@ -1,4 +1,5 @@
-import { Terminal } from "@papit/terminal";
+import { PackageGraph } from "./graph";
+import { Information } from "./information";
 import { RemotePackage, RemotePackages } from "./types";
 
 export class Remote {
@@ -6,7 +7,10 @@ export class Remote {
     private static abortsignal: AbortController | undefined;
     private static emitter = new EventTarget();
 
+    private static hasinit = false;
     static async init(scope: string, size: number = 100, from = 0) {
+        if (this.abortsignal) return;
+
         try
         {
             this.abortsignal = new AbortController();
@@ -30,9 +34,15 @@ export class Remote {
         {
             this.map.clear();
         }
+        finally 
+        {
+            this.hasinit = true;
+        }
     }
 
-    static get(name: string) {
+    static async get(name: string) {
+        if (!this.hasinit) await Remote.init(Information.scope, PackageGraph.size);
+
         const version = this.map.get(name);
         if (version) return version;
 
@@ -42,7 +52,7 @@ export class Remote {
                 try
                 {
                     const res = await fetch(`https://registry.npmjs.org/${encodeURIComponent(name)}`)
-                    if (!res.ok) return resolve(null);
+                    if (!res.ok) throw null;
 
                     const data = await res.json() as RemotePackage;
                     this.map.set(data.name, data["dist-tags"].latest);
@@ -52,6 +62,10 @@ export class Remote {
                 catch 
                 {
                     resolve(null);
+                }
+                finally 
+                {
+                    this.emitter.removeEventListener("change", loader)
                 }
             }
 

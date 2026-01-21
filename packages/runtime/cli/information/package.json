@@ -20,6 +20,9 @@
     "main": "./lib/bundle.js",
     "types": "./lib/bundle.d.ts",
     "type": "module",
+    "bin": {
+        "papit-information": "./lib/bundle.js"
+    },
     "files": [
         "asset/",
         "lib/"

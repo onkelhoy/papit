@@ -89,6 +89,8 @@ export class Arguments {
     static has(key: string) { return this.instance.has(key) }
     static string(key: string) { return this.instance.string(key) }
     static number(key: string) { return this.instance.number(key) }
+
+    static get isCLI() { return process.env.npm_lifecycle_event === "npx" }
 }
 
 (function () {
