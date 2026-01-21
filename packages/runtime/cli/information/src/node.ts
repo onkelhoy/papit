@@ -6,6 +6,7 @@ import { Arguments } from "@papit/arguments";
 import { Remote } from "./remote";
 import { LocalPackage, RootPackage } from "./types";
 import { getEntryPoints } from "./entrypoint";
+import { Cache } from "./cache";
 
 export class PackageNode {
     parents: PackageNode[] = [];
@@ -21,16 +22,46 @@ export class PackageNode {
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
     get location() { return this._location }
-    get sourceFolder() { return this.tsconfig.options.baseUrl ?? path.join(this.location, "src") }
-    get outFolder() { return this.tsconfig.options.outDir ?? path.dirname(this.tsconfig.options.outFile ?? "") ?? path.join(this.location, "lib") }
+    get sourceFolder() { return path.relative(this.location, this.tsconfig.options.baseUrl ?? path.join(this.location, "src")) }
+    get outFolder() { return path.relative(this.location, this.tsconfig.options.outDir ?? path.dirname(this.tsconfig.options.outFile ?? "") ?? path.join(this.location, "lib")) }
     get name() { return this._packageJSON.name }
+    private _externals: string[] | undefined;
+    get externals() {
+        if (!this._externals) 
+        {
+            this._externals = Object
+                .keys(this.packageJSON.dependencies ?? {})
+                .concat(Object.keys(this.packageJSON.devDependencies ?? {}))
+                .concat(Object.keys(this.packageJSON.peerDependencies ?? {}))
+        }
+        return this._externals;
+    }
     private _remote: string | null | undefined;
     async remote() {
         if (!this._remote) this._remote = await Remote.get(this.name);
         return this._remote;
     }
+    get modifiedtime() {
+        let mtime = 0;
+        const joined = path.join(this.location, this.sourceFolder);
+        fs
+            .readdirSync(joined, { recursive: true, encoding: "utf-8" })
+            .forEach(file => {
+                const stat = fs.statSync(path.join(joined, file));
+                if (!stat.isFile()) return;
 
-    private _entrypoints: ReturnType<typeof getEntryPoints>|undefined;
+                mtime = Math.max(mtime!, stat.mtimeMs);
+            });
+
+        const previous = Cache.get(this.name).mtime;
+        Cache.set(this.name, { mtime });
+        return {
+            current: mtime,
+            previous,
+        };
+    }
+
+    private _entrypoints: ReturnType<typeof getEntryPoints> | undefined;
     get entrypoints() {
         if (!this._entrypoints)
         {
@@ -41,14 +72,21 @@ export class PackageNode {
     }
 
     private _tsconfig: ts.ParsedCommandLine | undefined;
+    private _tsconfigpath: string | undefined;
+    get tsconfigpath() {
+        if (!this._tsconfigpath)
+        {
+            this._tsconfigpath = Arguments.has("prod") ? path.join(this.location, "tsconfig.prod.json") : path.join(this.location, "tsconfig.json");
+            if (!fs.existsSync(this._tsconfigpath)) this._tsconfigpath = path.join(this.location, "tsconfig.json");
+            if (!fs.existsSync(this._tsconfigpath)) throw new Error("no location found for tsconfig");
+        }
+
+        return this._tsconfigpath;
+    }
     get tsconfig() {
         if (this._tsconfig) return this._tsconfig;
 
-        let location = Arguments.has("prod") ? path.join(this.location, "tsconfig.prod.json") : path.join(this.location, "tsconfig.json");
-        if (!fs.existsSync(location)) location = path.join(this.location, "tsconfig.json");
-        if (!fs.existsSync(location)) throw new Error("no location found for tsconfig");
-
-        const configFile = ts.readConfigFile(location, ts.sys.readFile);
+        const configFile = ts.readConfigFile(this.tsconfigpath, ts.sys.readFile);
         if (configFile.error)
         {
             throw new Error(`Error reading tsconfig: ${configFile.error.messageText}`);
@@ -57,7 +95,7 @@ export class PackageNode {
         this._tsconfig = ts.parseJsonConfigFileContent(
             configFile.config,
             ts.sys,
-            path.dirname(location)
+            path.dirname(this.tsconfigpath)
         );
 
         return this._tsconfig;

@@ -2,7 +2,8 @@ import { Information, PackageNode, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 
-(async function ()  {
+(async function () {
+    console.log('HELLO?', PackageGraph.nodes, Information.location)
     if (!Arguments.isCLI && !Arguments.has("run")) return;
 
     if (Arguments.has("bloodline")) console.log('bloodline')

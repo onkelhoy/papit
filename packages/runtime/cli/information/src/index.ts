@@ -4,6 +4,7 @@ export * from "./node";
 export * from "./information";
 export * from "./remote";
 export * from "./types";
+export * from "./entrypoint";
 
 // PackageGraph.nodes.forEach(n => console.log(n.name, n.location))
 
@@ -16,14 +17,13 @@ export * from "./types";
 //     console.log({ name: node.name, children: node.descendants().map(a => a.name), parents: node.ancestors().map(a => a.name), remote });
 // }())
 
-
 import { Terminal } from "@papit/terminal";
 import { Arguments } from "@papit/arguments";
 import { PackageGraph } from "./graph";
 import { Information } from "./information";
 
 (async function () {
-    if (!Arguments.isCLI) return;
+    if (!Arguments.isCLI || !process.env._?.endsWith("papit-information")) return;
     if (Arguments.has("location")) return console.log({ local: Information.local, root: Information.root, package: Information.package });
 
     while (true)
@@ -34,8 +34,8 @@ import { Information } from "./information";
         {
             console.log({
                 local: Information.local,
-                root: Information.root,
-                package: Information.package
+                root: Information.root.location,
+                package: Information.package.location
             });
             continue;
         }

@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { LocalPackage, RootPackage } from "./types";
 import { PackageNode } from "./node";
+import { Cache } from "./cache";
 
 export class Graph {
     root!: PackageNode;
@@ -18,6 +19,7 @@ export class Graph {
         const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
         const scope = rootJSON.name.split("/").at(0);
         this.root = this.createNode(scope, rootJSON, rootPATH, "root", leftovers);
+        Cache.setup(this.root.location);
 
         fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
             .filter(loc => {
@@ -94,13 +96,13 @@ export class Graph {
         return node;
     }
 
-    public order(packages: PackageNode[]) 
-    {
+    public getOrder(packages: PackageNode[]) {
         const map = new Map<string, string[]>();
-        const batches:PackageNode[][] = [];
+        const batches: PackageNode[][] = [];
 
         for (const node of packages)
         {
+            if (node.name === this.root.name) continue;
             map.set(node.name, node.ancestors.map(n => n.name));
         }
 
@@ -110,16 +112,15 @@ export class Graph {
 
             const sorted = Array.from(map.keys()).map(name => {
                 const deps = map.get(name)!;
-
                 return { name, count: deps.filter(dep => map.has(dep)).length };
-            }).sort((a, b) => b.count - a.count);
+            }).sort((a, b) => a.count - b.count);
 
-            let current:number|undefined;
+            let current: number | undefined;
             for (const item of sorted)
             {
                 if (current === undefined) current = item.count;
                 if (current !== item.count) break;
-                
+
                 map.delete(item.name);
                 batch.push(this.get(item.name)!);
             }
@@ -127,7 +128,7 @@ export class Graph {
             batches.push(batch);
         }
 
-        return batches.reverse();
+        return batches;
     }
 }
 
@@ -139,7 +140,7 @@ export class PackageGraph {
     static get root() { return this.instance.root }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
-    static order(packages: PackageNode[]) { return this.instance.order(packages) }
+    static getOrder(packages: PackageNode[]) { return this.instance.getOrder(packages) }
 }
 
 
