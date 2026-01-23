@@ -1,6 +1,18 @@
+import { type Args } from "./args";
+
 export type Level = "verbose" | "debug" | "info" | "error" | "warning" | "silent";
-export class Instance {
+export class Loglevel {
     level: Level = "silent";
+
+    init(args: Args) 
+    {
+        if (args.has("debug")) this.level = "debug";
+        if (args.has("verbose")) this.level = "verbose";
+        if (args.has("info")) this.level = "info";
+        if (args.has("warning")) this.level = "warning";
+        if (args.has("error")) this.level = "error";
+        if (args.has("silent")) this.level = "silent";
+    }
 
     get silent() {
         return this.level === "silent";
@@ -45,23 +57,4 @@ export class Instance {
         if (value) this.level = "error";
         else if (this.error) this.level = "silent"
     }
-}
-
-export class Loglevel {
-    private static instance = new Instance();
-
-    static get level() { return this.instance.level }
-    static set level(value: Level) { this.instance.level = value }
-    static get silent() { return this.instance.silent }
-    static get debug() { return this.instance.debug }
-    static get verbose() { return this.instance.verbose }
-    static get info() { return this.instance.info }
-    static get warning() { return this.instance.warning }
-    static get error() { return this.instance.error }
-    static set silent(value: boolean) { this.instance.silent = value }
-    static set debug(value: boolean) { this.instance.debug = value }
-    static set verbose(value: boolean) { this.instance.verbose = value }
-    static set info(value: boolean) { this.instance.info = value }
-    static set warning(value: boolean) { this.instance.warning = value }
-    static set error(value: boolean) { this.instance.error = value }
 }

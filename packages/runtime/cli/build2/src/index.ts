@@ -1,15 +1,19 @@
+export * from "./bundles/js-bundle";
+export * from "./bundles/ts-bundle";
+
 import { Information, PackageNode, PackageGraph } from "@papit/information";
-import { ArgInstance, Arguments, Loglevel } from "@papit/arguments";
+import { Args, Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 import { getBatches } from "./helper";
 import { tsBundler } from "./bundles/ts-bundle";
 import path from "node:path";
+import { jsBundler } from "./bundles/js-bundle";
 
 function canPrint() {
     return !(!Arguments.isCLI && !Arguments.has("run")) || !process.env._?.endsWith("papit-build2");
 }
 export async function build(args = process.argv, islands?: string[]) {
-    const _args = new ArgInstance(args, islands);
+    const _args = new Args(args, islands);
 
     const batches = getBatches(_args);
     const failed = new Set<string>();
@@ -20,13 +24,14 @@ export async function build(args = process.argv, islands?: string[]) {
     }
 };
 
-function runBatch(batch: PackageNode[], failed: Set<string>, args: ArgInstance) {
+function runBatch(batch: PackageNode[], failed: Set<string>, args: Args) {
     const canprint = canPrint();
     const promises = batch.map(node => {
-        return new Promise<void>(async resolve => {
+        return new Promise<boolean>(async resolve => {
 
             let close: () => void = () => null;
             let update: (text: string) => void = () => null;
+            let shouldinstall = false;
 
             let status: "tsc" | "js" | "ts" = "tsc";
             const tempOutDir = path.join(node.location, ".temp/build");
@@ -68,14 +73,35 @@ function runBatch(batch: PackageNode[], failed: Set<string>, args: ArgInstance) 
 
                 for (const entry in entrypoins.entries)
                 {
+                    const entrypoint = entrypoins.entries[entry];
                     if (canprint) update(Terminal.dim(node.name, "building - bundle javascript"));
-                    // await jsBundle(entrypoins.entries[entry], node);
+                    await jsBundler(entrypoint, node, args, canprint);
+
+                    // check if bin 
+                    if (entrypoint.import?.output && entrypoins.bin.has(entrypoint.import.output))
+                    {
+                        shouldinstall = true;
+                        // add shebang and remove from root/node_modeles/.bin
+                        if (!args.has("ci"))
+                        {
+                            const rootNodeModuleBin = path.join(Information.root.location, "node_modules/.bin", binEntry);
+                            if (fs.existsSync(rootNodeModuleBin)) 
+                            {
+                            fs.rmSync(rootNodeModuleBin);
+                            }
+                        }
+
+                        const bundle = fs.readFileSync(javascriptFileOutput, { encoding: "utf-8" });
+                        const updated = bundle.startsWith("#!/usr/bin/env node") ? bundle : `#!/usr/bin/env node\n${bundle}`;
+                        fs.writeFileSync(javascriptFileOutput, updated, { mode: 0o755 });
+                    }
+
                     status = "ts";
 
                     if (node.tsconfig.options.declaration)
                     {
                         if (canprint) update(Terminal.dim(node.name, "building - bundle javascript"));
-                        tsstatus = await tsBundler(entrypoins.entries[entry], node, tempOutDir);
+                        tsstatus = await tsBundler(entrypoint, node, tempOutDir);
                     }
                 }
 
@@ -91,19 +117,18 @@ function runBatch(batch: PackageNode[], failed: Set<string>, args: ArgInstance) 
                 {
                     close();
                     Terminal.write(Terminal.red("●"), Terminal.dim(node.name), Terminal.red("failed"));
-                }
-
-                if (Loglevel.error) 
-                {
-                    console.log('failed at', status, node.entrypoints.entries["bundle"]?.types);
-                    console.log(e);
+                    if (args.error) 
+                    {
+                        Terminal.error('failed at', status);
+                        console.log(e);
+                    }
                 }
 
                 failed.add(node.name);
             }
             finally 
             {
-                resolve();
+                resolve(shouldinstall);
             }
         });
     });

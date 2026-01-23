@@ -43,6 +43,7 @@ export type RootPackage = BasePackage & {
        */
       priority?: number;
     }>;
+    type?: string;
     htmlprefix?: string;
   };
 }

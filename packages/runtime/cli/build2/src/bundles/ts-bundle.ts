@@ -3,12 +3,13 @@ import path from "node:path";
 import { Extractor, ExtractorConfig } from '@microsoft/api-extractor';
 import { Terminal } from "@papit/terminal";
 import { EntryPoint, PackageNode } from "@papit/information";
-import { Loglevel } from "@papit/arguments";
+import { Arguments } from "@papit/arguments";
 
 export async function tsBundler(
     entry: EntryPoint,
     node: PackageNode,
     tempOutDir: string,
+    args = Arguments.instance
 ) {
     let { input, output } = entry.types ?? {};
     if (!input || !output) return "no input or output file";
@@ -37,7 +38,7 @@ export async function tsBundler(
         // run API Extractor
         return Extractor.invoke(extractorConfig, {
             localBuild: true,
-            showVerboseMessages: !!Loglevel.verbose,
+            showVerboseMessages: !!args.verbose,
         });
     });
 
@@ -47,29 +48,3 @@ export async function tsBundler(
         process.exit(1);
     }
 }
-
-// * this
-//   if (Arguments.args.flags.dev)
-//   {
-//     const srcName = path.basename(path.dirname(inputFile));
-//     const outDir = path.dirname(outputFile);
-
-//     await Terminal.execute(
-//       "tsc",
-//       info.local,
-//       ["--emitDeclarationOnly", "-p", meta.tsconfig.path, "--declarationDir", outDir],
-//     );
-
-//     // The srcName folder that gets created INSIDE outDir (not in package root)
-//     const tempDtsDir = path.join(outDir, srcName);
-
-//     if (fs.existsSync(tempDtsDir))
-//     {
-//       // Copy the generated .d.ts files from the nested folder to outDir
-//       await copyFolder(tempDtsDir, outDir, content => content);
-//       // Delete the temporary nested folder
-//       fs.rmSync(tempDtsDir, { recursive: true, force: true });
-//     }
-
-//     return;
-//   }

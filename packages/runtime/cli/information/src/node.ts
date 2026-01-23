@@ -53,7 +53,7 @@ export class PackageNode {
                 mtime = Math.max(mtime!, stat.mtimeMs);
             });
 
-        const previous = Cache.get(this.name).mtime;
+        const previous = Cache.get(this.name)?.mtime;
         Cache.set(this.name, { mtime });
         return {
             current: mtime,

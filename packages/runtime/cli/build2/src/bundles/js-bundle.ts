@@ -1,24 +1,27 @@
 // import statements
-import path from "node:path";
-import esbuild, { BuildOptions, WatchOptions } from "esbuild";
+import esbuild, { BuildOptions } from "esbuild";
 import { EntryPoint, PackageNode } from "@papit/information";
 
 import { ChildProcessWithoutNullStreams } from "node:child_process";
-import { Arguments, Loglevel } from "@papit/arguments";
+import { Arguments } from "@papit/arguments";
+import { Terminal } from "@papit/terminal";
 
 export async function jsBundler(
     entry: EntryPoint,
     node: PackageNode,
+    args = Arguments.instance,
+    canprint = false,
+    callback?: (counter: number, result: esbuild.BuildResult<esbuild.BuildOptions>) => void,
 ) {
     if (!entry.import) return; // deal also with require? 
 
-    const isDev = Arguments.has("dev");
+    const isDev = args.has("dev");
     let logLevel = "silent";
-    if (Loglevel.error) logLevel = "error";
-    else if (Loglevel.warning) logLevel = "warning";
-    else if (Loglevel.info) logLevel = "info";
-    else if (Loglevel.verbose) logLevel = "info";
-    else if (Loglevel.debug) logLevel = "info";
+    if (args.error) logLevel = "error";
+    else if (args.warning) logLevel = "warning";
+    else if (args.info) logLevel = "info";
+    else if (args.verbose) logLevel = "info";
+    else if (args.debug) logLevel = "info";
 
     const options: BuildOptions = {
         bundle: true,
@@ -36,7 +39,7 @@ export async function jsBundler(
 
         tsconfig: node.tsconfigpath,
         format: node.packageJSON.type === "module" ? "esm" : "cjs",
-        platform: ["node"].includes(meta.config.type ?? "web-component") ? "node" : "browser",
+        platform: ["node"].includes(node.packageJSON.papit.type ?? "web-component") ? "node" : "browser",
 
         logLevel: logLevel as BuildOptions["logLevel"],
         loader: {
@@ -44,41 +47,55 @@ export async function jsBundler(
         }
     }
 
-    if ((Arguments.args.flags.live && exoptions?.watch !== false) || exoptions?.watch === true)
+    if (args.has("live"))
     {
-        return watch(options, info, exoptions);
+        return watch(options, node, args, canprint, callback);
     }
 
-    return build(options);
+    return build(options, node, args, canprint);
 }
 
-async function build(options: BuildOptions) {
+async function build(
+    options: BuildOptions, 
+    node: PackageNode, 
+    args = Arguments.instance,
+    canprint = false,
+) {
     const esbuildInfo = await esbuild.build(options);
     if (esbuildInfo.errors.length > 0)
     {
-        if (Arguments.verbose)
+        if (canprint)
         {
-            Terminal.error(JSON.stringify(esbuildInfo.errors, null, 2));
+            if (args.verbose)
+            {
+                Terminal.error(JSON.stringify(esbuildInfo.errors, null, 2));
+            }
+    
+            Terminal.error("esbuild had errors", args.verbose ? "" : "run with --verbose flag for details");
         }
-
-        Terminal.error("esbuild had errors", Arguments.verbose ? "" : "run with --verbose flag for details");
         process.exit(1);
     }
 
-    if (esbuildInfo.warnings.length > 0)
+    if (esbuildInfo.warnings.length > 0 && canprint)
     {
-        if (Arguments.verbose)
+        if (args.verbose)
         {
             Terminal.warn(JSON.stringify(esbuildInfo.warnings, null, 2));
         }
 
-        Terminal.warn("esbuild had warnings", Arguments.verbose ? "" : "run with --verbose flag for details");
+        Terminal.warn("esbuild had warnings", args.verbose ? "" : "run with --verbose flag for details");
     }
 
     return esbuildInfo;
 }
 
-async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>, exoptions?: Partial<ExecutorOptions>) {
+async function watch(
+    options: BuildOptions, 
+    node: PackageNode,
+    args = Arguments.instance,
+    canprint = false,
+    callback?: (counter: number, result: esbuild.BuildResult<esbuild.BuildOptions>) => void,
+) {
     let counter = 0;
     const ctx = await esbuild.context({
         ...options,
@@ -94,14 +111,14 @@ async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>
                         if (!child?.process || child.process.killed) continue;
 
                         const kill = child.process.kill("SIGTERM");
-                        if (kill) Terminal.write("terminated child");
+                        if (kill && canprint) Terminal.write("terminated child");
                         else 
                         {
-                            Terminal.error("something went wrong terminating child process");
+                            if (canprint) Terminal.error("something went wrong terminating child process");
                             process.exit(1);
                         }
 
-                        Terminal.clearSession(child.session);
+                        if (canprint) Terminal.clearSession(child.session);
                     }
                 });
 
@@ -109,7 +126,7 @@ async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>
                     if (result.errors.length > 0)
                     {
                         result.errors.forEach(e => {
-                            Terminal.error(Terminal.red("esbuild"), e.detail);
+                            if (canprint) Terminal.error(Terminal.red("esbuild"), e.detail);
                         });
 
                         return;
@@ -118,20 +135,14 @@ async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>
                     if (Arguments.info) 
                     {
                         counter++;
-                        if (counter > 1)
+                        if (counter > 1 && canprint)
                         {
                             Terminal.write(Terminal.blue("  ↳ rebuild"), "-", String(counter++));
                         }
                     }
 
-                    let executables = Arguments.args.flags.execute;
-                    if (typeof executables === "string") executables = [executables];
-
-                    if (exoptions?.callback)
-                    {
-                        exoptions.callback(counter, result);
-                    }
-
+                    let executables = args.get("execute");
+                    if (callback) callback(counter, result);
                     if (!Array.isArray(executables)) return;
 
                     for (const executable of executables)
@@ -139,10 +150,10 @@ async function watch(options: BuildOptions, info: ReturnType<typeof getPathInfo>
                         childprocesses.push({
                             session: Terminal.createSession(),
                             process: Terminal.spawn("node", {
-                                cwd: info.package,
+                                cwd: node.location,
                                 args: [executable, ...process.argv.slice(2)],
-                                onData: text => Terminal.write(text),
-                                onError: text => Terminal.write(text),
+                                onData: text => canprint && Terminal.write(text),
+                                onError: text => canprint && Terminal.write(text),
                                 onClose: console.log.bind("close")
                             }),
                         });

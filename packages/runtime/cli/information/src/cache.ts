@@ -14,7 +14,7 @@ export class Cache {
     private static _hasloaded = false;
     static setup(rootLocation: string) { this.location = rootLocation }
 
-    static get(name: string) {
+    static get(name: string): Partial<Entry>|undefined {
         if (!this._hasloaded)
         {
             this._hasloaded = true;

@@ -1,8 +1,8 @@
 import { Information, PackageNode, PackageGraph } from "@papit/information";
-import { ArgInstance } from "@papit/arguments";
+import { Arguments } from "@papit/arguments";
 
 // helper function 
-export function getBatches(args: ArgInstance) {
+export function getBatches(args = Arguments.instance) {
     let batches: PackageNode[][];
     if (!args.has("individual") && (args.has("all") || Information.package.name === Information.root.name))
     {

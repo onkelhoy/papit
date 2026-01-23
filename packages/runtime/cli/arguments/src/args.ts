@@ -1,8 +1,8 @@
-import { Loglevel } from "./loglevel";
+import { Loglevel, type Level } from "./loglevel";
 
 type Primitive = string | number | boolean;
 type Input = Primitive | Primitive[];
-export class Instance {
+export class Args extends Loglevel {
     flags: Record<string, string[]> = {};
     values: string[] = [];
 
@@ -31,6 +31,7 @@ export class Instance {
     }
 
     constructor(input: Input, islands: string[] = []) {
+        super();
         const converted = this.convert(input);
 
         let flagName: string | null = null;
@@ -65,21 +66,15 @@ export class Instance {
 
             this.add(name, value);
         });
+
+        super.init(this);
     }
 }
 
 export class Arguments {
-    private static instance: Instance;
+    static instance: Args;
     static init(input: Input, islands: string[] = []) {
-        if (!this.instance) this.instance = new Instance(input, islands);
-        if (this.instance.has("debug")) Loglevel.level = "debug";
-        if (this.instance.has("verbose")) Loglevel.level = "verbose";
-        if (this.instance.has("info")) Loglevel.level = "info";
-        if (this.instance.has("warning")) Loglevel.level = "warning";
-        if (this.instance.has("error")) Loglevel.level = "error";
-        if (this.instance.has("silent")) Loglevel.level = "silent";
-
-        return this.instance;
+        if (!this.instance) this.instance = new Args(input, islands);
     }
 
     static toggle(key: string) { return this.instance.toggle(key) }
@@ -89,6 +84,21 @@ export class Arguments {
     static has(key: string) { return this.instance.has(key) }
     static string(key: string) { return this.instance.string(key) }
     static number(key: string) { return this.instance.number(key) }
+
+    static get level() { return this.instance.level }
+    static set level(value: Level) { this.instance.level = value }
+    static get silent() { return this.instance.silent }
+    static get debug() { return this.instance.debug }
+    static get verbose() { return this.instance.verbose }
+    static get info() { return this.instance.info }
+    static get warning() { return this.instance.warning }
+    static get error() { return this.instance.error }
+    static set silent(value: boolean) { this.instance.silent = value }
+    static set debug(value: boolean) { this.instance.debug = value }
+    static set verbose(value: boolean) { this.instance.verbose = value }
+    static set info(value: boolean) { this.instance.info = value }
+    static set warning(value: boolean) { this.instance.warning = value }
+    static set error(value: boolean) { this.instance.error = value }
 
     static get isCLI() { return process.env.npm_lifecycle_event === "npx" }
 }
