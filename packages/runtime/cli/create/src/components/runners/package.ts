@@ -1,64 +1,45 @@
 import path from "node:path";
 import fs from "node:fs";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
 
-import {
-    getJSON,
-    getScope,
-    getPackage,
-    copyFolder,
-    Terminal,
-    type Lockfile,
-    getPathInfo,
-    RootPackage,
-    LocalPackage,
-    Arguments,
-    option,
-} from "@papit/util"
+
+import { option, Terminal } from "@papit/terminal";
+import { Information, LocalPackage, PackageGraph } from "@papit/information";
+import { Arguments } from "@papit/arguments";
+
 import { componentRunner } from "./component";
-
-import { createFolderConfig, getFolders, selectFolder } from "../util";
+import { copyFolder, getFolders, selectFolder } from "../util";
 import { getName } from "../util/name";
 
-const execAsync = promisify(exec);
-
 export async function packageRunner(
-    info: ReturnType<typeof getPathInfo>,
+    createPackageLocation: string,
 ) {
     const session = Terminal.createSession();
 
-    const scope = getScope();
+    // const Information.scope = getInformation.scope();
 
-    const rootPackage = getJSON<RootPackage>(path.join(info.root, "package.json"));
+    const rootPackage = Information.root.packageJSON;
     if (rootPackage === null)
     {
         Terminal.error("root package.json not found");
         process.exit(1);
     }
 
-    const layer = await selectFolder(
-        {
-            ...info,
-            scope,
-        },
-        rootPackage,
-    );
+    const layer = await selectFolder();
 
-    const templateFolders = getFolders(path.join(info.script!, "asset/package-templates/"));
+    const templateFolders = getFolders(path.join(createPackageLocation, "asset/package-templates/"));
     const localRunnerSet = new Set<string>();
     try
     {
-        getFolders(path.join(info.root, "bin/runners/package"))
+        getFolders(path.join(Information.root.location, "bin/runners/package"))
             .forEach(f => {
-                if (!fs.existsSync(path.join(info.root, "bin/runners/package", f, "package.json"))) return;
+                if (!fs.existsSync(path.join(Information.root.location, "bin/runners/package", f, "package.json"))) return;
                 templateFolders.push(f);
                 localRunnerSet.add(f);
             });
     }
     catch { }
 
-    const argType = Arguments.args.flags.package ?? Arguments.args.flags.type;
+    const argType = Arguments.string("package") ?? Arguments.string("type");
     let template: option = { index: templateFolders.findIndex(t => t === argType), text: "" };
     template.text = templateFolders[template.index];
 
@@ -69,26 +50,22 @@ export async function packageRunner(
     }
     Terminal.clearSession();
 
-    let htmlPrefix: string | undefined = undefined;
-    if (Array.isArray(Arguments.args.flags['html-prefix'])) htmlPrefix = Arguments.args.flags['html-prefix'].join("-");
-    else if (typeof Arguments.args.flags['html-prefix'] === "string") htmlPrefix = Arguments.args.flags['html-prefix'];
-    if (htmlPrefix?.trim() === "") htmlPrefix = undefined;
+    let htmlprefix = Arguments.string("html-prefix");
+    if (htmlprefix?.trim() === "") htmlprefix = undefined;
 
-    if (!htmlPrefix && /web-components?/i.test(template.text))
+    if (!htmlprefix && /web-components?/i.test(template.text))
     {
-        // const rootConfig = getConfig(path.join(info.root, ".config"));
-
-        if (!htmlPrefix) htmlPrefix = rootPackage.papit?.htmlprefix;
+        if (!htmlprefix) htmlprefix = rootPackage.papit?.htmlprefix;
 
         Terminal.createSession();
         while (true) 
         {
             let answer: string;
-            if (htmlPrefix)
+            if (htmlprefix)
             {
-                const ans = await Terminal.prompt(`use default "${htmlPrefix}" or override?`);
+                const ans = await Terminal.prompt(`use default "${htmlprefix}" or override?`);
                 answer = ans.input;
-                if (!answer) answer = htmlPrefix;
+                if (!answer) answer = htmlprefix;
             }
             else 
             {
@@ -100,16 +77,15 @@ export async function packageRunner(
                     const setasroot = await Terminal.confirm(`you wish to set "${answer}" as the default html-prefix?`);
                     if (setasroot)
                     {
-                        if (!rootPackage.papit) rootPackage.papit = { layers: {} };
                         rootPackage.papit.htmlprefix = answer;
-                        fs.writeFileSync(path.join(info.root, "package.json"), JSON.stringify(rootPackage, null, 2), { encoding: "utf-8" });
+                        fs.writeFileSync(path.join(Information.root.location, "package.json"), JSON.stringify(rootPackage, null, 2), { encoding: "utf-8" });
                     }
                 }
             }
 
             if (answer) 
             {
-                htmlPrefix = answer;
+                htmlprefix = answer;
                 break;
             }
             else 
@@ -121,16 +97,9 @@ export async function packageRunner(
         Terminal.clearSession();
     }
 
-    const localFolder = path.relative(info.root, layer);
+    const localFolder = path.relative(Information.root.location, layer);
 
     const layerBasename = path.basename(layer);
-    let layerConfig = rootPackage.papit.layers[localFolder]
-
-    if (!layerConfig)
-    {
-        Terminal.warn(".config file is missing");
-        await createFolderConfig(layer, layerBasename, info, rootPackage); // this will update "layerConfig" thanks to JS strong by reference 
-    }
 
     if (!rootPackage.repository?.url)
     {
@@ -139,24 +108,16 @@ export async function packageRunner(
     }
 
     const repository = rootPackage.repository.url.replace(/\.git$/, '');
-    const lockfile_location = path.join(info.root, "package-lock.json");
-
-    let lockfile = getJSON<Lockfile>(lockfile_location);
-    if (lockfile === null)
-    {
-        await execAsync('npm install');
-        lockfile = getJSON<Lockfile>(lockfile_location);
-    }
+    const lockfile_location = path.join(Information.root.location, "package-lock.json");
 
     Terminal.clearSession(session); // this will also create session
     let nameInfo: ReturnType<typeof getName>;
-    while (true)
+    let fullName: string | undefined;
+    while (fullName === undefined || nameInfo === undefined)
     {
         Terminal.clearSession();
-        let input: string | undefined = undefined;
-        if (Array.isArray(Arguments.args.flags.name)) input = Arguments.args.flags.name.join(" ");
-        else if (typeof Arguments.args.flags.name === "string") input = Arguments.args.flags.name;
-        else 
+        let input: string | undefined = Arguments.string("name");
+        if (!input) 
         {
             const ans = await Terminal.prompt("(package) name", true);
             input = ans.input;
@@ -169,19 +130,20 @@ export async function packageRunner(
             Terminal.write("name missing, try again");
             continue;
         }
-        if (lockfile && getPackage(`${scope}/${nameInfo.name}`, lockfile))
+
+        const combinedName = `${Information.scope}/${nameInfo.name}`;
+        if (PackageGraph.get(combinedName))
         {
-
             Terminal.write("package already exists, try again")
-            continue;
         }
-
-        break;
+        else 
+        {
+            fullName = combinedName;
+        }
     }
 
-    const fullName = `${scope}/${layerConfig.include === "prefix" ? layerConfig.name + "-" : ""}${nameInfo.name}${layerConfig.include === "suffix" ? "-" + layerConfig.name : ""}`;
-    let description = Array.isArray(Arguments.args.flags.description) ? Arguments.args.flags.description.join(" ") : Arguments.args.flags.description;
-    if (!description || description === true) 
+    let description = Arguments.string("description");
+    if (!description) 
     {
         const ans = await Terminal.prompt("description", true);
         description = ans.input;
@@ -193,7 +155,8 @@ export async function packageRunner(
     const destination = path.join(layer, nameInfo.name);
 
     // Copy package template
-    await copyFolder(localRunnerSet.has(template.text) ? path.join(info.root, "bin/runners/package", template.text) : path.join(info.script!, "asset/package-templates", template.text), destination, async (file, src) => {
+    const srcFolder = localRunnerSet.has(template.text) ? path.join(Information.root.location, "bin/runners/package", template.text) : path.join(createPackageLocation, "asset/package-templates", template.text);
+    await copyFolder(srcFolder, destination, async (file, src) => {
         if (src.endsWith(".gitkeep")) return false;
 
         const final = file
@@ -201,19 +164,18 @@ export async function packageRunner(
             .replace(/VARIABLE_FULL_NAME/g, fullName)
             .replace(/VARIABLE_DESCRIPTION/g, description)
             .replace(/VARIABLE_LAYER_FOLDER/g, layerBasename)
-            .replace(/VARIABLE_LAYER_NAME/g, layerConfig.name ?? layerBasename)
             .replace(/VARIABLE_PROJECTLICENSE/g, rootPackage.license || "MIT")
             .replace(/VARIABLE_GITHUB_REPO/g, repository)
             .replace(/VARIABLE_LOCAL_DESTINATION/g, path.join(localFolder, nameInfo.name))
             .replace(/VARIABLE_CLASS_NAME/g, nameInfo.className)
-            .replace(/VARIABLE_HTML_PREFIX/g, htmlPrefix ?? "")
-            .replace(/VARIABLE_HTML_NAME/g, `${htmlPrefix}-${nameInfo.name}`)
+            .replace(/VARIABLE_HTML_PREFIX/g, htmlprefix ?? "")
+            .replace(/VARIABLE_HTML_NAME/g, `${htmlprefix}-${nameInfo.name}`)
             .replace(/VARIABLE_USER/g, process.env.USER ?? "anonymous");
 
         return final;
     });
 
-    const localPackage = getJSON<LocalPackage>(path.join(destination, "package.json"));
+    const localPackage = JSON.parse(fs.readFileSync(path.join(destination, "package.json"), { encoding: "utf-8" })) as LocalPackage;
     if (!localPackage)
     {
         Terminal.error(`package.json not found at "${destination}"`);
@@ -230,14 +192,16 @@ export async function packageRunner(
         }
     }
 
+    PackageGraph.add(destination); // we need to append to graph so component-runner can run smooth 
+
     Terminal.createSession();
-    const shouldInstall = 'agree' in Arguments.args.flags || 'install' in Arguments.args.flags || await Terminal.confirm("install package", true);
+    const shouldInstall = Arguments.true('agree') || Arguments.true('install') || await Terminal.confirm("install package", true);
     if (shouldInstall)
     {
         try
         {
             const { close } = Terminal.loading("installing");
-            await execAsync('npm install');
+            await Terminal.execute('npm install', description);
             close();
             Terminal.clearSession();
         }
@@ -251,17 +215,17 @@ export async function packageRunner(
         Terminal.clearSession();
     }
 
-    const shouldCommit = 'agree' in Arguments.args.flags || 'commit' in Arguments.args.flags || await Terminal.confirm("git commit", true);
+    const shouldCommit = Arguments.true('agree') || Arguments.true('commit') || await Terminal.confirm("git commit", true);
 
-    await componentRunner(info, { destination, nameInfo, htmlPrefix, shouldCommit });
+    await componentRunner(createPackageLocation, { destination, nameInfo, htmlprefix, shouldCommit });
 
     if (shouldCommit)
     {
         try
         {
-            await execAsync(`git add ${lockfile_location}`);
-            await execAsync(`git add ${destination}`);
-            await execAsync(`git commit -m "add: ${fullName} package"`);
+            await Terminal.execute(`git add ${lockfile_location}`, destination);
+            await Terminal.execute(`git add ${destination}`, destination);
+            await Terminal.execute(`git commit -m "add: ${fullName} package"`, destination);
             Terminal.clearSession();
         }
         catch

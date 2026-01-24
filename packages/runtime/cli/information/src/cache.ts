@@ -14,7 +14,7 @@ export class Cache {
     private static _hasloaded = false;
     static setup(rootLocation: string) { this.location = rootLocation }
 
-    static get(name: string): Partial<Entry>|undefined {
+    static get(name: string): Partial<Entry> | undefined {
         if (!this._hasloaded)
         {
             this._hasloaded = true;
@@ -30,16 +30,17 @@ export class Cache {
 
         return this._cache.packages[name];
     }
-    static set(name: string, entry: Partial<Entry>) {
+    static set(name: string, entry: Partial<Entry>, withoutSave = false) {
         this._cache.packages[name] = {
             ...(this._cache.packages[name] ?? {}),
             ...entry
         };
 
+        if (withoutSave) return;
         this.save();
     }
 
-    private static save() {
+    static save() {
         if (!fs.existsSync(path.join(this.location, ".temp")))
         {
             fs.mkdirSync(path.join(this.location, ".temp"));

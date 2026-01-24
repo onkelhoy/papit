@@ -24,6 +24,8 @@
         "declaration": true,
         "incremental": true,
         "resolveJsonModule": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "baseUrl": "src",
         "paths": {
             "@papit/foundations-group": [
                 "./index"

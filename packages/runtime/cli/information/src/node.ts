@@ -8,15 +8,14 @@ import { LocalPackage, RootPackage } from "./types";
 import { getEntryPoints } from "./entrypoint";
 import { Cache } from "./cache";
 
-export class PackageNode {
-    parents: PackageNode[] = [];
-    children: PackageNode[] = [];
+export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
+    parents: PackageNode<LocalPackage>[] = [];
+    children: PackageNode<LocalPackage>[] = [];
 
     constructor(
-        private _packageJSON: LocalPackage | RootPackage,
+        private _packageJSON: T,
         private _type: "external" | "root" | "local",
         private _location: string,
-        // private _remote: string | null | undefined,
     ) { }
 
     get packageJSON() { return this._packageJSON }
@@ -41,7 +40,11 @@ export class PackageNode {
         if (!this._remote) this._remote = await Remote.get(this.name);
         return this._remote;
     }
-    get modifiedtime() {
+
+    set modifiedtime(value: number) {
+        Cache.set(this.name, { mtime: value });
+    }
+    get modifiedtime(): { current: number, previous: number | undefined } {
         let mtime = 0;
         const joined = path.join(this.location, this.sourceFolder);
         fs
@@ -65,7 +68,7 @@ export class PackageNode {
     get entrypoints() {
         if (!this._entrypoints)
         {
-            this._entrypoints = getEntryPoints(this)
+            this._entrypoints = getEntryPoints(this as PackageNode<LocalPackage>)
         }
 
         return this._entrypoints;

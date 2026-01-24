@@ -13,7 +13,7 @@ describe('LinkedList', () => {
         })
         it("should generate array", () => {
             const list = new LinkedList([1, 2, 3, 4]);
-            const arr = list.toArray();
+            const arr = Array.from(list);
 
             assert.deepStrictEqual(arr, [1, 2, 3, 4]);
         })
@@ -60,7 +60,7 @@ describe('LinkedList', () => {
         })
         it("should generate array", () => {
             const list = new LinkedList([1, 2, 3, 4]);
-            const arr = list.toArray();
+            const arr = Array.from(list);
 
             assert.deepStrictEqual(arr, [1, 2, 3, 4]);
         });
@@ -93,9 +93,9 @@ describe('LinkedList', () => {
         it("should be able to insert", () => {
             const list = new DoubleLinkedList([1, 2, 3, 4]);
             list.insert(3);
-            assert.deepStrictEqual(list.toArray(), [3, 1, 2, 3, 4], "first insert failed");
+            assert.deepStrictEqual(Array.from(list), [3, 1, 2, 3, 4], "first insert failed");
             list.insert(45, 4);
-            assert.deepStrictEqual(list.toArray(), [3, 1, 2, 3, 45, 4], "second insert failed");
+            assert.deepStrictEqual(Array.from(list), [3, 1, 2, 3, 45, 4], "second insert failed");
         })
     })
 });

@@ -9,7 +9,7 @@ describe('Queue', () => {
     })
     it("should generate array", () => {
         const queue = new Queue([1, 2, 3, 4]);
-        assert.deepStrictEqual(queue.toArray(), [1, 2, 3, 4]);
+        assert.deepStrictEqual(Array.from(queue), [1, 2, 3, 4]);
     })
     it("should peek", () => {
         const queue = new Queue([1, 2, 3, 4]);
@@ -30,3 +30,4 @@ describe('Queue', () => {
         assert.equal(queue.size, 3);
     })
 });
+

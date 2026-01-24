@@ -1,9 +1,10 @@
 import { PackageGraph } from "./graph";
 import { PackageNode } from "./node";
-import { Cache } from "./cache";
+import { Arguments } from "@papit/arguments";
+import { LocalPackage, RootPackage } from "./types";
 
 export class Information {
-    private static _package: PackageNode | undefined;
+    private static _package: PackageNode<LocalPackage | RootPackage> | undefined;
     private static _local: string | undefined;
     private static _scope: string | undefined;
 
@@ -17,7 +18,7 @@ export class Information {
     }
     static get root() { return PackageGraph.root }
 
-    static get package() {
+    static get package(): PackageNode<LocalPackage> {
         if (!this._package)
         {
             this._package = PackageGraph.nodes
@@ -26,11 +27,36 @@ export class Information {
                 .at(0)!;
         }
 
-        return this._package;
+        return this._package as PackageNode<LocalPackage>;
     }
 
     static get name() { return this.package.name }
     static get location() { return this.package.location }
     static get sourceFolder() { return this.package.sourceFolder }
     static get outFolder() { return this.package.outFolder }
+
+    static getBatches(args = Arguments.instance) {
+        if (!args.has("individual") && (args.has("all") || Information.package.name === Information.root.name))
+        {
+            return PackageGraph.getOrder(PackageGraph.nodes)
+        }
+
+        if (!args.has("individual") && args.has("bloodline"))
+        {
+            return PackageGraph.getOrder(Information.package.ancestors.concat(Information.package, ...Information.package.descendants));
+        }
+
+        if (!args.has("individual") && args.has("descendants"))
+        {
+            return PackageGraph.getOrder(Information.package.descendants.concat(Information.package));
+        }
+
+        if (!args.has("individual") && args.has("ancestors"))
+        {
+            return PackageGraph.getOrder(Information.package.ancestors.concat(Information.package));
+        }
+
+        // individual 
+        return [[Information.package]];
+    }
 }

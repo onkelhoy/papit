@@ -6,7 +6,7 @@ VARIABLE_DESCRIPTION
 
 ---
 
-![Type](https://img.shields.io/badge/Type-VARIABLE_LAYER_NAME-orange)
+![Type](https://img.shields.io/badge/Type-VARIABLE_LAYER_FOLDER-orange)
 [![Tests](VARIABLE_GITHUB_REPO/actions/workflows/pull-request.yml/badge.svg)](VARIABLE_GITHUB_REPO/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/VARIABLE_FULL_NAME.svg?logo=npm)](https://www.npmjs.com/package/VARIABLE_FULL_NAME)
 

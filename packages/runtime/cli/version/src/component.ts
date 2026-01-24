@@ -1,28 +1,26 @@
 // import statements 
-import path from "node:path";
-import { Arguments, getJSON, getPathInfo, LocalPackage, Terminal } from "@papit/util";
 import { pre } from "./components/pre";
 import { post } from "./components/post";
+import { Terminal } from "@papit/terminal";
+import { Arguments } from "@papit/arguments";
+import { Information } from "@papit/information";
 
 (async function () {
-  const location = Arguments.args.flags.location;
-  const originalinfo = getPathInfo(typeof location === "string" ? location : undefined);
+    const packageJSON = Information.package.packageJSON;
 
-  const packageJSON = getJSON<LocalPackage>(path.join(originalinfo.local, "package.json"));
-  if (!packageJSON)
-  {
-    Terminal.error("package.json missing");
-    throw new Error("package.json missing");
-  }
+    if (!packageJSON)
+    {
+        Terminal.error("package.json missing");
+        throw new Error("package.json missing");
+    }
 
-  if (Arguments.args.flags.pre || process.env.npm_lifecycle_event === "preversion")
-  {
-    pre(packageJSON, originalinfo);
-    return;
-  }
+    if (Arguments.has("pre") || process.env.npm_lifecycle_event === "preversion")
+    {
+        return pre();
+    }
 
-  if (Arguments.args.flags.post || process.env.npm_lifecycle_event === "postversion")
-  {
-    post(packageJSON, originalinfo);
-  }
+    if (Arguments.has("post") || process.env.npm_lifecycle_event === "postversion")
+    {
+        post(packageJSON);
+    }
 }());

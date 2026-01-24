@@ -54,6 +54,9 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/arguments": "^0.0.1",
+        "@papit/information": "^0.0.1",
+        "@papit/terminal": "^0.0.1",
         "@papit/util": "^0.0.1"
     },
     "devDependencies": {

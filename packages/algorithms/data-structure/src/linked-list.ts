@@ -3,13 +3,12 @@ class ListNode<T> {
     next: ListNode<T> | undefined;
 }
 
-interface ILinkedList<T, INode> {
+interface ILinkedList<T, INode> extends Iterable<T> {
     get size(): number;
     append(value: T): void;
     delete(value: T): void;
     insert(value: T, target?: T): void;
     find(value: T): INode | undefined;
-    toArray(): T[];
 }
 
 export class LinkedList<T> implements ILinkedList<T, ListNode<T>> {
@@ -23,6 +22,15 @@ export class LinkedList<T> implements ILinkedList<T, ListNode<T>> {
 
     constructor(arr: T[] = []) {
         arr.forEach(value => this.append(value));
+    }
+
+    *[Symbol.iterator](): Iterator<T, any, any> {
+        let target = this.front;
+        while (target)
+        {
+            yield target.value;
+            target = target.next;
+        }
     }
 
     private create(value: T) {
@@ -80,17 +88,6 @@ export class LinkedList<T> implements ILinkedList<T, ListNode<T>> {
         const parent = this.findPrev(value);
         if (parent) return parent.next;
     }
-    toArray() {
-        const arr: T[] = [];
-        let target = this.front;
-        while (target)
-        {
-            arr.push(target.value);
-            target = target.next;
-        }
-
-        return arr;
-    }
 }
 
 
@@ -112,6 +109,15 @@ export class DoubleLinkedList<T> implements ILinkedList<T, DoubleNode<T>> {
 
     constructor(arr: T[] = []) {
         arr.forEach(value => this.append(value));
+    }
+
+    *[Symbol.iterator](): Iterator<T, any, any> {
+        let target = this.front;
+        while (target)
+        {
+            yield target.value;
+            target = target.next;
+        }
     }
 
     private create(value: T): [DoubleNode<T>, boolean] {
@@ -177,16 +183,5 @@ export class DoubleLinkedList<T> implements ILinkedList<T, DoubleNode<T>> {
         if (node === this.front) this.front = node.next;
         if (node === this.rear) this.rear = node.prev;
         this._size--;
-    }
-    toArray() {
-        const arr: T[] = [];
-        let target = this.front;
-        while (target)
-        {
-            arr.push(target.value);
-            target = target.next;
-        }
-
-        return arr;
     }
 }

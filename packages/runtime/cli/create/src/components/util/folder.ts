@@ -1,6 +1,10 @@
-import { Terminal, RootPackage, getPathInfo, Arguments } from "@papit/util";
+// import { Terminal, RootPackage, getPathInfo, Arguments } from "@papit/util";
+import { Arguments } from "@papit/arguments";
+import { Information, PackageGraph } from "@papit/information";
+import { Terminal } from "@papit/terminal";
 import fs from "node:fs";
 import path from "node:path";
+
 
 export function getFolders(dir: string): string[] {
     return fs.readdirSync(dir).filter(name => fs.statSync(path.join(dir, name)).isDirectory());
@@ -8,32 +12,30 @@ export function getFolders(dir: string): string[] {
 
 function getLayerFolders(
     dir: string,
-    rootPackage: RootPackage,
-    info: ReturnType<typeof getPathInfo>
 ): string[] {
-    return fs.readdirSync(dir).filter(name => {
-        const joined = path.join(dir, name);
-        if (!fs.statSync(joined).isDirectory()) return false;
-        const replaced = path.relative(info.root, joined);
+    return fs
+        .readdirSync(dir)
+        .filter(name => {
+            const joined = path.join(dir, name);
+            if (!fs.statSync(joined).isDirectory()) return false;
+            const replaced = path.relative(Information.root.location, joined);
 
-        return !!rootPackage.papit.layers[replaced]
-    });
+            return true;
+            // return !!rootPackage.papit.layers[replaced]
+        });
 };
 
-export async function selectFolder(
-    info: ReturnType<typeof getPathInfo> & { scope: string; },
-    rootPackage: RootPackage,
-) {
+export async function selectFolder() {
     return Terminal.sessionBlock(async () => {
-        let target = path.join(info.root, "packages");
+        let target = path.join(Information.root.location, "packages");
         const original = target;
 
         while (target)
         {
             const session = Terminal.createSession();
-            const folders = getLayerFolders(target, rootPackage, info);
+            const folders = getLayerFolders(target);
 
-            Terminal.write("Current: ", target.replace(info.root, info.scope));
+            Terminal.write("Current: ", target.replace(Information.root.location, Information.scope));
             Terminal.write();
 
             const option = await Terminal.option([["Choose Folder", "Create Folder"], target === original ? folders : ["..", ...folders]]);
@@ -45,10 +47,9 @@ export async function selectFolder(
             if (option.index === 1)
             {
                 const answer = await Terminal.prompt("folder name", false, target);
-                const basename = path.basename(answer.input);
 
                 const url = path.join(target, answer.input);
-                const created = await createFolder(url, basename, info, rootPackage);
+                const created = await createFolder(url);
 
                 if (created)
                 {
@@ -73,45 +74,57 @@ export async function selectFolder(
 
 async function createFolder(
     url: string,
-    name: string,
-    info: ReturnType<typeof getPathInfo>,
-    rootPackage: RootPackage,
 ) {
     Terminal.createSession();
-    await createFolderConfig(url, name, info, rootPackage);
     Terminal.write(`[${url}]`);
-    const shouldCreate = Arguments.args.flags.agree || await Terminal.confirm("confirm folder creation", true);
+    const shouldCreate = Arguments.has("agree") || await Terminal.confirm("confirm folder creation", true);
 
     if (!shouldCreate) return false;
+
+    fs.mkdirSync(url, { recursive: true, });
 
     Terminal.clearSession();
 
     return true;
 }
 
-export async function createFolderConfig(
-    url: string,
-    name: string,
-    info: ReturnType<typeof getPathInfo>,
-    rootPackage: RootPackage,
-) {
-    return Terminal.sessionBlock(async () => {
-        const overrideName = await Terminal.prompt(`use "${name}" or override?`) || name;
-        Terminal.clearSession();
+/**
+ * Recursively copy a folder to a destination.
+ * Optionally, post-process files with a parser function.
+ *
+ * @param {string} src - Source folder path
+ * @param {string} dest - Destination folder path
+ * @param {(content: string, src: string, destination: string) => false | string | Promise<string|false>} [parser] - Optional function to transform file content, use false to filter out
+ */
+export async function copyFolder(src: string, dest: string, parser: (content: string, src: string, destination: string) => false | string | Promise<string | false>) {
+    // Ensure destination exists
+    fs.mkdirSync(dest, { recursive: true });
 
-        const prefixSuffix = ["false", "prefix", "suffix"];
-        const mode = await Terminal.option(prefixSuffix, `include "${overrideName.input}" in packages`);
+    const entries = fs.readdirSync(src, { withFileTypes: true });
 
-        if (!rootPackage.papit) rootPackage.papit = { layers: {} };
-        const localFolder = path.relative(info.root, url);
-        rootPackage.papit.layers[localFolder] = {
-            include: mode.text === "false" ? false : mode.text as "prefix" | "suffix",
-            name,
+    for (const entry of entries)
+    {
+        const srcPath = path.join(src, entry.name);
+        const destPath = path.join(dest, entry.name);
+
+        if (entry.isDirectory())
+        {
+            await copyFolder(srcPath, destPath, parser); // recursive copy
+            continue;
         }
 
+        // case file 
+        if (typeof parser !== "function")
+        {
+            fs.copyFileSync(srcPath, destPath);
+            continue;
+        }
 
-        // its create new mode 
-        fs.mkdirSync(url, { recursive: true, });
-        fs.writeFileSync(path.join(info.root, "package.json"), JSON.stringify(rootPackage, null, 2), { encoding: "utf-8" });
-    });
+        const content = fs.readFileSync(srcPath, "utf-8");
+        const parsed = await parser(content, srcPath, destPath);
+        if (parsed === false) continue;
+
+        fs.copyFileSync(srcPath, destPath);
+        fs.writeFileSync(destPath, parsed, "utf-8");
+    }
 }

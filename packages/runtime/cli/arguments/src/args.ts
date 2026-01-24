@@ -21,6 +21,7 @@ export class Args extends Loglevel {
         this.flags[key] = [...(this.flags[key] ?? []), ...this.convert(value)];
     }
     has(key: string) { return !!this.get(key) }
+    true(key: string) { return this.has(key) ? true : undefined }
     string(key: string) {
         const value = this.get(key);
         return value.at(0);
@@ -82,6 +83,7 @@ export class Arguments {
     static set(key: string, value: Input) { return this.instance.set(key, value) }
     static add(key: string, value: Input) { return this.instance.add(key, value) }
     static has(key: string) { return this.instance.has(key) }
+    static true(key: string) { return this.instance.true(key) }
     static string(key: string) { return this.instance.string(key) }
     static number(key: string) { return this.instance.number(key) }
 

@@ -93,7 +93,6 @@ The generated license file automatically references the same license as the work
 - `VARIABLE_FULL_NAME`
 - `VARIABLE_DESCRIPTION`
 - `VARIABLE_LAYER_FOLDER`
-- `VARIABLE_LAYER_NAME`
 - `VARIABLE_PROJECTLICENSE`
 - `VARIABLE_GITHUB_REPO`
 - `VARIABLE_LOCAL_DESTINATION`

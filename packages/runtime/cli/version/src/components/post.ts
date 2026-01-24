@@ -1,79 +1,97 @@
 import path from "node:path";
 import fs from "node:fs";
-import { Arguments, getDependencyBloodline, getJSON, getPathInfo, LocalPackage, Lockfile, Terminal } from "@papit/util";
+import { Arguments } from "@papit/arguments";
+import { Terminal } from "@papit/terminal";
+import { Information, LocalPackage, PackageNode, RootPackage } from "@papit/information";
+// import { Arguments, getDependencyBloodline, getJSON, getPathInfo, LocalPackage, Lockfile, Terminal } from "@papit/util";
 
-export async function post(packageJSON: LocalPackage, originalinfo: ReturnType<typeof getPathInfo>) {
+export async function post(packageJSON: LocalPackage | RootPackage) { // }, originalinfo: ReturnType<typeof getPathInfo>) {
 
-  Arguments.args.flags.remote = true;
-  Arguments.args.flags['include-root'] = true;
-  Arguments.args.flags['include-dev'] = true;
+    Arguments.set("remote", true);
+    Arguments.set('include-root', true);
+    Arguments.set('include-dev', true);
 
-  const updateDependencies = new Map<string, string>();
-  updateDependencies.set(packageJSON.name, packageJSON.version);
-  const lockfilepath = path.join(originalinfo.root, "temp-package-lock.json");
-  const lockfile = getJSON<Lockfile>(lockfilepath);
+    const updateDependencies = new Map<string, string>();
+    updateDependencies.set(packageJSON.name, packageJSON.version);
+    const lockfilepath = path.join(Information.root.location, "temp-package-lock.json");
+    //   const lockfile = getJSON<Lockfile>(lockfilepath);
+    const batches = Information.getBatches(Arguments.instance);
 
-  await getDependencyBloodline(
-    packageJSON.name,
-    async batch => {
-      for (const b of batch) 
-      {
-        if (originalinfo.local === b.location) continue;
-        const info = getPathInfo(b.location);
-        const packageJSON = getJSON<LocalPackage>(path.join(info.local, "package.json"));
-        if (!packageJSON)
-        {
-          Terminal.error(b.name ? `${b.name}'s package.json missing` : "package.json missing");
-          throw new Error("package.json missing");
-        }
+    for (const batch of batches)
+    {
+        await runBatch(batch, updateDependencies);
+    }
+    // await getDependencyBloodline(
+    //     packageJSON.name,
+    //     async batch => {
 
-        // we upgrade remote version if they dont match 
-        if (packageJSON.remoteVersion !== b.remoteversion && b.remoteversion !== undefined)
-        {
-          packageJSON.remoteVersion = b.remoteversion;
-        }
+    //     },
+    //     { info: originalinfo, type: "descendants", lockfile: lockfile ?? undefined }
+    // );
 
-        // we do a patch if we need 
-        if (!(b.changedversion || packageJSON.version !== packageJSON.remoteVersion))
-        {
-          const match = packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
-          if (match?.groups)
-          {
-            const { major, minor, patch, semver } = match.groups;
-            packageJSON.version = `${major}.${minor}.${Number(patch) + 1}${semver}`;
-          }
+    fs.renameSync(lockfilepath, path.join(Information.root.location, "package-lock.json"));
+}
 
-          if (Arguments.info)
-          {
-            Terminal.write(Terminal.green(packageJSON.name), "version patch");
-          }
-        }
 
-        for (const [name, version] of updateDependencies)
-        {
-          if (packageJSON.dependencies?.[name]) packageJSON.dependencies[name] = version;
-          if (packageJSON.devDependencies?.[name]) packageJSON.devDependencies[name] = version;
-          if (packageJSON.peerDependencies?.[name]) packageJSON.peerDependencies[name] = version;
-        }
+function runBatch(batch: PackageNode[], updateDependencies: Map<string, string>) {
 
-        updateDependencies.set(packageJSON.name, packageJSON.version);
+    const promises = batch.map(node => {
+        return new Promise<boolean>(async resolve => {
 
-        try 
-        {
-          fs.writeFileSync(path.join(info.local, "package.json"), JSON.stringify(packageJSON, null, 2), { encoding: "utf-8" });
-        }
-        catch (e)
-        {
-          Terminal.error(b.name, "version broke");
-          if (Arguments.error)
-          {
-            console.log(e);
-          }
-        }
-      }
-    },
-    { info: originalinfo, type: "descendants", lockfile: lockfile ?? undefined }
-  );
+            // we upgrade remote version if they dont match 
+            const remote = await node.remote();
+            let changed = false;
+            if (remote !== null && node.packageJSON.remoteVersion !== remote)
+            {
+                node.packageJSON.remoteVersion = remote;
+                changed = true;
+            }
 
-  fs.renameSync(lockfilepath, path.join(originalinfo.root, "package-lock.json"));
+            // we do a patch if we need 
+            if (!(changed || node.packageJSON.version !== node.packageJSON.remoteVersion))
+            {
+                const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
+                if (match?.groups)
+                {
+                    const { major, minor, patch, semver } = match.groups;
+                    node.packageJSON.version = `${major}.${minor}.${Number(patch) + 1}${semver}`;
+                }
+
+                if (Arguments.info)
+                {
+                    Terminal.write(Terminal.green(node.packageJSON.name), "version patch");
+                }
+            }
+
+            for (const [name, version] of updateDependencies)
+            {
+                if (node.packageJSON.dependencies?.[name]) node.packageJSON.dependencies[name] = version;
+                if (node.packageJSON.devDependencies?.[name]) node.packageJSON.devDependencies[name] = version;
+                if (node.packageJSON.peerDependencies?.[name]) node.packageJSON.peerDependencies[name] = version;
+            }
+
+            updateDependencies.set(node.packageJSON.name, node.packageJSON.version);
+
+            let isSuccess = true;
+            try 
+            {
+                fs.writeFileSync(path.join(Information.local, "package.json"), JSON.stringify(node.packageJSON, null, 2), { encoding: "utf-8" });
+            }
+            catch (e)
+            {
+                isSuccess = false;
+                Terminal.error(node.name, "version broke");
+                if (Arguments.error)
+                {
+                    console.log(e);
+                }
+            }
+            finally 
+            {
+                resolve(isSuccess)
+            }
+        });
+    });
+
+    return Promise.all(promises);
 }

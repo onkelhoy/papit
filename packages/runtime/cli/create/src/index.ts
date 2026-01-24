@@ -3,28 +3,27 @@
 import path from "node:path";
 import fs from "node:fs";
 
-import { Arguments, getJSON, getPathInfo, LocalPackage, Terminal, type option } from "@papit/util"
+import { Arguments } from "@papit/arguments";
+import { Information, LocalPackage, PackageGraph } from "@papit/information";
+import { Terminal, option } from "@papit/terminal";
+
 import { packageRunner } from "./components/runners/package";
 import { componentRunner } from "./components/runners/component";
 import { getFolders } from "./components/util";
 import { projectRunner } from "./components/runners/project";
 
 (async function () {
-    Arguments.islands = ["install", "commit", "agree"]
-    const info = getPathInfo(undefined, import.meta.url);
+    Arguments.init(process.argv, ["install", "commit", "agree"])
 
     if (Arguments.verbose)
     {
         process.env.verbose = "true";
     }
 
-    if (!info.script)
-    {
-        Terminal.error("could not find @papit/create");
-        process.exit(1);
-    }
+    const createPackageLocation = path.dirname(import.meta.dirname);
+    const CREATE_PACKAGE = JSON.parse(fs.readFileSync(path.join(createPackageLocation, "package.json"), { encoding: "utf-8" })) as LocalPackage;
 
-    const CREATE_PACKAGE = getJSON<LocalPackage>(path.join(info.script, "package.json"));
+    // const  = PackageGraph.get("@papit/create");
     if (!CREATE_PACKAGE)
     {
         Terminal.error("could not find @papit/create package.json");
@@ -44,7 +43,7 @@ import { projectRunner } from "./components/runners/project";
     Terminal.write();
 
     const localRunnerSet = new Set<string>();
-    const localRunnersLocation = path.join(info.root, "bin/runners");
+    const localRunnersLocation = path.join(Information.root.location, "bin/runners");
     const options = ["package", "component", "project", "showcase"];
     try
     {
@@ -65,7 +64,7 @@ import { projectRunner } from "./components/runners/project";
     let option: option | null = null;
     for (let i = 0; i < options.length; i++)
     {
-        if (Arguments.args.flags[options[i]]) 
+        if (Arguments.has(options[i])) 
         {
             option = { index: i, text: options[i] };
             break;
@@ -82,13 +81,13 @@ import { projectRunner } from "./components/runners/project";
     switch (option.index)
     {
         case 0:
-            await packageRunner(info);
+            await packageRunner(createPackageLocation);
             break;
         case 1:
-            await componentRunner(info);
+            await componentRunner(createPackageLocation);
             break;
         case 2:
-            await projectRunner(info);
+            await projectRunner(createPackageLocation);
             break;
         default: {
             if (!localRunnerSet.has(option.text))
@@ -105,7 +104,7 @@ import { projectRunner } from "./components/runners/project";
             }
 
             const { default: runner } = await import(runnerFile);
-            await runner(info, Arguments.args)
+            await runner();
             break;
         }
     }

@@ -8,8 +8,8 @@ type Entries = Record<string, EntryPoint>;
 
 export function getEntryPoints(node: PackageNode) {
     const entries: Entries = {};
-    const bin = new Set<string>();
-    const outputs = new Set<string>();
+    const bin = new Map<string, string>();
+    const outputs = new Map<string, string>();
 
     if (node.packageJSON.main) addString(entries, outputs, "bundle", node, node.packageJSON.main);
     if (node.packageJSON.types) add(entries, outputs, "bundle", node, { types: node.packageJSON.types });
@@ -49,7 +49,7 @@ export function getEntryPoints(node: PackageNode) {
 }
 
 // helper functions 
-function add(entries: Entries, outputs: Set<string>, key: string, node: PackageNode, entry: Partial<EntryPoint<string>>) {
+function add(entries: Entries, map: Map<string, string>, key: string, node: PackageNode, entry: Partial<EntryPoint<string>>) {
     if (!entries[key]) entries[key] = { import: undefined, types: undefined, require: undefined };
 
     for (const e in entry) 
@@ -58,28 +58,28 @@ function add(entries: Entries, outputs: Set<string>, key: string, node: PackageN
         if (!output) continue;
 
         const inputoutput = getOutputInput(output, node);
-        if (outputs.has(inputoutput.output)) continue;
+        if (map.has(inputoutput.output)) continue;
 
-        outputs.add(inputoutput.output);
+        map.set(inputoutput.output, key);
         entries[key][e as keyof EntryPoint] = inputoutput;
     }
 }
-function addString(entries: Entries, outputs: Set<string>, key: string, node: PackageNode, output: string) {
+function addString(entries: Entries, map: Map<string, string>, key: string, node: PackageNode, output: string) {
     const entry = node.packageJSON.type === "commonjs" ? "require" : "import";
-    add(entries, outputs, key, node, { [entry]: output });
+    add(entries, map, key, node, { [entry]: output });
 }
-function extract(entries: Entries, outputs: Set<string>, node: PackageNode, property: "bin" | "entryPoints") {
+function extract(entries: Entries, map: Map<string, string>, node: PackageNode, property: "bin" | "entryPoints") {
     if (!node.packageJSON[property]) return
 
     if (typeof node.packageJSON[property] === "string")
     {
-        addString(entries, outputs, "bundle", node, node.packageJSON[property])
+        addString(entries, map, "bundle", node, node.packageJSON[property])
         return;
     }
 
     for (const key in node.packageJSON[property])
     {
-        addString(entries, outputs, key, node, node.packageJSON[property][key])
+        addString(entries, map, key, node, node.packageJSON[property][key])
     }
 }
 function getOutputInput(output: string, node: PackageNode) {

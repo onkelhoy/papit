@@ -1,15 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
-import { LocalPackage, RootPackage } from "./types";
+import { LocalPackage, Package, RootPackage } from "./types";
 import { PackageNode } from "./node";
 import { Cache } from "./cache";
 
 export class Graph {
-    root!: PackageNode;
-    private _nodes = new Map<string, PackageNode>();
+    root!: PackageNode<RootPackage>;
+    private _nodes = new Map<string, PackageNode<LocalPackage>>();
 
     get nodes() { return Array.from(this._nodes.values()) }
-    get(name: string) { return this._nodes.get(name) }
+    get(name: string) { return this._nodes.get(name) as PackageNode<LocalPackage> }
+
+    private scope = "";
 
     constructor() {
         const location = process.cwd();
@@ -17,8 +19,9 @@ export class Graph {
         const leftovers = new Map<string, string[]>();
         const rootPATH = findWorkspaceRoot(location);
         const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
-        const scope = rootJSON.name.split("/").at(0);
-        this.root = this.createNode(scope, rootJSON, rootPATH, "root", leftovers);
+        this.scope = rootJSON.name.split("/").at(0);
+
+        this.root = this.add(rootPATH, "root", leftovers, rootJSON);
         Cache.setup(this.root.location);
 
         fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
@@ -29,13 +32,9 @@ export class Graph {
                 return true;
             })
             .forEach((localFilePath, index, array) => {
-                const location = path.join(rootPATH, "packages", localFilePath);
-                const packageJSON = JSON.parse(fs.readFileSync(location, { encoding: "utf-8" }));
-                const dirname = path.dirname(location);
-                this.createNode(
-                    scope,
-                    packageJSON,
-                    dirname,
+                const location = path.dirname(path.join(rootPATH, "packages", localFilePath));
+                this.add(
+                    location,
                     "local",
                     leftovers,
                 );
@@ -53,13 +52,12 @@ export class Graph {
         });
     }
 
-    private createNode(
-        scope: string,
-        packageJSON: LocalPackage | RootPackage,
-        location: string,
-        type: "external" | "root" | "local",
-        leftovers: Map<string, string[]>,
-    ) {
+    add(location: string): PackageNode;
+    add(location: string, type: "external" | "root" | "local", leftovers?: Map<string, string[]>): PackageNode;
+    add(location: string, type: "external" | "root" | "local", leftovers?: Map<string, string[]>, packageJSON?: Package): PackageNode;
+    add(location: string, type: "external" | "root" | "local" = "local", leftovers?: Map<string, string[]>, _packageJSON?: Package) {
+        const packageJSON = _packageJSON ?? JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
+
         if (!this._nodes.has(packageJSON.name))
         {
             const node = new PackageNode(
@@ -77,15 +75,15 @@ export class Graph {
         {
             for (const key in packageJSON[dependencyType])
             {
-                if (!key.startsWith(scope)) continue;
+                if (!key.startsWith(this.scope)) continue;
 
                 const existingNode = this._nodes.get(key); // ?? this.createNode(scope, );
                 if (existingNode)
                 {
                     node.parents.push(existingNode);
-                    existingNode.children.push(node);
+                    existingNode.children.push(node as PackageNode<LocalPackage>);
                 }
-                else 
+                else if (leftovers)
                 {
                     if (leftovers.has(key)) leftovers.get(key)?.push(node.name);
                     else leftovers.set(key, [node.name]);
@@ -96,7 +94,7 @@ export class Graph {
         return node;
     }
 
-    public getOrder(packages: PackageNode[]) {
+    public getOrder(packages: PackageNode<LocalPackage>[]) {
         const map = new Map<string, string[]>();
         const batches: PackageNode[][] = [];
 
@@ -137,10 +135,13 @@ export class PackageGraph {
     static get(name: string) {
         return this.instance.get(name);
     }
+    static add(location: string) {
+        return this.instance.add(location);
+    }
     static get root() { return this.instance.root }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
-    static getOrder(packages: PackageNode[]) { return this.instance.getOrder(packages) }
+    static getOrder(packages: PackageNode<LocalPackage>[]) { return this.instance.getOrder(packages) }
 }
 
 

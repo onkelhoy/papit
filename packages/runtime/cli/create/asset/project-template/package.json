@@ -34,28 +34,5 @@
         "esbuild": "^0.27.2",
         "typescript": "^5.9.3"
     },
-    "papit": {
-        "layers": {
-            "packages/atoms": {
-                "include": "false",
-                "name": "atom"
-            },
-            "packages/molecules": {
-                "include": "false",
-                "name": "molecule"
-            },
-            "packages/organisms": {
-                "include": "false",
-                "name": "organism"
-            },
-            "packages/pages": {
-                "include": "suffix",
-                "name": "page"
-            },
-            "packages/templates": {
-                "include": "suffix",
-                "name": "template"
-            }
-        }
-    }
+    "papit": {}
 }
