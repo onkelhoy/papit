@@ -1,6 +1,6 @@
 {
     "name": "@papit/build",
-    "description": "build tool for @papit packages",
+    "description": "",
     "keywords": [
         "papit",
         "node",
@@ -9,17 +9,18 @@
     ],
     "version": "0.0.1",
     "scripts": {
-        "prebuild": "node ./bin/build.cjs",
-        "build": "node .temp/bundle.js -- --run",
+        "prebuild": "node bin/prebuild.mjs",
+        "build": "npx @papit/build --run --error --ancestors",
         "watch": "tsc -w",
-        "start": "npm run build -- --run --dev && node ./lib/bundle.js",
+        "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
+        "test:only": "node --test --test-only tests/**/*.test.js",
         "preversion": "papit-version",
         "postversion": "papit-version",
         "component": "npm create @papit -- --component"
     },
     "main": "./lib/bundle.js",
-    "types": "./lib/types/index.d.ts",
+    "types": "./lib/bundle.d.ts",
     "type": "module",
     "files": [
         "asset/",
@@ -55,18 +56,18 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/arguments": "^0.0.1",
-        "@papit/information": "^0.0.1",
-        "@papit/terminal": "^0.0.1",
-        "@papit/util": "^0.0.1"
+        "@papit/arguments": "0.0.1",
+        "@papit/data-structure": "0.0.1",
+        "@papit/information": "0.0.1",
+        "@papit/terminal": "0.0.1"
     },
     "peerDependencies": {
-        "@microsoft/api-extractor": "^7.55.2",
-        "esbuild": "^0.27.2",
-        "typescript": "^5.9.3"
+        "@microsoft/api-extractor": "7.55.2",
+        "esbuild": "0.27.2",
+        "typescript": "5.9.3"
     },
     "devDependencies": {
-        "@types/node": "^22.10.2"
+        "@types/node": "22.10.2"
     },
     "browserslist": [
         "defaults",
@@ -74,13 +75,14 @@
         "not dead"
     ],
     "papit": {
-        "priority": 2,
         "publish": true,
         "type": "node",
-        "main": {
-            "name": "build",
-            "className": "Build"
-        },
-        "components": {}
+        "main": "build",
+        "components": {
+            "build": {
+                "className": "Build",
+                "htmlprefix": "pap"
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@
         "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
         "baseUrl": "src",
         "paths": {
-            "@papit/util-version": [
+            "@papit/version": [
                 "./index"
             ],
         }

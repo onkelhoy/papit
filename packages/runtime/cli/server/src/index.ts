@@ -1,43 +1,38 @@
 import path from "node:path";
 import fs from "node:fs";
-import { Arguments, DependencyBatch, getDependencyBloodline, getDependencyOrder, getJSON, getPathInfo, LocalPackage, Lockfile, Terminal } from "@papit/util"
+// import { Arguments, DependencyBatch, getDependencyBloodline, getDependencyOrder, getJSON, getPathInfo, LocalPackage, Lockfile, Terminal } from "@papit/util"
+import { Arguments } from "@papit/arguments";
+import { Terminal } from "@papit/terminal";
+import { Information } from "@papit/information";
 
 import { getAssetFolders, handleAsset, Translation } from "./components/asset";
 import { close as httpExit, start as httpStart } from "./components/http";
 import { Importmap } from "./components/importmap/types";
 import { extractImportmap } from "./components/importmap/import-map";
-import { getMeta } from "@papit/build";
+// import { getMeta } from "@papit/build";
 
 export * from "./components/http"
 
 export async function setup() {
-    const info = getPathInfo(
-        typeof Arguments.args.flags.location === "string" ? Arguments.args.flags.location : undefined,
-        import.meta.url
-    );
 
-    if (info.script == null)
+    const serverPackageLocation = Information.getNearestPackageLocation(import.meta.url);
+
+    if (serverPackageLocation == null)
     {
         Terminal.error("script location of @papit/server is missing");
         process.exit(1);
     }
 
-    const lockfile = getJSON<Lockfile>(path.join(info.package, "package-lock.json"));
-    if (info.root === info.local && !lockfile)
-    {
-        Terminal.error("could not find package-lock.json file, try running \"npm install\”")
-        process.exit(1);
-    }
-    let packageJSON = getJSON<LocalPackage>(path.join(info.package, "package.json"));
-    let meta: Awaited<ReturnType<typeof getMeta>>;
-    if (!packageJSON)
-    {
-        packageJSON = getJSON<LocalPackage>(path.join(info.root, "package.json"));
-    }
-    else 
-    {
-        meta = await getMeta(Arguments.has("prod") ? "prod" : "dev", info, packageJSON);
-    }
+    let packageJSON = Information.package.packageJSON;
+    // let meta: Awaited<ReturnType<typeof getMeta>>;
+    // if (!packageJSON)
+    // {
+    //     packageJSON = getJSON<LocalPackage>(path.join(Information.root.location, "package.json"));
+    // }
+    // else 
+    // {
+    //     meta = await getMeta(Arguments.has("prod") ? "prod" : "dev", info, packageJSON);
+    // }
 
     if (!packageJSON)
     {
@@ -52,8 +47,8 @@ export async function setup() {
     // we start by loading assets from dev-server (so we allow for overrides)
     for (const asset of assetFolders)
     {
-        const assetLocation = path.join(info.script, asset);
-        await handleAsset(info.script, assetLocation, translations, assets, assetFolders);
+        const assetLocation = path.join(serverPackageLocation, asset);
+        await handleAsset(serverPackageLocation, assetLocation, translations, assets, assetFolders);
     }
 
     const importmap: Importmap = {
@@ -63,12 +58,12 @@ export async function setup() {
     let importmapFolder: string | null = null;
     if (!Arguments.has("bundle")) 
     {
-        if (info.root === info.local)
-            importmapFolder = path.join(info.root, "node_modules");
+        if (Information.root.location === Information.package.location)
+            importmapFolder = path.join(Information.root.location, "node_modules");
         else
-            importmapFolder = path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies");
+            importmapFolder = path.join(Information.package.location, Arguments.string("import-map") ?? ".temp/dependencies");
     }
-    // !Arguments.has("bundle") ? path.join(info.local, Arguments.string("import-map") ?? ".temp/dependencies") : null;
+    // !Arguments.has("bundle") ? path.join(Information.package.location, Arguments.string("import-map") ?? ".temp/dependencies") : null;
     let createdImportMapFolder = false;
     if (importmapFolder && !fs.existsSync(importmapFolder))
     {
@@ -115,7 +110,7 @@ export async function setup() {
     const shutdown = () => {
         if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))
         {
-            fs.rmSync(path.join(info.local, ".temp"), { force: true, recursive: true });
+            fs.rmSync(path.join(Information.package.location, ".temp"), { force: true, recursive: true });
         }
         console.log(); // spacing for Ctrl+C
         httpExit();

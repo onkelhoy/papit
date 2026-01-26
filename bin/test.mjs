@@ -1,10 +1,13 @@
 import path from "node:path";
-import { Arguments, Terminal, getDependencyOrder, getPathInfo } from "@papit/util";
-import { setup, close } from "@papit/server";
+// import { Arguments, Terminal, getDependencyOrder, getPathInfo } from "@papit/util";
+import {Arguments} from "@papit/arguments";
+import {Terminal} from "@papit/terminal";
+import {Information} from "@papit/information";
+import {setup, close} from "@papit/server";
 
 function runner(b, info) {
     return new Promise(resolve => {
-        const { close, update } = Terminal.loading(
+        const {close, update} = Terminal.loading(
             `${Terminal.dim("testing")} ${b.name}`,
             80,
             frame => {
@@ -25,7 +28,7 @@ function runner(b, info) {
 
         child.on("close", code => {
             close();
-            resolve({ code, buffer });
+            resolve({code, buffer});
         });
     });
 }
@@ -43,7 +46,7 @@ function runner(b, info) {
     await getDependencyOrder(async batch => {
         for (const b of batch)
         {
-            const { code } = await runner(b, info);
+            const {code} = await runner(b, info);
 
             if (code === 0)
             {
@@ -63,7 +66,7 @@ function runner(b, info) {
     }
     for (const b of secondchance)
     {
-        const { code, buffer } = await runner(b, info);
+        const {code, buffer} = await runner(b, info);
 
         if (code === 0)
         {

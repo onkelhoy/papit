@@ -69,7 +69,10 @@ args: {
 }
 ```
 
-For more details on the structure and behavior of these arguments, see the `@papit/util` package.
+For more details on the structure and behavior of these arguments, see the 
+- `@papit/arguments` 
+- `@papit/information`
+package.
 
 ---
 

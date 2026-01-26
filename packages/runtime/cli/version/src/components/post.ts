@@ -3,7 +3,6 @@ import fs from "node:fs";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 import { Information, LocalPackage, PackageNode, RootPackage } from "@papit/information";
-// import { Arguments, getDependencyBloodline, getJSON, getPathInfo, LocalPackage, Lockfile, Terminal } from "@papit/util";
 
 export async function post(packageJSON: LocalPackage | RootPackage) { // }, originalinfo: ReturnType<typeof getPathInfo>) {
 
@@ -14,20 +13,12 @@ export async function post(packageJSON: LocalPackage | RootPackage) { // }, orig
     const updateDependencies = new Map<string, string>();
     updateDependencies.set(packageJSON.name, packageJSON.version);
     const lockfilepath = path.join(Information.root.location, "temp-package-lock.json");
-    //   const lockfile = getJSON<Lockfile>(lockfilepath);
     const batches = Information.getBatches(Arguments.instance);
 
     for (const batch of batches)
     {
         await runBatch(batch, updateDependencies);
     }
-    // await getDependencyBloodline(
-    //     packageJSON.name,
-    //     async batch => {
-
-    //     },
-    //     { info: originalinfo, type: "descendants", lockfile: lockfile ?? undefined }
-    // );
 
     fs.renameSync(lockfilepath, path.join(Information.root.location, "package-lock.json"));
 }

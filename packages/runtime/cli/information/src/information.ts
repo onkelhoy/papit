@@ -1,6 +1,11 @@
+import { fileURLToPath } from "node:url";
+import path from "node:path";
+import fs from "node:fs";
+
+import { Arguments } from "@papit/arguments";
+
 import { PackageGraph } from "./graph";
 import { PackageNode } from "./node";
-import { Arguments } from "@papit/arguments";
 import { LocalPackage, RootPackage } from "./types";
 
 export class Information {
@@ -30,6 +35,21 @@ export class Information {
         return this._package as PackageNode<LocalPackage>;
     }
 
+    static getNearestPackageLocation(location: string) {
+        const __filename = fileURLToPath(location);
+        let __dirname = __filename;
+
+        // get the parent folder of 'lib' if it ends with 'lib'
+        for (let i = 0; i < 5; i++)
+        {
+            __dirname = path.dirname(__dirname);
+            if (!fs.existsSync(path.join(__dirname, "package.json"))) continue;
+
+            return __dirname;
+        }
+
+        return null;
+    }
     static get name() { return this.package.name }
     static get location() { return this.package.location }
     static get sourceFolder() { return this.package.sourceFolder }

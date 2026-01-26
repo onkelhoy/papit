@@ -27,12 +27,11 @@
     ],
     "devDependencies": {
         "@papit/version": "0.0.1",
-        "@papit/util": "0.0.1",
         "@papit/build": "0.0.1",
         "@papit/create": "0.0.1",
-        "@microsoft/api-extractor": "^7.55.2",
-        "esbuild": "^0.27.2",
-        "typescript": "^5.9.3"
+        "@microsoft/api-extractor": "7.55.2",
+        "esbuild": "0.27.2",
+        "typescript": "5.9.3"
     },
     "papit": {}
 }

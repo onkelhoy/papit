@@ -28,7 +28,10 @@ export class Args extends Loglevel {
     }
     number(key: string) {
         const value = this.string(key);
-        return Number(value);
+        if (value === undefined) return undefined;
+        const num = Number(value);
+        if (Number.isNaN(num)) return undefined;
+        return num;
     }
 
     constructor(input: Input, islands: string[] = []) {

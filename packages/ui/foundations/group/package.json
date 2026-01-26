@@ -54,16 +54,16 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/web-component": "^*"
+        "@papit/web-component": "*"
     },
     "devDependencies": {
-        "@playwright/test": "^1.45.3",
-        "@papit/translator": "^*",
-        "@papit/card": "^*",
-        "@papit/codeblock": "^*",
-        "@papit/typography": "^*",
-        "typescript": "^5.9.3",
-        "playwright": "^1.45.3"
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "@papit/translator": "*",
+        "@papit/card": "*",
+        "@papit/codeblock": "*",
+        "@papit/typography": "*",
+        "typescript": "5.9.3"
     },
     "browserslist": [
         "defaults",

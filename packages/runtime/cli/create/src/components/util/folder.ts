@@ -1,4 +1,3 @@
-// import { Terminal, RootPackage, getPathInfo, Arguments } from "@papit/util";
 import { Arguments } from "@papit/arguments";
 import { Information, PackageGraph } from "@papit/information";
 import { Terminal } from "@papit/terminal";

@@ -2,12 +2,9 @@ import path from "node:path";
 import fs from "node:fs";
 import { execSync } from "node:child_process";
 
-import {
-    Terminal,
-    copyFolder,
-    getPathInfo,
-    Arguments,
-} from "@papit/util"
+import { Arguments } from "@papit/arguments";
+import { Information } from "@papit/information";
+import { Terminal } from "@papit/terminal";
 
 export async function projectRunner(createPackageLocation: string) {
     Terminal.write("Project Creation\n")

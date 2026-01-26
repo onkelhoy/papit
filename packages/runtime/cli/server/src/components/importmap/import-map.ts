@@ -1,6 +1,7 @@
 import path from "node:path";
 import fs from "node:fs";
-import { getLockfilePackagePath, getPackage, getPathInfo, LocalPackage, Lockfile } from "@papit/util";
+// import { getLockfilePackagePath, getPackage, getPathInfo, LocalPackage, Lockfile } from "@papit/util";
+import { Information } from "@papit/information";
 import { Importmap } from "./types";
 import { getMeta } from "@papit/build";
 

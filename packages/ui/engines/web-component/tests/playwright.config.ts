@@ -1,9 +1,10 @@
-import { Arguments, getPathInfo } from '@papit/util';
+import { Arguments } from '@papit/arguments';
+import { Information } from '@papit/information';
 import { defineConfig, devices } from '@playwright/test';
 import path from "node:path";
 
 const info = getPathInfo();
-const dirname = path.join(info.package, "tests");
+const dirname = path.join(Information.package.location, "tests");
 
 export default defineConfig({
     // Look for test files in the "tests" directory, relative to this configuration file.

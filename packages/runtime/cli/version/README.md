@@ -1,4 +1,4 @@
-# @papit/util-version
+# @papit/version
 
 monorepo version flood helper, making sure descendants get patched
 
@@ -8,14 +8,14 @@ monorepo version flood helper, making sure descendants get patched
 
 ![Type](https://img.shields.io/badge/Type-cli-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
-[![NPM version](https://img.shields.io/npm/v/@papit/utill-version.svg?logo=npm)](https://www.npmjs.com/package@papit/utilil-version)
+[![NPM version](https://img.shields.io/npm/v/@papit/version.svg?logo=npm)](https://www.npmjs.com/package@papit/version)
 
 ---
 
 ## installation
 
 ```bash
-npm install @papit/utill-version
+npm install @papit/version
 ```
 
 ## Contributing

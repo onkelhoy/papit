@@ -53,8 +53,8 @@
     },
     "dependencies": {},
     "devDependencies": {
-        "@types/node": "^22.10.2",
-        "typescript": "^5.9.3"
+        "@types/node": "22.10.2",
+        "typescript": "5.9.3"
     },
     "browserslist": [
         "defaults",

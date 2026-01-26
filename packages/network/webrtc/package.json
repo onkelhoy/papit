@@ -9,7 +9,7 @@
     ],
     "version": "0.0.1",
     "scripts": {
-        "build": "npx @papit/build -- --run --error --ancestors",
+        "build": "npx @papit/build -- --error --ancestors",
         "watch": "tsc -w",
         "start": "npx @papit/server",
         "test": "npx playwright test -c tests/playwright.config.ts",
@@ -53,12 +53,12 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/meta-json": "^0.0.1"
+        "@papit/meta-json": "0.0.1"
     },
     "devDependencies": {
-        "@playwright/test": "^1.45.3",
-        "playwright": "^1.45.3",
-        "typescript": "^5.9.3"
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3"
     },
     "browserslist": [
         "defaults",
