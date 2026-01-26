@@ -55,7 +55,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
 
                 mtime = Math.max(mtime!, stat.mtimeMs);
             });
-
+        
         const previous = Cache.get(this.name)?.mtime;
         Cache.set(this.name, { mtime });
         return {
@@ -87,19 +87,20 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
         return this._tsconfigpath;
     }
     get tsconfig() {
-        if (this._tsconfig) return this._tsconfig;
-
-        const configFile = ts.readConfigFile(this.tsconfigpath, ts.sys.readFile);
-        if (configFile.error)
+        if (!this._tsconfig) 
         {
-            throw new Error(`Error reading tsconfig: ${configFile.error.messageText}`);
+            const configFile = ts.readConfigFile(this.tsconfigpath, ts.sys.readFile);
+            if (configFile.error)
+            {
+                throw new Error(`Error reading tsconfig: ${configFile.error.messageText}`);
+            }
+    
+            this._tsconfig = ts.parseJsonConfigFileContent(
+                configFile.config,
+                ts.sys,
+                path.dirname(this.tsconfigpath)
+            );
         }
-
-        this._tsconfig = ts.parseJsonConfigFileContent(
-            configFile.config,
-            ts.sys,
-            path.dirname(this.tsconfigpath)
-        );
 
         return this._tsconfig;
     }

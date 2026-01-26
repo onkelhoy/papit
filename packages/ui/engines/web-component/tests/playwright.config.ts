@@ -1,10 +1,10 @@
 import { Arguments } from '@papit/arguments';
-import { Information } from '@papit/information';
+import { PackageGraph } from '@papit/information';
 import { defineConfig, devices } from '@playwright/test';
 import path from "node:path";
 
-const info = getPathInfo();
-const dirname = path.join(Information.package.location, "tests");
+const dirname = path.join(PackageGraph.get("@papit/web-component").location, "tests");
+// const relative = path.relative(Information.root.location, PackageGraph.get("@papit/web-component").location);
 
 export default defineConfig({
     // Look for test files in the "tests" directory, relative to this configuration file.

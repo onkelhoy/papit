@@ -1,29 +1,25 @@
 import path from "node:path";
 import fs from "node:fs";
-import { execSync } from "node:child_process";
 
 import { Arguments } from "@papit/arguments";
-import { Information } from "@papit/information";
 import { Terminal } from "@papit/terminal";
+import { copyFolder } from "../util";
 
 export async function projectRunner(createPackageLocation: string) {
     Terminal.write("Project Creation\n")
     Terminal.createSession();
     let linebetween = false;
-    let name: string;
-    if (typeof Arguments.args.flags.name === "string")
-        name = Arguments.args.flags.name;
-    else 
-    {
+    let name = Arguments.string("name");
+
+    if (name === undefined) {
         const answer = await Terminal.prompt("name", true);
         name = answer.input;
         linebetween = true;
     }
 
-    let location: string;
-    if (typeof Arguments.args.flags.location === "string")
-        location = Arguments.args.flags.location;
-    else 
+    let location = Arguments.string("location");
+
+    if (location === undefined)
     {
         if (linebetween) Terminal.write();
         const answer = await Terminal.prompt("location");
@@ -58,10 +54,8 @@ export async function projectRunner(createPackageLocation: string) {
 
     fs.mkdirSync(location, { recursive: true });
 
-    let description: string;
-    if (typeof Arguments.args.flags.description === "string")
-        description = Arguments.args.flags.description;
-    else 
+    let description = Arguments.string("description");
+    if (description === undefined)
     {
         if (linebetween) Terminal.write();
         const ans = await Terminal.prompt("description");
@@ -69,10 +63,8 @@ export async function projectRunner(createPackageLocation: string) {
         linebetween = true;
     }
 
-    let license: string;
-    if (typeof Arguments.args.flags.license === "string")
-        license = Arguments.args.flags.license;
-    else 
+    let license = Arguments.string("license");
+    if (license === undefined)
     {
         if (linebetween) Terminal.write();
         const ans = await Terminal.prompt("license (default MIT)");
@@ -80,12 +72,10 @@ export async function projectRunner(createPackageLocation: string) {
         linebetween = true;
     }
 
-    let licensefilelocation: string;
     if (license)
     {
-        if (typeof Arguments.args.flags.licensefilelocation === "string")
-            licensefilelocation = Arguments.args.flags.licensefilelocation;
-        else 
+        let licensefilelocation = Arguments.string("license-file-location");
+        if (licensefilelocation === undefined)
         {
             if (linebetween) Terminal.write();
             const ans = await Terminal.prompt("license file location");
@@ -104,9 +94,8 @@ export async function projectRunner(createPackageLocation: string) {
     const initgit = Arguments.has("git") || await Terminal.confirm("init with git?");
     if (initgit)
     {
-        await execSync("git init", { cwd: location });
+        await Terminal.execute("git init", { cwd: location });
     }
-
 
     // Copy package template
     await copyFolder(path.join(createPackageLocation, "asset/project-template"), location, async (file, src) => {
@@ -123,7 +112,7 @@ export async function projectRunner(createPackageLocation: string) {
 
     if (initgit)
     {
-        await execSync("git add .", { cwd: location });
-        await execSync(`git commit -m "init: ${name} initialized"`, { cwd: location });
+        await Terminal.execute("git add .", { cwd: location });
+        await Terminal.execute(`git commit -m "init: ${name} initialized"`, { cwd: location });
     }
 }

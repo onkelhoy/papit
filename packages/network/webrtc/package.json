@@ -53,6 +53,7 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/information": "^0.0.1",
         "@papit/meta-json": "0.0.1"
     },
     "devDependencies": {

@@ -125,7 +125,7 @@ export async function componentRunner(
     {
         Terminal.clearSession();
 
-        let input: string | undefined = Arguments.string("name");
+        let input = Arguments.string("name");
         if (!input) 
         {
             const ans = await Terminal.prompt("(component) name", true);

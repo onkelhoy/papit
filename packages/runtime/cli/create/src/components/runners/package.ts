@@ -116,7 +116,7 @@ export async function packageRunner(
     while (fullName === undefined || nameInfo === undefined)
     {
         Terminal.clearSession();
-        let input: string | undefined = Arguments.string("name");
+        let input = Arguments.string("name");
         if (!input) 
         {
             const ans = await Terminal.prompt("(package) name", true);

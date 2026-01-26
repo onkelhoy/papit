@@ -10,7 +10,7 @@
     "version": "0.0.1",
     "scripts": {
         "prebuild": "node bin/prebuild.mjs",
-        "build": "npx @papit/build --run --error --ancestors",
+        "build": "npx @papit/build --error --ancestors",
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
@@ -66,6 +66,7 @@
         "publish": true,
         "type": "node",
         "main": "arguments",
+        "priority": 1,
         "components": {
             "arguments": {
                 "className": "Arguments",

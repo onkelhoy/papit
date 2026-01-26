@@ -9,7 +9,7 @@
     ],
     "version": "0.0.1",
     "scripts": {
-        "build": "npx @papit/build --run --error --ancestors",
+        "build": "npx @papit/build --error --ancestors",
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
@@ -65,6 +65,7 @@
         "publish": true,
         "type": "node",
         "main": "deep-merge",
+        "priority": 1,
         "components": {
             "deep-merge": {
                 "className": "DeepMerge",

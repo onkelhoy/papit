@@ -42,6 +42,7 @@ export async function build(args = process.argv, islands?: string[]) {
         for (const node of batch)
         {
             if (node.packageJSON.papit.priority === undefined) continue;
+            if (Information.package.name === node.name) continue; 
             prioQueue.enqueue(node, node.packageJSON.papit.priority);
         }
     }
@@ -50,43 +51,57 @@ export async function build(args = process.argv, islands?: string[]) {
 
     if (prioQueue.size > 0)
     {
+        Terminal.write(Terminal.yellow("priority*"))
+
+        let shouldinstall = false;
         for (const node of prioQueue) 
         {
-            runner(node, failed, _args, canprint);
+            const install = await runner(node, failed, _args, canprint);
+            if (install) shouldinstall = true;
         }
+        if (shouldinstall) await npmInstall(_args, canprint)
+        console.log();
     }
 
+    const prioArray = Array.from(prioQueue);
     for (const batch of batches)
     {
-        const shouldinstall = await runBatch(batch, failed, _args, canprint);
-        if (shouldinstall.some(Boolean))
+        let shouldinstall = false;
+        for (const node of batch) 
         {
-            await npmInstall(_args, canprint)
+            if (prioArray.some(v => v.name === node.name)) continue;
+            const install = await runner(node, failed, _args, canprint);
+            if (install) shouldinstall = true;
         }
+        // const shouldinstall = await runBatch(batch, failed, _args, canprint);
+        if (shouldinstall) await npmInstall(_args, canprint);
     }
 };
 
 async function runner(node: PackageNode, failed: Set<string>, args: Args, canprint: boolean): Promise<boolean> {
     // we store terminal functions for the loading
     let close: () => void = () => null;
-    let update: (text: string) => void = () => null;
+    let update = (text:string) => Terminal.write(text);
     let shouldinstall = false;
 
     let status: "tsc" | "js" | "ts" = "tsc";
     const tempOutDir = path.join(node.location, ".temp/build");
-    let previousModifiedtime: number | undefined;
-    try 
+    // let previousModifiedtime: number | undefined;
+    try
     {
         if (!args.has("force"))
         {
-            const { current, previous } = Information.package.modifiedtime;
-            previousModifiedtime = previous;
+            const { current, previous } = node.modifiedtime;
+            // previousModifiedtime = previous;  
             if (current === previous)
             {
                 if (canprint) Terminal.write(Terminal.blue("●"), Terminal.dim(node.name), Terminal.blue("skipped"));
                 return true;
             }
         }
+
+        // lets clear the output folder
+        fs.rmSync(path.join(node.location, node.outFolder), { recursive: true, force: true });
 
         if (canprint)
         {
@@ -159,6 +174,7 @@ async function runner(node: PackageNode, failed: Set<string>, args: Args, canpri
         if (canprint) 
         {
             close();
+
             Terminal.write(Terminal.red("●"), Terminal.dim(node.name), Terminal.red("failed"));
             if (args.error) 
             {
@@ -167,8 +183,7 @@ async function runner(node: PackageNode, failed: Set<string>, args: Args, canpri
             }
         }
 
-        // if (previousModifiedtime !== undefined) node.modifiedtime = previousModifiedtime; // after a long session i realise actually - 
-        // why should we rebuild a failured build 
+        // if (previousModifiedtime !== undefined) node.modifiedtime = previousModifiedtime; // after a long session i realise actually - why should we rebuild a failured build 
         failed.add(node.name);
     }
     finally 

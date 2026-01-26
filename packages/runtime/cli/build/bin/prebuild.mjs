@@ -1,6 +1,6 @@
 import esbuild from "esbuild";
 import fs from "node:fs";
-import {spawn} from "node:child_process";
+import { spawn } from "node:child_process";
 
 import packageJSON from '../package.json' with {type: 'json'};
 
@@ -10,7 +10,7 @@ function spawnCommand(command, args, cwd) {
             cwd,
             stdio: "inherit",
             shell: false,
-            env: {...process.env},
+            env: { ...process.env },
         });
 
         child.on("close", code => {
@@ -30,14 +30,14 @@ const externals = [...Object.keys(packageJSON.dependencies || {}), ...Object.key
 
     if (fs.existsSync(".temp") && fs.existsSync("lib")) 
     {
-        console.log("skipped", packageJSON.name);
+        console.log("prebuild skipped", packageJSON.name);
         return;
     }
 
-    fs.rmSync("lib", {recursive: true, force: true});
-    fs.rmSync(".temp", {recursive: true, force: true});
+    fs.rmSync("lib", { recursive: true, force: true });
+    fs.rmSync(".temp", { recursive: true, force: true });
     await spawnCommand("tsc", ["--emitDeclarationOnly", "--declarationDir", "lib"], process.cwd());
-    fs.writeFileSync("lib/bundle.d.ts", "export * from './src';", {encoding: "utf-8"});
+    fs.writeFileSync("lib/bundle.d.ts", "export * from './src';", { encoding: "utf-8" });
 
     const esbuildInfo = await esbuild.build({
         entryPoints: ["src/index.ts"],

@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {spawnCommand} from "./spawn-command.mjs";
+import { spawnCommand } from "./spawn-command.mjs";
 
 const root = process.cwd();
 
@@ -9,6 +9,7 @@ if (fs.existsSync(path.join(root, "node_modules/.bin/papit-build")))
 
 (async function () {
     await spawnCommand("npm run prebuild", path.join(root, "packages/algorithms/data-structure"));
+    await spawnCommand("npm run prebuild", path.join(root, "packages/algorithms/deep-merge"));
     await spawnCommand("npm run prebuild", path.join(root, "packages/runtime/cli/arguments"));
     await spawnCommand("npm run prebuild", path.join(root, "packages/runtime/cli/terminal"));
     await spawnCommand("npm run prebuild", path.join(root, "packages/runtime/cli/information"));

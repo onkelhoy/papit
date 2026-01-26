@@ -69,6 +69,7 @@
         "publish": true,
         "type": "node",
         "main": "information",
+        "priority": 2,
         "components": {
             "information": {
                 "className": "Information",

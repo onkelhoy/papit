@@ -66,6 +66,7 @@
         "publish": true,
         "type": "node",
         "main": "data-structure",
+        "priority": 1,
         "components": {
             "data-structure": {
                 "className": "DataModels",
