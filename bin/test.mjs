@@ -91,4 +91,5 @@ function runner(node) {
     }
 
     close();
+    process.exit(0);
 }());
