@@ -2,7 +2,7 @@
 import esbuild, { BuildOptions } from "esbuild";
 import { PackageNode } from "@papit/information";
 
-import { ChildProcessWithoutNullStreams } from "node:child_process";
+import { ChildProcess } from "node:child_process";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 
@@ -104,7 +104,7 @@ async function watch(
             name: "rebuild",
             setup(build) {
 
-                const childprocesses: Array<{ session: number, process: ChildProcessWithoutNullStreams }> = [];
+                const childprocesses: Array<{ session: number, process: ChildProcess }> = [];
                 build.onStart(async () => {
                     while (childprocesses.length > 0)
                     {
