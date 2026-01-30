@@ -51,6 +51,8 @@ jobs:
         run: npx playwright install --with-deps
 
       - name: Run tests
+        env: 
+          CI: true
         run: npm test -- --ci --remote
 
       - name: Upload Playwright artifacts
