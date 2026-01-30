@@ -1,12 +1,12 @@
 import path from "node:path";
-import {Arguments} from "@papit/arguments";
-import {Information} from "@papit/information";
-import {Terminal} from "@papit/terminal";
-import {setup, close} from "@papit/server";
+import { Arguments } from "@papit/arguments";
+import { Information } from "@papit/information";
+import { Terminal } from "@papit/terminal";
+import { setup, close } from "@papit/server";
 
 function runner(node) {
     return new Promise(async resolve => {
-        const {close, update} = Terminal.loading(
+        const { close, update } = Terminal.loading(
             `${Terminal.dim("testing")} ${node.name}`,
             80,
             frame => {
@@ -27,7 +27,7 @@ function runner(node) {
 
         child.on("close", code => {
             close();
-            resolve({code, buffer});
+            resolve({ code, buffer });
         });
     });
 }
@@ -46,7 +46,7 @@ function runner(node) {
     {
         for (const node of batch)
         {
-            if (Arguments.has("ci"))
+            if (Arguments.has("ci") || process.env.CI)
             {
                 const remote = await node.remote();
                 if (node.version === remote && remote)
@@ -56,7 +56,7 @@ function runner(node) {
                 }
             }
 
-            const {code} = await runner(node);
+            const { code } = await runner(node);
 
             if (code === 0)
             {
@@ -76,15 +76,15 @@ function runner(node) {
     }
     for (const node of secondchance)
     {
-        const {code, buffer} = await runner(node);
+        const { code, buffer } = await runner(node);
 
         if (code === 0)
         {
-            Terminal.write(Terminal.yellow("✅"), node.name, Terminal.green("passed"));
+            Terminal.write(Terminal.green("●"), node.name, Terminal.green("passed"));
         }
         else 
         {
-            Terminal.write(Terminal.yellow("❌"), node.name, Terminal.red("failed"));
+            Terminal.write(Terminal.red("●"), node.name, Terminal.red("failed"));
             Terminal.write(buffer)
             process.exit(1);
         }
