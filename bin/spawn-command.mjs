@@ -12,12 +12,18 @@ export function spawnCommand(command, cwd, args = []) {
             env: { ...process.env },
         });
 
-        child.stdout.on("data", data => {
-            // process.stdout.write(data);
-        });
-        child.stderr.on("data", data => {
-            process.stderr.write(data);
-        });
+        if (child.stdout) 
+        {
+            child.stdout.on("data", data => {
+                // process.stdout.write(data);
+            });
+        }
+        if (child.stderr)
+        {
+            child.stderr.on("data", data => {
+                process.stderr.write(data);
+            });
+        }
 
         child.on("close", code => {
             if (code === 0) resolve();
