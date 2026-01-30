@@ -66,6 +66,7 @@ export type LocalPackage = BasePackage & {
         priority?: number;
         publish: boolean;
         type: string;
+        skip?: boolean,
         /**
          * Main (default) component.
          * Must match a key in `components`.

@@ -67,6 +67,7 @@
         "not dead"
     ],
     "papit": {
+        "skip": true,
         "publish": true,
         "type": "node",
         "main": "signal-server",

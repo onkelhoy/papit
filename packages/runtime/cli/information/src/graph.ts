@@ -63,6 +63,8 @@ export class Graph {
     add(location: string, type: "external" | "root" | "local" = "local", leftovers?: Map<string, string[]>, _packageJSON?: Package) {
         const packageJSON = _packageJSON ?? JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
 
+        if (packageJSON.papit?.skip) return;
+
         if (!this._nodes.has(packageJSON.name))
         {
             const node = new PackageNode(
