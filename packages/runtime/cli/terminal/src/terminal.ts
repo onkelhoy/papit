@@ -27,6 +27,15 @@ export class Terminal extends Colors {
     static session: number | null = null;
 
     static loading(text = "Loading", duration = 80, callback?: (frame: number) => void) {
+
+        if (!process.stdout.isTTY)
+        {
+            return {
+                close: () => null,
+                update: () => null,
+            }
+        }
+
         let frame = 0;
         let active = true;
         let interval: NodeJS.Timeout | undefined;
