@@ -233,21 +233,27 @@ export class Terminal extends Colors {
 
         const child = spawn(cmd, _args.concat(options.args ?? []), {
             cwd: options.cwd,
-            stdio: "pipe",
+            stdio: process.env.CI ? "inherit" : "pipe",
             shell: false,
             env: { ...process.env },
         });
 
-        child.stdout.on("data", chunk => {
-            const text = chunk.toString("utf8");
-            stdout += text;
-            options.onData?.(text);
-        });
+        if (child.stdout)
+        {
+            child.stdout.on("data", chunk => {
+                const text = chunk.toString("utf8");
+                stdout += text;
+                options.onData?.(text);
+            });
+        }
 
-        child.stderr.on("data", chunk => {
-            const text = chunk.toString("utf8");
-            stderr += text;
-        });
+        if (child.stderr)
+        {
+            child.stderr.on("data", chunk => {
+                const text = chunk.toString("utf8");
+                stderr += text;
+            });
+        }
 
         child.on("error", error => options.onError?.(error, stdout, stderr));
         child.on("close", code => options.onClose?.(code, stdout, stderr));
