@@ -5,7 +5,7 @@ import { ServerResponse } from "node:http";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 
-import { Translation, Translations } from "./types";
+import type { Translation, Translations } from "./types";
 import { deepMerge } from "./util";
 import { NotFoundError } from "../errors";
 import { getFILE } from "../file/get";

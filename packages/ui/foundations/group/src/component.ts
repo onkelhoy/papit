@@ -4,7 +4,7 @@ import { CustomElement, html, property } from "@papit/web-component";
 
 // local 
 import sheet from "./style.css" assert { type: "css" };
-import { ClickEvent } from "./types";
+import { type ClickEvent } from "./types";
 
 console.log('what the hell is sheet?, weird-- ok BAJS åsna FK', sheet)
 

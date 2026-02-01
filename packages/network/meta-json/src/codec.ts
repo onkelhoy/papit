@@ -1,4 +1,4 @@
-import { BufferSource, MessageType } from "./types";
+import type { BufferSource, MessageType } from "./types";
 
 export class Codec {
     private static encoder = new TextEncoder();

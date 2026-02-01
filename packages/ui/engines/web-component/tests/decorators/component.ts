@@ -76,6 +76,7 @@ class Component extends CustomElement {
 
     render() {
         return html`
+            GREAT:
             <span>${this.counter}</span>
             <button @click="${this.handleInc}">inc</button>
             <button @click="${this.handleA}" id="a">A</button>

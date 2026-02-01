@@ -10,7 +10,7 @@ import { Terminal } from "@papit/terminal";
 import { PackageNode } from "@papit/information";
 
 export function createExplorer(
-    node: PackageNode,
+    node: InstanceType<typeof PackageNode>,
   FFs: string[],
   url: ReturnType<typeof getURL>,
   devServerScript: string,

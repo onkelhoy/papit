@@ -1,4 +1,4 @@
-import { Resolvable } from "../../functions/resolve";
+import type { Resolvable } from "functions/resolve";
 
 export type Setting<T = any> = {
   /**

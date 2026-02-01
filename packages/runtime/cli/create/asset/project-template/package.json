@@ -26,9 +26,10 @@
         "!packages/**/asset/**"
     ],
     "devDependencies": {
-        "@microsoft/api-extractor": "7.55.2",
         "esbuild": "0.27.2",
         "typescript": "5.9.3",
+        "@papit/bundle-ts": "0.0.1",
+        "@papit/bundle-js": "0.0.1",
         "@papit/arguments": "0.0.1",
         "@papit/terminal": "0.0.1",
         "@papit/information": "0.0.1",

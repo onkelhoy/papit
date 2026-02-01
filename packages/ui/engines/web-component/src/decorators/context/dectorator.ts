@@ -1,8 +1,8 @@
 // TODO: im still behinvg like old solution - no test nothing done here 
 
-import { stringifyValue } from "../../functions/value";
-import { nextParent } from "../../functions/next-parent";
-import { Setting } from "./types";
+import { stringifyValue } from "functions/value";
+import { nextParent } from "functions/next-parent";
+import type { Setting } from "./types";
 
 
 // import { parseValue, sameValue, stringifyValue } from "../../functions/value";

@@ -1,4 +1,4 @@
-import { Value } from "./types";
+import type { Value } from "./types";
 
 export function toArray(a: Value, ...rest: number[]): Float32Array | number[] {
     if (Array.isArray(a) || a instanceof Float32Array)

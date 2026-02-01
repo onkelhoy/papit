@@ -1,7 +1,7 @@
 // import statements 
 import { spawn } from "node:child_process";
 
-import { SpawnOptions } from "./types";
+import type { SpawnOptions } from "./types";
 import { prompt } from "./methods/prompt";
 import { option } from "./methods/option";
 import { Colors } from "./color";
@@ -81,12 +81,20 @@ export class Terminal extends Colors {
         this.printLine(this.getString(" ", values));
     }
 
+    static success(...values: any[]) {
+        this.semantic(this.green("● success "), values);
+    }
+
+    static info(...values: any[]) {
+        this.semantic(this.blue("● info "), values);
+    }
+
     static warn(...values: any[]) {
-        this.semantic(`🟡 ${process.stdout.isTTY ? this.yellow("warn ") : ""}`, values);
+        this.semantic(this.yellow("● warn "), values);
     }
 
     static error(...values: any[]) {
-        this.semantic(`🔴 ${process.stdout.isTTY ? this.red("error ") : ""}`, values);
+        this.semantic(this.red("● error "), values);
     }
 
     private static semantic(prefix: string, values: any[]) {

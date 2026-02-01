@@ -1,4 +1,4 @@
-import { PartDescriptor } from "./types";
+import type { PartDescriptor } from "./types";
 
 /**
  * @fileoverview Extracts "part descriptors" from a DOM element tree.

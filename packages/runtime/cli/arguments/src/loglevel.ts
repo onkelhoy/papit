@@ -4,14 +4,15 @@ export type Level = "verbose" | "debug" | "info" | "error" | "warning" | "silent
 export class Loglevel {
     level: Level = "silent";
 
-    init(args: Args) 
-    {
+    init(args: Args) {
         if (args.has("debug")) this.level = "debug";
         if (args.has("verbose")) this.level = "verbose";
         if (args.has("info")) this.level = "info";
         if (args.has("warning")) this.level = "warning";
         if (args.has("error")) this.level = "error";
         if (args.has("silent")) this.level = "silent";
+
+        if (this.level && this.level !== "silent") console.log("log-level: " + this.level);
     }
 
     get silent() {

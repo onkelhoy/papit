@@ -1,11 +1,9 @@
+import { type PackageJson } from "@papit/bundle-js";
 
-type BasePackage = {
+type BasePackage = PackageJson & {
     name: string;
     version: string;
     remoteVersion?: string;
-    dependencies: Record<string, string>;
-    devDependencies: Record<string, string>;
-    peerDependencies?: Record<string, string>;
     license?: string;
     repository?: {
         type: "git" | (string & {});
@@ -15,12 +13,6 @@ type BasePackage = {
     private?: boolean;
     workspaces?: string[];
     scripts?: Record<string, string>;
-    bin?: Record<string, string>;
-    main?: string;
-    types?: string;
-    type: "module" | "commonjs";
-    entryPoints?: string | Record<string, string>;
-    exports?: string | Partial<Record<"." | (string & {}), string | Partial<Record<"import" | "types" | "require" | (string & {}), string>>>>;
 }
 
 export type RootPackage = BasePackage & {

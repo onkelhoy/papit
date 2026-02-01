@@ -4,7 +4,6 @@ export * from "./node";
 export * from "./information";
 export * from "./remote";
 export * from "./types";
-export * from "./entrypoint";
 
 // PackageGraph.nodes.forEach(n => console.log(n.name, n.location))
 

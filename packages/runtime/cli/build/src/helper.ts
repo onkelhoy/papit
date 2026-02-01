@@ -1,6 +1,6 @@
 import { Information } from "@papit/information";
 import { Args } from "@papit/arguments";
-import { LoadingClose, Terminal } from "@papit/terminal";
+import { type LoadingClose, Terminal } from "@papit/terminal";
 
 export async function npmInstall(args: Args, canPrint: boolean) {
 

@@ -1,4 +1,4 @@
-import { Data, Value, MatrixObject } from "./types";
+import type { Data, Value, MatrixObject } from "./types";
 
 export function isNestedArray(v: unknown): v is number[][] {
   return Array.isArray(v) && v.length > 0 && Array.isArray(v[0]);

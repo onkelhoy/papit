@@ -1,5 +1,5 @@
 import { tokenise } from "./token";
-import { parser, Query } from "./parser";
+import { parser, type Query } from "./parser";
 
 const cachedQueries:Record<string, Query[]> = {};
 export function Query(query: string) {

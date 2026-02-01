@@ -1,108 +1,134 @@
-export * from "./bundles/js-bundle";
-export * from "./bundles/ts-bundle";
-
 import path from "node:path";
 import fs from "node:fs";
 
-import { PriorityQueue } from "@papit/data-structure";
+import { type LogLevel } from "esbuild";
+
 import { Information, PackageNode } from "@papit/information";
 import { Args, Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
+import { getESOptions, hasChanged, jsBundle, jsWatch, OnBuildEvent } from "@papit/bundle-js";
+import { tsBundle } from "@papit/bundle-ts";
 
-import { npmInstall } from "./helper";
-import { tsBundler } from "./bundles/ts-bundle";
-import { jsBundler } from "./bundles/js-bundle";
+import { npmInstall } from "helper";
 
 function canPrint() {
     return Arguments.has("run-build") || (Arguments.isCLI && !!process.env._?.endsWith("papit-build"));
 }
 
-function runBatch(batch: PackageNode[], failed: Set<string>, args: Args, canprint: boolean) {
-    const promises = batch.map(node => runner(node, failed, args, canprint));
-    return Promise.all(promises);
-}
+// function runBatch(batch: PackageNode[], failed: Set<string>, args: Args, canprint: boolean) {
+//     const promises = batch.map(node => runner(node, failed, args, canprint));
+//     return Promise.all(promises);
+// }
 
 (async function () {
+
     if (!canPrint()) return;
-    await build();
+    const watchers = await build();
+
+    await new Promise<void>(resolve => {
+        process.on("SIGINT", async () => {
+            Terminal.write("\ndisposing watchers...");
+            await Promise.all(watchers.map(w => w.dispose()));
+            resolve();
+        });
+    });
 }())
 
-export async function build(args = process.argv, islands?: string[]) {
-    const _args = new Args(args, islands);
-
-    // we can safely create even if our current target package doesnt have. (assuming fs.createFile dont create the deep nested folder for us - it does not =)
-    const binFolder = path.join(Information.root.location, "node_modules/.bin");
-    if (!fs.existsSync(binFolder)) fs.mkdirSync(binFolder, { recursive: true }); // I assume reqursive is same as "-p" flag in unix mkdir command. - its correct =) 
+export async function build(
+    args = new Args(process.argv),
+    onPackageBuild?: (node: PackageNode, info: OnBuildEvent) => void,
+) {
     const canprint = canPrint();
+    const ordered = Information.getPriorityBatches(args);
 
-    const batches = Information.getBatches(_args);
-    const prioQueue = new PriorityQueue<PackageNode>();
-    for (const batch of batches) 
-    {
-        for (const node of batch)
-        {
-            if (node.packageJSON.papit.priority === undefined) continue;
-            if (Information.package.name === node.name) continue; 
-            prioQueue.enqueue(node, node.packageJSON.papit.priority);
-        }
-    }
+    let logLevel: LogLevel = "silent";
+    if (args.error) logLevel = "error";
+    else if (args.warning) logLevel = "warning";
+    else if (args.info) logLevel = "info";
+    else if (args.verbose || args.debug) logLevel = "info";
 
     const failed = new Set<string>();
+    const watchers: Awaited<ReturnType<typeof jsWatch>>[] = [];
 
-    if (prioQueue.size > 0)
-    {
-        Terminal.write(Terminal.yellow("priority*"))
-
-        let shouldinstall = false;
-        for (const node of prioQueue) 
-        {
-            const install = await runner(node, failed, _args, canprint);
-            if (install) shouldinstall = true;
-        }
-        if (shouldinstall) await npmInstall(_args, canprint)
-        console.log();
-    }
-
-    const prioArray = Array.from(prioQueue);
-    for (const batch of batches)
+    // always do initial build first, in order
+    for (const batch of ordered)
     {
         let shouldinstall = false;
-        for (const node of batch) 
+        const isPriority = batch === ordered[0];
+        if (isPriority && batch.length > 0 && canprint) Terminal.write(Terminal.yellow("priority*"));
+
+        for (const node of batch)
         {
-            if (prioArray.some(v => v.name === node.name)) continue;
-            const install = await runner(node, failed, _args, canprint);
+            const install = await runner(node, failed, args, canprint, logLevel);
             if (install) shouldinstall = true;
         }
-        // const shouldinstall = await runBatch(batch, failed, _args, canprint);
-        if (shouldinstall) await npmInstall(_args, canprint);
+
+        if (shouldinstall) await npmInstall(args, canprint);
     }
-};
 
-async function runner(node: PackageNode, failed: Set<string>, args: Args, canprint: boolean): Promise<boolean> {
-    // we store terminal functions for the loading
-    let close: () => void = () => null;
-    let update = (text:string) => Terminal.write(text);
-    let shouldinstall = false;
 
-    let status: "tsc" | "js" | "ts" = "tsc";
-    const tempOutDir = path.join(node.location, ".temp/build");
-    // let previousModifiedtime: number | undefined;
-    try
+    // after initial build, start watchers if live
+    if (args.has("live"))
     {
-        if (!args.has("force"))
+        for (const batch of ordered)
         {
-            const { current, previous } = node.modifiedtime;
-            // previousModifiedtime = previous;  
-            if (current === previous && fs.existsSync(path.join(node.location, node.outFolder)))
+            for (const node of batch)
             {
-                if (canprint) Terminal.write(Terminal.blue("●"), Terminal.dim(node.name), Terminal.blue("skipped"));
-                return true;
+                if (failed.has(node.name)) continue;
+
+                const baseOptions = getESOptions(Arguments.instance, node.location, {
+                    logLevel,
+                    packageJSON: node.packageJSON,
+                    externals: node.externals,
+                });
+                const watcher = await jsWatch(
+                    args, node.location,
+                    {
+                        entryPoints: node.entrypoints,
+                        logLevel,
+                        externals: node.externals,
+                        packageJSON: node.packageJSON,
+                        tsconfig: node.tsconfig,
+                        esoptions: baseOptions,
+                    },
+                    async (info) => {
+                        onBuild(args, node, info);
+                        onPackageBuild?.(node, info);
+
+                        if (node.tsconfig.options.declaration)
+                        {
+                            await tsBundle(args, node.location, {
+                                entryPoints: node.entrypoints,
+                                packageJSON: node.packageJSON,
+                                tsconfig: node.tsconfig,
+                            });
+                        }
+                    }
+                );
+                watchers.push(watcher);
             }
         }
 
-        // lets clear the output folder
-        fs.rmSync(path.join(node.location, node.outFolder), { recursive: true, force: true });
+        if (canprint) Terminal.write(Terminal.green("watching..."));
+    }
 
+    return watchers;
+}
+
+async function runner(
+    node: PackageNode,
+    failed: Set<string>,
+    args: Args,
+    canprint: boolean,
+    logLevel: LogLevel,
+): Promise<boolean> {
+    // we store terminal functions for the loading
+    let close: () => void = () => null;
+    let update = (text: string) => Terminal.write(text);
+    let shouldinstall = false;
+
+    try
+    {
         if (canprint)
         {
             const loadinfo = Terminal.loading(Terminal.dim(node.name, "building"));
@@ -110,63 +136,79 @@ async function runner(node: PackageNode, failed: Set<string>, args: Args, canpri
             close = loadinfo.close;
         }
 
-        const entrypoins = node.entrypoints;
+        const baseOptions = getESOptions(
+            Arguments.instance,
+            node.location, {
+            logLevel,
+            packageJSON: node.packageJSON,
+            externals: node.externals,
+        }
+        );
+
+        const skipped = {
+            bundlejs: false,
+            bundlets: false,
+        }
+        const bundlejs = await jsBundle(
+            args, node.location,
+            {
+                entryPoints: node.entrypoints,
+                logLevel,
+                externals: node.externals,
+                packageJSON: node.packageJSON,
+                tsconfig: node.tsconfig,
+                esoptions: baseOptions,
+            },
+            info => {
+                const localshouldinstall = onBuild(args, node, info);
+                if (localshouldinstall) shouldinstall = localshouldinstall;
+            }
+        );
+
+        if (bundlejs === "skipped")
+        {
+            skipped.bundlejs = true;
+        }
+
+        if (bundlejs && bundlejs !== "skipped" && bundlejs.length > 0)
+        {
+            throw bundlejs;
+        }
+
 
         if (node.tsconfig.options.declaration)
         {
-            if (canprint) update(Terminal.dim(node.name, "building - running typescript"));
-            await Terminal.execute(
-                "npx",
-                node.location,
-                [
-                    "tsc",
-                    "--emitDeclarationOnly", "-p", node.tsconfigpath, "--declarationDir", tempOutDir
-                ],
-            );
-        }
+            if (canprint) update(Terminal.dim(node.name, "building - bundle typescript"));
+            const bundlets = await tsBundle(args, node.location, {
+                entryPoints: node.entrypoints,
+                packageJSON: node.packageJSON,
+                tsconfig: node.tsconfig,
+            });
 
-        status = "js";
-
-        for (const entry in entrypoins.entries)
-        {
-            const entrypoint = entrypoins.entries[entry];
-            if (canprint) update(Terminal.dim(node.name, "building - bundle javascript"));
-            await jsBundler(entrypoint.import?.input, entrypoint.import?.output, node, args, canprint);
-
-            // check if bin 
-            const importOutput = entrypoint.import?.output ?? "";
-            const binName = entrypoins.bin.get(importOutput);
-            if (binName)
+            if (bundlets === "skipped")
             {
-                shouldinstall = true;
-                // add shebang and remove from root/node_modeles/.bin
-                if (!args.has("ci"))
-                {
-                    const rootNodeModuleBin = path.join(Information.root.location, "node_modules/.bin", binName);
-                    if (fs.existsSync(rootNodeModuleBin)) 
-                    {
-                        fs.rmSync(rootNodeModuleBin);
-                    }
-                }
-
-                const bundle = fs.readFileSync(importOutput, { encoding: "utf-8" });
-                const updated = bundle.startsWith("#!/usr/bin/env node") ? bundle : `#!/usr/bin/env node\n${bundle}`;
-                fs.writeFileSync(importOutput, updated, { mode: 0o755 });
+                skipped.bundlets = true;
             }
 
-            status = "ts";
-
-            if (node.tsconfig.options.declaration)
+            if (bundlets && bundlets !== "skipped" && bundlets.length > 0)
             {
-                if (canprint) update(Terminal.dim(node.name, "building - bundle javascript"));
-                await tsBundler(entrypoint, node, tempOutDir);
+                throw bundlets;
             }
         }
 
         if (canprint) 
         {
-            close();
-            Terminal.write(Terminal.green("●"), Terminal.dim(node.name), Terminal.green("success"));
+            close(); // cool
+
+            if (skipped.bundlejs || skipped.bundlets)
+            {
+
+                Terminal.write(Terminal.blue("●"), Terminal.dim(node.name), Terminal.blue("skipped"));
+            }
+            else
+            {
+                Terminal.write(Terminal.green("●"), Terminal.dim(node.name), Terminal.green("success"));
+            }
         }
     }
     catch (e)
@@ -178,16 +220,39 @@ async function runner(node: PackageNode, failed: Set<string>, args: Args, canpri
             Terminal.write(Terminal.red("●"), Terminal.dim(node.name), Terminal.red("failed"));
             if (args.error) 
             {
-                Terminal.error('failed at', status);
                 console.log(e);
             }
         }
 
-        // if (previousModifiedtime !== undefined) node.modifiedtime = previousModifiedtime; // after a long session i realise actually - why should we rebuild a failured build 
         failed.add(node.name);
     }
     finally 
     {
+        close();
         return shouldinstall;
     }
+}
+
+function onBuild(args: Args, node: PackageNode, info: OnBuildEvent) {
+    if (info.type !== "build" && info.type !== "rebuild") return;
+
+    const importOutput = info.entry.output ?? "";
+    const binName = node.entrypoints.bin.get(importOutput);
+    if (!binName) return;
+
+    // add shebang and remove from root/node_modeles/.bin
+    if (!args.has("ci"))
+    {
+        const rootNodeModuleBin = path.join(Information.root.location, "node_modules/.bin", binName);
+        if (fs.existsSync(rootNodeModuleBin)) 
+        {
+            fs.rmSync(rootNodeModuleBin);
+        }
+    }
+
+    const bundle = fs.readFileSync(importOutput, { encoding: "utf-8" });
+    const updated = bundle.startsWith("#!/usr/bin/env node") ? bundle : `#!/usr/bin/env node\n${bundle}`;
+    fs.writeFileSync(importOutput, updated, { mode: 0o755 });
+
+    return true; // should install 
 }

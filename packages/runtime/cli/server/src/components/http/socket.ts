@@ -3,6 +3,8 @@ import { createHash } from "node:crypto";
 import { Duplex } from "node:stream";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
+import path from "node:path";
+import { Information } from "@papit/information";
 
 const connectedClients = new Set<Duplex>();
 
@@ -44,7 +46,7 @@ export function update(filename: string, content: string) {
       return
     }
 
-    const message = frameWebSocketMessage({ action: 'update', filename, content });
+    const message = frameWebSocketMessage({ action: 'update', filename: "/" + path.relative(Information.root.location, filename), content });
     write(message);
   }
   catch (e)

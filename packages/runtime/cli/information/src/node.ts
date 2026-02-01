@@ -2,10 +2,11 @@ import fs from "node:fs";
 import path from "node:path";
 import ts from "typescript";
 import { Arguments } from "@papit/arguments";
+import { getEntryPoints, getExternals, getTSconfig, getTSlocation, outFolder, sourceFolder } from "@papit/bundle-js";
 
 import { Remote } from "./remote";
-import { LocalPackage, RootPackage } from "./types";
-import { getEntryPoints } from "./entrypoint";
+import type { LocalPackage, RootPackage } from "./types";
+// import { getEntryPoints } from "./entrypoint";
 import { Cache } from "./cache";
 
 export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
@@ -21,17 +22,14 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
     get location() { return this._location }
-    get sourceFolder() { return path.relative(this.location, this.tsconfig.options.baseUrl ?? path.join(this.location, "src")) }
-    get outFolder() { return path.relative(this.location, this.tsconfig.options.outDir ?? path.dirname(this.tsconfig.options.outFile ?? "") ?? path.join(this.location, "lib")) }
+    get sourceFolder() { return sourceFolder(this.location, this.tsconfig) }
+    get outFolder() { return outFolder(this.location, this.tsconfig) }
     get name() { return this._packageJSON.name }
     private _externals: string[] | undefined;
     get externals() {
         if (!this._externals) 
         {
-            this._externals = Object
-                .keys(this.packageJSON.dependencies ?? {})
-                .concat(Object.keys(this.packageJSON.devDependencies ?? {}))
-                .concat(Object.keys(this.packageJSON.peerDependencies ?? {}))
+            this._externals = getExternals(this.packageJSON);
         }
         return this._externals;
     }
@@ -56,12 +54,12 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
                 {
                     const stat = fs.statSync(file);
                     if (!stat.isFile()) return;
-    
+
                     mtime = Math.max(mtime!, stat.mtimeMs);
                 }
-                catch {}
+                catch { }
             });
-        
+
         const previous = Cache.get(this.name)?.mtime;
         Cache.set(this.name, { mtime });
         return {
@@ -74,7 +72,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
     get entrypoints() {
         if (!this._entrypoints)
         {
-            this._entrypoints = getEntryPoints(this as PackageNode<LocalPackage>)
+            this._entrypoints = getEntryPoints(this.location, this.packageJSON, this.tsconfig);
         }
 
         return this._entrypoints;
@@ -85,7 +83,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
     get tsconfigpath() {
         if (!this._tsconfigpath)
         {
-            this._tsconfigpath = Arguments.has("prod") ? path.join(this.location, "tsconfig.prod.json") : path.join(this.location, "tsconfig.json");
+            this._tsconfigpath = getTSlocation(Arguments.instance, this.location);
             if (!fs.existsSync(this._tsconfigpath)) this._tsconfigpath = path.join(this.location, "tsconfig.json");
             if (!fs.existsSync(this._tsconfigpath)) throw new Error("no location found for tsconfig");
         }
@@ -95,17 +93,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
     get tsconfig() {
         if (!this._tsconfig) 
         {
-            const configFile = ts.readConfigFile(this.tsconfigpath, ts.sys.readFile);
-            if (configFile.error)
-            {
-                throw new Error(`Error reading tsconfig: ${configFile.error.messageText}`);
-            }
-    
-            this._tsconfig = ts.parseJsonConfigFileContent(
-                configFile.config,
-                ts.sys,
-                path.dirname(this.tsconfigpath)
-            );
+            this._tsconfig = getTSconfig(Arguments.instance, this.location, this.tsconfigpath);
         }
 
         return this._tsconfig;

@@ -10,8 +10,8 @@
  * @created 2025-08-11
  */
 
-import { QueryMeta } from "../../element/types";
-import { Setting } from "./types";
+import type { QueryMeta } from "element/types";
+import type { Setting } from "./types";
 
 /**
  * A property decorator that registers a DOM query for the decorated property.

@@ -1,5 +1,5 @@
 import { Codec } from "./codec";
-import { BufferSource, MessageType } from "./types";
+import type { BufferSource, MessageType } from "./types";
 
 export class MetaJson<Meta extends Object = object, Payload = any> implements MessageType<Meta, Payload | BufferSource> {
   private parsed = false;

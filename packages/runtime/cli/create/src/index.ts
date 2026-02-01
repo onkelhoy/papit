@@ -5,7 +5,7 @@ import fs from "node:fs";
 
 import { Arguments } from "@papit/arguments";
 import { Information, LocalPackage, PackageGraph } from "@papit/information";
-import { Terminal, option } from "@papit/terminal";
+import { Terminal, type option } from "@papit/terminal";
 
 import { packageRunner } from "./components/runners/package";
 import { componentRunner } from "./components/runners/component";

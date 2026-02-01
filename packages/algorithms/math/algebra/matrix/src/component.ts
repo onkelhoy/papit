@@ -1,6 +1,6 @@
 import { Vector, Vector3, VectorValue } from "@papit/vector";
 import { isMatrixObject, isNestedArray, toMatrix } from "./helper";
-import { Value, MatrixObject } from "./types";
+import type { Value, MatrixObject } from "./types";
 
 export class Matrix extends Float32Array {
   rows: number = 0;

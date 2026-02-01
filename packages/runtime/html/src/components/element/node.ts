@@ -1,10 +1,10 @@
 import { NodeList } from "./utility";
 import type Document from "./document";
 import type Element from "./element";
-import { EventTargetPublic } from "../util/event";
+// import { EventTargetPublic } from "../util/event";
 
 class NotFoundError extends Error {}
-export default abstract class Node extends EventTargetPublic {
+export default abstract class Node extends EventTarget {
   /**
    * 
    * @param ownerDocument Document

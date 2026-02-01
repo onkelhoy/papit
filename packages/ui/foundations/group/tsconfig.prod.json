@@ -5,16 +5,5 @@
         "inlineSources": false,
         "declarationMap": false,
         "incremental": false
-    },
-    "exclude": [
-        "**/*.test.ts",
-        "**/*.spec.ts",
-        "lib/*.tsbuildinfo"
-    ],
-    "include": [
-        "src/**/*.js",
-        "src/**/*.ts",
-        "src/**/*.tsx",
-        "src/**/*.d.ts"
-    ]
+    }
 }

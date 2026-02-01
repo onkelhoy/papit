@@ -2,7 +2,8 @@ import { Arguments } from "@papit/arguments";
 
 import { PackageGraph } from "./graph";
 import { PackageNode } from "./node";
-import { LocalPackage, RootPackage } from "./types";
+import type { LocalPackage, RootPackage } from "./types";
+import { PriorityQueue } from "@papit/data-structure";
 
 export class Information {
     private static _package: PackageNode<LocalPackage | RootPackage> | undefined;
@@ -31,7 +32,7 @@ export class Information {
         return this._package as PackageNode<LocalPackage>;
     }
 
-    static get name() { return this.package.name }
+    static get packageName() { return this.package.name }
     static get location() { return this.package.location }
     static get sourceFolder() { return this.package.sourceFolder }
     static get outFolder() { return this.package.outFolder }
@@ -59,5 +60,28 @@ export class Information {
 
         // individual 
         return [[Information.package]];
+    }
+
+    static getPriorityBatches(args = Arguments.instance) {
+        const batches = this.getBatches(args);
+        const prioQueue = new PriorityQueue<PackageNode>();
+        const prioSet = new Set<string>();
+
+        for (const batch of batches) {
+            for (const node of batch) {
+                if (node.packageJSON.papit.priority === undefined) continue;
+                if (this.package.name === node.name) continue;
+                prioQueue.enqueue(node, node.packageJSON.papit.priority);
+                prioSet.add(node.name);
+            }
+        }
+
+        const ordered: PackageNode[][] = [Array.from(prioQueue)];
+        for (const batch of batches) {
+            const filtered = batch.filter(n => !prioSet.has(n.name));
+            if (filtered.length > 0) ordered.push(filtered);
+        }
+
+        return ordered; // first array is priority, rest are batches in order
     }
 }

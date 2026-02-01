@@ -30,6 +30,8 @@ export class Cache {
     const cached = this.map.get(url.absolute);
     if (!cached) return null;
 
+    if (fs.existsSync(url.absolute)) return null; 
+
     if (cached.mtime === null) return cached;
 
     const stats = fs.statSync(url.absolute);

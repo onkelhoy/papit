@@ -1,6 +1,6 @@
 import { PackageGraph } from "./graph";
 import { Information } from "./information";
-import { RemotePackage, RemotePackages } from "./types";
+import type { RemotePackage, RemotePackages } from "./types";
 
 export class Remote {
     static map = new Map<string, string>();

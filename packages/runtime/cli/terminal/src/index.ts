@@ -1,3 +1,3 @@
 // exports
 export * from "./terminal";
-export { option, LoadingClose, LoadingUpdate } from "./types";
+export type { option, LoadingClose, LoadingUpdate } from "./types";

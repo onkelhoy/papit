@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 
 
-import { option, Terminal } from "@papit/terminal";
+import { type option, Terminal } from "@papit/terminal";
 import { Information, LocalPackage, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 
@@ -57,7 +57,7 @@ export async function packageRunner(
     {
         if (!htmlprefix) htmlprefix = rootPackage.papit?.htmlprefix;
 
-        Terminal.createSession();
+        if (!Arguments.info) Terminal.createSession();
         while (true) 
         {
             let answer: string;
@@ -90,11 +90,11 @@ export async function packageRunner(
             }
             else 
             {
-                Terminal.clearSession();
+                if (!Arguments.info) Terminal.clearSession();
                 Terminal.warn("you must use a html-prefix for web-components")
             }
         }
-        Terminal.clearSession();
+        if (!Arguments.info) Terminal.clearSession();
     }
 
     const localFolder = path.relative(Information.root.location, layer);
@@ -194,30 +194,57 @@ export async function packageRunner(
 
     PackageGraph.add(destination); // we need to append to graph so component-runner can run smooth 
 
+
+    let shouldCommit = false;
+    if (Arguments.has("no")) shouldCommit = false;
+    else if (Arguments.has("yes")) shouldCommit = true;
+    else shouldCommit = Arguments.true('agree') || Arguments.true('commit') || await Terminal.confirm("git commit", true);
+
+    await componentRunner(
+        createPackageLocation,
+        { destination, nameInfo, htmlprefix, shouldCommit },
+        (dest, folder) => {
+            if (folder === "src") dest = dest.replace(/\/components\/.*/, '');
+            if (folder === "views") dest = dest.replace(new RegExp(nameInfo.name + "$"), "experiment");
+            if (folder === "tests") dest = dest.replace(new RegExp(nameInfo.name + "$"), fullName.replace("@", "~").replace("/", "-"));
+
+            if (Arguments.debug) Terminal.info(JSON.stringify({ dest, folder }));
+
+            return dest;
+        }
+    );
+
+    fs.rmdirSync(path.join(destination, "src/components"));
+
     Terminal.createSession();
-    const shouldInstall = Arguments.true('agree') || Arguments.true('install') || await Terminal.confirm("install package", true);
+    let shouldInstall = false;
+    if (Arguments.has("no")) shouldInstall = false;
+    else if (Arguments.has("yes")) shouldInstall = true;
+    else shouldInstall = Arguments.true('agree') || Arguments.true('install') || await Terminal.confirm("install package", true);
+
     if (shouldInstall)
     {
+        const { close } = Terminal.loading("installing");
         try
         {
-            const { close } = Terminal.loading("installing");
             await Terminal.execute('npm install', description);
-            close();
-            Terminal.clearSession();
         }
-        catch
+        catch (e)
         {
             Terminal.warn("error during install");
+            console.log(e);
+            Terminal.createSession();
+        }
+        finally 
+        {
+            close();
+            Terminal.clearSession();
         }
     }
     else 
     {
         Terminal.clearSession();
     }
-
-    const shouldCommit = Arguments.true('agree') || Arguments.true('commit') || await Terminal.confirm("git commit", true);
-
-    await componentRunner(createPackageLocation, { destination, nameInfo, htmlprefix, shouldCommit });
 
     if (shouldCommit)
     {
@@ -226,7 +253,7 @@ export async function packageRunner(
             await Terminal.execute(`git add ${lockfile_location}`, destination);
             await Terminal.execute(`git add ${destination}`, destination);
             await Terminal.execute(`git commit -m "add: ${fullName} package"`, destination);
-            Terminal.clearSession();
+            // Terminal.clearSession();
         }
         catch
         {
@@ -235,9 +262,7 @@ export async function packageRunner(
     }
     else 
     {
-        Terminal.clearSession();
+        // Terminal.clearSession();
     }
-
     Terminal.write(`${fullName} created\n`);
-
 }
