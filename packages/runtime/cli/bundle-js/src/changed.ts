@@ -3,7 +3,7 @@ import path from "node:path";
 
 export function hasChanged(location: string, filenames: string[], options: Partial<{ tempSuffix: string, filter: RegExp | ((fileName: string) => boolean) }> = { }) {
     
-    if (!options.filter) options.filter = /\.(j|t)s(\w|on)?$/i;
+    if (!options.filter) options.filter = /\.(css|((j|t)s(\w|on)?))$/i;
 
     const savedLocation = path.join(location, `.temp/mstime.${options.tempSuffix ?? "papit-bundle-js"}.json`);
     filenames = filenames.concat(path.join(location, "package.json"), path.join(location, "tsconfig.json"));

@@ -1,15 +1,16 @@
-import {spawn} from "node:child_process";
+import { spawn } from "node:child_process";
 
 export function spawnCommand(command, cwd, args = []) {
     const [cmd, ..._args] = command.split(" ");
 
     return new Promise((resolve, reject) => {
+        const full = [cmd, ..._args.concat(args)].join(" ");
 
-        const child = spawn(cmd, _args.concat(args), {
+        const child = spawn(full, {
             cwd,
             stdio: process.env.CI ? "inherit" : "pipe",
-            shell: false,
-            env: {...process.env},
+            shell: true,
+            env: { ...process.env },
         });
 
         if (child.stdout) 
@@ -33,4 +34,4 @@ export function spawnCommand(command, cwd, args = []) {
             }
         });
     });
-}
+}   

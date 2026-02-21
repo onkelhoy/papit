@@ -1,0 +1,8 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en-UK"
+    },
+    "hello": "custom world",
+    "variable": "custom {name} poop"
+}

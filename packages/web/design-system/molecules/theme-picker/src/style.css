@@ -1,0 +1,25 @@
+:host {
+    display: contents;
+
+    button {
+        width: var(--size, var(--space-6, 24px));
+        height: var(--size, var(--space-6, 24px));
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        border: none;
+        background: transparent;
+        padding: var(--space-6, 24px);
+        cursor: pointer;
+
+        &:hover {
+            background-color: color-mix(in oklch, var(--background-lighter, light-dark(oklch(98% 0 0), oklch(24% 0 0))) 40%, transparent);
+        }
+    }
+
+    pap-menuitem {
+        align-items: center;
+        gap: var(--space-2, 0.5rem);
+    }
+}

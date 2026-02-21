@@ -1,0 +1,57 @@
+:host {
+    anchor-name: --anchor;
+    display: inline-flex;
+}
+
+@keyframes tooltip-in {
+    from {
+        opacity: 0;
+        display: flex;
+    }
+
+    to {
+        opacity: 1;
+        display: flex;
+    }
+}
+
+@keyframes tooltip-out {
+    from {
+        opacity: 1;
+        display: flex;
+    }
+
+    to {
+        opacity: 0;
+        display: none;
+    }
+}
+
+
+pap-placement {
+    position-anchor: --anchor;
+    display: none;
+    opacity: 0;
+    background-color: var(--background-inverse);
+    color: var(--text-inverse);
+    padding: var(--space-2, 0.5rem);
+    border-radius: var(--space-2, 0.5rem);
+    max-width: var(--max-tooltip-width, 30rem);
+}
+
+pap-placement[data-closing] {
+    display: flex;
+    gap: var(--space-1, 0.25rem);
+    animation: tooltip-out 120ms ease forwards;
+}
+
+pap-placement[data-open] {
+    display: flex;
+    gap: var(--space-1, 0.25rem);
+    animation: tooltip-in 120ms ease forwards;
+}
+
+
+pap-placement::after {
+    display: block;
+}

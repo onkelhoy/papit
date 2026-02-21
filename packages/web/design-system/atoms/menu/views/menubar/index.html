@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menubar | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <!-- <pap-card>
+        <pap-typography slot="header" variant="h4">Experiment</pap-typography>
+        <pap-codeblock display="both">
+            <pap-menubar></pap-menubar>
+        </pap-codeblock>
+    </pap-card> -->
+
+    <pap-menubar>
+        <pap-menuitem>
+            File
+            <pap-menu>
+                <pap-menuitem>New</pap-menuitem>
+                <pap-menuitem>Open</pap-menuitem>
+                <pap-menuitem>
+                    Open Recent
+                    <pap-menu>
+                        <pap-menuitem>project-one.txt</pap-menuitem>
+                        <pap-menuitem>project-two.txt</pap-menuitem>
+                    </pap-menu>
+                </pap-menuitem>
+                <pap-menuitem>Save</pap-menuitem>
+            </pap-menu>
+        </pap-menuitem>
+
+        <pap-menuitem>
+            Edit
+            <pap-menu>
+                <pap-menuitem>Undo</pap-menuitem>
+                <pap-menuitem>Redo</pap-menuitem>
+                <pap-menuitem>Cut</pap-menuitem>
+                <pap-menuitem>Copy</pap-menuitem>
+                <pap-menuitem>Paste</pap-menuitem>
+            </pap-menu>
+        </pap-menuitem>
+
+        <pap-menuitem>
+            View
+            <pap-menu>
+                <pap-menuitem>Zoom In</pap-menuitem>
+                <pap-menuitem>Zoom Out</pap-menuitem>
+                <pap-menuitem>
+                    Theme
+                    <pap-menu>
+                        <pap-menuitem>Light</pap-menuitem>
+                        <pap-menuitem>Dark</pap-menuitem>
+                        <pap-menuitem>System</pap-menuitem>
+                    </pap-menu>
+                </pap-menuitem>
+            </pap-menu>
+        </pap-menuitem>
+    </pap-menubar>
+</body>
+
+</html>

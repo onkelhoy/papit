@@ -76,6 +76,7 @@
         "not dead"
     ],
     "papit": {
+        "priority": 4,
         "publish": true,
         "type": "node",
         "main": "build",

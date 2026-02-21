@@ -10,7 +10,7 @@
     "scripts": {
         "analyse": "to come",
         "publish": "to come",
-        "prebuild": "rm -rf packages/temp/* && npm install && node bin/prebuild.mjs",
+        "prebuild": "node bin/prebuild.mjs",
         "clean": "node bin/clean.mjs",
         "build": "npx @papit/build",
         "test": "node bin/test.mjs",

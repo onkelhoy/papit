@@ -1,9 +1,9 @@
 import { Arguments } from "@papit/arguments";
+import { PriorityQueue } from "@papit/data-structure";
 
 import { PackageGraph } from "./graph";
 import { PackageNode } from "./node";
 import type { LocalPackage, RootPackage } from "./types";
-import { PriorityQueue } from "@papit/data-structure";
 
 export class Information {
     private static _package: PackageNode<LocalPackage | RootPackage> | undefined;
@@ -67,8 +67,10 @@ export class Information {
         const prioQueue = new PriorityQueue<PackageNode>();
         const prioSet = new Set<string>();
 
-        for (const batch of batches) {
-            for (const node of batch) {
+        for (const batch of batches)
+        {
+            for (const node of batch)
+            {
                 if (node.packageJSON.papit.priority === undefined) continue;
                 if (this.package.name === node.name) continue;
                 prioQueue.enqueue(node, node.packageJSON.papit.priority);
@@ -77,7 +79,8 @@ export class Information {
         }
 
         const ordered: PackageNode[][] = [Array.from(prioQueue)];
-        for (const batch of batches) {
+        for (const batch of batches)
+        {
             const filtered = batch.filter(n => !prioSet.has(n.name));
             if (filtered.length > 0) ordered.push(filtered);
         }

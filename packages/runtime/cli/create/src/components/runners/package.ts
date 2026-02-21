@@ -1,14 +1,14 @@
 import path from "node:path";
 import fs from "node:fs";
 
-
 import { type option, Terminal } from "@papit/terminal";
 import { Information, LocalPackage, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 
 import { componentRunner } from "./component";
-import { copyFolder, getFolders, selectFolder } from "../util";
-import { getName } from "../util/name";
+import { copyFolder, getFolders, selectFolder } from "components/util";
+import { getName } from "components/util/name";
+import { PackageJson } from "@papit/bundle-js";
 
 export async function packageRunner(
     createPackageLocation: string,
@@ -205,8 +205,8 @@ export async function packageRunner(
         { destination, nameInfo, htmlprefix, shouldCommit },
         (dest, folder) => {
             if (folder === "src") dest = dest.replace(/\/components\/.*/, '');
+            if (folder === "lib") dest = dest.replace(new RegExp(nameInfo.name + "$"), "");
             if (folder === "views") dest = dest.replace(new RegExp(nameInfo.name + "$"), "experiment");
-            if (folder === "tests") dest = dest.replace(new RegExp(nameInfo.name + "$"), fullName.replace("@", "~").replace("/", "-"));
 
             if (Arguments.debug) Terminal.info(JSON.stringify({ dest, folder }));
 
@@ -214,7 +214,8 @@ export async function packageRunner(
         }
     );
 
-    fs.rmdirSync(path.join(destination, "src/components"));
+    const srcComponents = path.join(destination, "src/components");
+    if (fs.existsSync(srcComponents)) fs.rmdirSync(srcComponents);
 
     Terminal.createSession();
     let shouldInstall = false;

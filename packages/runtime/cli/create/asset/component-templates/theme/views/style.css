@@ -1,0 +1,270 @@
+@import "@papit/theme";
+@import "VARIABLE_FULL_NAME";
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body,
+div.theme-opposite {
+    font-family: monospace;
+    font-size: 12px;
+    background: var(--background);
+    color: var(--foreground);
+    padding: var(--space-8);
+    display: grid;
+    gap: var(--space-16);
+}
+
+/* ── Section ── */
+
+.showcase-section {
+    display: grid;
+    gap: var(--space-4);
+}
+
+.showcase-title {
+    font-size: 10px;
+    font-weight: normal;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--tertiary);
+}
+
+/* ── Swatches ── */
+
+.swatch-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+
+.swatch {
+    width: 96px;
+    border-radius: var(--radius-small);
+    overflow: hidden;
+    border: 1px solid var(--background-darkest);
+}
+
+.swatch::before {
+    content: '';
+    display: block;
+    height: 56px;
+}
+
+.swatch-label {
+    display: block;
+    padding: var(--space-1) var(--space-2);
+    background: var(--background-lighter);
+    color: var(--tertiary);
+    font-size: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* brand */
+.swatch--primary::before {
+    background: var(--primary);
+}
+
+.swatch--secondary::before {
+    background: var(--secondary);
+}
+
+.swatch--tertiary::before {
+    background: var(--tertiary);
+}
+
+/* semantic */
+.swatch--success::before {
+    background: var(--success);
+}
+
+.swatch--info::before {
+    background: var(--info);
+}
+
+.swatch--warning::before {
+    background: var(--warning);
+}
+
+.swatch--error::before {
+    background: var(--error);
+}
+
+/* backgrounds */
+.swatch--background-lightest::before {
+    background: var(--background-lightest);
+}
+
+.swatch--background-lighter::before {
+    background: var(--background-lighter);
+}
+
+.swatch--background-light::before {
+    background: var(--background-light);
+}
+
+.swatch--background::before {
+    background: var(--background);
+}
+
+.swatch--background-dark::before {
+    background: var(--background-dark);
+}
+
+.swatch--background-darker::before {
+    background: var(--background-darker);
+}
+
+.swatch--background-darkest::before {
+    background: var(--background-darkest);
+}
+
+/* foregrounds */
+.swatch--foreground-lightest::before {
+    background: var(--foreground-lightest);
+}
+
+.swatch--foreground-lighter::before {
+    background: var(--foreground-lighter);
+}
+
+.swatch--foreground-light::before {
+    background: var(--foreground-light);
+}
+
+.swatch--foreground::before {
+    background: var(--foreground);
+}
+
+.swatch--foreground-dark::before {
+    background: var(--foreground-dark);
+}
+
+.swatch--foreground-darker::before {
+    background: var(--foreground-darker);
+}
+
+.swatch--foreground-darkest::before {
+    background: var(--foreground-darkest);
+}
+
+/* ── Spacing ── */
+
+.space-list {
+    display: grid;
+    gap: var(--space-2);
+}
+
+.space-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.space-item::before {
+    content: '';
+    display: block;
+    height: var(--space-4);
+    background: var(--primary);
+    border-radius: var(--radius-small);
+    flex-shrink: 0;
+}
+
+.space-label {
+    color: var(--tertiary);
+}
+
+.space-item--1::before {
+    width: var(--space-1);
+}
+
+.space-item--2::before {
+    width: var(--space-2);
+}
+
+.space-item--3::before {
+    width: var(--space-3);
+}
+
+.space-item--4::before {
+    width: var(--space-4);
+}
+
+.space-item--5::before {
+    width: var(--space-5);
+}
+
+.space-item--6::before {
+    width: var(--space-6);
+}
+
+.space-item--7::before {
+    width: var(--space-7);
+}
+
+.space-item--8::before {
+    width: var(--space-8);
+}
+
+.space-item--9::before {
+    width: var(--space-9);
+}
+
+.space-item--10::before {
+    width: var(--space-10);
+}
+
+.space-item--12::before {
+    width: var(--space-12);
+}
+
+.space-item--16::before {
+    width: var(--space-16);
+}
+
+.space-item--20::before {
+    width: var(--space-20);
+}
+
+/* ── Radius ── */
+
+.swatch-row:has(.radius-item) {
+    align-items: flex-end;
+}
+
+.radius-item {
+    width: 96px;
+    height: 96px;
+    background: var(--background-darkest);
+    display: flex;
+    align-items: flex-end;
+    padding: var(--space-2);
+}
+
+.radius-label {
+    color: var(--tertiary);
+    font-size: 10px;
+}
+
+.radius-item--small {
+    border-radius: var(--radius-small);
+}
+
+.radius-item--medium {
+    border-radius: var(--radius-medium);
+}
+
+.radius-item--large {
+    border-radius: var(--radius-large);
+}
+
+.radius-item--full {
+    border-radius: var(--radius-full);
+}

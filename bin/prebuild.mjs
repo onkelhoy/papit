@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import {spawnCommand} from "./spawn-command.mjs";
+import { spawnCommand } from "./spawn-command.mjs";
 
 const root = process.cwd();
 
@@ -8,19 +8,19 @@ if (fs.existsSync(path.join(root, "node_modules/.bin/papit-build")))
     process.exit(0);
 
 const prebuilds = [
-    {name: "@papit/bundle-js", location: "packages/runtime/cli/bundle-js"},
-    {name: "@papit/bundle-ts", location: "packages/runtime/cli/bundle-ts"},
-    {name: "@papit/data-structure", location: "packages/algorithms/data-structure"},
-    {name: "@papit/deep-merge", location: "packages/algorithms/deep-merge"},
-    {name: "@papit/arguments", location: "packages/runtime/cli/arguments"},
-    {name: "@papit/terminal", location: "packages/runtime/cli/terminal"},
-    {name: "@papit/information", location: "packages/runtime/cli/information"},
-    {name: "@papit/build", location: "packages/runtime/cli/build"},
+    { name: "@papit/bundle-js", location: "packages/runtime/cli/bundle-js" },
+    { name: "@papit/bundle-ts", location: "packages/runtime/cli/bundle-ts" },
+    { name: "@papit/data-structure", location: "packages/algorithms/data-structure" },
+    { name: "@papit/deep-merge", location: "packages/algorithms/deep-merge" },
+    { name: "@papit/arguments", location: "packages/runtime/cli/arguments" },
+    { name: "@papit/terminal", location: "packages/runtime/cli/terminal" },
+    { name: "@papit/information", location: "packages/runtime/cli/information" },
+    { name: "@papit/build", location: "packages/runtime/cli/build" },
 ];
 
 (async function () {
 
-    for (const {name, location} of prebuilds)
+    for (const { name, location } of prebuilds)
     {
         console.log('running prebuild', name);
         await spawnCommand("node bin/prebuild.mjs", path.join(root, location));

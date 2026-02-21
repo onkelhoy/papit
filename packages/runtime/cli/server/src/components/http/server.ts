@@ -3,34 +3,33 @@ import http, { ServerResponse } from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 
-// import { Arguments, getJSON, getPathInfo, LocalPackage, Terminal } from "@papit/util";
-// import { executor } from "@papit/build";
-
-// components
-import { HttpError, MethodNotAllowedError } from "../errors";
-import { streamAsset, type Translation } from "../asset";
-import { getHTML } from "../html/html";
-
-// local imports 
-import { upgrade } from "./socket";
-import { getPort } from "./port";
-import { bundler } from "../file/bundler";
-// import { handleRequest } from "./request";
-import { getURL } from "./url";
-import { Cache } from "../file/cache";
-import { getFILE } from "../file/get";
 import { Information } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
+
+// components
+import { HttpError, MethodNotAllowedError } from "components/errors";
+import { streamAsset, type Translations } from "components/asset";
+import { getHTML } from "components/html/html";
+
+// local imports 
+import { bundler } from "components/file/bundler";
+import { Cache } from "components/file/cache";
+import { getFILE } from "components/file/get";
+
+import { upgrade } from "./socket";
+import { getPort } from "./port";
+import { getURL } from "./url";
 
 let PORT = Arguments.number("port") || 3000;
 export let server: null | http.Server = null;
 
 export function start(
     serverPackageLocation: string,
-    translations: Record<string, Translation>,
+    translations: Translations,
     assets: Record<string, string[]>,
     importmap: { imports: Record<string, string> },
+    themes: Map<string, string>,
 ) {
     PORT = Arguments.number("port") || 3000
     return new Promise<void>(async (resolve) => {
@@ -95,8 +94,7 @@ export function start(
                     return res.end("ok");
                 }
 
-
-                if (req.url === "/favicon.ico")
+                if (req.url?.endsWith("/favicon.ico"))
                 {
                     req.url = "/favicon.svg";
                 }
@@ -119,6 +117,22 @@ export function start(
                     return;
                 }
                 catch { }
+
+                const packageName = req.url?.split("@")?.at(1);
+                if (packageName)
+                {
+                    const url = themes.get("@" + packageName);
+                    if (url)
+                    {
+                        const file = getFILE({ absolute: url, relative: path.relative(Information.root.location, url) }, filecache, res);
+                        if (file === "streamed") return;
+
+                        res.statusCode = 200;
+                        res.setHeader('Content-Type', file.mimeType);
+                        res.end(file.buffer);
+                        return;
+                    }
+                }
 
                 const url = getURL(req);
                 const stat = fs.statSync(url.absolute);
@@ -151,6 +165,12 @@ export function start(
                 {
                     const document = await getHTML(url, assets, importmap, serverPackageLocation, htmlcache);
                     res.statusCode = 200;
+
+                    if (!Arguments.has("prod"))
+                    {
+                        res.setHeader('Cache-Control', 'no-store');
+                    }
+
                     res.end(document.outerHTML);
                     return;
                 }
@@ -189,7 +209,7 @@ export function close() {
 }
 
 function handleError(e: unknown, res: ServerResponse) {
-    if (Arguments.error) console.trace(e);
+    if (Arguments.error) console.trace("[SERVER]", e);
 
     if (e instanceof HttpError)
     {

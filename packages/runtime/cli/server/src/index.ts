@@ -5,13 +5,13 @@ import { Terminal } from "@papit/terminal";
 import { Information } from "@papit/information";
 import { build } from "@papit/build";
 
-import { getAssetFolders, handleAsset,type Translation } from "./components/asset";
-import { close as httpExit, start as httpStart, update as socketUpdate } from "./components/http";
-import type { Importmap } from "./components/importmap/types";
-import { extractImportmap } from "./components/importmap/import-map";
-import { getPackageLocationFromImportMeta } from "./components/http/url";
+import { extractAssets, getAssetFolders, Translations } from "components/asset";
+import { close as httpExit, start as httpStart, update as socketUpdate } from "components/http";
+import type { Importmap } from "components/importmap/types";
+import { extractImportmap } from "components/importmap/import-map";
+import { getPackageLocationFromImportMeta } from "components/http/url";
 
-export * from "./components/http"
+export * from "components/http"
 
 export async function setup() {
 
@@ -31,30 +31,41 @@ export async function setup() {
         process.exit(1);
     }
 
-    const translations: Record<string, Translation> = {};
+    const translations: Translations = {
+        data: {},
+        map: {},
+    };
     const assets: Record<string, string[]> = {};
     const assetFolders = getAssetFolders();
 
+    // why ? - perhaps as in the batches wont always capute the server? 
     // we start by loading assets from dev-server (so we allow for overrides)
-    for (const asset of assetFolders)
-    {
-        const assetLocation = path.join(serverPackageLocation, asset);
-        await handleAsset(serverPackageLocation, assetLocation, translations, assets, assetFolders);
-    }
+    // for (const asset of assetFolders)
+    // {
+    //     const assetLocation = path.join(serverPackageLocation, asset);
+    //     await handleAsset(serverPackageLocation, assetLocation, translations, assets, assetFolders);
+    // }
+
+    extractAssets(
+        serverPackageLocation,
+        translations,
+        assets,
+        assetFolders,
+    );
 
     const importmap: Importmap = {
         imports: {}
     }
 
+    const themes = new Map<string, string>();
+
     let importmapFolder: string | null = null;
-    if (!Arguments.has("bundle")) 
-    {
-        if (Information.root.location === Information.package.location)
-            importmapFolder = path.join(Information.root.location, "node_modules");
-        else
-            importmapFolder = path.join(Information.package.location, Arguments.string("import-map") ?? ".temp/dependencies");
-    }
-    // !Arguments.has("bundle") ? path.join(Information.package.location, Arguments.string("import-map") ?? ".temp/dependencies") : null;
+
+    if (Information.root.location === Information.package.location)
+        importmapFolder = path.join(Information.root.location, "node_modules");
+    else
+        importmapFolder = path.join(Information.package.location, Arguments.string("import-map") ?? ".temp/dependencies");
+
     let createdImportMapFolder = false;
     if (importmapFolder && !fs.existsSync(importmapFolder))
     {
@@ -73,6 +84,16 @@ export async function setup() {
     {
         for (const node of batch) 
         {
+            if (node.packageJSON.papit.type === "theme")
+            {
+                const output = node.entrypoints.entries.theme?.import?.output ?? node.entrypoints.entries.bundle?.import?.output;
+                if (output)
+                {
+                    themes.set(node.name, output);
+                }
+                continue;
+            }
+
             if (importmapFolder)
             {
                 extractImportmap(node, importmap, importmapFolder);
@@ -80,19 +101,28 @@ export async function setup() {
 
             if (!Arguments.has("include-node") && node.packageJSON.papit.type === "node") continue;
 
-            for (const asset of assetFolders)
-            {
-                const assetLocation = path.join(node.location, asset);
-                await handleAsset(node.location, assetLocation, translations, assets, assetFolders);
-            }
+            // for (const asset of assetFolders)
+            // {
+            //     const assetLocation = path.join(node.location, asset);
+            //     await handleAsset(node.location, assetLocation, translations, assets, assetFolders);
+            // }
+
+            extractAssets(
+                node.location,
+                translations,
+                assets,
+                assetFolders,
+            );
+
         }
     }
 
-    if (!Arguments.has("prod")) Arguments.set("live", true);
+    // if (!Arguments.has("prod") && !Arguments.has("serve")) Arguments.set("live", true);
+
     const buildOutput = await build(Arguments.instance, (node, info) => {
         if (info.type === "rebuild")
         {
-            Terminal.write(Terminal.blue("package change"), node.name)
+            if (Arguments.verbose) Terminal.write(Terminal.blue("package change"), node.name)
             socketUpdate(node.location, info.result.outputFiles?.at(0)?.text ?? "");
         }
     });
@@ -114,8 +144,13 @@ export async function setup() {
     process.on("SIGTERM", shutdown);  // kill <pid>, Docker stop
     process.on("SIGHUP", shutdown);   // terminal closed
 
-    if (!Arguments.has("serve")) Arguments.set("live", true);
-    await httpStart(serverPackageLocation, translations, assets, importmap);
+    await httpStart(
+        serverPackageLocation,
+        translations,
+        assets,
+        importmap,
+        themes,
+    );
 };
 
 (async function () {

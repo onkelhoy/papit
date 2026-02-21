@@ -1,0 +1,11 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en-UK"
+    },
+    "sentence1": "The quick brown fox jumps over the lazy dog",
+    "sentence2": "She sells seashells by the seashore",
+    "sentence3": "Welcome back, {name}!",
+    "sentence4": "Your order has been confirmed",
+    "sentence5": "Please select your preferred language"
+}

@@ -4,7 +4,7 @@ import fs from "node:fs";
 import ts from "typescript";
 import { outFolder, type PackageJson, sourceFolder } from "./helper";
 
-export type EntryPoint<T = { output: string, input: string }> = { import: T | undefined, require: T | undefined, types: T | undefined };
+export type EntryPoint<T = { output: string, input: string, name: string  }> = { import: T | undefined, require: T | undefined, types: T | undefined };
 type Entries = Record<string, EntryPoint>;
 
 export function getEntryPoints(
@@ -69,7 +69,7 @@ function add(
         const output = entry[e as keyof EntryPoint];
         if (!output) continue;
 
-        const inputoutput = getOutputInput(location, tsconfig, output);
+        const inputoutput = getOutputInput(location, tsconfig, output, key);
         if (map.has(inputoutput.output)) continue;
 
         map.set(inputoutput.output, key);
@@ -113,12 +113,17 @@ function getOutputInput(
     location: string,
     tsconfig: ts.ParsedCommandLine,
     output: string,
+    name: string,
 ) {
     const out = outFolder(location, tsconfig);
     const src = sourceFolder(location, tsconfig);
 
-    let input = output.replace(out + "/", src + "/").replace(/\.js$/, ".ts");
+    let input = output
+        .replace(out + "/", src + "/")
+        .replace(/\.d\.ts$/, ".ts")
+        .replace(/\.js$/, ".ts");
+        
     if (!fs.existsSync(path.join(location, input))) input = path.join(src, "index.ts");
 
-    return { output: path.join(location, output), input: path.join(location, input) };
+    return { output: path.join(location, output), input: path.join(location, input), name };
 }

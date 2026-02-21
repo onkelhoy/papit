@@ -2,21 +2,23 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import fs from "node:fs";
 import { IncomingMessage } from "node:http";
-import { InternalServerError } from "../errors";
+
 import { Information, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 
+import { InternalServerError } from "components/errors";
+
 export function getURL(
-  request: IncomingMessage,
+    request: IncomingMessage,
 ) {
     const get = () => {
         if (request.url && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) 
         {
             return { absolute: request.url, relative: path.relative(request.url, Information.package.location) }; // this might bite later
         }
-        
+
         const rest = [Arguments.string("folder"), request.url].filter(v => v !== undefined);
-        
+
         const potentials = [Information.local, Information.package.location, Information.root.location];
         for (const potential of potentials)
         {
@@ -26,7 +28,7 @@ export function getURL(
                 return { absolute, relative: path.relative(potential, absolute) || path.relative(Information.package.location, Information.local) || "/" };
             }
         }
-        
+
         return { absolute: path.join(Information.package.location, request.url ?? "/"), relative: request.url ?? "/" };
     }
 
@@ -67,7 +69,7 @@ export function getPACKAGE(url: ReturnType<typeof getURL>) {
     {
         throw new InternalServerError(`could not find package at 1: ${location}`);
     }
-    
+
     const node = PackageGraph.search(location)
     if (!node)
     {

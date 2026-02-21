@@ -1,0 +1,20 @@
+:host {
+    display: none;
+    --gap: calc(var(--space-1, 0.25rem) + var(--space-1, 0.25rem) / 2);
+
+    pap-group {
+        display: flex;
+        flex-direction: column;
+    }
+}
+
+:host(:popover-open) {
+    display: block;
+    width: max-content;
+
+    padding: 0;
+    border: none;
+    border-radius: var(--space-1, 0.25rem);
+    outline: 2px solid var(--background-lightest, light-dark(oklch(100% 0 0), oklch(32% 0 0)));
+    background-color: var(--background-lightest, light-dark(oklch(100% 0 0), oklch(32% 0 0)));
+}
