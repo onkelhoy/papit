@@ -2,11 +2,11 @@ import path from "node:path";
 import fs from "node:fs";
 
 import { Information, LocalPackage } from "@papit/information";
+import { type option, Terminal } from "@papit/terminal";
+import { Arguments } from "@papit/arguments";
 
 import { copyFolder, getFolders } from "../util";
 import { getName } from "../util/name";
-import { option, Terminal } from "@papit/terminal";
-import { Arguments } from "@papit/arguments";
 
 type PackageInfo = {
     destination: string;
@@ -35,10 +35,15 @@ function createFolderIfNotExistSync(url: string) {
 export async function componentRunner(
     createPackageLocation: string,
     packageInfo?: PackageInfo,
+    overrideName?: (value: string, folder: string) => string,
 ) {
 
-    const packageJSONLocation = Information.package.location; // path.join(info.local, "package.json");
-    const _localPackage = Information.package.packageJSON; // getJSON<LocalPackage>(packageJSONLocation)
+
+    // const packageJSONLocation = path.join(packageInfo ? packageInfo.destination : Information.package.location, "package.json"); // path.join(info.local, "package.json");
+    // const _localPackage = packageInfo ? JSON.parse(packageJSONLocation) Information.package.packageJSON; // getJSON<LocalPackage>(packageJSONLocation)
+
+    const packageJSONLocation = path.join(packageInfo?.destination ?? Information.package.location, "package.json");
+    const _localPackage = packageInfo ? JSON.parse(fs.readFileSync(packageJSONLocation, { encoding: "utf-8" })) : Information.package.packageJSON;
 
     if (_localPackage == null)
     {
@@ -166,9 +171,10 @@ export async function componentRunner(
         await Terminal.execute(`git add ${packageJSONLocation}`, Information.root.location);
     }
 
+
     for (const folder of folders)
     {
-        let destParent = path.join(Information.local, folder);
+        let destParent = path.join(packageInfo?.destination ?? Information.package.location, folder);
         let dest = destParent;
         const templateFolderSrc = path.join(templateSrc, folder);
 
@@ -187,13 +193,18 @@ export async function componentRunner(
         }
         createFolderIfNotExistSync(destParent);
 
-        await copyFolder(templateFolderSrc, dest, file => {
-            return file
+        if (overrideName) dest = overrideName(dest, folder);
+
+        // console.log("WE ARE COPY THE FILES INTO THE PACKJAGE", { templateFolderSrc, dest })
+        await copyFolder(
+            templateFolderSrc,
+            dest,
+            file => file
                 .replace(/VARIABLE_NAME/g, nameInfo.name)
                 .replace(/VARIABLE_FULL_NAME/g, localPackage.name)
                 .replace(/VARIABLE_HTML_NAME/g, `${htmlprefix}-${nameInfo.name}`)
                 .replace(/VARIABLE_CLASS_NAME/g, nameInfo.className)
-        });
+        );
 
         if (shouldCommit)
         {

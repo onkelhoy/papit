@@ -50,7 +50,7 @@
  */
 
 import { debounceFn, STANDARD_DELAY } from "../../functions/debounce";
-import { Options } from "./types";
+import type { Options } from "./types";
 
 /**
  * Debounce a class method.

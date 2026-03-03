@@ -1,3 +1,4 @@
+// TODO: delete me i already exzist uinder @papit/deep-merge 
 export function deepMerge<T extends object, U extends object>(a: T, b: U, omit: string[] = []): T & U {
   const result: any = { ...a };
 

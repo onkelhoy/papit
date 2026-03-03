@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { LocalPackage, Package, RootPackage } from "./types";
+import type { LocalPackage, Package, RootPackage } from "./types";
 import { PackageNode } from "./node";
 import { Cache } from "./cache";
 

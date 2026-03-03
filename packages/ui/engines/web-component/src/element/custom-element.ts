@@ -39,7 +39,7 @@
 import { html, getValues } from "../html";
 import { TemplateInstance, partFactory } from '../html/part';
 import { debounceFn } from "../functions/debounce";
-import { PropertyMeta, QueryMeta, Setting } from "./types";
+import type { PropertyMeta, QueryMeta, Setting } from "./types";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
     mode: "open",

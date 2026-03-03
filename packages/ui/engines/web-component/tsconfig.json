@@ -2,8 +2,10 @@
     "compilerOptions": {
         "target": "es2018",
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
+        // "moduleDetection": "force",
         "noEmitOnError": true,
+        "skipLibCheck": true,
         "lib": [
             "es2020",
             "dom",
@@ -12,33 +14,29 @@
         ],
         "jsx": "react-jsx",
         "strict": true,
-        "esModuleInterop": false,
+        "verbatimModuleSyntax": false,
+        "noUncheckedIndexedAccess": false, // use me for strict array/object access checks
+        "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true,
+        "useDefineForClassFields": false,
         "outDir": "lib",
-        "sourceMap": true,
-        "inlineSources": true,
-        "rootDir": "./",
-        "allowJs": true,
-        "declarationDir": "lib/types",
+        "rootDir": "src",
         "declaration": true,
-        "incremental": true,
         "resolveJsonModule": true,
-        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "allowJs": true,
         "baseUrl": "src",
         "paths": {
             "@papit/web-component": [
                 "./index"
-            ],
-        }
+            ]
+        },
+        "sourceMap": true,
+        "inlineSources": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
     },
-    "exclude": [
-        "lib"
-    ],
     "include": [
-        "src",
-        "views",
-        "global-css.d.ts",
-        "tests"
+        "src"
     ]
 }

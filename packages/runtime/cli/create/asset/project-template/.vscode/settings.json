@@ -15,4 +15,5 @@
     "typescript.format.placeOpenBraceOnNewLineForFunctions": false,
     "typescript.format.placeOpenBraceOnNewLineForControlBlocks": true,
     "javascript.format.placeOpenBraceOnNewLineForControlBlocks": true,
+    "files.associations": { "*.json": "jsonc" },
 }

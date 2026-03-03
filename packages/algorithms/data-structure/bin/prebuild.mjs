@@ -1,56 +1,70 @@
-import esbuild from "esbuild";
-import fs from "node:fs";
-import { spawn } from "node:child_process";
+import { jsBundle, getArguments, getTSconfig, getEntryPoints } from "@papit/bundle-js";
+import { tsBundle } from "@papit/bundle-ts";
 
 import packageJSON from '../package.json' with {type: 'json'};
 
-function spawnCommand(command, args, cwd) {
-    return new Promise((resolve, reject) => {
-        const child = spawn(command, args, {
-            cwd,
-            stdio: "inherit",
-            shell: false,
-            env: { ...process.env },
-        });
-
-        child.on("close", code => {
-            if (code === 0) resolve();
-            else 
-            {
-                reject(new Error(`prebuild failed (${code})`));
-                process.exit(1);
-            }
-        });
-    });
+const STATE_COLOR = {
+    failed: 31,  // RED 
+    success: 32, // GREEN
+    skipped: 34, // BLUE 
 }
-
-const externals = [...Object.keys(packageJSON.dependencies || {}), ...Object.keys(packageJSON.peerDependencies || {})];
+const printState = (dim, state, name) => {
+    if (process.stdout.isTTY)
+    {
+        process.stdout.write(`\x1b[${STATE_COLOR[state]}m● \x1b[0m${dim} \x1b[${STATE_COLOR[state]}m${state}\x1b[0m - ${name}\n`);
+    }
+    else
+    {
+        process.stdout.write(`● {dim} ${state} - ${name}\n`);
+    }
+}
 
 (async function () {
 
-    if (fs.existsSync(".temp") && fs.existsSync("lib")) 
+    const args = getArguments();
+
+    const location = process.cwd();
+    const tsconfig = getTSconfig(args, location);
+    const entryPoints = getEntryPoints(location, packageJSON, tsconfig);
+
+    const bundlejs = await jsBundle(args, location,
+        {
+            packageJSON,
+            entryPoints,
+            tsconfig
+        }
+    );
+
+    if (bundlejs && bundlejs !== "skipped" && bundlejs.length > 0)
     {
-        console.log("prebuild skipped", packageJSON.name);
+        printState("prebuild js-bundle", "failed", packageJSON.name);
+
+        if (args.has("error")) res.forEach(node => console.log(node.result.errors));
+        process.exit(1);
+    }
+
+    const bundlets = await tsBundle(args, location,
+        {
+            entryPoints,
+            packageJSON,
+            tsconfig,
+        }
+    );
+
+    if (bundlets && bundlets !== "skipped" && bundlets.length > 0)
+    {
+        printState("prebuild ts-bundle", "failed", packageJSON.name);
+
+        if (args.has("error")) bundlets.forEach(node => console.log(node.result.errors));
+        process.exit(1);
+    }
+
+
+    if (bundlejs === "skipped" && bundlets === "skipped") 
+    {
+        printState("prebuild", "skipped", packageJSON.name);
         return;
     }
 
-    fs.rmSync("lib", { recursive: true, force: true });
-    fs.rmSync(".temp", { recursive: true, force: true });
-    await spawnCommand("tsc", ["--emitDeclarationOnly", "--declarationDir", "lib"], process.cwd());
-    fs.writeFileSync("lib/bundle.d.ts", "export * from './src';", { encoding: "utf-8" });
-
-    const esbuildInfo = await esbuild.build({
-        entryPoints: ["src/index.ts"],
-        bundle: true,
-        outfile: "lib/bundle.js",
-        minify: true,
-        format: packageJSON.type === "module" ? "esm" : "cjs",
-        platform: ["node"].includes(packageJSON.papit?.type ?? "node") ? "node" : "browser",
-        external: externals,
-    });
-
-    if (esbuildInfo.errors.length > 0)
-    {
-        process.exit(1);
-    }
+    printState("prebuild", "success", packageJSON.name);
 }());

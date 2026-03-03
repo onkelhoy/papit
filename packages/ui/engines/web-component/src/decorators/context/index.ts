@@ -3,5 +3,5 @@ export {
 } from "./dectorator"
 
 export {
-  Setting as ContextDecoratorSetting,
+  type Setting as ContextDecoratorSetting,
 } from './types';

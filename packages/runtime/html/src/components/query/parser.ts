@@ -1,4 +1,4 @@
-import { Token, State } from "./token";
+import { type Token, State } from "./token";
 
 export type Query = {
   tag?: string;

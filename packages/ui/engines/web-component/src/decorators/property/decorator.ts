@@ -13,10 +13,10 @@
  * @created 2025-08-11
  */
 
-import { parseValue, sameValue, stringifyValue } from "../../functions/value";
-import { PropertyMeta } from "../../element/types";
-import { resolve } from "../../functions/resolve";
-import { Setting } from "./types";
+import { parseValue, sameValue, stringifyValue } from "functions/value";
+import type { PropertyMeta } from "element/types";
+import { resolve } from "functions/resolve";
+import type { Setting } from "./types";
 
 const defaultSettings: Partial<Setting> = {
   readonly: false,

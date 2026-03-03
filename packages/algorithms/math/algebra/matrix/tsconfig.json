@@ -3,33 +3,36 @@
         "target": "es2022",
         "module": "esnext",
         "moduleResolution": "bundler",
+        // "moduleDetection": "force",
         "noEmitOnError": true,
+        "skipLibCheck": true,
         "lib": [
             "es2022"
         ],
         "strict": true,
+        "verbatimModuleSyntax": false,
+        "noUncheckedIndexedAccess": false, // use me for strict array/object access checks
         "esModuleInterop": true,
         "allowSyntheticDefaultImports": true,
         "experimentalDecorators": true,
+        "useDefineForClassFields": false,
         "outDir": "lib",
-        "sourceMap": true,
-        "inlineSources": true,
-        "rootDir": "./",
-        "allowJs": true,
-        "declarationDir": "lib/types",
+        "rootDir": "src",
         "declaration": true,
-        "incremental": true,
         "resolveJsonModule": true,
-        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "allowJs": true,
         "baseUrl": "src",
         "paths": {
             "@papit/matrix": [
                 "./index"
-            ],
-        }
+            ]
+        },
+        "sourceMap": true,
+        "inlineSources": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
     },
     "include": [
-        "src",
-        "tests"
+        "src"
     ]
 }

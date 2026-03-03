@@ -3,5 +3,5 @@ export {
 } from "./decorator";
 
 export {
-  Setting as PropertyDecoratorSetting,
+  type Setting as PropertyDecoratorSetting,
 } from './types';

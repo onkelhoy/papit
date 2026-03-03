@@ -2,11 +2,12 @@ import path from "node:path";
 import fs from "node:fs";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { Information, PackageNode } from "@papit/information";
+import { Information } from "@papit/information";
+import { build } from "@papit/build";
 
-import { getAssetFolders, handleAsset, Translation } from "./components/asset";
-import { close as httpExit, start as httpStart } from "./components/http";
-import { Importmap } from "./components/importmap/types";
+import { getAssetFolders, handleAsset,type Translation } from "./components/asset";
+import { close as httpExit, start as httpStart, update as socketUpdate } from "./components/http";
+import type { Importmap } from "./components/importmap/types";
 import { extractImportmap } from "./components/importmap/import-map";
 import { getPackageLocationFromImportMeta } from "./components/http/url";
 
@@ -23,15 +24,6 @@ export async function setup() {
     }
 
     let packageJSON = Information.package.packageJSON;
-    // let meta: Awaited<ReturnType<typeof getMeta>>;
-    // if (!packageJSON)
-    // {
-    //     packageJSON = getJSON<LocalPackage>(path.join(Information.root.location, "package.json"));
-    // }
-    // else 
-    // {
-    //     meta = await getMeta(Arguments.has("prod") ? "prod" : "dev", info, packageJSON);
-    // }
 
     if (!packageJSON)
     {
@@ -85,9 +77,9 @@ export async function setup() {
             {
                 extractImportmap(node, importmap, importmapFolder);
             }
-    
+
             if (!Arguments.has("include-node") && node.packageJSON.papit.type === "node") continue;
-    
+
             for (const asset of assetFolders)
             {
                 const assetLocation = path.join(node.location, asset);
@@ -96,11 +88,23 @@ export async function setup() {
         }
     }
 
+    if (!Arguments.has("prod")) Arguments.set("live", true);
+    const buildOutput = await build(Arguments.instance, (node, info) => {
+        if (info.type === "rebuild")
+        {
+            Terminal.write(Terminal.blue("package change"), node.name)
+            socketUpdate(node.location, info.result.outputFiles?.at(0)?.text ?? "");
+        }
+    });
+
     const shutdown = () => {
         if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))
         {
             fs.rmSync(path.join(Information.package.location, ".temp"), { force: true, recursive: true });
         }
+
+        buildOutput.forEach(output => output.dispose());
+
         console.log(); // spacing for Ctrl+C
         httpExit();
         process.exit(0);

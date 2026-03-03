@@ -1,4 +1,4 @@
-import { Part, PartHelpers } from "../types";
+import type { Part, PartHelpers } from "../types";
 
 /**
  * @fileoverview Manages a dynamic list of items in the DOM.

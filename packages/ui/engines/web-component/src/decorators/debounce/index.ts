@@ -3,5 +3,5 @@ export {
 } from "./decorator";
 
 export {
-  Options as DebounceOptions,
+  type Options as DebounceOptions,
 } from "./types";

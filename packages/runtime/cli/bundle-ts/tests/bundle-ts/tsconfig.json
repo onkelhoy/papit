@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+         "target": "es2022",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "lib": [
+            "es2022"
+        ],
+        "strict": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "useDefineForClassFields": false,
+        "outDir": "out",
+        "sourceMap": true,
+        "inlineSources": true,
+        "rootDir": "./",
+        "allowJs": true,
+        "declarationDir": "out/types",
+        "declaration": true,
+        "incremental": true,
+        "resolveJsonModule": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "baseUrl": "src",
+        "paths": {
+            "@papit/bundle-ts": [
+                "./index"
+            ],
+        }
+    },
+    "include": [
+        "src",
+        "tests"
+    ]
+}

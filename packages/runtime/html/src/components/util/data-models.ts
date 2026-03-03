@@ -1,6 +1,6 @@
-import { EventTargetPublic } from "./event";
+// import { EventTargetPublic } from "./event";
 
-export class List<T> extends EventTargetPublic {
+export class List<T> extends EventTarget {
   constructor(protected arr: T[]) {
     super()
   }

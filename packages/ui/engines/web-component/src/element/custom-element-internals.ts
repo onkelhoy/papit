@@ -18,7 +18,7 @@
 
 import { property } from "../decorators/property";
 import { CustomElement } from "./custom-element";
-import { Setting } from "./types";
+import type { Setting } from "./types";
 
 /**
  * **CustomElementInternals**

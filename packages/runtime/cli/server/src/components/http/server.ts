@@ -8,7 +8,7 @@ import path from "node:path";
 
 // components
 import { HttpError, MethodNotAllowedError } from "../errors";
-import { streamAsset, Translation } from "../asset";
+import { streamAsset, type Translation } from "../asset";
 import { getHTML } from "../html/html";
 
 // local imports 
@@ -46,10 +46,10 @@ export function start(
         const bundlecache = new Cache("bundle");
         bundlecache.maxSize = Arguments.number("cache-bundle") ?? 150; // MB
 
-        if (Information.name !== "@papit/server" && !Arguments.has("serve"))
+        if (Information.packageName !== "@papit/server" && !Arguments.has("serve"))
         {
             if (Arguments.info) Terminal.write(Terminal.blue("listening to file changes"), Information.package.name);
-            
+
             Arguments.set("no-bundle", true);
             Arguments.set("live", true);
             Arguments.set("location", Information.package.location);
@@ -66,6 +66,17 @@ export function start(
         server.listen(PORT, () => {
             Arguments.set("port", PORT);
             if (!Arguments.silent) Terminal.write("server:", Terminal.blue(PORT), Terminal.yellow("- running"));
+            if (Arguments.has("open"))
+            {
+                const url = path.join(`http://localhost:${PORT}`, path.relative(Information.root.location, Information.package.location));
+                const joined = path.join(url, Arguments.string("open") ?? Arguments.string("folder") ?? "");
+                switch (process.platform)
+                {
+                    case "win32": Terminal.execute(`start "${joined}"`, url); break;
+                    case "darwin": Terminal.execute(`open "${joined}"`, url); break;
+                    case "linux": Terminal.execute(`xdg-open "${joined}"`, url); break;
+                }
+            }
             resolve();
         });
 
@@ -122,7 +133,7 @@ export function start(
                         url.relative = path.join(url.relative, "index.html");
                     }
                 }
-                
+
                 const cached = htmlcache.get(url) ?? bundlecache.get(url) ?? filecache.get(url);
 
                 if (cached)

@@ -57,6 +57,7 @@
     "dependencies": {
         "@papit/arguments": "0.0.1",
         "@papit/build": "0.0.1",
+        "@papit/bundle-js": "^0.0.1",
         "@papit/html": "0.0.1",
         "@papit/information": "0.0.1",
         "@papit/terminal": "0.0.1",

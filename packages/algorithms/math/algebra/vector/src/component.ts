@@ -1,5 +1,5 @@
 import { toArray } from "./helper";
-import { Value, VectorObject } from "./types";
+import type { Value, VectorObject } from "./types";
 
 export class Vector extends Float32Array {
   constructor(dimension: number);

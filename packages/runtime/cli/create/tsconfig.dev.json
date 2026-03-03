@@ -1,0 +1,12 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "rootDir": "./",
+        "sourceMap": true,
+        "inlineSources": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+        "noEmit": true
+    },
+    "include": ["src", "tests"]
+}

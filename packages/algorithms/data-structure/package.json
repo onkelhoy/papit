@@ -55,7 +55,9 @@
     "dependencies": {},
     "devDependencies": {
         "@types/node": "22.10.2",
-        "typescript": "5.9.3"
+        "typescript": "5.9.3",
+        "@papit/bundle-ts": "^0.0.1",
+        "@papit/bundle-js": "^0.0.1"
     },
     "browserslist": [
         "defaults",

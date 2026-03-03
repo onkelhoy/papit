@@ -58,7 +58,7 @@ export class Args extends Loglevel {
                 // we treat as multiple groups 
                 for (let j = 0; j < name.length; j++)
                 {
-                    this.toggle(name[j]);
+                    this.toggle(name[j]!);
                 }
                 return;
             }

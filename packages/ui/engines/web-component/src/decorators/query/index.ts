@@ -3,6 +3,6 @@ export {
 } from "./decorator";
 
 export {
-  Setting as QueryDecoratorSetting,
+  type Setting as QueryDecoratorSetting,
 } from './types';
 

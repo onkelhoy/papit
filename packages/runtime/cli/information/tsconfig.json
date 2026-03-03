@@ -1,35 +1,38 @@
 {
-  "compilerOptions": {
-    "target": "es2022",
-    "module": "esnext",
-    "moduleResolution": "bundler",
-    "noEmitOnError": true,
-    "lib": [
-      "es2022"
-    ],
-    "strict": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
-    "experimentalDecorators": true,
-    "outDir": "lib",
-    "sourceMap": true,
-    "inlineSources": true,
-    "rootDir": "./",
-    "allowJs": true,
-    "declarationDir": "lib/types",
-    "declaration": true,
-    "incremental": true,
-    "resolveJsonModule": true,
-    "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
-    "baseUrl": "src",
-    "paths": {
-      "@papit/information": [
-        "./index"
-      ]
-    }
-  },
-  "include": [
-    "src",
-    "tests"
-  ]
+    "compilerOptions": {
+        "target": "es2022",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        // "moduleDetection": "force",
+        "noEmitOnError": true,
+        "skipLibCheck": true,
+        "lib": [
+            "es2022"
+        ],
+        "strict": true,
+        "verbatimModuleSyntax": false,
+        "noUncheckedIndexedAccess": false, // use me for strict array/object access checks
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "useDefineForClassFields": false,
+        "outDir": "lib",
+        "rootDir": "src",
+        "declaration": true,
+        "resolveJsonModule": true,
+        "allowJs": true,
+        "baseUrl": "src",
+        "paths": {
+            "@papit/information": [
+                "./index"
+            ]
+        },
+        "sourceMap": true,
+        "inlineSources": true,
+        "incremental": true,
+        "tsBuildInfoFile": ".temp/build/tsconfig.tsbuildinfo",
+    },
+    "include": [
+        "src"
+    ]
 }
