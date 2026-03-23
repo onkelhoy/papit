@@ -1,4 +1,4 @@
-import { Lexer, type StateRules } from "./lexer";
+import { Lexer, type StateRules } from "lexer";
 
 // Simple, focused token types
 export type MarkdownToken =

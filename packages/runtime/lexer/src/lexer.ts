@@ -1,7 +1,8 @@
 export type LexerAction<Ctx, Token> = (
     ctx: Ctx & {
         append: (char: string) => void;
-        emit: (token: Token) => void
+        emit: (token: Token) => void;
+        reconsume: () => void;
     },
     char: string,
     buffer: string,
@@ -21,9 +22,11 @@ export class Lexer<Ctx = any, Token = any> {
     private state: string;
     private buffer: string = "";
     private tokens: Token[] = [];
+    private reconsume = false;
     private ctx: Ctx & {
         append: (char: string) => void;
-        emit: (token: Token) => void
+        emit: (token: Token) => void;
+        reconsume: () => void;
     };
 
     constructor(
@@ -42,13 +45,20 @@ export class Lexer<Ctx = any, Token = any> {
             emit: (token: Token) => {
                 this.tokens.push(token);
                 this.buffer = "";
-            }
+            },
+            reconsume: () => { this.reconsume = true },
         };
     }
 
     run(input: string): Token[] {
         for (let i = 0; i < input.length; i++)
         {
+            if (this.reconsume)
+            {
+                this.reconsume = false;
+                i--;
+                continue;
+            }
             const char = input[i];
             const stateRules = this.rules[this.state];
             let matched = false;
