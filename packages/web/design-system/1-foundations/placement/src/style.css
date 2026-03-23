@@ -1,0 +1,177 @@
+:host {
+    position: absolute;
+    position-anchor: var(--anchor-name, --anchor);
+    display: block;
+    --gap: var(--space-2, 8px);
+    --marker-space: calc(var(--space-2, 0.5rem) * -1 + 1px);
+    width: max-content;
+
+    &::after {
+        content: "";
+        position: absolute;
+
+        width: var(--space-2, 0.5rem);
+        height: var(--space-2, 0.5rem);
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        /* default style is arrow */
+        background: inherit;
+        display: none;
+    }
+}
+
+:host([placement^="top"]) {
+    margin-bottom: var(--gap);
+}
+
+:host([placement^="bottom"]) {
+    margin-top: var(--gap);
+}
+
+:host([placement^="left"]) {
+    margin-right: var(--gap);
+}
+
+:host([placement^="right"]) {
+    margin-left: var(--gap);
+}
+
+
+/* TOP */
+:host([placement="top"]),
+:host([placement="top-center"]) {
+    position-area: top;
+    justify-self: anchor-center;
+}
+
+:host([placement="top-left"]) {
+    position-area: top span-right;
+}
+
+:host([placement="top-right"]) {
+    position-area: top span-left;
+}
+
+/* BOTTOM */
+:host([placement="bottom"]),
+:host([placement="bottom-center"]) {
+    position-area: bottom;
+    justify-self: anchor-center;
+}
+
+:host([placement="bottom-left"]) {
+    position-area: bottom span-right;
+}
+
+:host([placement="bottom-right"]) {
+    position-area: bottom span-left;
+}
+
+/* LEFT */
+:host([placement="left"]),
+:host([placement="left-center"]) {
+    position-area: left;
+    align-self: anchor-center;
+}
+
+:host([placement="left-top"]) {
+    position-area: span-bottom left;
+}
+
+:host([placement="left-bottom"]) {
+    position-area: span-top left;
+}
+
+/* RIGHT */
+:host([placement="right"]),
+:host([placement="right-center"]) {
+    position-area: right;
+    align-self: anchor-center;
+}
+
+:host([placement="right-top"]) {
+    position-area: span-bottom right;
+}
+
+:host([placement="right-bottom"]) {
+    position-area: span-top right;
+}
+
+/* MARKER STYLES */
+
+/* TOP — marker points down, sits at bottom edge */
+:host([placement="top"])::after,
+:host([placement="top-center"])::after {
+    bottom: var(--marker-space);
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+:host([placement="top-left"])::after {
+    bottom: var(--marker-space);
+    left: var(--space-2, 0.5rem);
+}
+
+:host([placement="top-right"])::after {
+    bottom: var(--marker-space);
+    right: var(--space-2, 0.5rem);
+}
+
+/* BOTTOM — marker points up, sits at top edge */
+:host([placement="bottom"])::after,
+:host([placement="bottom-center"])::after {
+    top: var(--marker-space);
+    left: 50%;
+    transform: translateX(-50%) rotate(180deg);
+}
+
+:host([placement="bottom-left"])::after {
+    top: var(--marker-space);
+    left: var(--space-2, 0.5rem);
+    transform: rotate(180deg);
+}
+
+:host([placement="bottom-right"])::after {
+    top: var(--marker-space);
+    right: var(--space-2, 0.5rem);
+    transform: rotate(180deg);
+}
+
+/* LEFT — marker points right, sits at right edge */
+:host([placement="left"])::after,
+:host([placement="left-center"])::after {
+    right: var(--marker-space);
+    top: 50%;
+    transform: translateY(-50%) rotate(-90deg);
+}
+
+:host([placement="left-top"])::after {
+    right: var(--marker-space);
+    top: var(--space-2, 0.5rem);
+    transform: rotate(-90deg);
+}
+
+:host([placement="left-bottom"])::after {
+    right: var(--marker-space);
+    bottom: var(--space-2, 0.5rem);
+    transform: rotate(-90deg);
+}
+
+/* RIGHT — marker points left, sits at left edge */
+:host([placement="right"])::after,
+:host([placement="right-center"])::after {
+    left: var(--marker-space);
+    top: 50%;
+    transform: translateY(-50%) rotate(90deg);
+}
+
+:host([placement="right-top"])::after {
+    left: var(--marker-space);
+    top: var(--space-2, 0.5rem);
+    transform: rotate(90deg);
+}
+
+:host([placement="right-bottom"])::after {
+    left: var(--marker-space);
+    bottom: var(--space-2, 0.5rem);
+    transform: rotate(90deg);
+}

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <!-- <pap-card>
+        <pap-typography slot="header" variant="h4">Experiment</pap-typography>
+        <pap-codeblock display="both">
+            <pap-menu></pap-menu>
+        </pap-codeblock>
+    </pap-card> -->
+
+    <h1>Menu Examples</h1>
+    <div class="flex">
+        <h2>Raw HTML case</h2>
+        <span><button popovertarget="raw-html-bottom">bottom</button></span>
+        <pap-menu id="raw-html-bottom">
+            <button role="menuitem">menu item 1</button>
+            <button role="menuitem">menu item 2</button>
+            <button role="menuitem">menu item 3</button>
+            <button role="menuitem">menu item 4</button>
+            <button role="menuitem">menu item 5</button>
+        </pap-menu>
+
+
+        <span><button popovertarget="raw-html-top">top</button></span>
+        <pap-menu id="raw-html-top" placement="top">
+            <button role="menuitem">menu item 1</button>
+            <button role="menuitem">menu item 2</button>
+            <button role="menuitem">menu item 3</button>
+            <button role="menuitem">menu item 4</button>
+            <button role="menuitem">menu item 5</button>
+        </pap-menu>
+
+
+        <span><button popovertarget="raw-html-right">right</button></span>
+        <pap-menu id="raw-html-right" placement="right">
+            <button role="menuitem">menu item 1</button>
+            <button role="menuitem">menu item 2</button>
+            <button role="menuitem">menu item 3</button>
+            <button role="menuitem">menu item 4</button>
+            <button role="menuitem">menu item 5</button>
+        </pap-menu>
+
+
+        <span><button popovertarget="raw-html-left">left</button></span>
+        <pap-menu id="raw-html-left" placement="left">
+            <button role="menuitem">menu item 1</button>
+            <button role="menuitem">menu item 2</button>
+            <button role="menuitem">menu item 3</button>
+            <button role="menuitem">menu item 4</button>
+            <button role="menuitem">menu item 5</button>
+        </pap-menu>
+    </div>
+
+
+    <div class="flex">
+        <h2>Nested Menu Example</h2>
+        <span>
+            <button popovertarget="nested">nested</button>
+        </span>
+
+        <pap-menu id="nested">
+            <pap-menuitem>
+                menu item 1
+                <pap-menu>
+                    <pap-menuitem>
+                        menu item 1.1
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.1.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.1.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.1.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.1.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.1.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 1.2
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.2.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.2.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.2.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.2.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.2.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+
+                    <pap-menuitem>
+                        menu item 1.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 1.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 1.4
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.4.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.4.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.4.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.4.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.4.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 1.5
+                        <pap-menu>
+                            <pap-menuitem>menu item 1.5.1</pap-menuitem>
+                            <pap-menuitem>menu item 1.5.2</pap-menuitem>
+                            <pap-menuitem>menu item 1.5.3</pap-menuitem>
+                            <pap-menuitem>menu item 1.5.4</pap-menuitem>
+                            <pap-menuitem>menu item 1.5.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+                </pap-menu>
+            </pap-menuitem>
+
+
+            <pap-menuitem>
+                menu item 2
+                <pap-menu>
+                    <pap-menuitem>
+                        menu item 2.1
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.1.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.1.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.1.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.1.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.1.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 2.2
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.2.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.2.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.2.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.2.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.2.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+
+                    <pap-menuitem>
+                        menu item 2.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 2.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 2.4
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.4.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.4.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.4.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.4.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.4.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 2.5
+                        <pap-menu>
+                            <pap-menuitem>menu item 2.5.1</pap-menuitem>
+                            <pap-menuitem>menu item 2.5.2</pap-menuitem>
+                            <pap-menuitem>menu item 2.5.3</pap-menuitem>
+                            <pap-menuitem>menu item 2.5.4</pap-menuitem>
+                            <pap-menuitem>menu item 2.5.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+                </pap-menu>
+            </pap-menuitem>
+
+            <pap-menuitem>
+                menu item 3
+                <pap-menu>
+                    <pap-menuitem>
+                        menu item 3.1
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.1.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.1.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.1.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.1.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.1.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 3.2
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.2.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.2.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.2.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.2.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.2.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+
+                    <pap-menuitem>
+                        menu item 3.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 3.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 3.4
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.4.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.4.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.4.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.4.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.4.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 3.5
+                        <pap-menu>
+                            <pap-menuitem>menu item 3.5.1</pap-menuitem>
+                            <pap-menuitem>menu item 3.5.2</pap-menuitem>
+                            <pap-menuitem>menu item 3.5.3</pap-menuitem>
+                            <pap-menuitem>menu item 3.5.4</pap-menuitem>
+                            <pap-menuitem>menu item 3.5.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+                </pap-menu>
+            </pap-menuitem>
+
+            <pap-menuitem>
+                menu item 4
+                <pap-menu>
+                    <pap-menuitem>
+                        menu item 4.1
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.1.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.1.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.1.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.1.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.1.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 4.2
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.2.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.2.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.2.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.2.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.2.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+
+                    <pap-menuitem>
+                        menu item 4.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 4.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 4.4
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.4.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.4.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.4.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.4.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.4.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 4.5
+                        <pap-menu>
+                            <pap-menuitem>menu item 4.5.1</pap-menuitem>
+                            <pap-menuitem>menu item 4.5.2</pap-menuitem>
+                            <pap-menuitem>menu item 4.5.3</pap-menuitem>
+                            <pap-menuitem>menu item 4.5.4</pap-menuitem>
+                            <pap-menuitem>menu item 4.5.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+                </pap-menu>
+            </pap-menuitem>
+
+            <pap-menuitem>
+                menu item 5
+                <pap-menu>
+                    <pap-menuitem>
+                        menu item 5.1
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.1.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.1.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.1.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.1.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.1.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 5.2
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.2.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.2.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.2.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.2.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.2.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+
+                    <pap-menuitem>
+                        menu item 5.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 5.3
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.3.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.3.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 5.4
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.4.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.4.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.4.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.4.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.4.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+
+                    <pap-menuitem>
+                        menu item 5.5
+                        <pap-menu>
+                            <pap-menuitem>menu item 5.5.1</pap-menuitem>
+                            <pap-menuitem>menu item 5.5.2</pap-menuitem>
+                            <pap-menuitem>menu item 5.5.3</pap-menuitem>
+                            <pap-menuitem>menu item 5.5.4</pap-menuitem>
+                            <pap-menuitem>menu item 5.5.5</pap-menuitem>
+                        </pap-menu>
+                    </pap-menuitem>
+                </pap-menu>
+            </pap-menuitem>
+        </pap-menu>
+    </div>
+</body>
+
+</html>

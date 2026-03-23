@@ -42,7 +42,7 @@ export async function tsBundle(
     timestamp(args, "before has-changed");
 
     if (
-        !args.has("force") 
+        !(args.has("force") || args.has("f")) 
         && !hasChanged(location, tsconfig?.fileNames, { tempSuffix: "papit-bundle-ts" }) 
         && !entryPointsArray.some(entry => !fs.existsSync(entry.output))) 
     {

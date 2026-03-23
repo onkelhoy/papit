@@ -1,4 +1,5 @@
-window.onload = () => {
+window.addEventListener("load", function () {
+
     const ws = new WebSocket('ws://localhost:' + location.port ?? window.PAPIT_PORT);
     ws.onerror = (error) => {
         console.error('live-server socket error:', error);
@@ -31,4 +32,4 @@ window.onload = () => {
     }
 
     window.currentliveservererrorfile = null;
-}
+});

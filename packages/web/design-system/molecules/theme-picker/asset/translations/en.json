@@ -1,0 +1,11 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en-UK"
+    },
+    "theme-picker": "theme-picker",
+    "theme picker": "Theme picker",
+    "light": "light",
+    "dark": "dark",
+    "system": "system"
+}

@@ -1,0 +1,221 @@
+@layer theme-base, theme;
+
+@layer theme-base {
+    :root {
+        /* Brand */
+        --primary: light-dark(oklch(14% 0 0), oklch(92% 0 0));
+        /* near black */
+        --secondary: light-dark(oklch(80% 0 0), oklch(28% 0 0));
+        /* near #ccc  */
+        --tertiary: light-dark(oklch(55% 0 0), oklch(55% 0 0));
+        /* mid grey   */
+
+        --text: light-dark(oklch(10% 0 0), oklch(95% 0 0));
+        --text-inverse: light-dark(oklch(95% 0 0), oklch(10% 0 0));
+        --text-secondary: light-dark(oklch(42% 0 0), oklch(62% 0 0));
+        /* muted, readable in both modes */
+
+        /* Semantic — vivid, same hues in both modes */
+        --success: light-dark(oklch(50% 0.18 145), oklch(72% 0.20 145));
+        /* spring green  */
+        --info: light-dark(oklch(46% 0.20 262), oklch(65% 0.20 262));
+        /* deep blue     */
+        --warning: light-dark(oklch(58% 0.18 68), oklch(80% 0.18 68));
+        /* orange-yellow */
+        --error: light-dark(oklch(50% 0.22 25), oklch(65% 0.22 25));
+        /* fire red      */
+
+        /* Backgrounds — near white → mid grey */
+        --background-lightest: light-dark(oklch(100% 0 0), oklch(32% 0 0));
+        --background-lighter: light-dark(oklch(98% 0 0), oklch(24% 0 0));
+        --background-light: light-dark(oklch(95% 0 0), oklch(20% 0 0));
+        --background: light-dark(oklch(92% 0 0), oklch(16% 0 0));
+        --background-dark: light-dark(oklch(86% 0 0), oklch(12% 0 0));
+        --background-darker: light-dark(oklch(78% 0 0), oklch(8% 0 0));
+        --background-darkest: light-dark(oklch(68% 0 0), oklch(4% 0 0));
+
+        /* Foregrounds — mid grey → near black */
+        --foreground-lightest: light-dark(oklch(52% 0 0), oklch(100% 0 0));
+        --foreground-lighter: light-dark(oklch(40% 0 0), oklch(97% 0 0));
+        --foreground-light: light-dark(oklch(28% 0 0), oklch(92% 0 0));
+        --foreground: light-dark(oklch(16% 0 0), oklch(86% 0 0));
+        --foreground-dark: light-dark(oklch(10% 0 0), oklch(74% 0 0));
+        --foreground-darker: light-dark(oklch(6% 0 0), oklch(62% 0 0));
+        --foreground-darkest: light-dark(oklch(2% 0 0), oklch(48% 0 0));
+
+        /* INVERSE Backgrounds — near white → mid grey */
+        --background-lightest-inverse: light-dark(oklch(32% 0 0), oklch(100% 0 0));
+        --background-lighter-inverse: light-dark(oklch(24% 0 0), oklch(98% 0 0));
+        --background-light-inverse: light-dark(oklch(20% 0 0), oklch(95% 0 0));
+        --background-inverse: light-dark(oklch(16% 0 0), oklch(92% 0 0));
+        --background-dark-inverse: light-dark(oklch(12% 0 0), oklch(86% 0 0));
+        --background-darker-inverse: light-dark(oklch(8% 0 0), oklch(78% 0 0));
+        --background-darkest-inverse: light-dark(oklch(4% 0 0), oklch(68% 0 0));
+
+        /* INVERSE Foregrounds — mid grey → near black */
+        --foreground-lightest-inverse: light-dark(oklch(100% 0 0), oklch(52% 0 0));
+        --foreground-lighter-inverse: light-dark(oklch(97% 0 0), oklch(40% 0 0));
+        --foreground-light-inverse: light-dark(oklch(92% 0 0), oklch(28% 0 0));
+        --foreground-inverse: light-dark(oklch(86% 0 0), oklch(16% 0 0));
+        --foreground-dark-inverse: light-dark(oklch(74% 0 0), oklch(10% 0 0));
+        --foreground-darker-inverse: light-dark(oklch(62% 0 0), oklch(6% 0 0));
+        --foreground-darkest-inverse: light-dark(oklch(48% 0 0), oklch(2% 0 0));
+    }
+
+    /* make sure web-components are hidden intially to avoid flashes */
+    *:not(:defined) {
+        visibility: hidden;
+    }
+
+    :root {
+        color-scheme: light;
+
+        [data-theme="opposite"],
+        .theme-opposite {
+            color-scheme: dark;
+            background-color: var(--background);
+            color: var(--text);
+
+            [data-theme="opposite"],
+            .theme-opposite {
+                color-scheme: light;
+            }
+
+            /* nested 1 level */
+        }
+
+        @media (prefers-color-scheme: dark) {
+            color-scheme: dark;
+
+            [data-theme="opposite"],
+            .theme-opposite {
+                color-scheme: light;
+
+                [data-theme="opposite"],
+                .theme-opposite {
+                    color-scheme: dark;
+                }
+
+                /* nested 1 level */
+            }
+        }
+    }
+
+    [data-theme="light"],
+    .theme-light {
+        color-scheme: light;
+
+        [data-theme="opposite"],
+        .theme-opposite {
+            color-scheme: dark;
+
+            [data-theme="opposite"],
+            .theme-opposite {
+                color-scheme: light;
+            }
+
+            /* nested 1 level */
+        }
+    }
+
+    [data-theme="dark"],
+    .theme-dark {
+        color-scheme: dark;
+
+        [data-theme="opposite"],
+        .theme-opposite {
+            color-scheme: light;
+
+            [data-theme="opposite"],
+            .theme-opposite {
+                color-scheme: dark;
+            }
+
+            /* nested 1 level */
+        }
+    }
+
+    /* == UNITS == */
+    :root {
+        --base-unit: 0.25rem;
+        --space-1: calc(var(--base-unit) * 1);
+        /* 0.25rem - 4px  */
+        --space-2: calc(var(--base-unit) * 2);
+        /* 0.5rem  - 8px  */
+        --space-3: calc(var(--base-unit) * 3);
+        /* 0.75rem - 12px */
+        --space-4: calc(var(--base-unit) * 4);
+        /* 1rem    - 16px */
+        --space-5: calc(var(--base-unit) * 5);
+        /* 1.25rem - 20px */
+        --space-6: calc(var(--base-unit) * 6);
+        /* 1.5rem  - 24px */
+        --space-7: calc(var(--base-unit) * 7);
+        /* 1.75rem - 28px */
+        --space-8: calc(var(--base-unit) * 8);
+        /* 2rem    - 32px */
+        --space-9: calc(var(--base-unit) * 9);
+        /* 2.25rem - 36px */
+        --space-10: calc(var(--base-unit) * 10);
+        /* 2.5rem  - 40px */
+        --space-11: calc(var(--base-unit) * 11);
+        /* 2.75rem - 44px */
+        --space-12: calc(var(--base-unit) * 12);
+        /* 3rem    - 48px */
+        --space-13: calc(var(--base-unit) * 13);
+        /* 3.25rem - 52px */
+        --space-14: calc(var(--base-unit) * 14);
+        /* 3.5rem  - 56px */
+        --space-15: calc(var(--base-unit) * 15);
+        /* 3.75rem - 60px */
+        --space-16: calc(var(--base-unit) * 16);
+        /* 4rem    - 64px */
+        --space-17: calc(var(--base-unit) * 17);
+        /* 4.25rem - 68px */
+        --space-18: calc(var(--base-unit) * 18);
+        /* 4.5rem  - 72px */
+        --space-19: calc(var(--base-unit) * 19);
+        /* 4.75rem - 76px */
+        --space-20: calc(var(--base-unit) * 20);
+        /* 5rem    - 80px */
+
+        --radius-small: var(--space-2);
+        --radius-medium: var(--space-4);
+        --radius-large: var(--space-8);
+        --radius-full: 100vh;
+    }
+
+    /* THEME VIEW TRANSITION */
+    @media (prefers-reduced-motion: no-preference) {
+        ::view-transition-old(root) {
+            animation-delay: 500ms;
+        }
+
+        ::view-transition-new(root) {
+            animation: theme-transition-in 500ms;
+        }
+    }
+
+    @keyframes theme-transition-in {
+        from {
+            clip-path: circle(0% at var(--theme-transition-location, 80% 0%));
+        }
+
+        to {
+            clip-path: circle(200% at var(--theme-transition-location, 80% 0%));
+        }
+    }
+}
+
+/* not good support for function for now but this is how we could get the luminace value */
+
+/* 
+    @function --contrasting-color(--surface) {
+        // prefer color-contrast() if supported
+        @supports (color: color-contrast(red vs black, white)) {
+            result: color-contrast(var(--surface) vs black, white);
+        }
+        // fallback to relative color luminance trick
+        result: oklch(from var(--surface) clamp(0, (l - 0.6) * -999, 1) 0 0);
+    } 
+*/

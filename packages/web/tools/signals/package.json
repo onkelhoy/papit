@@ -1,0 +1,89 @@
+{
+    "name": "@papit/signals",
+    "description": "a simple package doing the overly hyped signals pattern ",
+    "keywords": [
+        "papit",
+        "web-component",
+        "typescript",
+        "signals"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/server --info",
+        "test": "npx playwright test -c tests/playwright.config.ts",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium"
+    },
+    "main": "./lib/browser.js",
+    "types": "./lib/browser.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/browser.js",
+            "types": "./lib/browser.d.ts"
+        },
+        "./browser": {
+            "import": "./lib/browser.js",
+            "types": "./lib/browser.d.ts"
+        },
+        "./node": {
+            "import": "./lib/node.js",
+            "types": "./lib/node.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/tools/signals",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/onkelhoy/papit.git",
+        "directory": "packages/web/tools/signals"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {},
+    "devDependencies": {
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": {
+            "./browser": "browser",
+            "./node": "node"
+        },
+        "main": "signals",
+        "htmlprefix": "pap",
+        "components": {
+            "signals": {
+                "className": "Signals",
+                "htmlprefix": "pap"
+            }
+        }
+    }
+}

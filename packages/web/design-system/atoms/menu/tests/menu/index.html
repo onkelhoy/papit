@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>menu test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <button data-testid="trigger" id="main-trigger" popovertarget="main-menu">Options</button>
+    <pap-menu data-testid="with-trigger" id="main-menu">
+        <pap-menuitem>Cut</pap-menuitem>
+        <pap-menuitem>Copy</pap-menuitem>
+        <pap-menuitem data-testid="submenu-trigger">
+            Open Recent
+            <pap-menu data-testid="submenu">
+                <pap-menuitem>project-one.txt</pap-menuitem>
+                <pap-menuitem>project-two.txt</pap-menuitem>
+                <pap-menuitem>project-three.txt</pap-menuitem>
+            </pap-menu>
+        </pap-menuitem>
+        <pap-menuitem>Paste</pap-menuitem>
+        <pap-menuitem>Delete</pap-menuitem>
+    </pap-menu>
+
+    <button data-testid="outside">Outside</button>
+</body>
+
+</html>

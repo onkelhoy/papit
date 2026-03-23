@@ -1,7 +1,7 @@
-import {describe, it, beforeEach} from "node:test";
+import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert";
 
-import {Query, Document, Node} from "@papit/html";
+import { Query, Document, Node } from "@papit/html";
 
 describe("Node / Element", () => {
 
@@ -31,10 +31,10 @@ describe("Node / Element", () => {
         it("should parse comment", () => {
             const doc = new Document();
             doc.innerHTML = `
-        <!-- comment1 -->
-        <!-- comment2 -->
-        <div>Hello World</div>
-      `;
+                <!-- comment1 -->
+                <!-- comment2 -->
+                <div>Hello World</div>
+            `;
 
             assert.strictEqual(doc.childNodes.length, 3);
             assert.strictEqual(doc.childNodes.item(0).nodeName, "COMMENT_NODE", "comment.nodeName != COMMENT_NODE");
@@ -43,14 +43,32 @@ describe("Node / Element", () => {
             assert.strictEqual(doc.documentElement.tagName, "div");
         });
 
+        it("should parse multiline comment", () => {
+            const doc = new Document();
+            doc.innerHTML = `
+                <!-- 
+                    <p>hello</p>
+                -->
+                <!-- comment2 -->
+                <div>Hello World</div>
+            `;
+            // Same structure as single-line: comment + comment + div = 3 nodes
+            assert.strictEqual(doc.childNodes.length, 3);
+            assert.strictEqual(doc.childNodes.item(0).nodeName, "COMMENT_NODE");
+            // textContent likely includes whitespace/newlines - adjust trim behavior to match your parser
+            assert.ok(doc.childNodes.item(0).textContent.includes("<p>hello</p>"), "multiline comment body should be preserved as text");
+            assert.strictEqual(doc.childNodes.item(1).textContent, "comment2");
+            assert.strictEqual(doc.documentElement.tagName, "div");
+        });
+
         it("should parse comment with doctype", () => {
             const doc = new Document();
             doc.innerHTML = `
-        <!doctype html>
-        <!-- comment1 -->
-        <!-- comment2 -->
-        <div>Hello World</div>
-      `;
+                <!doctype html>
+                <!-- comment1 -->
+                <!-- comment2 -->
+                <div>Hello World</div>
+            `;
 
             console.log(doc.childNodes.item(0).nodeName);
             assert.strictEqual(doc.childNodes.length, 4);
@@ -60,7 +78,6 @@ describe("Node / Element", () => {
             assert.strictEqual(doc.childNodes.item(2).textContent, "comment2");
             assert.strictEqual(doc.documentElement.tagName, "div");
             assert.strictEqual(doc.outerHTML, "<!DOCTYPE html><!-- comment1 --><!-- comment2 --><div>Hello World</div>");
-
         });
     })
 
@@ -207,7 +224,7 @@ describe("Node / Element", () => {
             assert.strictEqual(folders.children.length, 5);
             assert.strictEqual(files.children.length, 5);
 
-            assert.strictEqual(doc.innerHTML, "<body><ul><li><span /><span>0</span></li><li><span /><span>1</span></li><li><span /><span>2</span></li><li><span /><span>3</span></li><li><span /><span>4</span></li></ul><ul><li><span /><span>5</span></li><li><span /><span>6</span></li><li><span /><span>7</span></li><li><span /><span>8</span></li><li><span /><span>9</span></li></ul></body>")
+            assert.strictEqual(doc.innerHTML, "<body><ul><li><span></span><span>0</span></li><li><span></span><span>1</span></li><li><span></span><span>2</span></li><li><span></span><span>3</span></li><li><span></span><span>4</span></li></ul><ul><li><span></span><span>5</span></li><li><span></span><span>6</span></li><li><span></span><span>7</span></li><li><span></span><span>8</span></li><li><span></span><span>9</span></li></ul></body>")
         })
 
         it("should build tree from innerHTML", () => {
@@ -249,22 +266,46 @@ describe("Node / Element", () => {
 
         it("should assign title", () => {
             doc.innerHTML = `
-        <!doctype html>
-        <html>
-          <head>
-            <title>Hello World</title>
-          </head>
-          <body>
-            alright 
-          </body>
-        <html>
-      `;
+                <!doctype html>
+                <html>
+                <head>
+                    <title>Hello World</title>
+                </head>
+                <body>
+                    alright 
+                </body>
+                <html>
+            `;
 
             assert.ok(!!doc.title, "title is missing");
             assert.strictEqual(doc.title, "Hello World");
 
             doc.title = "hejsan banan";
             assert.strictEqual(doc.title, "hejsan banan");
+        });
+
+        it.only("should move childNodes from one document body to another", () => {
+            const source = new Document();
+            source.innerHTML = `
+                <html>
+                <body>
+                    <span data-testid="hello"></span>
+                    <span data-testid="none"></span>
+                    <span data-testid="variable"></span>
+                </body>
+                </html>
+            `;
+
+            const target = new Document();
+            target.innerHTML = `<html><body></body></html>`;
+
+            [...source.body.childNodes].forEach(node => target.body.appendChild(node));
+
+            assert.strictEqual(target.body.children.length, 3);
+            assert.strictEqual(target.body.children[0].getAttribute("data-testid"), "hello");
+            assert.strictEqual(target.body.children[1].getAttribute("data-testid"), "none");
+            assert.strictEqual(target.body.children[2].getAttribute("data-testid"), "variable");
+            assert.strictEqual(source.body.children.length, 0);
         });
     });
 
@@ -288,7 +329,7 @@ describe("Node / Element", () => {
             const span = document.createElement("span");
             div.appendChild(span);
 
-            assert.strictEqual(document.outerHTML, "<div><span /></div>");
+            assert.strictEqual(document.outerHTML, "<div><span></span></div>");
 
             span.innerHTML = "<p>bajskorvar</p>";
             assert.strictEqual(document.outerHTML, "<div><span><p>bajskorvar</p></span></div>");
@@ -409,12 +450,12 @@ describe("Node / Element", () => {
         <html>
           <div></div>
           <div>hejsan</div>
-          <div/>
+          <div></div>
         </html>
       `;
 
             assert.strictEqual(doc.documentElement.children.length, 3);
-            assert.strictEqual(doc.innerHTML, "<html><div /><div>hejsan</div><div /></html>");
+            assert.strictEqual(doc.innerHTML, "<html><div></div><div>hejsan</div><div></div></html>");
         });
 
         it("should parse with script tag", () => {

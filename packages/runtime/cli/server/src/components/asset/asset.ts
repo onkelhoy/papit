@@ -1,106 +1,140 @@
 import path from "node:path";
-import fs from "node:fs";
+// import fs from "node:fs";
 import { ServerResponse } from "node:http";
 
-import { Arguments } from "@papit/arguments";
-import { Terminal } from "@papit/terminal";
+// import { Arguments } from "@papit/arguments";
+// import { Terminal } from "@papit/terminal";
+// import { deepMergeTwo } from "@papit/deep-merge";
 
-import type { Translation, Translations } from "./types";
-import { deepMerge } from "./util";
-import { NotFoundError } from "../errors";
-import { getFILE } from "../file/get";
-import { Cache } from "../file/cache";
+import { extractTranslation, type Translation, type Translations } from "./translation";
+// import { deepMerge } from "./util";
+import { NotFoundError } from "components/errors";
+import { getFILE } from "components/file/get";
+import { Cache } from "components/file/cache";
+import { Information } from "@papit/information";
 
-async function extractTranslation(folder: string, translations: Translations) {
-    const files = fs
-        .readdirSync(folder)
-        .map(name => path.join(folder, name))
-        .filter(file => fs.statSync(file).isFile() && file.endsWith(".json"));
+// export async function extractAssets(
+//     root: string,
+//     location: string,
+//     translations: Translations,
+//     assets: Record<string, string[]>,
+//     folders: string[],
+//     deep = 0,
+// ) {
+//     if (!fs.existsSync(location) || deep > 10) return;
 
-    for (const file of files)
-    {
-        const json = JSON.parse(fs.readFileSync(file, { encoding: "utf-8" })) as Translation;
-        
-        if (!json) continue;
+//     const FFs = fs.readdirSync(location)
 
-        if (!translations[json.meta.language]) translations[json.meta.language] = { meta: json.meta };
-        translations[json.meta.language] = deepMerge(translations[json.meta.language], json, ["meta"]);
-    }
-}
+//     for (const name of FFs)
+//     {
+//         const url = path.join(location, name)
+//         const stat = fs.statSync(url)
 
-export function getAssetFolders() {
-    const folders = ["asset", "assets", "public"];
+//         if (!stat.isDirectory()) continue
 
-    if (Arguments.has("asset"))
-    {
-        const asset = Arguments.get("asset");
-        folders.push(...asset);
-    }
-    return folders;
-}
+//         const lowerName = name.toLowerCase()
 
-export async function handleAsset(
-    root: string,
+//         if (lowerName.startsWith("translation"))
+//         {
+//             await extractTranslation(url, translations)
+//             continue  // don't recurse into translation folders
+//         }
+
+//         if (folders.includes(lowerName))
+//         {
+//             // found an asset folder — harvest its files
+//             await handleAsset(root, url, translations, assets, folders)
+//             continue  // don't recurse further into it
+//         }
+
+//         // not an asset folder — keep looking deeper
+//         await extractAssets(root, url, translations, assets, folders, deep + 1)
+//     }
+// }
+
+// asset.ts — just registers a file into assets/translations
+export function handleAsset(
     location: string,
-    translations: Record<string, Translation>,
+    file: string,
     assets: Record<string, string[]>,
-    folders: string[], // [assets|public|files]
-    deep = 0,
 ) {
-    if (!fs.existsSync(location)) return;
+    const relativeURL = path.relative(location, file);
+    const segments = relativeURL.split(path.sep);
 
-    // files and folders
-    const FFs = fs.readdirSync(location); // .filter(name => fs.statSync(path.join(location, name)).isDirectory());
-
-    for (const name of FFs) 
+    while (segments.length > 0)
     {
-        const url = path.join(location, name);
-        const stat = fs.statSync(url);
-
-        if (stat.isFile())
-        {
-            const relativeURL = path.relative(root, url);
-            const absoluteURL = '/' + relativeURL;
-            if (!assets[absoluteURL]) assets[absoluteURL] = [];
-            assets[absoluteURL].push(url);
-
-            const segments = relativeURL.split(path.sep);
-            // Remove first segment if it's an asset folder
-            if (folders.includes(segments[0]))
-            {
-                segments.shift();
-                const relativeURL = '/' + segments.join('/');
-
-                if (!assets[relativeURL]) assets[relativeURL] = [];
-                assets[relativeURL].push(url);
-            }
-        }
-
-        if (stat.isDirectory())
-        {
-            const lowerName = name.toLowerCase();
-            if (lowerName.startsWith("translation"))
-            {
-                await extractTranslation(url, translations);
-                return;
-            }
-
-            if (deep < 10)
-            {
-                await handleAsset(root, url, translations, assets, folders, deep + 1);
-            }
-            else if (Arguments.warning)
-            {
-                Terminal.warn("max asset depth reached", url);
-            }
-        }
+        const joined = "/" + segments.join("/");
+        if (!assets[joined]) assets[joined] = [];
+        assets[joined].push(file);
+        segments.shift();
     }
 }
+
+
+// export async function handleAsset(
+//     root: string,
+//     location: string,
+//     translations: Record<string, Translation>,
+//     assets: Record<string, string[]>,
+//     folders: string[], // [assets|public|files]
+//     deep = 0,
+// ) {
+//     if (!fs.existsSync(location)) return;
+
+//     // files and folders
+//     const FFs = fs.readdirSync(location); // .filter(name => fs.statSync(path.join(location, name)).isDirectory());
+
+//     for (const name of FFs) 
+//     {
+//         const url = path.join(location, name);
+//         console.log("handle asset", { name, url })
+//         const stat = fs.statSync(url);
+
+//         if (stat.isFile())
+//         {
+//             const relativeURL = path.relative(root, url);
+//             const absoluteURL = '/' + relativeURL;
+//             if (!assets[absoluteURL]) assets[absoluteURL] = [];
+//             assets[absoluteURL].push(url);
+
+//             const segments = relativeURL.split(path.sep);
+//             // Remove first segment if it's an asset folder
+//             if (folders.includes(segments[0]))
+//             {
+//                 segments.shift();
+//                 const relativeURL = '/' + segments.join('/');
+
+//                 if (!assets[relativeURL]) assets[relativeURL] = [];
+//                 assets[relativeURL].push(url);
+//             }
+//         }
+
+//         if (stat.isDirectory())
+//         {
+//             const lowerName = name.toLowerCase();
+//             if (lowerName.startsWith("translation"))
+//             {
+//                 await extractTranslation(url, translations);
+//                 return;
+//             }
+
+//             if (deep < 10)
+//             {
+//                 console.log("looking recursivle", url)
+//                 await handleAsset(root, url, translations, assets, folders, deep + 1);
+//             }
+//             else if (Arguments.warning)
+//             {
+//                 Terminal.warn("max asset depth reached", url);
+//             }
+//         }
+//     }
+// }
 
 
 export async function streamAsset(
     url: string,
-    translations: Record<string, Translation>,
+    translations: Translations,
     assets: Record<string, string[]>,
     cache: Cache,
     res: ServerResponse,
@@ -118,7 +152,17 @@ export async function streamAsset(
     }
 
     // we need to check translations 
-    // if (translations[url])
+    if (translations.map[url])
+    {
+        const lang = translations.map[url]
+        if (lang)
+        {
+            return {
+                mimeType: 'application/json',
+                buffer: Buffer.from(JSON.stringify(translations.data[lang]))
+            }
+        }
+    }
 
     throw new NotFoundError(`asset "${url}" not found`);
 }

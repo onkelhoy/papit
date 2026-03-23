@@ -38,14 +38,15 @@ export async function jsBundle(
 
     const packageJSON: PackageJson = options?.packageJSON ?? JSON.parse(fs.readFileSync(packageJsonLocation, { encoding: "utf-8" }));
     const entryPoints = options?.entryPoints ?? getEntryPoints(location, packageJSON, tsconfig);
-    const entrypointsArray = options?.entryPointArray ? options.entryPointArray : Object.values(entryPoints.entries).map(value => value.import).filter(v => v !== undefined);
+    const entrypointsArray = options?.entryPointArray ? options.entryPointArray : Object.entries(entryPoints.entries).map(([name, value]) => value.import?.input ? ({ ...value.import, name }) : undefined).filter(v => v !== undefined);
 
     const first = entrypointsArray.at(0);
     if (!first) throw new Error("[@papit/bundle-js] no entry-points passed");
 
     const inputs = options?.tsconfig && typeof options?.tsconfig !== "string" ? options.tsconfig.fileNames : entrypointsArray.map(v => v.input);
+    // TODO: inputs is currently not checking CSS files. instead we should just map out ALL files inside the src folder 
     if (
-        !args.has("force")
+        !(args.has("force") || args.has("f"))
         && first.output !== undefined
         && !hasChanged(location, inputs)
         && fs.existsSync(path.dirname(first.output))
@@ -106,15 +107,18 @@ export async function jsWatch(
             const option = modifyOptions(entry, esoptions);
             const ctx = await esbuild.context({
                 ...option,
-                plugins: [{
-                    name: "onbuild",
-                    setup(build) {
-                        build.onEnd(result => {
-                            if (onBuild) onBuild({ type: entrySet.has(entry.input) ? "rebuild" : "build", result, entry });
-                            entrySet.add(entry.input);
-                        });
+                plugins: [
+                    ...(option.plugins ?? []),
+                    {
+                        name: "onbuild",
+                        setup(build) {
+                            build.onEnd(result => {
+                                if (onBuild) onBuild({ type: entrySet.has(entry.input) ? "rebuild" : "build", result, entry });
+                                entrySet.add(entry.input);
+                            });
+                        }
                     }
-                }]
+                ]
             });
             await ctx.watch();
             return ctx;

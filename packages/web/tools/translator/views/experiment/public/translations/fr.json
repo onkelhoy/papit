@@ -1,0 +1,11 @@
+{
+    "meta": {
+        "region": "FR",
+        "language": "fr-FR"
+    },
+    "sentence1": "Le rapide renard brun saute par-dessus le chien paresseux",
+    "sentence2": "Elle vend des coquillages au bord de la mer",
+    "sentence3": "Bon retour, {name} !",
+    "sentence4": "Votre commande a été confirmée",
+    "sentence5": "Veuillez sélectionner votre langue préférée"
+}

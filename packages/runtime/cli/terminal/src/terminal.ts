@@ -248,10 +248,12 @@ export class Terminal extends Colors {
         let stdout = "";
         let stderr = "";
 
-        const child = spawn(cmd, _args.concat(options.args ?? []), {
+        const full = [cmd, ..._args.concat(options.args ?? [])].join(" ");
+        
+        const child = spawn(full, {
             cwd: options.cwd,
             stdio: process.env.CI ? "inherit" : "pipe",
-            shell: false,
+            shell: true,
             env: { ...process.env },
         });
 

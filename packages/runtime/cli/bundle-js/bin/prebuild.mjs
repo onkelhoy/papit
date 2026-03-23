@@ -22,10 +22,11 @@ const printState = (dim, state, name) => {
 
 function spawnCommand(command, args, cwd) {
     return new Promise((resolve, reject) => {
-        const child = spawn(command, args, {
+        const full = [command, ...args].join(" ");
+        const child = spawn(full, {
             cwd,
             stdio: "inherit",
-            shell: false,
+            shell: true,
             env: { ...process.env },
         });
 
@@ -44,7 +45,7 @@ function getArguments() {
     const args = new Set();
     for (let arg of process.argv.slice(2))
     {
-        args.add(arg.replace(/^--/, ""));
+        args.add(arg.replace(/^--?/, ""));
     }
 
     return args;
@@ -62,7 +63,7 @@ const externals = [
 
     const args = getArguments();
 
-    if (!args.has("force") && fs.existsSync(".temp") && fs.existsSync("lib")) 
+    if (!(args.has("force") || args.has("f")) && fs.existsSync(".temp") && fs.existsSync("lib")) 
     {
         console.log("prebuild skipped", packageJSON.name);
         return;

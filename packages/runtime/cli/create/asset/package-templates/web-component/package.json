@@ -9,9 +9,9 @@
     ],
     "version": "0.0.1",
     "scripts": {
-        "build": "npx @papit/build --error --ancestors",
+        "build": "npx @papit/build --error",
         "watch": "tsc -w",
-        "start": "npx @papit/server",
+        "start": "npx @papit/server --info",
         "test": "npx playwright test -c tests/playwright.config.ts",
         "preversion": "papit-version",
         "postversion": "papit-version",
@@ -60,14 +60,11 @@
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
         "typescript": "5.9.3",
-        
+        "@papit/theme": "*",
         "@papit/translator": "*",
         "@papit/card": "*",
         "@papit/codeblock": "*",
-        "@papit/typography": "*",
-        "@papit/arguments": "*",
-        "@papit/information": "*",
-        "@papit/terminal": "*"
+        "@papit/typography": "*"
     },
     "browserslist": [
         "defaults",

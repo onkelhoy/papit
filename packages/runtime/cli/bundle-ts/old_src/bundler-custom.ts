@@ -53,7 +53,7 @@ export async function tsBundle(
         mappedEntryinputs.temp.push(path.join(tempOutDir, entry.input.replace(location, '').replace(/.ts$/, '.d.ts')));
     });
 
-    if (args.has("force") || hasChanged(location, tsconfig?.fileNames) || !fs.existsSync(path.join(tempOutDir, sourceFolder(location, tsconfig)))) 
+    if ((args.has("force") || args.has("f")) || hasChanged(location, tsconfig?.fileNames) || !fs.existsSync(path.join(tempOutDir, sourceFolder(location, tsconfig)))) 
     {
         // this is stupid, but html needs it but then we cannot test this own package.. 
         // const fileNames = /cli\/bundle-ts/.test(location) ? tsconfig?.fileNames : tsconfig?.fileNames?.filter(f => !f.includes('/tests/'));

@@ -1,0 +1,25 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>menuitem test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <pap-menuitem data-testid="leaf">Cut</pap-menuitem>
+
+    <pap-menuitem data-testid="with-submenu">
+        Open Recent
+        <pap-menu>
+            <pap-menuitem>project-one.txt</pap-menuitem>
+            <pap-menuitem>project-two.txt</pap-menuitem>
+        </pap-menu>
+    </pap-menuitem>
+
+    <pap-menuitem role="menuitemcheckbox">Toggle</pap-menuitem>
+</body>
+
+</html>

@@ -20,6 +20,25 @@ function canPrint() {
 //     return Promise.all(promises);
 // }
 
+export function debounceFn<T extends (...args: any[]) => any>(
+    execute: T,
+    delay: number = 100
+): (...args: Parameters<T>) => void {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
+        if (timer)
+        {
+            clearTimeout(timer);
+        }
+
+        timer = setTimeout(() => {
+            execute.apply(this, args);
+            timer = null;
+        }, delay);
+    };
+}
+
 (async function () {
 
     if (!canPrint()) return;
@@ -49,16 +68,38 @@ export async function build(
 
     const failed = new Set<string>();
     const watchers: Awaited<ReturnType<typeof jsWatch>>[] = [];
+    let hasprintedPriority = false;
+
+    const debouncedInstall = debounceFn(npmInstall);
 
     // always do initial build first, in order
     for (const batch of ordered)
     {
         let shouldinstall = false;
         const isPriority = batch === ordered[0];
-        if (isPriority && batch.length > 0 && canprint) Terminal.write(Terminal.yellow("priority*"));
+        if (isPriority && batch.length > 0 && canprint) 
+        {
+            Terminal.write(Terminal.yellow("priority"));
+            hasprintedPriority = true;
+        }
+        else if (canprint && hasprintedPriority)
+        {
+            hasprintedPriority = false;
+            Terminal.write("\n" + Terminal.yellow("normal"));
+        }
 
         for (const node of batch)
         {
+            if (node.packageJSON.papit?.type === "theme")
+            {
+                const result = buildTheme(args, node);
+                if (canprint && !args.has("live"))
+                {
+                    if (result === "skipped") Terminal.write(Terminal.blue("●"), Terminal.dim(node.name), Terminal.blue("skipped"));
+                    else Terminal.write(Terminal.green("●"), Terminal.dim(node.name), Terminal.green("success"));
+                }
+                continue;
+            }
             const install = await runner(node, failed, args, canprint, logLevel);
             if (install) shouldinstall = true;
         }
@@ -75,6 +116,11 @@ export async function build(
             for (const node of batch)
             {
                 if (failed.has(node.name)) continue;
+                if (node.packageJSON.papit?.type === "theme") 
+                {
+                    buildTheme(args, node);
+                    continue;
+                }
 
                 const baseOptions = getESOptions(Arguments.instance, node.location, {
                     logLevel,
@@ -92,9 +138,9 @@ export async function build(
                         esoptions: baseOptions,
                     },
                     async (info) => {
-                        onBuild(args, node, info);
-                        onPackageBuild?.(node, info);
+                        const shouldinstall = onBuild(args, node, info);
 
+                        onPackageBuild?.(node, info);
                         if (node.tsconfig.options.declaration)
                         {
                             await tsBundle(args, node.location, {
@@ -102,6 +148,11 @@ export async function build(
                                 packageJSON: node.packageJSON,
                                 tsconfig: node.tsconfig,
                             });
+                        }
+
+                        if (shouldinstall)
+                        {
+                            debouncedInstall(args, canprint);
                         }
                     }
                 );
@@ -138,11 +189,12 @@ async function runner(
 
         const baseOptions = getESOptions(
             Arguments.instance,
-            node.location, {
-            logLevel,
-            packageJSON: node.packageJSON,
-            externals: node.externals,
-        }
+            node.location,
+            {
+                logLevel,
+                packageJSON: node.packageJSON,
+                externals: node.externals,
+            }
         );
 
         const skipped = {
@@ -202,7 +254,6 @@ async function runner(
 
             if (skipped.bundlejs || skipped.bundlets)
             {
-
                 Terminal.write(Terminal.blue("●"), Terminal.dim(node.name), Terminal.blue("skipped"));
             }
             else
@@ -231,6 +282,24 @@ async function runner(
         close();
         return shouldinstall;
     }
+}
+
+function buildTheme(args: Args, node: PackageNode) {
+    const src = path.join(node.location, node.sourceFolder);
+    const files = fs.readdirSync(src)
+        .filter(f => f.endsWith(".css"));
+
+    const out = path.join(node.location, node.outFolder);
+
+    if (!(args.has("force") || args.has("f")) && fs.existsSync(out) && !hasChanged(node.location, files.map(f => path.join(src, f))))
+    {
+        return "skipped"
+    }
+
+    fs.mkdirSync(out, { recursive: true });
+    files.forEach(f => fs.cpSync(path.join(src, f), path.join(out, f)));
+
+    return "success"
 }
 
 function onBuild(args: Args, node: PackageNode, info: OnBuildEvent) {

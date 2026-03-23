@@ -1,0 +1,17 @@
+:host {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+
+    width: var(--space-6, 24px);
+    height: var(--space-6, 24px);
+
+    font-size: 1.5rem;
+    color: var(--text);
+
+    svg {
+        fill: currentColor;
+        width: inherit;
+        height: inherit;
+    }
+}

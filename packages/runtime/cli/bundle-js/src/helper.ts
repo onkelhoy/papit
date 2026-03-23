@@ -7,7 +7,7 @@ export type PackageJson = {
     devDependencies: Record<string, string>;
     peerDependencies: Record<string, string>;
     papit?: {
-        type: string,
+        type: string | Record<string, string>,
     }
 
     bin?: Record<string, string>;
@@ -44,7 +44,7 @@ export function getTSlocation(
     location: string,
 ) {
     let tsconfigLocation = path.join(location, "tsconfig.json");
-    
+
     if (args.has("prod"))
     {
         const prodloc = path.join(location, "tsconfig.prod.json");

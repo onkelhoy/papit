@@ -54,7 +54,6 @@
     "dependencies": {
         "@papit/arguments": "0.0.1",
         "@papit/data-structure": "^0.0.1",
-        "@papit/deep-merge": "0.0.1",
         "@papit/terminal": "^0.0.1",
         "typescript": "5.9.3"
     },
