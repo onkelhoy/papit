@@ -63,7 +63,6 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
                     break;
 
                 case 0x8: // close frame
-                    console.log('Client requested close');
                     socket.end();
                     break;
 

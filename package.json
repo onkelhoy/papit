@@ -15,7 +15,7 @@
         "build": "npx @papit/build",
         "test": "node bin/test.mjs",
         "create": "npm create @papit -- --package --html-prefix=pap",
-        "start": "npx @papit/server --serve --info"
+        "start": "npx @papit/server --info"
     },
     "keywords": [
         "typescript"
