@@ -1,0 +1,44 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>splitter test</title>
+    <script type="module" defer src="main.js"></script>
+    <style>
+        /* tests need dimensions to work */
+        body {
+            margin: 0;
+            padding: 1rem;
+        }
+
+        pap-splitter {
+            width: 600px;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- default vertical -->
+    <pap-splitter data-testid="base-target" label="Sidebar">
+        <div slot="primary">Primary</div>
+        <div slot="secondary">Secondary</div>
+    </pap-splitter>
+
+    <!-- horizontal -->
+    <pap-splitter data-testid="horizontal" split="horizontal" label="Editor">
+        <div slot="primary">Editor</div>
+        <div slot="secondary">Terminal</div>
+    </pap-splitter>
+
+    <!-- custom min/max/step -->
+    <pap-splitter data-testid="custom" label="Custom" min="20" max="80" step="10">
+        <div slot="primary">Primary</div>
+        <div slot="secondary">Secondary</div>
+    </pap-splitter>
+
+</body>
+
+</html>
