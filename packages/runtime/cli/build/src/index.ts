@@ -172,7 +172,7 @@ async function runner(
             }
         }
 
-        if (skipped.bundlejs || skipped.bundlets)
+        if (skipped.bundlejs)
         {
             onPackageBuild?.(node, "skipped");
         }
