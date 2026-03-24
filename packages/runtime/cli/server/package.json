@@ -62,6 +62,7 @@
         "@papit/html": "0.0.1",
         "@papit/information": "0.0.1",
         "@papit/terminal": "0.0.1",
+        "chokidar": "^5.0.0",
         "esbuild": "0.27.2"
     },
     "devDependencies": {

@@ -1,7 +1,7 @@
 // import statements
 import fs from "node:fs";
 import path from "node:path";
-import esbuild, { BuildContext, type BuildOptions, type BuildResult } from "esbuild";
+import esbuild, { type BuildOptions, type BuildResult } from "esbuild";
 import { getESOptions, modifyOptions, type Options } from "./options";
 import { hasChanged } from "changed";
 import { getEntryPoints } from "entrypoints";
@@ -19,7 +19,7 @@ function timestamp(args: { has: (key: string) => boolean }, message?: string) {
 }
 
 export type OnBuildEvent =
-    | { type: "build" | "rebuild"; result: esbuild.BuildResult<esbuild.BuildOptions>; entry: { input: string, output: string | undefined } }
+    | { type: "build"; result: esbuild.BuildResult<esbuild.BuildOptions>; entry: { input: string, output: string | undefined } }
     | { type: "skipped" };
 
 type OnBuild = (event: OnBuildEvent) => void;
@@ -80,53 +80,53 @@ export async function jsBundle(
 }
 
 
-export async function jsWatch(
-    args: { has: (key: string) => boolean },
-    location: string,
-    options?: Partial<Options>,
-    onBuild?: OnBuild,
-): Promise<{ contexts: BuildContext[], dispose: () => void }> {
+// export async function jsWatch(
+//     args: { has: (key: string) => boolean },
+//     location: string,
+//     options?: Partial<Options>,
+//     onBuild?: OnBuild,
+// ): Promise<{ contexts: BuildContext[], dispose: () => void }> {
 
-    const tsconfig = options?.tsconfig ?? getTSconfig(args, location);
-    const packageJsonLocation = path.join(location, "package.json");
-    if (!fs.existsSync(packageJsonLocation)) throw new Error("[@papit/bundle-js] error no package.json file found");
+//     const tsconfig = options?.tsconfig ?? getTSconfig(args, location);
+//     const packageJsonLocation = path.join(location, "package.json");
+//     if (!fs.existsSync(packageJsonLocation)) throw new Error("[@papit/bundle-js] error no package.json file found");
 
-    const packageJSON: PackageJson = options?.packageJSON ?? JSON.parse(fs.readFileSync(packageJsonLocation, { encoding: "utf-8" }));
-    const entryPoints = options?.entryPoints ?? getEntryPoints(location, packageJSON, tsconfig);
-    const entrypointsArray = options?.entryPointArray ? options.entryPointArray : Object.values(entryPoints.entries).map(value => value.import).filter(v => v !== undefined);
-    const first = entrypointsArray.at(0);
+//     const packageJSON: PackageJson = options?.packageJSON ?? JSON.parse(fs.readFileSync(packageJsonLocation, { encoding: "utf-8" }));
+//     const entryPoints = options?.entryPoints ?? getEntryPoints(location, packageJSON, tsconfig);
+//     const entrypointsArray = options?.entryPointArray ? options.entryPointArray : Object.values(entryPoints.entries).map(value => value.import).filter(v => v !== undefined);
+//     const first = entrypointsArray.at(0);
 
-    if (!first) throw new Error("[@papit/bundle-js] no entry-points passed");
+//     if (!first) throw new Error("[@papit/bundle-js] no entry-points passed");
 
-    const esoptions = options?.esoptions ?? getESOptions(args, location, options);
+//     const esoptions = options?.esoptions ?? getESOptions(args, location, options);
 
-    const entrySet = new Set<string>();
+//     const entrySet = new Set<string>();
 
-    const contexts = await Promise.all(
-        entrypointsArray.map(async entry => {
-            const option = modifyOptions(entry, esoptions);
-            const ctx = await esbuild.context({
-                ...option,
-                plugins: [
-                    ...(option.plugins ?? []),
-                    {
-                        name: "onbuild",
-                        setup(build) {
-                            build.onEnd(result => {
-                                if (onBuild) onBuild({ type: entrySet.has(entry.input) ? "rebuild" : "build", result, entry });
-                                entrySet.add(entry.input);
-                            });
-                        }
-                    }
-                ]
-            });
-            await ctx.watch();
-            return ctx;
-        })
-    );
+//     const contexts = await Promise.all(
+//         entrypointsArray.map(async entry => {
+//             const option = modifyOptions(entry, esoptions);
+//             const ctx = await esbuild.context({
+//                 ...option,
+//                 plugins: [
+//                     ...(option.plugins ?? []),
+//                     {
+//                         name: "onbuild",
+//                         setup(build) {
+//                             build.onEnd(result => {
+//                                 if (onBuild) onBuild({ type: entrySet.has(entry.input) ? "rebuild" : "build", result, entry });
+//                                 entrySet.add(entry.input);
+//                             });
+//                         }
+//                     }
+//                 ]
+//             });
+//             await ctx.watch();
+//             return ctx;
+//         })
+//     );
 
-    return {
-        contexts,
-        dispose: () => Promise.all(contexts.map(ctx => ctx.dispose())),
-    };
-}
+//     return {
+//         contexts,
+//         dispose: () => Promise.all(contexts.map(ctx => ctx.dispose())),
+//     };
+// }
