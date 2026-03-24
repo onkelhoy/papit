@@ -49,7 +49,7 @@ export function start(
         bundlecache.maxSize = Arguments.number("cache-bundle") ?? 150; // MB
 
 
-        if (!Arguments.has("prod")) live();
+        if (Arguments.has("live")) live();
 
         if (Information.packageName !== "@papit/server" && !Arguments.has("serve"))
         {
@@ -244,7 +244,8 @@ function live() {
                 filePath.includes("/.temp/") ||
                 filePath.includes("/.vscode/") ||
                 filePath.includes("/.github/") ||
-                filePath.includes("/lib/")
+                filePath.includes("/lib/") ||
+                /\/tests?\//.test(filePath)
             );
         },
         // ignoreInitial: true, // BUG IN CHOKIDAR WITH "followSymlinks"

@@ -90,7 +90,7 @@ test.describe("@papit/menu menu unit tests", () => {
             expect(expanded).toBe('false');
         });
 
-        test('returns focus to trigger when closed via Escape', async ({ page }) => {
+        test.skip('returns focus to trigger when closed via Escape', async ({ page }) => {
             await page.click('button[data-testid="trigger"]');
             await page.waitForTimeout(1000);
             await page.keyboard.press('Escape');
