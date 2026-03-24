@@ -2,8 +2,9 @@
 import http, { ServerResponse } from "node:http";
 import fs from "node:fs";
 import path from "node:path";
+import chokidar from "chokidar";
 
-import { Information } from "@papit/information";
+import { Information, PackageNode } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 
@@ -17,9 +18,10 @@ import { bundler } from "components/file/bundler";
 import { Cache } from "components/file/cache";
 import { getFILE } from "components/file/get";
 
-import { upgrade } from "./socket";
+import { update as socketUpdate, upgrade } from "./socket";
 import { getPort } from "./port";
-import { getURL } from "./url";
+import { getPACKAGE, getURL } from "./url";
+import { build } from "@papit/build";
 
 let PORT = Arguments.number("port") || 3000;
 export let server: null | http.Server = null;
@@ -31,7 +33,8 @@ export function start(
     importmap: { imports: Record<string, string> },
     themes: Map<string, string>,
 ) {
-    PORT = Arguments.number("port") || 3000
+    PORT = Arguments.number("port") || 3000;
+
     return new Promise<void>(async (resolve) => {
 
         PORT = await getPort(PORT);
@@ -45,6 +48,9 @@ export function start(
         const bundlecache = new Cache("bundle");
         bundlecache.maxSize = Arguments.number("cache-bundle") ?? 150; // MB
 
+
+        if (!Arguments.has("prod")) live();
+
         if (Information.packageName !== "@papit/server" && !Arguments.has("serve"))
         {
             if (Arguments.info) Terminal.write(Terminal.blue("listening to file changes"), Information.package.name);
@@ -54,12 +60,6 @@ export function start(
             Arguments.set("location", Information.package.location);
             Arguments.set("mode", "dev");
             Arguments.set("buildMode", "ancestors");
-
-            // executor({
-            //     callback(counter, result) {
-            //         console.log('rebuild')
-            //     },
-            // });
         }
 
         server.listen(PORT, () => {
@@ -234,4 +234,86 @@ function handleError(e: unknown, res: ServerResponse) {
     }
 
     res.end();
+}
+
+function live() {
+    const watcher = chokidar.watch(Information.root.location, {
+        ignored: (filePath: string) => {
+            return (
+                filePath.includes("/node_modules/") ||
+                filePath.includes("/.temp/") ||
+                filePath.includes("/.vscode/") ||
+                filePath.includes("/.github/") ||
+                filePath.includes("/lib/")
+            );
+        },
+        // ignoreInitial: true, // BUG IN CHOKIDAR WITH "followSymlinks"
+        persistent: true,
+        followSymlinks: false
+    });
+
+    let chokidarready = false;
+    watcher.on("ready", () => { chokidarready = true; });
+
+    let isBuilding = false;
+
+    const runBuild = async (node: PackageNode) => {
+        isBuilding = true;
+        try
+        {
+            await build(Arguments.instance, node, (_, info) => {
+                if (info === "success")
+                {
+                    if (Arguments.info) Terminal.write(Terminal.blue("rebuilt"), node.name);
+                    socketUpdate(node);
+                }
+                else if (info === "skipped")
+                {
+                    if (Arguments.info) Terminal.write(Terminal.blue("skipped"), node.name);
+                }
+                else 
+                {
+                    if (Arguments.info) Terminal.error(node.name);
+                }
+            });
+        }
+        catch (e)
+        {
+            if (Arguments.error) Terminal.error(e);
+        }
+        finally 
+        {
+            isBuilding = false;
+        }
+    }
+
+    watcher.on("all", (event, filePath, stats) => {
+        if (!chokidarready) return;
+        if (isBuilding) return;
+
+        const url = { absolute: filePath, relative: path.relative(Information.root.location, filePath) };
+        const packageNode = getPACKAGE(url);
+
+        if (url.relative.includes(packageNode.sourceFolder + "/"))
+        {
+            runBuild(packageNode);
+        }
+        else 
+        {
+            socketUpdate(packageNode);
+        }
+
+        if (Arguments.debug)
+        {
+            console.log("SERVER LIVE RELOAD", {
+                url,
+                package: {
+                    name: packageNode.name,
+                    location: packageNode.location,
+                    src: packageNode.sourceFolder,
+                },
+                includes: url.relative.includes(packageNode.sourceFolder + "/")
+            })
+        }
+    });
 }

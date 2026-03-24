@@ -6,6 +6,8 @@ window.addEventListener("load", function () {
     }
     ws.onopen = () => {
         console.log('live-server socket connected', 'ws://localhost:' + location.port ?? window.PAPIT_PORT);
+
+        ws.send(JSON.stringify({type: "register", location: window.location.pathname}));
     }
     ws.onmessage = (message) => {
         const data = JSON.parse(message.data); // { action: 'update', filename, content }
@@ -14,10 +16,10 @@ window.addEventListener("load", function () {
         {
             case "update":
                 // NOTE: this might need to be expanded since this wont upgrade whenever 
-                if (window.location.pathname.startsWith(data.filename) || data.filename.startsWith(window.location.pathname))
+                if (data.isDescendant || window.location.pathname.startsWith(data.filename) || data.filename.startsWith(window.location.pathname))
                     window.location.reload();
                 else
-                    console.log("hot reload skipped", { filename: data.filename, window: window.location.pathname })
+                    console.log("hot reload skipped", {filename: data.filename, window: window.location.pathname})
                 break;
             case "error":
                 console.log('wonk wonk an error..');

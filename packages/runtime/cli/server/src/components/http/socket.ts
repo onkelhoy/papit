@@ -5,9 +5,10 @@ import path from "node:path";
 
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { Information } from "@papit/information";
+import { Information, PackageNode } from "@papit/information";
+import { getPACKAGE } from "./url";
 
-const connectedClients = new Set<Duplex>();
+const connectedClients = new Map<Duplex, PackageNode>();
 
 export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Duplex, head: Buffer) {
     // handshake
@@ -24,7 +25,7 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
     socket.write(responseHeaders.join('\r\n') + '\r\n\r\n');
 
     // keeping track
-    connectedClients.add(socket);
+
 
     if (Arguments.info) Terminal.write(Terminal.blue("client connected"));
 
@@ -34,10 +35,56 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
     socket.on("error", (err: any) => {
         if (err.code === "ECONNRESET") connectedClients.delete(socket);
     });
+    socket.on("data", (chunk: Buffer) => {
+        try
+        {
+            const frame = parseWebSocketFrame(chunk);
+
+            switch (frame.opcode)
+            {
+                case 0x1: // text frame
+                    const message = frame.payload.toString('utf8');
+                    // Parse as JSON if that's what you're sending
+                    try
+                    {
+                        const data = JSON.parse(message);
+
+                        switch (data.type)
+                        {
+                            case "register": {
+                                const packageNode = getPACKAGE({ relative: data.location, absolute: path.join(Information.root.location, data.location) });
+                                connectedClients.set(socket, packageNode);
+                                break;
+                            }
+                        }
+
+                    }
+                    catch (e) { }
+                    break;
+
+                case 0x8: // close frame
+                    console.log('Client requested close');
+                    socket.end();
+                    break;
+
+                case 0x9: // ping
+                    // Send pong back
+                    const pongFrame = frameWebSocketMessage({ type: 'pong' });
+                    socket.write(pongFrame);
+                    break;
+
+                default:
+                    console.log('Unknown opcode:', frame.opcode);
+            }
+        } catch (err)
+        {
+            console.error('Error parsing WebSocket frame:', err);
+        }
+    });
 }
 
 // exposed functions 
-export function update(filename: string, content: string) {
+export function update(node: PackageNode) {
     // notify all clients 
     try
     {
@@ -47,8 +94,23 @@ export function update(filename: string, content: string) {
             return
         }
 
-        const message = frameWebSocketMessage({ action: 'update', filename: "/" + path.relative(Information.root.location, filename), content });
-        write(message);
+        const rawMessage = {
+            action: "update",
+            filename: "/" + path.relative(Information.root.location, node.location),
+        }
+
+        connectedClients.forEach((socketNode, socket) => {
+
+            if (!socket || !socket.writable)
+            {
+                if (Arguments.verbose) Terminal.error(Terminal.blue("socket"), "[error] could not find client");
+                connectedClients.delete(socket);
+                return;
+            }
+            const message = frameWebSocketMessage({ ...rawMessage, isDescendant: node?.descendants.some(n => n.name === socketNode.name) });
+
+            socket.write(message);
+        });
     }
     catch (e)
     {
@@ -69,7 +131,8 @@ export function error(filename: string, errors: any[]) {
 
 // helper functions
 function write(message: Buffer<ArrayBufferLike>) {
-    connectedClients.forEach((socket) => {
+    connectedClients.forEach((_, socket) => {
+
         if (!socket || !socket.writable)
         {
             if (Arguments.verbose) Terminal.error(Terminal.blue("socket"), "[error] could not find client");
@@ -115,4 +178,51 @@ function frameWebSocketMessage(data: unknown): Buffer {
     payload.copy(frame, offset);
 
     return frame;
+}
+
+function parseWebSocketFrame(buffer: Buffer): { opcode: number; payload: Buffer } {
+    const firstByte = buffer[0];
+    const secondByte = buffer[1];
+
+    const fin = (firstByte & 0x80) !== 0;
+    const opcode = firstByte & 0x0f;
+    const masked = (secondByte & 0x80) !== 0;
+    let payloadLength = secondByte & 0x7f;
+
+    let offset = 2;
+
+    // Extended payload length (matches your framing logic)
+    if (payloadLength === 126)
+    {
+        payloadLength = buffer.readUInt16BE(offset);
+        offset += 2;
+    } else if (payloadLength === 127)
+    {
+        payloadLength = Number(buffer.readBigUInt64BE(offset));
+        offset += 8;
+    }
+
+    // Clients MUST mask payload, so we expect masked = true
+    if (!masked)
+    {
+        throw new Error("Expected masked frame from client");
+    }
+
+    // Read masking key
+    const maskingKey = buffer.slice(offset, offset + 4);
+    offset += 4;
+
+    // Read and unmask payload
+    const maskedPayload = buffer.slice(offset, offset + payloadLength);
+    const unmasked = Buffer.alloc(payloadLength);
+
+    for (let i = 0; i < payloadLength; i++)
+    {
+        unmasked[i] = maskedPayload[i] ^ maskingKey[i % 4];
+    }
+
+    return {
+        opcode,
+        payload: unmasked
+    };
 }

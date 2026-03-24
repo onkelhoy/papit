@@ -3,10 +3,9 @@ import fs from "node:fs";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 import { Information } from "@papit/information";
-import { build } from "@papit/build";
 
 import { extractAssets, getAssetFolders, Translations } from "components/asset";
-import { close as httpExit, start as httpStart, update as socketUpdate } from "components/http";
+import { close as httpExit, start as httpStart } from "components/http";
 import type { Importmap } from "components/importmap/types";
 import { extractImportmap } from "components/importmap/import-map";
 import { getPackageLocationFromImportMeta } from "components/http/url";
@@ -119,13 +118,14 @@ export async function setup() {
 
     // if (!Arguments.has("prod") && !Arguments.has("serve")) Arguments.set("live", true);
 
-    const buildOutput = await build(Arguments.instance, (node, info) => {
-        if (info.type === "rebuild")
-        {
-            if (Arguments.verbose) Terminal.write(Terminal.blue("package change"), node.name)
-            socketUpdate(node.location, info.result.outputFiles?.at(0)?.text ?? "");
-        }
-    });
+    // const buildOutput = await build(Arguments.instance, (node, info) => {
+    //     if (info.type === "rebuild")
+    //     {
+    //         if (Arguments.verbose) Terminal.write(Terminal.blue("package change"), node.name)
+    //         socketUpdate(node.location, info.result.outputFiles?.at(0)?.text ?? "");
+    //     }
+    // }); //
+
 
     const shutdown = () => {
         if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))
@@ -133,7 +133,7 @@ export async function setup() {
             fs.rmSync(path.join(Information.package.location, ".temp"), { force: true, recursive: true });
         }
 
-        buildOutput.forEach(output => output.dispose());
+        // buildOutput.forEach(output => output.dispose());
 
         console.log(); // spacing for Ctrl+C
         httpExit();

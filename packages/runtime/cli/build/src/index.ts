@@ -6,7 +6,7 @@ import { type LogLevel } from "esbuild";
 import { Information, PackageNode } from "@papit/information";
 import { Args, Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { getESOptions, hasChanged, jsBundle, jsWatch, OnBuildEvent } from "@papit/bundle-js";
+import { getESOptions, hasChanged, jsBundle, OnBuildEvent } from "@papit/bundle-js";
 import { tsBundle } from "@papit/bundle-ts";
 
 import { npmInstall } from "helper";
@@ -15,50 +15,19 @@ function canPrint() {
     return Arguments.has("run-build") || (Arguments.isCLI && !!process.env._?.endsWith("papit-build"));
 }
 
-// function runBatch(batch: PackageNode[], failed: Set<string>, args: Args, canprint: boolean) {
-//     const promises = batch.map(node => runner(node, failed, args, canprint));
-//     return Promise.all(promises);
-// }
-
-export function debounceFn<T extends (...args: any[]) => any>(
-    execute: T,
-    delay: number = 100
-): (...args: Parameters<T>) => void {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-
-    return function (this: ThisParameterType<T>, ...args: Parameters<T>) {
-        if (timer)
-        {
-            clearTimeout(timer);
-        }
-
-        timer = setTimeout(() => {
-            execute.apply(this, args);
-            timer = null;
-        }, delay);
-    };
-}
-
 (async function () {
 
     if (!canPrint()) return;
-    const watchers = await build();
-
-    await new Promise<void>(resolve => {
-        process.on("SIGINT", async () => {
-            Terminal.write("\ndisposing watchers...");
-            await Promise.all(watchers.map(w => w.dispose()));
-            resolve();
-        });
-    });
+    await build();
 }())
 
 export async function build(
     args = new Args(process.argv),
-    onPackageBuild?: (node: PackageNode, info: OnBuildEvent) => void,
+    node?: PackageNode,
+    onPackageBuild?: (node: PackageNode, info: "failed" | "skipped" | "success") => void,
 ) {
     const canprint = canPrint();
-    const ordered = Information.getPriorityBatches(args);
+    const failed = new Set<string>();
 
     let logLevel: LogLevel = "silent";
     if (args.error) logLevel = "error";
@@ -66,11 +35,23 @@ export async function build(
     else if (args.info) logLevel = "info";
     else if (args.verbose || args.debug) logLevel = "info";
 
-    const failed = new Set<string>();
-    const watchers: Awaited<ReturnType<typeof jsWatch>>[] = [];
-    let hasprintedPriority = false;
+    if (node)
+    {
+        if (node.packageJSON.papit?.type === "theme")
+        {
+            const result = buildTheme(args, node);
+            if (onPackageBuild) onPackageBuild(node, result);
+            return;
+        }
 
-    const debouncedInstall = debounceFn(npmInstall);
+        const shouldinstall = await runner(node, failed, args, canprint, logLevel, onPackageBuild);
+        if (shouldinstall) await npmInstall(args, canprint);
+        return;
+    }
+
+    const ordered = Information.getPriorityBatches(args);
+
+    let hasprintedPriority = false;
 
     // always do initial build first, in order
     for (const batch of ordered)
@@ -100,70 +81,12 @@ export async function build(
                 }
                 continue;
             }
-            const install = await runner(node, failed, args, canprint, logLevel);
+            const install = await runner(node, failed, args, canprint, logLevel, onPackageBuild);
             if (install) shouldinstall = true;
         }
 
         if (shouldinstall) await npmInstall(args, canprint);
     }
-
-
-    // after initial build, start watchers if live
-    if (args.has("live"))
-    {
-        for (const batch of ordered)
-        {
-            for (const node of batch)
-            {
-                if (failed.has(node.name)) continue;
-                if (node.packageJSON.papit?.type === "theme") 
-                {
-                    buildTheme(args, node);
-                    continue;
-                }
-
-                const baseOptions = getESOptions(Arguments.instance, node.location, {
-                    logLevel,
-                    packageJSON: node.packageJSON,
-                    externals: node.externals,
-                });
-                const watcher = await jsWatch(
-                    args, node.location,
-                    {
-                        entryPoints: node.entrypoints,
-                        logLevel,
-                        externals: node.externals,
-                        packageJSON: node.packageJSON,
-                        tsconfig: node.tsconfig,
-                        esoptions: baseOptions,
-                    },
-                    async (info) => {
-                        const shouldinstall = onBuild(args, node, info);
-
-                        onPackageBuild?.(node, info);
-                        if (node.tsconfig.options.declaration)
-                        {
-                            await tsBundle(args, node.location, {
-                                entryPoints: node.entrypoints,
-                                packageJSON: node.packageJSON,
-                                tsconfig: node.tsconfig,
-                            });
-                        }
-
-                        if (shouldinstall)
-                        {
-                            debouncedInstall(args, canprint);
-                        }
-                    }
-                );
-                watchers.push(watcher);
-            }
-        }
-
-        if (canprint) Terminal.write(Terminal.green("watching..."));
-    }
-
-    return watchers;
 }
 
 async function runner(
@@ -172,6 +95,7 @@ async function runner(
     args: Args,
     canprint: boolean,
     logLevel: LogLevel,
+    onPackageBuild?: (node: PackageNode, info: "failed" | "skipped" | "success") => void,
 ): Promise<boolean> {
     // we store terminal functions for the loading
     let close: () => void = () => null;
@@ -248,6 +172,15 @@ async function runner(
             }
         }
 
+        if (skipped.bundlejs || skipped.bundlets)
+        {
+            onPackageBuild?.(node, "skipped");
+        }
+        else
+        {
+            onPackageBuild?.(node, "success");
+        }
+
         if (canprint) 
         {
             close(); // cool
@@ -275,6 +208,7 @@ async function runner(
             }
         }
 
+        onPackageBuild?.(node, "failed");
         failed.add(node.name);
     }
     finally 
@@ -303,7 +237,7 @@ function buildTheme(args: Args, node: PackageNode) {
 }
 
 function onBuild(args: Args, node: PackageNode, info: OnBuildEvent) {
-    if (info.type !== "build" && info.type !== "rebuild") return;
+    if (info.type !== "build") return; // && info.type !== "rebuild") return;
 
     const importOutput = info.entry.output ?? "";
     const binName = node.entrypoints.bin.get(importOutput);
