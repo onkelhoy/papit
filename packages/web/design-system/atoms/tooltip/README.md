@@ -2,7 +2,7 @@
 
 Elegant and easy to use tooltip covering the required WCAG specs
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/tooltip
 
 <pap-tooltip></pap-tooltip>
 ```
-
 
 ## Contributing
 

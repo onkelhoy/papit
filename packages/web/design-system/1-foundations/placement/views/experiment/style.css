@@ -40,7 +40,7 @@ section {
     }
 
     pap-placement {
-        background-color: var(--background-lighter);
+        background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
         padding: var(--space-2, 8px);
         border-radius: var(--radius-2, 4px);
         font-size: 0.75rem;

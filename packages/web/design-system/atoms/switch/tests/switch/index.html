@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>switch test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <form data-testid="form">
+        <!-- disabled, no default -->
+        <pap-switch data-testid="disabled" disabled name="disabled"></pap-switch>
+
+        <!-- a: explicit defaultchecked=false → unchecked -->
+        <pap-switch data-testid="a" name="a" defaultchecked="false"></pap-switch>
+
+        <!-- b: defaultchecked present (no value) → checked -->
+        <pap-switch data-testid="b" name="b" defaultchecked></pap-switch>
+
+        <!-- c: checked attribute → checked, no defaultchecked so reset goes unchecked -->
+        <pap-switch data-testid="c" name="c" checked></pap-switch>
+
+        <!-- readonly: should not toggle -->
+        <pap-switch data-testid="readonly" name="readonly" readonly></pap-switch>
+
+        <button data-testid="submit" type="submit">submit</button>
+        <button data-testid="reset" type="reset">reset</button>
+    </form>
+</body>
+
+</html>

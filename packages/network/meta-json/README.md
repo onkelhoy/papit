@@ -2,7 +2,7 @@
 
 a binary file that host two json objects as one, first is dedicated for metadata and the other for the payload, this speeds up reading data significant when data is not ment for dedicated place btu information needs to taken, like in routing
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

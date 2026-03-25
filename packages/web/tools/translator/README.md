@@ -2,7 +2,7 @@
 
 Simple translation utility with lazy fetch, variable interpolation, and auto language detection
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/translator
 
 <pap-translator></pap-translator>
 ```
-
 
 ## Contributing
 

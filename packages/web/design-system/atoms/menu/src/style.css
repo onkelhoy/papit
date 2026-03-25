@@ -15,6 +15,6 @@
     padding: 0;
     border: none;
     border-radius: var(--space-1, 0.25rem);
-    outline: 2px solid var(--background-lightest, light-dark(oklch(100% 0 0), oklch(32% 0 0)));
-    background-color: var(--background-lightest, light-dark(oklch(100% 0 0), oklch(32% 0 0)));
+    outline: 2px solid var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+    background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
 }

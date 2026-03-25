@@ -2,7 +2,7 @@
 
 A WCAG complient menu component, the aim for simplicity is key
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/menu
 
 <pap-menu></pap-menu>
 ```
-
 
 ## Contributing
 

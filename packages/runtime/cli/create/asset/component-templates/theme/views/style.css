@@ -13,7 +13,7 @@ body,
 div.theme-opposite {
     font-family: monospace;
     font-size: 12px;
-    background: var(--background);
+    background: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
     color: var(--foreground);
     padding: var(--space-8);
     display: grid;
@@ -47,7 +47,7 @@ div.theme-opposite {
     width: 96px;
     border-radius: var(--radius-small);
     overflow: hidden;
-    border: 1px solid var(--background-darkest);
+    border: 1px solid var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0)));
 }
 
 .swatch::before {
@@ -59,7 +59,7 @@ div.theme-opposite {
 .swatch-label {
     display: block;
     padding: var(--space-1) var(--space-2);
-    background: var(--background-lighter);
+    background: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
     color: var(--tertiary);
     font-size: 10px;
     white-space: nowrap;
@@ -98,42 +98,21 @@ div.theme-opposite {
 }
 
 /* backgrounds */
-.swatch--background-lightest::before {
-    background: var(--background-lightest);
-}
-
-.swatch--background-lighter::before {
-    background: var(--background-lighter);
-}
 
 .swatch--background-light::before {
-    background: var(--background-light);
+    background: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
 }
 
 .swatch--background::before {
-    background: var(--background);
+    background: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
 }
 
 .swatch--background-dark::before {
-    background: var(--background-dark);
+    background: var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0)));
 }
 
-.swatch--background-darker::before {
-    background: var(--background-darker);
-}
-
-.swatch--background-darkest::before {
-    background: var(--background-darkest);
-}
 
 /* foregrounds */
-.swatch--foreground-lightest::before {
-    background: var(--foreground-lightest);
-}
-
-.swatch--foreground-lighter::before {
-    background: var(--foreground-lighter);
-}
 
 .swatch--foreground-light::before {
     background: var(--foreground-light);
@@ -145,14 +124,6 @@ div.theme-opposite {
 
 .swatch--foreground-dark::before {
     background: var(--foreground-dark);
-}
-
-.swatch--foreground-darker::before {
-    background: var(--foreground-darker);
-}
-
-.swatch--foreground-darkest::before {
-    background: var(--foreground-darkest);
 }
 
 /* ── Spacing ── */
@@ -242,7 +213,7 @@ div.theme-opposite {
 .radius-item {
     width: 96px;
     height: 96px;
-    background: var(--background-darkest);
+    background: var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0)));
     display: flex;
     align-items: flex-end;
     padding: var(--space-2);

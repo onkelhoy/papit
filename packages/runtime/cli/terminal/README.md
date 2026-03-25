@@ -1,8 +1,8 @@
 # @papit/terminal
 
-heart component for cli, dealing with logging to a terminal, with fancy methods like prompt and option 
+heart component for cli, dealing with logging to a terminal, with fancy methods like prompt and option
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

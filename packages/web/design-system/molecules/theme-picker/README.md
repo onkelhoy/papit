@@ -2,7 +2,7 @@
 
 A simple yet elegant answer to a theme picker, light dark and system with powerful yet simple control
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/theme-picker
 
 <pap-theme-picker></pap-theme-picker>
 ```
-
 
 ## Contributing
 

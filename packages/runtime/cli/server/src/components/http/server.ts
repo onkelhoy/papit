@@ -244,6 +244,7 @@ function live() {
                 filePath.includes("/.temp/") ||
                 filePath.includes("/.vscode/") ||
                 filePath.includes("/.github/") ||
+                filePath.includes("/.git/") ||
                 filePath.includes("/lib/") ||
                 /\/tests?\//.test(filePath)
             );

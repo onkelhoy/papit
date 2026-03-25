@@ -22,6 +22,13 @@ import { spawnCommand } from "./spawn-command.mjs";
         fs.rmSync(path.join(dirname, ".temp"), { recursive: true, force: true });
         fs.rmSync(path.join(dirname, "lib"), { recursive: true, force: true });
         fs.rmSync(path.join(dirname, "reports"), { recursive: true, force: true });
+
+        if (process.argv.some(a => /--?t(ests?)?/.test(a)))
+        {
+            fs.rmSync(path.join(dirname, "tests/snapshots"), { recursive: true, force: true });
+            fs.rmSync(path.join(dirname, "tests/test-reports"), { recursive: true, force: true });
+            fs.rmSync(path.join(dirname, "tests/test-results"), { recursive: true, force: true });
+        }
     }
 
     if (finds > 0)

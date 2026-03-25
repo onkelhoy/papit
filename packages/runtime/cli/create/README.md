@@ -2,7 +2,7 @@
 
 Project and package scaffolding tool for @papit — opinionated, consistent, and designed to kickstart Papit-based projects with the correct structure from day one.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 This package is intended to be used **from within a workspace or an empty directory**. Simply run:
 
@@ -69,10 +69,11 @@ args: {
 }
 ```
 
-For more details on the structure and behavior of these arguments, see the 
-- `@papit/arguments` 
+For more details on the structure and behavior of these arguments, see the
+
+- `@papit/arguments`
 - `@papit/information`
-package.
+  package.
 
 ---
 

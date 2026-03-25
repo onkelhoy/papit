@@ -3,16 +3,12 @@
     align-items: center;
     cursor: pointer;
     padding: var(--space-2, .5rem) var(--space-1, .25rem);
-    background-color: var(--background-lightest, light-dark(oklch(100% 0 0), oklch(32% 0 0)));
-}
-
-:host(:hover) {
-    background-color: var(--background-lighter, light-dark(oklch(98% 0 0), oklch(24% 0 0)));
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
 }
 
 :host([aria-expanded="true"]),
 :host(:focus) {
-    background-color: var(--background-light, light-dark(oklch(95% 0 0), oklch(20% 0 0)));
+    background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
 }
 
 :host([aria-haspopup="menu"])::after {

@@ -1,0 +1,52 @@
+:host {
+    --size: var(--space-4, 1rem);
+    --padding: 3px;
+
+    width: var(--space-9, 2.25rem);
+    height: var(--size);
+    background-color: var(--foreground-light, light-dark(oklch(52% 0 0), oklch(62% 0 0)));
+    border-radius: 1000vw;
+    position: relative;
+    display: inline-block;
+    padding: var(--padding);
+    cursor: pointer;
+
+    outline-offset: 1px;
+
+    &::after {
+        content: ' ';
+        width: var(--size);
+        height: var(--size);
+        background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+        transition: left cubic-bezier(0.68, -0.55, 0.27, 1.55) 80ms;
+        position: absolute;
+        border-radius: 50%;
+
+        top: 50%;
+        left: var(--padding);
+        translate: 0 -50%;
+    }
+}
+
+:host(:not([disabled]):not([readonly]):active),
+:host(:not([disabled]):not([readonly]):state(active)) {
+    &::after {
+        height: calc(var(--size) - 2px);
+    }
+}
+
+:host(:state(checked)) {
+    &::after {
+        left: calc(100% - var(--size) - var(--padding));
+    }
+}
+
+:host([readonly]) {
+    cursor: default;
+}
+
+:host([disabled]) {
+    cursor: not-allowed;
+
+    background-color: color-mix(var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0))), 40% var(--foreground-light, light-dark(oklch(52% 0 0), oklch(62% 0 0))));
+}
