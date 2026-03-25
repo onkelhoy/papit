@@ -1,0 +1,268 @@
+:host {
+    --ch-bg: light-dark(oklch(97% 0.005 264), oklch(18% 0.01 264));
+    --ch-surface: light-dark(oklch(93% 0.008 264), oklch(22% 0.015 264));
+    --ch-text: light-dark(oklch(25% 0.02 264), oklch(88% 0.01 264));
+    --ch-muted: light-dark(oklch(60% 0.01 264), oklch(50% 0.01 264));
+    --ch-keyword: light-dark(oklch(48% 0.22 305), oklch(72% 0.2 305));
+    --ch-keyword-2: light-dark(oklch(45% 0.18 220), oklch(68% 0.16 220));
+    --ch-identifier: light-dark(oklch(45% 0.12 250), oklch(80% 0.09 75));
+    --ch-string: light-dark(oklch(48% 0.14 150), oklch(72% 0.14 150));
+    --ch-number: light-dark(oklch(52% 0.18 50), oklch(74% 0.16 55));
+    --ch-operator: light-dark(oklch(45% 0.06 264), oklch(65% 0.04 264));
+    --ch-punctuation: light-dark(oklch(55% 0.04 264), oklch(58% 0.04 264));
+    --ch-comment: light-dark(oklch(58% 0.04 264), oklch(46% 0.04 264));
+
+    --hover: color-mix(var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0))), 90% var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0))));
+
+
+    div[part="display"] {
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        border-radius: var(--space-2, 0.5rem);
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+        border-bottom: 0;
+
+        overflow: hidden;
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+            border-bottom: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+
+            pap-switch {
+                margin-left: auto;
+                --padding: 1px;
+            }
+
+            button {
+                background: none;
+                border: none;
+                display: flex;
+
+                margin-left: auto;
+                cursor: pointer;
+                gap: var(--space-1, 0.25rem);
+                padding: var(--space-2, 0.5rem);
+
+                &:hover {
+                    background-color: var(--hover);
+                }
+
+                pap-icon {
+                    margin: auto;
+                    color: var(--text);
+                    width: var(--space-5, 1.25rem);
+                    height: var(--space-5, 1.25rem);
+                }
+
+                pap-icon[name="done"] {
+                    display: none;
+                }
+
+                pap-icon[name="content_paste"] {
+                    display: initial;
+                }
+
+                &.copied {
+                    pap-icon[name="done"] {
+                        display: initial;
+                    }
+
+                    pap-icon[name="content_paste"] {
+                        display: none;
+                    }
+                }
+            }
+        }
+
+        pap-splitter {
+            display: none;
+        }
+    }
+
+    div[part="code"] {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        border-radius: var(--space-2, 0.5rem);
+        border-top: 0;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+
+        pre {
+            order: 1;
+            max-height: 7rem;
+            margin: 0;
+
+            code {
+                display: block;
+                font-family: var(--font-mono, ui-monospace, monospace);
+                font-size: 0.875rem;
+                line-height: 1.6;
+                color: var(--ch-text);
+                background: var(--ch-bg);
+                padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+                overflow-x: auto;
+
+                span {
+                    display: inline;
+                }
+
+                span.keyword {
+                    color: var(--ch-keyword);
+                    font-style: italic;
+
+                    &.secondary {
+                        color: var(--ch-keyword-2);
+                    }
+                }
+
+                span.identifier {
+                    color: var(--ch-identifier);
+                }
+
+                span.string,
+                span.value.string {
+                    color: var(--ch-string);
+                }
+
+                span.number,
+                span.value.number {
+                    color: var(--ch-number);
+                }
+
+                span.operator {
+                    color: var(--ch-operator);
+                }
+
+                span.punctuation {
+                    color: var(--ch-punctuation);
+                }
+
+                span.comment {
+                    color: var(--ch-comment);
+                    font-style: italic;
+                }
+
+                span.name {
+                    color: var(--ch-identifier);
+                }
+
+                span.property {
+                    color: var(--ch-number);
+                }
+
+                span.atrule {
+                    color: var(--ch-keyword);
+                }
+
+                span.variable {
+                    color: var(--ch-keyword-2);
+                }
+
+                span.value {
+                    color: var(--ch-string);
+                }
+            }
+        }
+
+        details {
+            order: 2;
+            border-top: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+            background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+
+            &:hover {
+                background-color: var(--hover);
+            }
+
+            summary {
+                padding: var(--space-2, 0.5rem) var(--space-5, 1.25rem);
+                list-style: none;
+                cursor: pointer;
+                display: flex;
+
+                pap-icon {
+                    margin: auto;
+                    width: var(--space-4);
+                    height: var(--space-4);
+                }
+            }
+        }
+
+        &:has(details[open]) {
+            pre {
+                max-height: none;
+                mask-image: none;
+            }
+
+            pap-icon {
+                rotate: 180deg;
+            }
+        }
+    }
+}
+
+:host([display]) {
+    div[part="display"] {
+
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        border-radius: var(--space-2, 0.5rem);
+
+        pap-splitter {
+            display: flex;
+            border: none;
+
+            section {
+                padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
+            }
+
+            color: var(--text, light-dark(oklch(10% 0 0), oklch(95% 0 0)));
+        }
+
+        pap-splitter::part(secondary) {
+            background-color: var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+        }
+
+        pap-splitter::part(separator) {
+            background-color: var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+        }
+
+        pap-splitter::part(thumb) {
+            background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+        }
+    }
+
+    div[part="code"] {
+        margin-top: var(--space-3, 0.75rem);
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        border-radius: var(--space-2, 0.5rem);
+    }
+}
+
+:host([color="canvas"]) {
+    section {
+        background-color: var(--pap-foreground-2, #EAEBEF);
+    }
+}
+
+:host([color="background"]) {
+    section {
+        background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    }
+}
+
+:host([color="checker"]) {
+    section {
+        background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+        --a: var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0)));
+
+        background-image: linear-gradient(45deg, var(--a) 25%, transparent 25%, transparent 75%, var(--a) 75%, var(--a)),
+            linear-gradient(45deg, var(--a) 25%, transparent 25%, transparent 75%, var(--a) 75%, var(--a));
+        background-position: 0 0, 0.75rem 0.75rem;
+        background-size: 1.5rem 1.5rem;
+    }
+}

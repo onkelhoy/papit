@@ -1,19 +1,17 @@
 :host {
     display: flex;
     position: relative;
+    overflow-x: hidden;
 
     --gap: 0.6rem;
-    --padding: var(--space-2, 0.5rem);
     --color: color-mix(var(--background-inverse, light-dark(oklch(16% 0 0), oklch(92% 0 0))), 30% transparent);
     --value: 50%;
 
     gap: var(--gap);
+    border: var(--color) 1px solid;
 
     div.panel {
         flex-shrink: 0;
-        border: var(--color) 1px solid;
-        border-radius: var(--space-2, 0.5rem);
-        padding: var(--padding);
         box-sizing: border-box;
         flex: 1 1 0;
     }
@@ -31,7 +29,7 @@
             left: 50%;
             translate: -50% -50%;
             border-radius: 100vh;
-            opacity: 0;
+            opacity: .7;
             transition: ease 80ms opacity;
             background-color: color-mix(var(--background-inverse, light-dark(oklch(16% 0 0), oklch(92% 0 0))), 30% transparent);
         }

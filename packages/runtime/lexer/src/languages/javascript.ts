@@ -5,29 +5,31 @@ export type JSToken =
     | { type: "identifier"; value: string }
     | { type: "number"; value: string }
     | { type: "string"; value: string }
+    | { type: "template"; value: string }
     | { type: "operator"; value: string }
     | { type: "punctuation"; value: string }
+    | { type: "whitespace"; value: string }
     | { type: "comment"; value: string };
 
-type CTX = {};
+type CTX = { current?: "number" | "word" | "comment" };
 
 const KEYWORDS = new Set([
-    "const", "let", "var", "function", "return",
-    "if", "else", "for", "while", "switch",
-    "async", "await",
-    "case", "break", "continue", "true", "false", "null", "undefined"
+    "break", "case", "catch", "class", "const", "continue",
+    "debugger", "default", "delete", "do", "else", "export",
+    "extends", "false", "finally", "for", "function", "if",
+    "import", "in", "instanceof", "let", "new", "null", "of",
+    "return", "super", "switch", "this", "throw", "true",
+    "try", "typeof", "undefined", "var", "void", "while",
+    "with", "yield", "async", "await",
 ]);
 
 function emitWord(ctx: any, buffer: string) {
     if (!buffer) return;
-
-    if (KEYWORDS.has(buffer))
-    {
-        ctx.emit({ type: "keyword", value: buffer });
-    } else
-    {
-        ctx.emit({ type: "identifier", value: buffer });
-    }
+    ctx.emit(
+        KEYWORDS.has(buffer)
+            ? { type: "keyword", value: buffer }
+            : { type: "identifier", value: buffer }
+    );
 }
 
 export const jsRules: StateRules<CTX, JSToken> = {
@@ -35,55 +37,59 @@ export const jsRules: StateRules<CTX, JSToken> = {
         {
             condition: () => true,
             action: (ctx, char, buffer) => {
-                emitWord(ctx, buffer);
+                if (!buffer) return;
+                if (ctx.current === "number")
+                {
+                    ctx.emit({ type: "number", value: buffer });
+                } else if (ctx.current === "comment")
+                {
+                    ctx.emit({ type: "comment", value: buffer });
+                } else
+                {
+                    emitWord(ctx, buffer); // handles word/keyword
+                }
             },
         },
     ],
 
     data: [
-        // strings
         { condition: '"', next: "stringDouble" },
         { condition: "'", next: "stringSingle" },
-
-        // comments
+        { condition: "`", next: "template" },
         { condition: "/", next: "slash" },
 
-        // numbers (must come before identifiers)
         {
             condition: /[0-9]/,
             next: "number",
             action: (ctx, char) => ctx.append(char),
         },
-
-        // identifiers / keywords
         {
             condition: /[a-zA-Z_$]/,
             next: "word",
             action: (ctx, char) => ctx.append(char),
         },
-
-        // operators (single + multi char handled in operator state)
+        // operators — note: no `/` here, handled by slash state
         {
-            condition: /[=<>!&|+\-*\/%]/,
+            condition: /[=<>!&|+\-*%^~?]/,
             next: "operator",
             action: (ctx, char) => ctx.append(char),
         },
-
-        // punctuation
+        // punctuation — escaped brackets to avoid regex ambiguity
         {
-            condition: /[{}()[\].,;:]/,
+            condition: /[{}()\[\].,;:]/,
             action: (ctx, char) => ctx.emit({ type: "punctuation", value: char }),
         },
-
-        // whitespace ignored
-        { condition: /\s/, action: () => { } },
+        // { condition: /\s/, action: () => { } },// in data state, replace the silent whitespace rule:
+        { condition: /\s/, action: (ctx, char) => ctx.emit({ type: "whitespace", value: char }) },
     ],
 
-    // identifiers / keywords
     word: [
         {
             condition: /[a-zA-Z0-9_$]/,
-            action: (ctx, char) => ctx.append(char),
+            action: (ctx, char) => {
+                ctx.current = "word";
+                ctx.append(char);
+            },
         },
         {
             condition: () => true,
@@ -95,11 +101,14 @@ export const jsRules: StateRules<CTX, JSToken> = {
         },
     ],
 
-    // numbers
+    // supports integers, floats, hex (0x...), BigInt (123n), numeric separators (1_000)
     number: [
         {
-            condition: /[0-9.]/,
-            action: (ctx, char) => ctx.append(char),
+            condition: /[0-9a-fA-FxX._n]/,
+            action: (ctx, char) => {
+                ctx.current = "number";
+                ctx.append(char);
+            },
         },
         {
             condition: () => true,
@@ -111,25 +120,15 @@ export const jsRules: StateRules<CTX, JSToken> = {
         },
     ],
 
-    // strings
     stringDouble: [
         {
             condition: '"',
             next: "data",
-            action: (ctx, char, buffer) => {
-                ctx.emit({ type: "string", value: buffer });
-            },
+            action: (ctx, char, buffer) => ctx.emit({ type: "string", value: buffer }),
         },
-        {
-            condition: "\\",
-            next: "stringDoubleEscape",
-        },
-        {
-            condition: () => true,
-            action: (ctx, char) => ctx.append(char),
-        },
+        { condition: "\\", next: "stringDoubleEscape" },
+        { condition: () => true, action: (ctx, char) => ctx.append(char) },
     ],
-
     stringDoubleEscape: [
         {
             condition: () => true,
@@ -142,20 +141,11 @@ export const jsRules: StateRules<CTX, JSToken> = {
         {
             condition: "'",
             next: "data",
-            action: (ctx, char, buffer) => {
-                ctx.emit({ type: "string", value: buffer });
-            },
+            action: (ctx, char, buffer) => ctx.emit({ type: "string", value: buffer }),
         },
-        {
-            condition: "\\",
-            next: "stringSingleEscape",
-        },
-        {
-            condition: () => true,
-            action: (ctx, char) => ctx.append(char),
-        },
+        { condition: "\\", next: "stringSingleEscape" },
+        { condition: () => true, action: (ctx, char) => ctx.append(char) },
     ],
-
     stringSingleEscape: [
         {
             condition: () => true,
@@ -164,60 +154,64 @@ export const jsRules: StateRules<CTX, JSToken> = {
         },
     ],
 
-    // slash handling (comments vs operator)
+    // template literals — ${...} interpolation not tokenized, treated as raw content
+    template: [
+        {
+            condition: "`",
+            next: "data",
+            action: (ctx, char, buffer) => ctx.emit({ type: "template", value: buffer }),
+        },
+        { condition: "\\", next: "templateEscape" },
+        { condition: () => true, action: (ctx, char) => ctx.append(char) },
+    ],
+    templateEscape: [
+        {
+            condition: () => true,
+            next: "template",
+            action: (ctx, char) => ctx.append(char),
+        },
+    ],
+
     slash: [
-        {
-            condition: "/",
-            next: "commentLine",
-        },
-        {
-            condition: "*",
-            next: "commentBlock",
-        },
+        { condition: "/", next: "commentLine" },
+        { condition: "*", next: "commentBlock" },
         {
             condition: () => true,
             next: "data",
-            action: (ctx, char) => {
+            action: (ctx) => {
                 ctx.emit({ type: "operator", value: "/" });
                 ctx.reconsume();
             },
         },
     ],
 
-    // line comments
     commentLine: [
         {
             condition: "\n",
             next: "data",
             action: (ctx, char, buffer) => {
+                ctx.current = undefined;
                 ctx.emit({ type: "comment", value: buffer });
             },
         },
         {
             condition: () => true,
-            action: (ctx, char) => ctx.append(char),
+            action: (ctx, char) => {
+                ctx.current = "comment";
+                ctx.append(char);
+            },
         },
     ],
 
-    // block comments
     commentBlock: [
-        {
-            condition: "*",
-            next: "commentBlockEnd",
-        },
-        {
-            condition: () => true,
-            action: (ctx, char) => ctx.append(char),
-        },
+        { condition: "*", next: "commentBlockEnd" },
+        { condition: () => true, action: (ctx, char) => ctx.append(char) },
     ],
-
     commentBlockEnd: [
         {
             condition: "/",
             next: "data",
-            action: (ctx, char, buffer) => {
-                ctx.emit({ type: "comment", value: buffer });
-            },
+            action: (ctx, char, buffer) => ctx.emit({ type: "comment", value: buffer }),
         },
         {
             condition: () => true,
@@ -229,10 +223,9 @@ export const jsRules: StateRules<CTX, JSToken> = {
         },
     ],
 
-    // operators (multi-character support)
     operator: [
         {
-            condition: /[=<>!&|+\-*\/%]/,
+            condition: /[=<>!&|+\-*%^~?]/,
             action: (ctx, char) => ctx.append(char),
         },
         {
@@ -247,11 +240,5 @@ export const jsRules: StateRules<CTX, JSToken> = {
 };
 
 export function js(value: string) {
-    const lexer = new Lexer<CTX, JSToken>(
-        jsRules,
-        "data",
-        {}
-    );
-
-    return lexer.run(value);
+    return new Lexer<CTX, JSToken>(jsRules, "data", { current: undefined }).run(value);
 }

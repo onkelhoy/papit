@@ -28,6 +28,12 @@ export class Icon extends CustomElement {
 
             if (!this.isUrl(value))
             {
+                if (!value.startsWith("/")) value = "/" + value;
+                if (!value.endsWith(".svg")) value += ".svg";
+            }
+
+            if (!this.isUrl(value))
+            {
                 console.log("[icon] not found in static icons and not URL, this icon can not exist");
                 return;
             }

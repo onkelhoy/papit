@@ -22,8 +22,23 @@ const htmlRules: StateRules<CTX, HtmlToken> = {
     ],
 
     data: [
-        { condition: "<", next: "tagOpen", action: (ctx, char, buffer) => buffer.length > 0 && ctx.emit({ type: "text", value: buffer }) },
+        { condition: "<", next: "potentialTagOpen" },
         { condition: () => true, action: (ctx, char) => ctx.append(char) },
+    ],
+
+    potentialTagOpen: [
+        {
+            condition: " ", next: "data", action: (ctx, char) => {
+                ctx.append("<");
+                ctx.append(char);
+            }
+        },
+        {
+            condition: /(\w|\/|\!)/, next: "tagOpen", action: (ctx, char, buffer) => {
+                if (buffer.length > 0) ctx.emit({ type: "text", value: buffer });
+                ctx.reconsume();
+            }
+        },
     ],
 
     tagOpen: [
