@@ -2,7 +2,7 @@
 
 Merge multiple SVG files into a single SVG spritesheet using <symbol> elements.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -41,9 +41,9 @@ svg-spritesheet --input ./icons --output ./spritesheet.svg
 
 Defaults:
 
-* **input**: current directory
-* **output**: `<input>/spritesheet.svg`
-* **symbol name**: `<title>` in SVG → fallback to filename
+- **input**: current directory
+- **output**: `<input>/spritesheet.svg`
+- **symbol name**: `<title>` in SVG → fallback to filename
 
 ---
 

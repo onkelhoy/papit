@@ -2,8 +2,7 @@
 
 A high‑performance vector math library for games, graphics, physics, and real‑time simulations.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
-
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 It provides **arbitrary‑dimension vectors** plus specialized **Vector2 and Vector3** classes, with a clean, chainable API suitable for **graphics pipelines**, **linear algebra**, and **engine‑level computations**.
 
@@ -19,15 +18,15 @@ The library is intentionally **low‑level, allocation‑aware, and predictable*
 
 ## Features
 
-* ✅ **Float32Array-backed vectors** for speed
-* ✅ General **N‑dimensional vectors** via `Vector`
-* ✅ Specialized **Vector2** and **Vector3** classes
-* ✅ Chainable **mutating instance API**
-* ✅ Functional **static helpers** (immutable style)
-* ✅ Common vector operations: `dot`, `cross`, `distance`, `normalize`
-* ✅ Vector rotation (`rotateX/Y/Z`) for 3D
-* ✅ Perpendicular and angle helpers for 2D
-* ✅ Zero dependencies
+- ✅ **Float32Array-backed vectors** for speed
+- ✅ General **N‑dimensional vectors** via `Vector`
+- ✅ Specialized **Vector2** and **Vector3** classes
+- ✅ Chainable **mutating instance API**
+- ✅ Functional **static helpers** (immutable style)
+- ✅ Common vector operations: `dot`, `cross`, `distance`, `normalize`
+- ✅ Vector rotation (`rotateX/Y/Z`) for 3D
+- ✅ Perpendicular and angle helpers for 2D
+- ✅ Zero dependencies
 
 ---
 
@@ -46,9 +45,7 @@ import { Vector3 } from "@papit/vector";
 
 const v = new Vector3(1, 2, 3);
 
-v.add([1, 0, -1])
- .normalize()
- .multiply(5);
+v.add([1, 0, -1]).normalize().multiply(5);
 
 console.log(v.magnitude); // 5
 ```
@@ -70,9 +67,9 @@ v.add([1, 2, 3, 4]);
 
 Useful for:
 
-* Arbitrary linear algebra
-* Physics simulations
-* Data transformations
+- Arbitrary linear algebra
+- Physics simulations
+- Data transformations
 
 ---
 
@@ -88,9 +85,9 @@ v.angle = Math.PI / 2; // rotate vector
 
 Includes:
 
-* 2D rotation helpers
-* Perpendicular computation
-* Angle calculation
+- 2D rotation helpers
+- Perpendicular computation
+- Angle calculation
 
 ---
 
@@ -105,9 +102,9 @@ v.rotateY(Math.PI / 2).cross([0, 1, 0]);
 
 Includes:
 
-* 3D rotations (`rotateX`, `rotateY`, `rotateZ`)
-* Cross product
-* Vector arithmetic
+- 3D rotations (`rotateX`, `rotateY`, `rotateZ`)
+- Cross product
+- Vector arithmetic
 
 ---
 
@@ -126,7 +123,7 @@ v.divide([2, 2, 2]);
 
 ```ts
 v.normalize(); // unit vector
-v.magnitude;   // length
+v.magnitude; // length
 v.magnitude = 10; // scale to new length
 ```
 
@@ -151,7 +148,7 @@ Vector.distance(a, b);
 ### Mutating (fast, no allocations)
 
 ```ts
-v.add([1, 0, 0]).rotateY(Math.PI/4);
+v.add([1, 0, 0]).rotateY(Math.PI / 4);
 ```
 
 ### Functional (immutable)
@@ -166,10 +163,10 @@ Static helpers automatically clone vectors.
 
 ## Design Philosophy
 
-* ⚡ **Performance first**
-* 🧠 Explicit math (no hidden magic)
-* 🔁 Predictable mutation
-* 🎮 **Game-engine friendly**
+- ⚡ **Performance first**
+- 🧠 Explicit math (no hidden magic)
+- 🔁 Predictable mutation
+- 🎮 **Game-engine friendly**
 
 This library is a **math primitive**, not a scene graph or engine.
 
@@ -177,7 +174,7 @@ This library is a **math primitive**, not a scene graph or engine.
 
 ## Related Packages
 
-* [`@papit/game-matrix`](https://www.npmjs.com/package/@papit/game-matrix) — Matrix math for transformations and graphics pipelines
+- [`@papit/game-matrix`](https://www.npmjs.com/package/@papit/game-matrix) — Matrix math for transformations and graphics pipelines
 
 ## Contributing
 

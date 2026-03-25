@@ -1,8 +1,8 @@
 # @papit/deep-merge
 
-a simple package dealing witg merging objects, it would take the last object 
+a simple package dealing witg merging objects, it would take the last object
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

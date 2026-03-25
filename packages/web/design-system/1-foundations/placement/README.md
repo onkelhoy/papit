@@ -1,8 +1,8 @@
 # @papit/placement
 
-A small helper component that uses the @position-try to place an anchor to fit the best view based on the placement attribute/property 
+A small helper component that uses the @position-try to place an anchor to fit the best view based on the placement attribute/property
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/placement
 
 <pap-placement></pap-placement>
 ```
-
 
 ## Contributing
 

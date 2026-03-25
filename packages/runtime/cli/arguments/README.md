@@ -1,8 +1,8 @@
 # @papit/arguments
 
-a simple package to deal with arguments, default behaviour will look on process.argv but it will also expose a function to extract based on string 
+a simple package to deal with arguments, default behaviour will look on process.argv but it will also expose a function to extract based on string
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

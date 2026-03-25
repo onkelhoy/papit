@@ -2,7 +2,7 @@
 
 A structural, non-visual component that manages keyboard navigation within a set of child elements using roving tabindex
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/group
 
 <pap-group></pap-group>
 ```
-
 
 ## Contributing
 

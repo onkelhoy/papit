@@ -52,7 +52,11 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
                         switch (data.type)
                         {
                             case "register": {
-                                const packageNode = getPACKAGE({ relative: data.location, absolute: path.join(Information.root.location, data.location) });
+                                let packageNode = getPACKAGE({ relative: data.location, absolute: path.join(Information.root.location, data.location) });
+                                if (packageNode.name === Information.root.name)
+                                {
+                                    packageNode = Information.package;
+                                }
                                 connectedClients.set(socket, packageNode);
                                 break;
                             }
@@ -93,12 +97,16 @@ export function update(node: PackageNode) {
             return
         }
 
-        const rawMessage = {
+        const message = frameWebSocketMessage({
             action: "update",
             filename: "/" + path.relative(Information.root.location, node.location),
-        }
+        });
 
         connectedClients.forEach((socketNode, socket) => {
+            if (socketNode.name !== node.name)
+            {
+                if (!node?.descendants.some(n => n.name === socketNode.name)) return;
+            }
 
             if (!socket || !socket.writable)
             {
@@ -106,7 +114,6 @@ export function update(node: PackageNode) {
                 connectedClients.delete(socket);
                 return;
             }
-            const message = frameWebSocketMessage({ ...rawMessage, isDescendant: node?.descendants.some(n => n.name === socketNode.name) });
 
             socket.write(message);
         });

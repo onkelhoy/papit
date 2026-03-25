@@ -1,8 +1,8 @@
 # @papit/information
 
-Quite an abstract package to collect package information about other packages 
+Quite an abstract package to collect package information about other packages
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -18,16 +18,21 @@ Quite an abstract package to collect package information about other packages
 npm install @papit/information
 ```
 
-## Example 
+## Example
 
 ```typescript
 import { PackageGraph } from "@papit/information";
 
 (async function () {
-    const node = PackageGraph.get("@papit/html")!;
-    const remote = await node.remote();
-    console.log({ name: node.name, children: node.descendants().map(a => a.name), parents: node.ancestors().map(a => a.name), remote });
-}())
+  const node = PackageGraph.get("@papit/html")!;
+  const remote = await node.remote();
+  console.log({
+    name: node.name,
+    children: node.descendants().map((a) => a.name),
+    parents: node.ancestors().map((a) => a.name),
+    remote,
+  });
+})();
 ```
 
 ## Contributing

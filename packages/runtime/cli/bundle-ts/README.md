@@ -2,7 +2,7 @@
 
 typescript bundler replacing the aweful microsoft-api-extractor that comes with 80 deps
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

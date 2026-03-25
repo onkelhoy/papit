@@ -2,7 +2,7 @@
 
 Renders SVG icons either by referencing a <symbol> in an existing spritesheet or by fetching an SVG from a URL. If the spritesheet is not yet present in the DOM, it fetches the SVG and injects it into the document body for reuse via symbol references.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/icon
 
 <pap-icon></pap-icon>
 ```
-
 
 ## Contributing
 

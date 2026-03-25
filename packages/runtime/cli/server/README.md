@@ -2,20 +2,20 @@
 
 A simple but powerful development server for modern JavaScript/TypeScript projects.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 `@papit/server` can serve your **local assets, package files, dependency assets**, and automatically handle **live updates, bundling, and caching**. It’s ideal for developers who want a **fast, flexible dev environment** with **asset localization, HTML/JS bundling, import maps, and dependency-aware serving**.
 
 **Key features:**
 
-* 📦 Serves local project files and assets
-* 🌐 Handles package and dependency assets automatically
-* ⚡ Supports live-reload updates for JavaScript/TypeScript
-* 🗂 Efficient caching mechanism for files, HTML, and bundles
-* 🖼 Automatic handling of images, fonts, audio, video, and other binary assets
-* 🛠 Dev-friendly HTTP error handling (`404`, `500`, `405`)
-* 🔌 Optional bundling via `@papit/build` for `.ts`/`.tsx` files
-* 🧩 Importmap support for module resolution across packages
+- 📦 Serves local project files and assets
+- 🌐 Handles package and dependency assets automatically
+- ⚡ Supports live-reload updates for JavaScript/TypeScript
+- 🗂 Efficient caching mechanism for files, HTML, and bundles
+- 🖼 Automatic handling of images, fonts, audio, video, and other binary assets
+- 🛠 Dev-friendly HTTP error handling (`404`, `500`, `405`)
+- 🔌 Optional bundling via `@papit/build` for `.ts`/`.tsx` files
+- 🧩 Importmap support for module resolution across packages
 
 ---
 
@@ -41,10 +41,10 @@ Basic usage:
 npx @papit/server
 ```
 
-* Starts a dev server on the default port `3000` (or the port specified with `--port`)
-* Serves your project assets, HTML, and bundled JavaScript/TypeScript
-* Supports **live reload** for client updates
-* Automatically handles caching and streaming for large assets
+- Starts a dev server on the default port `3000` (or the port specified with `--port`)
+- Serves your project assets, HTML, and bundled JavaScript/TypeScript
+- Supports **live reload** for client updates
+- Automatically handles caching and streaming for large assets
 
 ---
 
@@ -86,10 +86,10 @@ Licensed under the **@Papit License 1.0** – Copyright (c) 2024 Henry Pap (@onk
 
 **Key points:**
 
-* ✅ Free to use in commercial projects
-* ✅ Free to modify and distribute
-* ✅ Attribution required
-* ❌ Cannot resell the component itself as a standalone product
+- ✅ Free to use in commercial projects
+- ✅ Free to modify and distribute
+- ✅ Attribution required
+- ❌ Cannot resell the component itself as a standalone product
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 

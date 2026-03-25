@@ -1,8 +1,8 @@
 # @papit/signals
 
-a simple package doing the overly hyped signals pattern 
+a simple package doing the overly hyped signals pattern
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 

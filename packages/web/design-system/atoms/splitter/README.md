@@ -1,8 +1,8 @@
 # @papit/splitter
 
-A simple splitter following the window splitter pattern, can be used for both horzontal and vertical modes. 
+A simple splitter following the window splitter pattern, can be used for both horzontal and vertical modes.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -27,7 +27,6 @@ npm install @papit/splitter
 
 <pap-splitter></pap-splitter>
 ```
-
 
 ## Contributing
 

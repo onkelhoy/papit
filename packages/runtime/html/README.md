@@ -2,7 +2,7 @@
 
 A lightweight, deterministic HTML and DOM-like implementation for Node.js.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 This library provides a minimal, predictable subset of the DOM focused on:
 
