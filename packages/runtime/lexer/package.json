@@ -13,6 +13,7 @@
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
+        "test:only": "node --test --test-only tests/**/*.test.js",
         "preversion": "papit-version",
         "postversion": "papit-version",
         "component": "npm create @papit -- --component"
