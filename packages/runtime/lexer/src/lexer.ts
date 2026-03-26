@@ -56,7 +56,7 @@ export class Lexer<Ctx = any, Token = any> {
             if (this.reconsume)
             {
                 this.reconsume = false;
-                i--;
+                i -= 2;
                 continue;
             }
             const char = input[i];

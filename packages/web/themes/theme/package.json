@@ -9,7 +9,7 @@
     "version": "0.0.1",
     "scripts": {
         "watch": "tsc -w",
-        "start": "npx @papit/server --info",
+        "start": "npx @papit/server --info --live",
         "test": "npx playwright test -c tests/playwright.config.ts",
         "preversion": "papit-version",
         "postversion": "papit-version",

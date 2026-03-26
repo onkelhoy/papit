@@ -50,6 +50,7 @@ export class Splitter extends CustomElement {
     @property min: number = 0;
     @property max: number = 100;
     @property step: number = 5; // keyboard step size
+    @property({ type: Number }) private value: number = 50;
 
     @query('div[role="separator"]') separatorElement!: HTMLDivElement;
 
@@ -59,7 +60,6 @@ export class Splitter extends CustomElement {
     }
 
     private storedValue: number | null = null;
-    private value: number = 50;
 
     private handlekeydown = (e: KeyboardEvent) => {
         if (/Escape/i.test(e.key) && this.storedValue != null)
