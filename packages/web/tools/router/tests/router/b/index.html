@@ -1,0 +1,42 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>B TITLE</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <script src="main.js"></script>
+</head>
+
+<body>
+    <h1>Document B</h1>
+    <p data-testid="first-p">First Paragraph B</p>
+    <p data-testid="second-p">Second Paragraph B</p>
+
+    <img src="image.png" alt="relative" data-testid="image-relative" />
+    <img src="/image.png" alt="static" data-testid="image-static" />
+
+    <script>
+        console.log('internal script B');
+
+        const h1 = document.body.querySelector("h1");
+        h1.innerText = "Document B - Updated";
+    </script>
+
+    <style>
+        body>h1 {
+            color: red;
+        }
+
+        body>p {
+            color: blue;
+        }
+
+        body>p+p {
+            color: salmon;
+        }
+    </style>
+</body>
+
+</html>
