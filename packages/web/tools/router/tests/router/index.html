@@ -9,8 +9,31 @@
 </head>
 
 <body>
-    <pap-router data-testid="base-target">
-        fallback
+    <h1 data-testid="loads"></h1>
+
+    <button data-testid="button-a" data-url="a">a</button>
+    <button data-testid="button-b" data-url="b">b</button>
+    <button data-testid="button-c" data-url="c">c</button>
+    <button data-testid="button-d" data-url="location/abc/def/ghi">d</button>
+    <button data-testid="button-e" data-url="e">e</button>
+
+    <button data-testid="button-fallback" data-url="fallback">fallback</button>
+    <button data-testid="button-hello-world" data-url="hello/world">hello world</button>
+    <button data-testid="button-hello-foo-world-ABC" data-url="hello/ABC/world">ABC</button>
+    <button data-testid="button-hello-foo-world-DEF" data-url="hello/DEF/world">DEF</button>
+
+    <button data-testid="button-showcase" data-url="showcase/atoms/button/:view">Button Showcase</button>
+    <button data-testid="icon-showcase" data-url="showcase/atoms/icon/:view">Icon Showcase</button>
+    <button data-testid="input-showcase" data-url="showcase/molecules/input/:view">Input Showcase</button>
+    <button data-testid="select-showcase" data-url="showcase/molecules/select/:view">Select Showcase</button>
+
+    <pap-router hash-based data-testid="target">
+        <pap-route path="hello/world" realpath="c"></pap-route>
+        <pap-route path="hello/:foo/world" realpath="c"></pap-route>
+        <pap-route path="location/:a/:b/:c" realpath="d"></pap-route>
+        <pap-route path="fallback" realpath="x" realpath-fallback="y" realpath-fallback-0="a"></pap-route>
+        <div path="showcase/:type/:package/:view" realpath="fake-packages/:type/:package/views/:view" view="showcase"
+            view-fallback=":package"></div>
     </pap-router>
 </body>
 

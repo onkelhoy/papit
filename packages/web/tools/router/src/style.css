@@ -1,4 +1,0 @@
-:host {
-    color: var(--text);
-    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
-}

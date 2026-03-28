@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document A</title>
+
+    <script type="module" src="index.js"></script>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <h1>Document A</h1>
+    <button id="btn">CLICK ME</button>
+
+    <p>Hello World</p>
+
+    <script>
+        window.addEventListener("load", () =>
+        {
+            const h1 = document.body.querySelector('h1');
+            if (h1) {
+                h1.innerHTML = "Document A - UPDATED"
+            }
+            else {
+                console.error("hey dude its not there.. ITS NOT THERE!!!")
+            }
+        })
+    </script>
+</body>
+
+</html>
