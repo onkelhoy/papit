@@ -31,5 +31,5 @@ export function css(content: string, indent: number) {
         }
     })
 
-    return `<div class="css" style="padding-left: ${indent}rem">${value.join("")}</div>`;
+    return `<div class="css" style="padding-left: 2rem">${value.join("")}</div>`;
 }

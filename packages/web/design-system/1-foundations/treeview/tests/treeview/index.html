@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treeview | tests</title>
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+
+    <!-- focusable element before tree for Shift+Tab escape test -->
+    <button data-testid="before">Before</button>
+
+    <pap-treeview aria-label="File explorer">
+
+        <pap-treeitem>Hello Tree Item</pap-treeitem>
+
+        <pap-treeitem>
+            Nested
+            <pap-treeitem>Nested 1</pap-treeitem>
+            <pap-treeitem>Nested 2</pap-treeitem>
+            <pap-treeitem>Nested 3</pap-treeitem>
+        </pap-treeitem>
+
+        <pap-treeitem>Another Item</pap-treeitem>
+
+    </pap-treeview>
+
+    <!-- focusable element after tree for Tab escape test -->
+    <button data-testid="after">After</button>
+
+</body>
+
+</html>

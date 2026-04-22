@@ -1,6 +1,6 @@
 // core
 import '@papit/web-component';
-import '@papit/translator';
+import { translator } from '@papit/translator';
 import "@papit/typography";
 import "@papit/card";
 import "@papit/codeblock";
@@ -9,5 +9,9 @@ import "@papit/codeblock";
 import '@papit/web-component';
 
 window.onload = () => {
-  console.log('[demo]: window loaded');
+    console.log('[demo]: window loaded');
+
+    translator.add({ id: "en", url: "/en.json" });
+    translator.change("en");
 }
+

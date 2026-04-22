@@ -51,6 +51,10 @@ export default defineConfig({
             maxDiffPixelRatio: 0.2,
         },
     },
+    testIgnore: process.env.SKIP_SNAPSHOTS === "true"
+        ? ["**/snapshot.test.ts"]
+        : [],
+
     // Global setup and teardown scripts
     globalSetup: Arguments.get("global-setup") ?? path.join(dirname, 'setup.ts'),
     globalTeardown: Arguments.get("global-teardown") ?? path.join(dirname, 'teardown.ts'),

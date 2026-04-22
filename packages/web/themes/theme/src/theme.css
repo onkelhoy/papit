@@ -57,6 +57,8 @@
         /* body text */
         --foreground-dark-inverse: light-dark(oklch(96% 0 0), oklch(10% 0 0));
         /* headings, emphasis */
+
+        --focus-color: light-dark(blue, cornflowerblue);
     }
 
     /* make sure web-components are hidden intially to avoid flashes */

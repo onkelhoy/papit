@@ -4,6 +4,8 @@ import { bind, CustomElement, debounce, html, property, query, unsafeHTML } from
 import "@papit/icon";
 import "@papit/splitter";
 import "@papit/switch";
+import "@papit/tooltip";
+import { useTranslator, translator, TransalatorFn } from "@papit/translator/browser";
 import { Switch } from "@papit/switch";
 
 // local 
@@ -30,15 +32,50 @@ export class Codeblock extends CustomElement {
      * @default "checker"
      */
     @property color: "canvas" | "background" | "checker" = "checker";
-    @property({ type: Boolean }) display = false;
+    @property display: "both" | "code" | "raw" = "both";
 
     private content = "";
     private timer: NodeJS.Timeout | null = null;
+    private t = useTranslator().t;
+    private dispose?: () => void;
 
     //#region COLOR-SCHEME
     private ambientScheme!: "light" | "dark";
     private mediaQuery = matchMedia("(prefers-color-scheme: dark)");
     private observer = new MutationObserver(() => this.updateAmbient());
+    private orignalHTML: string;
+
+    constructor() {
+        super();
+
+        const serialize = (node: Node): string => {
+            if (node.nodeType === Node.TEXT_NODE || node.nodeType === Node.COMMENT_NODE) return node.textContent ?? '';
+
+            if (!(node instanceof Element)) return "";
+
+            const children = Object.values(node.childNodes).map(serialize).join("");
+            const tag = node.tagName.toLowerCase();
+
+            let attrs = "";
+            if (node instanceof CustomElement)
+            {
+                attrs = node.originalAttributes
+                    .map(a => `${a.name}="${a.value}"`)
+                    .join(' ');
+            }
+            else 
+            {
+                attrs = Array.from(node.attributes)
+                    .map(a => `${a.name}="${a.value}"`)
+                    .join(' ');
+            }
+
+            return `<${tag}${attrs ? ' ' + attrs : ''}>${children}</${tag}>`;
+        }
+
+        this.orignalHTML = Array.from(this.childNodes).map(serialize).join('');
+        this.content = formatHTML(this.orignalHTML);
+    }
 
     connectedCallback() {
         super.connectedCallback?.();
@@ -53,6 +90,9 @@ export class Codeblock extends CustomElement {
             node = node.parentElement;
         }
 
+        this.dispose = translator.subscribe(() => {
+            this.requestUpdate();
+        })
         this.updateAmbient();
     }
 
@@ -60,6 +100,8 @@ export class Codeblock extends CustomElement {
         super.disconnectedCallback?.();
         this.mediaQuery.removeEventListener("change", this.handleschemechange);
         this.observer.disconnect();
+
+        if (this.dispose) this.dispose();
     }
 
 
@@ -103,7 +145,7 @@ export class Codeblock extends CustomElement {
     // event handlers
     @bind
     private handlecopy() {
-        navigator.clipboard.writeText(this.originalHTML).then(() => {
+        navigator.clipboard.writeText(this.orignalHTML).then(() => {
             console.log("Copied to clipboard");
             if (this.timer !== null) clearTimeout(this.timer);
 
@@ -116,28 +158,26 @@ export class Codeblock extends CustomElement {
         });
     }
 
-    @bind
-    private handleslotchange(e: Event) {
-        this.originalHTML = this.innerHTML.replace(/<!--(\d+)-->/i, '');
-        this.content = formatHTML(this.originalHTML);
-
-        console.log('change?', this.content)
-        this.requestUpdate();
-    }
-
     render() {
         return html`
             <div part="display">
                 <header>
-                    <pap-switch @change="${this.handleswitch}"></pap-switch>
-                    <button @click="${this.handlecopy}">
-                        <pap-icon name="done"></pap-icon>
-                        <pap-icon name="content_paste"></pap-icon>
-                    </button>
+                    <pap-tooltip>
+                        <span>${this.t("Theme Toggle")}</span>
+                        <pap-switch slot="target" @change="${this.handleswitch}"></pap-switch>
+                    </pap-tooltip>
+
+                    <pap-tooltip placement="top-right">
+                        <span>${this.t("Copy Code")}</span>
+                        <button slot="target" @click="${this.handlecopy}">
+                            <pap-icon name="done"></pap-icon>
+                            <pap-icon name="copy"></pap-icon>
+                        </button>
+                    </pap-tooltip>
                 </header>
                 <pap-splitter value="90">
                     <section slot="primary">
-                        <slot @slotchange="${this.handleslotchange}"></slot>
+                        <slot></slot>
                     </section>
                     <div slot="secondary"></div>
                 </pap-splitter>

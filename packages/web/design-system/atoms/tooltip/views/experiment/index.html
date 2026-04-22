@@ -16,28 +16,27 @@
 </head>
 
 <body>
-    <!-- <pap-card>
-        <pap-typography slot="header" variant="h4">Experiment</pap-typography>
-        <pap-codeblock display="both">
-            <pap-tooltip></pap-tooltip>
+    <h1>Experiment</h1>
+
+    <section>
+        <h2>Simple Example</h2>
+        <pap-codeblock>
+            <pap-tooltip>
+                <button slot="target">Target</button>
+                Hello im a tooltip
+            </pap-tooltip>
         </pap-codeblock>
-    </pap-card> -->
+    </section>
 
-
-    <div style="height:15rem;display:flex;place-items: center;">
-        <pap-tooltip>
-            <button slot="target">Target</button>
-            Hello im a tooltip
-        </pap-tooltip>
-    </div>
-
-
-    <div style="height:15rem;display:flex;place-items: center;">
-        <pap-tooltip placement="right">
-            <button slot="target">Target</button>
-            Hello im a <strong>tooltip</strong> with some html
-        </pap-tooltip>
-    </div>
+    <section>
+        <h2>Simple Example</h2>
+        <pap-codeblock>
+            <pap-tooltip placement="right">
+                <button slot="target">Target</button>
+                Hello im a <strong>tooltip</strong> with some html
+            </pap-tooltip>
+        </pap-codeblock>
+    </section>
 </body>
 
 </html>

@@ -89,11 +89,11 @@ export function getTranslator(
         },
         subscribe: (fn: () => void) => {
             let initial = true
-            effect(() => {
+            return effect(() => {
                 current()
                 if (initial) { initial = false; return }
                 fn()
-            })
+            });
         },
     }
 }

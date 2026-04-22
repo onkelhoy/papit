@@ -140,17 +140,6 @@ export async function streamAsset(
     res: ServerResponse,
     signal?: AbortSignal,
 ) {
-    const files = [...assets[url]];
-    while (files.length > 0)
-    {
-        const filelocation = files.pop()!;
-        try
-        {
-            return getFILE({ absolute: filelocation, relative: url }, cache, res, signal);
-        }
-        catch { } // we try the next then
-    }
-
     // we need to check translations 
     if (translations.map[url])
     {
@@ -163,6 +152,18 @@ export async function streamAsset(
             }
         }
     }
+
+    const files = [...assets[url]];
+    while (files.length > 0)
+    {
+        const filelocation = files.pop()!;
+        try
+        {
+            return getFILE({ absolute: filelocation, relative: url }, cache, res, signal);
+        }
+        catch { } // we try the next then
+    }
+
 
     throw new NotFoundError(`asset "${url}" not found`);
 }
