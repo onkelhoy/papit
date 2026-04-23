@@ -9,10 +9,16 @@ import { getTSconfig, sourceFolder, type PackageJson } from "helper";
 
 const timestamp_value = performance.now();
 let timestamp_ticker = 0;
+
 function timestamp(args: { has: (key: string) => boolean }, message?: string) {
     if (!args.has("debug")) return;
-    if (!process.env.npm_package_json?.endsWith("bundle-js/package.json")) return;
-    if (process.env.npm_lifecycle_event === "npx" && process.env._ && !process.env._.endsWith("papit-bundle-js")) return;
+    const isNpmContext = process.env.npm_package_json?.endsWith("bundle-js/package.json");
+
+    // process.argv[1] contains the resolved script path — works on Windows too
+    const isNpxContext = process.env.npm_lifecycle_event === "npx"
+        && process.argv[1]?.endsWith("papit-bundle-js");
+
+    if (!isNpmContext && !isNpxContext) return;
 
     timestamp_ticker++;
     console.log((performance.now() - timestamp_value).toFixed(3).toString() + "ms passed", "#" + timestamp_ticker, message ? "- " + message : "");

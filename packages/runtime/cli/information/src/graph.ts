@@ -10,8 +10,7 @@ export class Graph {
 
     get nodes() { return Array.from(this._nodes.values()) }
     get(name: string) { return this._nodes.get(name) as PackageNode<LocalPackage> }
-    search(location: string, compare: "start"|"end" = "end") 
-    { 
+    search(location: string, compare: "start" | "end" = "end") {
         if (compare === "end") return this.nodes.find(node => node.location.endsWith(location));
         return this.nodes.find(node => location.startsWith(node.location));
     }
@@ -32,7 +31,7 @@ export class Graph {
         fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
             .filter(loc => {
                 if (!loc.endsWith("package.json")) return false;
-                if (/\/asset\//i.test(loc)) return false;
+                if (/[/\\]asset[/\\]/i.test(loc)) return false;
 
                 return true;
             })
@@ -144,7 +143,7 @@ export class PackageGraph {
     static get root() { return this.instance.root }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
-    static search(location: string, compare: "start"|"end" = "end") { return this.instance.search(location, compare) }
+    static search(location: string, compare: "start" | "end" = "end") { return this.instance.search(location, compare) }
     static getOrder(packages: PackageNode<LocalPackage>[]) { return this.instance.getOrder(packages) }
 }
 

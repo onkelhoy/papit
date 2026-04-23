@@ -37,15 +37,7 @@ export async function setup() {
     const assets: Record<string, string[]> = {};
     const assetFolders = getAssetFolders();
 
-    // why ? - perhaps as in the batches wont always capute the server? 
-    // we start by loading assets from dev-server (so we allow for overrides)
-    // for (const asset of assetFolders)
-    // {
-    //     const assetLocation = path.join(serverPackageLocation, asset);
-    //     await handleAsset(serverPackageLocation, assetLocation, translations, assets, assetFolders);
-    // }
-
-    extractAssets(
+    await extractAssets(
         serverPackageLocation,
         translations,
         assets,
@@ -100,13 +92,7 @@ export async function setup() {
 
             if (!Arguments.has("include-node") && node.packageJSON.papit.type === "node") continue;
 
-            // for (const asset of assetFolders)
-            // {
-            //     const assetLocation = path.join(node.location, asset);
-            //     await handleAsset(node.location, assetLocation, translations, assets, assetFolders);
-            // }
-
-            extractAssets(
+            await extractAssets(
                 node.location,
                 translations,
                 assets,
@@ -116,24 +102,11 @@ export async function setup() {
         }
     }
 
-    // if (!Arguments.has("prod") && !Arguments.has("serve")) Arguments.set("live", true);
-
-    // const buildOutput = await build(Arguments.instance, (node, info) => {
-    //     if (info.type === "rebuild")
-    //     {
-    //         if (Arguments.verbose) Terminal.write(Terminal.blue("package change"), node.name)
-    //         socketUpdate(node.location, info.result.outputFiles?.at(0)?.text ?? "");
-    //     }
-    // }); //
-
-
     const shutdown = () => {
         if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))
         {
             fs.rmSync(path.join(Information.package.location, ".temp"), { force: true, recursive: true });
         }
-
-        // buildOutput.forEach(output => output.dispose());
 
         console.log(); // spacing for Ctrl+C
         httpExit();
@@ -152,11 +125,4 @@ export async function setup() {
         themes,
     );
 };
-
-(async function () {
-    if (Arguments.isCLI && !!process.env._?.endsWith("papit-server"))
-    {
-        setup();
-    }
-}())
 

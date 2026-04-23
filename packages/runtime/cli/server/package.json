@@ -19,7 +19,7 @@
         "generate-explorer-icons": "npx @papit/svg-spritesheet --input ./explorer-icons --output ./asset/icons/explorer-spritesheet.svg"
     },
     "bin": {
-        "papit-server": "./lib/bundle.js"
+        "papit-server": "./lib/bin.js"
     },
     "main": "./lib/bundle.js",
     "types": "./lib/bundle.d.ts",

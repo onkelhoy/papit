@@ -3,6 +3,7 @@ import path from "node:path";
 import { Information, PackageNode } from "@papit/information";
 
 import { type Importmap } from "./types";
+import { pathToFileURL } from "node:url";
 
 export function extractImportmap(
     node: PackageNode,
@@ -35,14 +36,6 @@ export function extractImportmap(
             true,
         );
     }
-    // for (const key in node.packageJSON.devDependencies) 
-    // {
-
-    // }
-    // for (const key in node.packageJSON.peerDependencies) 
-    // {
-
-    // }
 }
 
 function extractPackageJSON(
@@ -50,20 +43,19 @@ function extractPackageJSON(
     location: string,
     packageJSON: PackageNode['packageJSON'],
     map: Importmap,
-
     external = false,
 ) {
     const append = (name: string, packagepath: string) => {
         if (map.imports[name]) return;
 
-        map.imports[name] = packagepath;
+        map.imports[name] = pathToFileURL(packagepath).pathname;
     }
 
     if (packageJSON.exports)
     {
         if (typeof packageJSON.exports === "string")
         {
-            append(name, path.join(location, packageJSON.exports));
+            append(name, path.resolve(location, packageJSON.exports));
         }
         else 
         {
@@ -79,13 +71,13 @@ function extractPackageJSON(
                 const value = typeof packageJSON.exports[key] === "string" ? packageJSON.exports[key] : packageJSON.exports[key]?.import;
                 if (!value) continue;
 
-                append(name, path.join(location, value));
+                append(name, path.resolve(location, value));
             }
         }
     }
 
     if (packageJSON.main)
     {
-        append(name, path.join(location, packageJSON.main));
+        append(name, path.resolve(location, packageJSON.main));
     }
 }

@@ -11,30 +11,41 @@ import { InternalServerError } from "components/errors";
 export function getURL(
     request: IncomingMessage,
 ) {
+    // Convert URL path back to native fs path on Windows before any joins
+    if (process.platform === 'win32' && request.url && /^\/[A-Za-z]:/.test(request.url))
+    {
+        request.url = request.url.slice(1).replace(/\//g, '\\');
+    }
+
     const get = () => {
+
         if (request.url && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) 
         {
             return { absolute: request.url, relative: path.relative(request.url, Information.package.location) }; // this might bite later
         }
 
         const rest = [Arguments.string("folder"), request.url].filter(v => v !== undefined);
-
         const potentials = [Information.local, Information.package.location, Information.root.location];
+
         for (const potential of potentials)
         {
             const absolute = path.join(potential, ...rest);
             if (fs.existsSync(absolute))
             {
-                return { absolute, relative: path.relative(potential, absolute) || path.relative(Information.package.location, Information.local) || "/" };
+                return { absolute, relative: path.relative(potential, absolute) || path.relative(Information.package.location, Information.local) || path.sep };
             }
         }
 
-        return { absolute: path.join(Information.package.location, request.url ?? "/"), relative: request.url ?? "/" };
+        return { absolute: path.join(Information.package.location, request.url ?? path.sep), relative: request.url ?? path.sep };
     }
 
     const data = get();
-    if (data.absolute.endsWith("/")) data.absolute = data.absolute.slice(0, data.absolute.length - 1);
-    return data;
+    if (data.absolute.endsWith(path.sep)) data.absolute = data.absolute.slice(0, data.absolute.length - 1);
+
+    return {
+        absolute: path.normalize(data.absolute),
+        relative: path.normalize(data.relative),
+    };
 }
 
 export function getPackageLocationFromImportMeta(location: string) {

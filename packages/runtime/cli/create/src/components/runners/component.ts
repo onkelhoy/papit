@@ -158,7 +158,7 @@ export async function componentRunner(
     const shouldCommit = packageInfo?.shouldCommit ?? Arguments.true('agree') ?? Arguments.true('commit') ?? await Terminal.confirm("git commit", true);
     Terminal.clearSession();
 
-    const templateSrc = localRunnerSet.has(template.text) ? path.join(Information.root.location, "bin/runners/component", template.text) : path.join(createPackageLocation, "asset/component-templates", template.text);
+    const templateSrc = localRunnerSet.has(template.text) ? path.join(Information.root.location, "bin", "runners", "component", template.text) : path.join(createPackageLocation, "asset", "component-templates", template.text);
     const folders = getFolders(templateSrc)
 
     localPackage.papit.components[nameInfo.name] = {

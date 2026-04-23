@@ -1,7 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
 import { deepMergeTwo } from "@papit/deep-merge";
-import { Information } from "@papit/information";
 
 export type Translation = {
     meta: {
@@ -15,23 +14,6 @@ export type Translations = {
     data: Record<string, Translation>;
     map: Record<string, string>;
 }
-
-// export function extractTranslation(folder: string, translations: Translations) {
-//     const files = fs
-//         .readdirSync(folder)
-//         .map(name => path.join(folder, name))
-//         .filter(file => fs.statSync(file).isFile() && file.endsWith(".json"));
-
-//     for (const file of files)
-//     {
-//         const json = JSON.parse(fs.readFileSync(file, { encoding: "utf-8" })) as Translation;
-
-//         if (!json) continue;
-
-//         if (!translations[json.meta.language]) translations[json.meta.language] = { meta: json.meta };
-//         translations[json.meta.language] = deepMergeTwo(translations[json.meta.language], json, ["meta"]);
-//     }
-// }
 
 export function extractTranslation(location: string, file: string, translations: Translations) {
     const json = JSON.parse(fs.readFileSync(file, { encoding: "utf-8" })) as Translation

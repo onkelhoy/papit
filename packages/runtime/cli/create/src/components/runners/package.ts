@@ -26,13 +26,13 @@ export async function packageRunner(
 
     const layer = await selectFolder();
 
-    const templateFolders = getFolders(path.join(createPackageLocation, "asset/package-templates/"));
+    const templateFolders = getFolders(path.join(createPackageLocation, "asset", "package-templates"));
     const localRunnerSet = new Set<string>();
     try
     {
-        getFolders(path.join(Information.root.location, "bin/runners/package"))
+        getFolders(path.join(Information.root.location, "bin", "runners", "package"))
             .forEach(f => {
-                if (!fs.existsSync(path.join(Information.root.location, "bin/runners/package", f, "package.json"))) return;
+                if (!fs.existsSync(path.join(Information.root.location, "bin", "runners", "package", f, "package.json"))) return;
                 templateFolders.push(f);
                 localRunnerSet.add(f);
             });
@@ -153,9 +153,10 @@ export async function packageRunner(
     Terminal.createSession();
 
     const destination = path.join(layer, nameInfo.name);
+    const toUnixPath = (p: string) => p.replace(/\\/g, '/');
 
     // Copy package template
-    const srcFolder = localRunnerSet.has(template.text) ? path.join(Information.root.location, "bin/runners/package", template.text) : path.join(createPackageLocation, "asset/package-templates", template.text);
+    const srcFolder = localRunnerSet.has(template.text) ? path.join(Information.root.location, "bin", "runners", "package", template.text) : path.join(createPackageLocation, "asset", "package-templates", template.text);
     await copyFolder(srcFolder, destination, async (file, src) => {
         if (src.endsWith(".gitkeep")) return false;
 
@@ -166,7 +167,7 @@ export async function packageRunner(
             .replace(/VARIABLE_LAYER_FOLDER/g, layerBasename)
             .replace(/VARIABLE_PROJECTLICENSE/g, rootPackage.license || "MIT")
             .replace(/VARIABLE_GITHUB_REPO/g, repository)
-            .replace(/VARIABLE_LOCAL_DESTINATION/g, path.join(localFolder, nameInfo.name))
+            .replace(/VARIABLE_LOCAL_DESTINATION/g, toUnixPath(path.join(localFolder, nameInfo.name)))
             .replace(/VARIABLE_CLASS_NAME/g, nameInfo.className)
             .replace(/VARIABLE_HTML_PREFIX/g, htmlprefix ?? "")
             .replace(/VARIABLE_HTML_NAME/g, `${htmlprefix}-${nameInfo.name}`)
@@ -204,7 +205,7 @@ export async function packageRunner(
         createPackageLocation,
         { destination, nameInfo, htmlprefix, shouldCommit },
         (dest, folder) => {
-            if (folder === "src") dest = dest.replace(/\/components\/.*/, '');
+            if (folder === "src") dest = dest.replace(/[/\\]components[/\\].*/, '');
             if (folder === "lib") dest = dest.replace(new RegExp(nameInfo.name + "$"), "");
             if (folder === "views") dest = dest.replace(new RegExp(nameInfo.name + "$"), "experiment");
 
@@ -214,7 +215,7 @@ export async function packageRunner(
         }
     );
 
-    const srcComponents = path.join(destination, "src/components");
+    const srcComponents = path.join(destination, "src", "components");
     if (fs.existsSync(srcComponents)) fs.rmdirSync(srcComponents);
 
     Terminal.createSession();
