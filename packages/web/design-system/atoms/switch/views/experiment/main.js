@@ -1,3 +1,7 @@
+// core
+import { translator } from '@papit/translator';
+import "@papit/codeblock";
+
 // component
 import '@papit/switch';
 

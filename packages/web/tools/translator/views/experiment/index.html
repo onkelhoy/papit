@@ -16,33 +16,28 @@
 </head>
 
 <body class="theme-light">
-    <!-- <pap-card>
-        <pap-typography slot="header" variant="h4">Title</pap-typography>
-        <pap-codeblock display="both">
-            
-            
-        </pap-codeblock>
-    </pap-card> -->
-
-
-
     <h1>Translator</h1>
 
-    <!--this should reflect current languages and the selected one-->
-    <label for="language"></label>
-    <select id="language"></select>
+    <section>
+        <h2>Simple Example</h2>
+        <!--this should reflect current languages and the selected one-->
+        <pap-codeblock>
+            <label for="language"></label>
+            <select id="language"></select>
 
-    <label for="name">Name</label>
-    <input id="name" value="henry" />
+            <label for="name">Name</label>
+            <input id="name" value="henry" />
 
-    <div class="theme-opposite">
-        <p>Translate 1: <span class="theme-opposite" data-t="sentence1"></span></p>
-        <p>Translate 2: <span data-t="sentence2"></span></p>
-        <p>Translate 3: <span data-t="sentence3"></span></p>
-        <p>Translate 4: <span data-t="sentence4"></span></p>
-        <p>Translate 5: <span data-t="sentence5"></span></p>
-    </div>
+            <div>
+                <p>Translate 1: <span data-t="sentence1"></span></p>
+                <p>Translate 2: <span data-t="sentence2"></span></p>
+                <p>Translate 3: <span data-t="sentence3"></span></p>
+                <p>Translate 4: <span data-t="sentence4"></span></p>
+                <p>Translate 5: <span data-t="sentence5"></span></p>
+            </div>
 
+        </pap-codeblock>
+    </section>
 </body>
 
 </html>

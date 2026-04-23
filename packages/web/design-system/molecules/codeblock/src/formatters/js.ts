@@ -45,5 +45,5 @@ export function js(content: string, indent: number) {
         }
     })
 
-    return `<div class="js" style="padding-left: ${indent}rem">${value.join("")}</div>`;
+    return `<div class="js" style="padding-left: 2rem">${value.join("")}</div>`;
 }

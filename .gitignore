@@ -8,6 +8,8 @@ isolated/
 temp/
 .papit/
 
+test-result.log
+
 bin/version/.config
 
 # Ignore OS-specific files

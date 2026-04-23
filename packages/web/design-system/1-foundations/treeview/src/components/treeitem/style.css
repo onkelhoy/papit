@@ -1,0 +1,41 @@
+[role="group"] {
+    display: none;
+}
+
+:host {
+    --_depth: var(--depth, 0rem);
+    outline: none !important;
+}
+
+div[part="group"] {
+    --depth: calc(var(--_depth) + var(--space-4, 1rem));
+}
+
+div[part="content"] {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1, 4px);
+    height: var(--space-6, 24px);
+    padding-left: var(--_depth);
+
+    pap-icon {
+        rotate: -90deg;
+        width: var(--space-3, 12px);
+    }
+}
+
+:host([aria-expanded="true"]) {
+    [role="group"] {
+
+        display: block;
+    }
+
+    pap-icon {
+        rotate: 0deg;
+    }
+}
+
+:host(:focus) div[part="content"] {
+    outline: 2px solid var(--focus-color, blue);
+    border-radius: 4px;
+}

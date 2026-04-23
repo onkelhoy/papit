@@ -1,15 +1,30 @@
 @import "@papit/theme";
 
-button:focus {
-    outline: 2px solid cornflowerblue;
-}
-
 body {
-    background-color: var(--background, oklch(92% 0 0));
-    color: var(--text, oklch(10% 0 0));
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: var(--text, light-dark(oklch(10% 0 0), oklch(95% 0 0)));
     display: flex;
     flex-direction: column;
     gap: var(--space-4, 16px);
+
+    padding-block: 5rem;
+
+    h1 {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+    }
+
+    section {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+    }
 }
 
 .flex {

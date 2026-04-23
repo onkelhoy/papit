@@ -1,0 +1,1 @@
+export const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [data-focusable]';

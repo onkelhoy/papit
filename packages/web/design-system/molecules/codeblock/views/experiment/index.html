@@ -16,147 +16,168 @@
 </head>
 
 <body>
-    <!-- <pap-card>
-        <pap-typography slot="header" variant="h4">Experiment</pap-typography>
-        <pap-codeblock display="both">
+    <h1>Experiment</h1>
+    <section>
+        <h2>Display (both)</h2>
+        <pap-codeblock>
+            <p>Hello world</p>
+
+            <div>
+                <!-- hello world -->
+            </div>
+
+            <style>
+                p {
+                    color: red;
+                }
+
+                /* wow some comment */
+                @hello {
+                    bajs: 3;
+                }
+            </style>
+
+            <script>
+                function hello()
+                {
+                    return "world"
+                }
+
+                // hello world
+
+                /* wow */
+
+                for (let i = 0; i < 100; i++) {
+                    hello();
+                    const a = {
+                        hello: 43,
+                        bajs: "yes",
+                        hehe: () =>
+                        {
+
+                        }
+                    };
+                }
+            </script>
+
+            <div>
+                <span>yes</span>
+                <span>no</span>
+            </div>
         </pap-codeblock>
-    </pap-card> -->
-    <!-- <pap-codeblock>
-        // import statements 
-        // system 
-        import { bind, CustomElement, html, property } from "@papit/web-component";
-
-        // local 
-        import sheet from "./style.css" assert { type: "css" };
-
-        export class Codeblock extends CustomElement {
-            static sheet = sheet;
-
-            // properties 
-
-            // event handlers
-            @bind
-            private handleslotchange(e: Event) {
-                if (!(e.target instanceof HTMLSlotElement)) return;
-
-                const nodes = e.target.assignedNodes({ flatten: true });
-                console.log(nodes);
-            }
-
-            render() {
-                return html`
-                    <code>
-                        <pre>
-                            <slot @slotchange="${this.handleslotchange}"></slot>
-                        </pre>
-                    </code>
-                `
-            }
-        }
-
-        declare global {
-            interface HTMLElementTagNameMap {
-                "pap-codeblock": Codeblock;
-            }
-        }
-    </pap-codeblock> -->
+    </section>
 
 
-    <pap-codeblock display>
-        <p>Hello world</p>
+    <section>
+        <h2>Code Display</h2>
+        <pap-codeblock display="code">
+            <p>Hello world</p>
 
-        <div>
-            <!-- hello world -->
-        </div>
+            <div>
+                <!-- hello world -->
+            </div>
 
-        <style>
-            p {
-                color: red;
-            }
+            <style>
+                p {
+                    color: red;
+                }
 
-            /* wow some comment */
-            @hello {
-                bajs: 3;
-            }
-        </style>
+                /* wow some comment */
+                @hello {
+                    bajs: 3;
+                }
+            </style>
 
-        <script>
-            function hello()
-            {
-                return "world"
-            }
+            <script>
+                function hello()
+                {
+                    return "world"
+                }
 
-            // hello world
+                // hello world
 
-            /* wow */
+                /* wow */
 
-            for (let i = 0; i < 100; i++) {
-                hello();
-                const a = {
-                    hello: 43,
-                    bajs: "yes",
-                    hehe: () =>
-                    {
+                for (let i = 0; i < 100; i++) {
+                    hello();
+                    const a = {
+                        hello: 43,
+                        bajs: "yes",
+                        hehe: () =>
+                        {
 
-                    }
-                };
-            }
-        </script>
+                        }
+                    };
+                }
+            </script>
 
-        <div>
-            <span>yes</span>
-            <span>no</span>
-        </div>
-    </pap-codeblock>
+            <div>
+                <span>yes</span>
+                <span>no</span>
+            </div>
+        </pap-codeblock>
+    </section>
 
+    <section>
+        <h2>RAW Display</h2>
+        <pap-codeblock display="raw">
+            <p>Hello world</p>
 
+            <div>
+                <!-- hello world -->
+            </div>
 
-    <pap-codeblock>
-        <p>Hello world</p>
+            <style>
+                p {
+                    color: red;
+                }
 
-        <div>
-            <!-- hello world -->
-        </div>
+                /* wow some comment */
+                @hello {
+                    bajs: 3;
+                }
+            </style>
 
-        <style>
-            p {
-                color: red;
-            }
+            <script>
+                function hello()
+                {
+                    return "world"
+                }
 
-            /* wow some comment */
-            @hello {
-                bajs: 3;
-            }
-        </style>
+                // hello world
 
-        <script>
-            function hello()
-            {
-                return "world"
-            }
+                /* wow */
 
-            // hello world
+                for (let i = 0; i < 100; i++) {
+                    hello();
+                    const a = {
+                        hello: 43,
+                        bajs: "yes",
+                        hehe: () =>
+                        {
 
-            /* wow */
+                        }
+                    };
+                }
+            </script>
 
-            for (let i = 0; i < 100; i++) {
-                hello();
-                const a = {
-                    hello: 43,
-                    bajs: "yes",
-                    hehe: () =>
-                    {
+            <div>
+                <span>yes</span>
+                <span>no</span>
+            </div>
+        </pap-codeblock>
+    </section>
 
-                    }
-                };
-            }
-        </script>
+    <section>
+        <h2>Attributes</h2>
+        <pap-codeblock>
+            <div data-attr="rödbetor" data-attr2="apelsiner" data-attr3="bananar" data-attr4="äpplen"
+                data-attr5="päron">
+                <p>Hello World</p>
+            </div>
+        </pap-codeblock>
+    </section>
 
-        <div>
-            <span>yes</span>
-            <span>no</span>
-        </div>
-    </pap-codeblock>
 </body>
 
 </html>

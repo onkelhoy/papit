@@ -16,29 +16,28 @@
 </head>
 
 <body>
-    <!-- <pap-card>
-        <pap-typography slot="header" variant="h4">Experiment</pap-typography>
-        <pap-codeblock display="both">
-            <pap-switch></pap-switch>
+    <h1>Experiment</h1>
+
+    <section>
+        <h2>Form Example</h2>
+
+        <pap-codeblock>
+            <form>
+                <div>
+                    <div>
+                        <label for="a">Switch A</label>
+                        <pap-switch defaultChecked id="a" name="a"></pap-switch>
+                    </div>
+                    <div>
+                        <label for="b">Switch B</label>
+                        <pap-switch id="b" name="b"></pap-switch>
+                    </div>
+                </div>
+                <button type="reset">reset</button>
+                <button type="submit">submit</button>
+            </form>
         </pap-codeblock>
-    </pap-card> -->
-
-
-    <form>
-        <div>
-            <div>
-                <label for="a">Switch A</label>
-                <pap-switch defaultChecked id="a" name="a"></pap-switch>
-            </div>
-            <div>
-                <label for="b">Switch B</label>
-                <pap-switch id="b" name="b"></pap-switch>
-            </div>
-        </div>
-        <button type="reset">reset</button>
-        <button type="submit">submit</button>
-    </form>
-
+    </section>
 </body>
 
 </html>

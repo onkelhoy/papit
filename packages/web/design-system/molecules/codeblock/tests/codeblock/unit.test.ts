@@ -30,13 +30,26 @@ test.describe("@papit/codeblock", () => {
             expect(before).not.toBe(after);
         });
 
-        test("switch toggles back on second click", async ({ page }) => {
+        // test("switch toggles back on second click", async ({ page }) => {
+        //     const component = page.locator('pap-codeblock');
+        //     const sw = component.locator('pap-switch');
+
+        //     const before = await component.evaluate((el: HTMLElement) => el.style.colorScheme);
+        //     await sw.click();
+        //     await sw.click();
+        //     const after = await component.evaluate((el: HTMLElement) => el.style.colorScheme);
+
+        //     expect(before).toBe(after);
+        // });
+
+        test('switch toggles back on second click', async ({ page }) => {
             const component = page.locator('pap-codeblock');
             const sw = component.locator('pap-switch');
 
             const before = await component.evaluate((el: HTMLElement) => el.style.colorScheme);
-            await sw.click();
-            await sw.click();
+            await sw.focus();
+            await page.keyboard.press('Space');
+            await page.keyboard.press('Space');
             const after = await component.evaluate((el: HTMLElement) => el.style.colorScheme);
 
             expect(before).toBe(after);

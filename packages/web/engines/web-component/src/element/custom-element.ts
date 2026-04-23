@@ -36,11 +36,11 @@
  * Henry Pap (GitHub: @onkelhoy)
  */
 
-import { html, getValues } from "../html";
-import { TemplateInstance, partFactory } from '../html/part';
-import { debounceFn } from "../functions/debounce";
-import type { PropertyMeta, QueryMeta, Setting } from "./types";
+import { html, getValues } from "html";
+import { TemplateInstance, partFactory } from 'html/part';
+import { debounceFn } from "functions/debounce";
 import { nextParent } from "functions/next-parent";
+import type { PropertyMeta, QueryMeta, Setting } from "./types";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
     mode: "open",
@@ -58,7 +58,7 @@ export class CustomElement extends HTMLElement {
      * Should be populated by decorators or subclasses.
      */
     static get observedAttributes() {
-        return [];
+        return [] as string[];
     };
 
     /**
@@ -82,7 +82,7 @@ export class CustomElement extends HTMLElement {
 
     // private styleElement: HTMLStyleElement | null = null;
 
-    originalHTML: string;
+    originalAttributes: Array<Attr>;
 
     /**
      * Creates a new custom element.
@@ -98,7 +98,7 @@ export class CustomElement extends HTMLElement {
 
         if (!settings.lightDOM) this.attachShadow(settings);
         this.requestUpdate = debounceFn(this.update, settings.requestUpdateTimeout ?? 50);
-        this.originalHTML = this.outerHTML;
+        this.originalAttributes = Array.from(this.attributes);
     }
 
 
@@ -108,6 +108,7 @@ export class CustomElement extends HTMLElement {
      */
     connectedCallback() {
         this.update();
+
     }
 
     /**
@@ -276,7 +277,7 @@ export class CustomElement extends HTMLElement {
      * @returns string|Element
      */
     render(): string | Node {
-        return "Phuong is so kool"
+        return "Birds can fly due to their wings"
     }
 
     // helper variables & private functions 

@@ -12,7 +12,7 @@
         "build": "npx @papit/build -- --error --ancestors",
         "watch": "tsc -w",
         "start": "npx @papit/server --info --live",
-        "test": "npx playwright test -c tests/playwright.config.ts",
+        "test": "npx playwright test -c tests/playwright.config.ts $@",
         "preversion": "papit-version",
         "postversion": "papit-version",
         "component": "npm create @papit -- --component",
@@ -59,9 +59,7 @@
         "typescript": "5.9.3",
         "@papit/theme": "*",
         "@papit/translator": "*",
-        "@papit/card": "*",
-        "@papit/codeblock": "*",
-        "@papit/typography": "*"
+        "@papit/codeblock": "*"
     },
     "browserslist": [
         "defaults",

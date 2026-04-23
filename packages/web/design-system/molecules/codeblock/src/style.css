@@ -14,7 +14,6 @@
 
     --hover: color-mix(var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0))), 90% var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0))));
 
-
     div[part="display"] {
         border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
         border-radius: var(--space-2, 0.5rem);
@@ -27,13 +26,16 @@
         header {
             display: flex;
             align-items: center;
-            justify-content: space-between;
             background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
             border-bottom: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
 
-            pap-switch {
+            pap-tooltip {
                 margin-left: auto;
-                --padding: 1px;
+            }
+
+            pap-switch {
+                --padding: 2px;
+                --size: 12px;
             }
 
             button {
@@ -41,7 +43,6 @@
                 border: none;
                 display: flex;
 
-                margin-left: auto;
                 cursor: pointer;
                 gap: var(--space-1, 0.25rem);
                 padding: var(--space-2, 0.5rem);
@@ -61,7 +62,7 @@
                     display: none;
                 }
 
-                pap-icon[name="content_paste"] {
+                pap-icon[name="copy"] {
                     display: initial;
                 }
 
@@ -70,7 +71,7 @@
                         display: initial;
                     }
 
-                    pap-icon[name="content_paste"] {
+                    pap-icon[name="copy"] {
                         display: none;
                     }
                 }
@@ -206,7 +207,7 @@
     }
 }
 
-:host([display]) {
+:host([display="both"]) {
     div[part="display"] {
 
         border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
@@ -240,6 +241,27 @@
         margin-top: var(--space-3, 0.75rem);
         border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
         border-radius: var(--space-2, 0.5rem);
+    }
+}
+
+:host([display="raw"]) {
+
+    div[part="display"] {
+        display: none;
+    }
+
+    div[part="code"] {
+        border-radius: var(--space-2, 0.5rem);
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+
+        pre {
+            max-height: none;
+            mask-image: none;
+        }
+    }
+
+    details {
+        display: none;
     }
 }
 

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treeview | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Treeview | experiment</h1>
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock>
+            <pap-treeview>
+                <li role="treeitem" aria-expanded="true">
+                    <span>Web</span>
+                    <ul role="group">
+                        <li role="treeitem" aria-expanded="false">
+                            <span>Languages</span>
+                            <ul role="group">
+                                <li role="treeitem" aria-expanded="false">
+                                    <span>HTML</span>
+                                    <ul role="group">
+                                        <li role="treeitem">Document structure</li>
+                                        <li role="treeitem">Head elements</li>
+                                        <li role="treeitem">Semantic elements</li>
+                                        <li role="treeitem">Attributes</li>
+                                        <li role="treeitem">Web forms</li>
+                                    </ul>
+                                </li>
+                                <li role="treeitem">CSS</li>
+                                <li role="treeitem">JavaScript</li>
+                            </ul>
+                        </li>
+                        <li role="treeitem" aria-expanded="false">
+                            <span>Accessibility</span>
+                            <ul role="group">
+                                <li role="treeitem" aria-label="accessibility object model">AOM</li>
+                                <li role="treeitem">WCAG</li>
+                                <li role="treeitem">ARIA</li>
+                            </ul>
+                        </li>
+                        <li role="treeitem" aria-expanded="false">
+                            <span>Web Performance</span>
+                            <ul role="group">
+                                <li role="treeitem">Load time</li>
+                            </ul>
+                        </li>
+                        <li role="treeitem">APIs</li>
+                    </ul>
+                </li>
+            </pap-treeview>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Treeitem Example</h2>
+        <pap-codeblock>
+            <pap-treeview>
+                <pap-treeitem aria-expanded="true">
+                    <span>Web</span>
+                    <pap-treeitem aria-expanded="false">
+                        <span>Languages</span>
+                        <pap-treeitem aria-expanded="false">
+                            <span>HTML</span>
+                            <pap-treeitem>Document structure</pap-treeitem>
+                            <pap-treeitem>Head elements</pap-treeitem>
+                            <pap-treeitem>Semantic elements</pap-treeitem>
+                            <pap-treeitem>Attributes</pap-treeitem>
+                            <pap-treeitem>Web forms</pap-treeitem>
+                        </pap-treeitem>
+                        <pap-treeitem>CSS</pap-treeitem>
+                        <pap-treeitem>JavaScript</pap-treeitem>
+                    </pap-treeitem>
+                    <pap-treeitem aria-expanded="false">
+                        <span>Accessibility</span>
+                        <pap-treeitem aria-label="accessibility object model">AOM</pap-treeitem>
+                        <pap-treeitem>WCAG</pap-treeitem>
+                        <pap-treeitem>ARIA</pap-treeitem>
+                    </pap-treeitem>
+                    <pap-treeitem aria-expanded="false">
+                        <span>Web Performance</span>
+                        <pap-treeitem>Load time</pap-treeitem>
+                    </pap-treeitem>
+                    <pap-treeitem>APIs</pap-treeitem>
+                </pap-treeitem>
+            </pap-treeview>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

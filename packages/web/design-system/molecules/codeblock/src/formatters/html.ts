@@ -17,26 +17,22 @@ export function html(content: string) {
         switch (token.type)
         {
             case "startTag": {
-                const indent = new Array(stack.size).fill(" ").join("");
                 const tag = new Array<string>();
-                tag.push(`<div style="padding-left: ${stack.size}rem;"><span class="symbol">&lt;</span>`);
+                tag.push(`<div style="padding-left: ${stack.size > 0 ? 2 : 0}rem;"><span class="symbol">&lt;</span>`);
                 tag.push(`<span class="name">${token.name}</span>`);
 
-                const [attribs, newlines] = getAttributes(indent, token.attributes);
-                if (attribs) tag.push(attribs);
+                const attributes = getAttributes(stack.size, token.attributes);
+                if (attributes) tag.push(attributes);
 
                 if (token.selfClosing)
                 {
-                    if (newlines) tag.push(`<span class="symbol">/&gt;</span>`);
-                    else tag.push('<span class="symbol"> /&gt;</span>');
-
+                    tag.push(`<span class="symbol">/&gt;</span>`);
                     tag.push("</div>")
 
                     return tag.join("");
                 }
 
-                if (newlines) tag.push(`<span class="symbol">&gt;</span>`);
-                else tag.push('<span class="symbol">&gt;</span>');
+                tag.push(`<span class="symbol">&gt;</span>`);
 
                 stack.push({
                     token,
@@ -46,16 +42,13 @@ export function html(content: string) {
             }
 
             case "endTag": {
-                const _tag = stack.pop();
-                const indent = new Array(stack.size).fill(" ").join("");
-
+                stack.pop();
                 const tag = new Array<string>();
                 tag.push('<span class="symbol">&lt;/</span>');
                 tag.push(`<span class="name">${token.name}</span>`);
                 tag.push('<span class="symbol">&gt;</span></div>');
 
-                // should it be one line ? 
-                return indent + tag.join("");
+                return tag.join("");
             }
 
             case "comment": {
@@ -91,7 +84,7 @@ export function html(content: string) {
                     }
                 }
 
-                return `<span class="content">${token.value}</span>`;
+                return `<span class="content" style="white-space: normal">${token.value}</span>`;
             }
         }
     }).join("");
@@ -99,25 +92,43 @@ export function html(content: string) {
     return `<div class="html">${value}</div>`;
 }
 
-function getAttributes(indent: string, attributesRecord: Record<string, string | true>): [string, boolean] {
+function getAttributes(indent: number, attributesRecord: Record<string, string | true>): string | null {
     const value = new Array<string>();
     const attributes = Object.keys(attributesRecord);
     if (attributes.length === 0)
     {
-        return ["", false];
+        return null;
     }
 
-
-    // value.push().join(" "));
+    let raw = "";
     attributes.forEach(attr => {
-        if (attributesRecord[attr] === true) value.push(`<span class="attribute key">${attr}<span>`);
-        else value.push(`<span class="attribute key">${attr}</div>="<span class="attribute value">${attributesRecord[attr]}</span>"`)
+        raw += attr;
+
+        if (attributesRecord[attr] === true || attributesRecord[attr] === "") value.push(`<div><span class="attribute key value">${attr}<span></div>`);
+        else 
+        {
+            raw += "=\"" + attributesRecord[attr] + "\"";
+            value.push([
+                "<div>",
+                `<span class="attribute key">${attr}</span>`,
+                '<span class="attribute symbol">=</span>',
+                '<span class="attribute symbol">"</span>',
+                `<span class="attribute value">${attributesRecord[attr]}</span>`,
+                '<span class="attribute symbol">"</span>',
+                "</div>"
+            ].join(""));
+        }
     });
 
-    const combined = value.join(" ");
-    if (combined.length > 150) 
+    let style = "";
+    if (raw.length > 80) 
     {
-        return ["\n" + indent + value.join("\n" + indent), true]
+        style += "flex-direction: column; padding-left: 2rem;"
     }
-    return [combined, false];
+    else
+    {
+        style += "display: inline-flex; gap:0.5rem; margin-left:0.5rem;"
+    }
+
+    return `<div style="${style}">${value.join("")}</div>`
 }

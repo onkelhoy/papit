@@ -23,37 +23,77 @@
         </pap-codeblock>
     </pap-card> -->
 
+    <h1>Experiment</h1>
 
-    <pap-group>
-        <button>BTN 1</button>
-        <button>BTN 2</button>
-        <button>BTN 3</button>
-    </pap-group>
+    <section>
+        <h1>Default</h1>
+        <pap-codeblock>
 
-    <pap-group aria-orientation="vertical" class="col" >
-        <span>
-            <button>BTN 4</button>
-        </span>
-        <span>
-            <button>BTN 5</button>
-        </span>
-        <span>
-            <button>BTN 6</button>
-        </span>
-    </pap-group>
+            <pap-group>
+                <button>BTN 1</button>
+                <button>BTN 2</button>
+                <button>BTN 3</button>
+            </pap-group>
+        </pap-codeblock>
+    </section>
 
-    <pap-group>
-        <button>BTN 7</button>
-        <button>BTN 8</button>
-        <button>BTN 9</button>
-    </pap-group>
+    <section>
+        <h1>aria-orientation</h1>
+        <pap-codeblock>
+            <pap-group aria-orientation="vertical" class="col">
+                <span>
+                    <button>BTN 4</button>
+                </span>
+                <span>
+                    <button>BTN 5</button>
+                </span>
+                <span>
+                    <button>BTN 6</button>
+                </span>
+            </pap-group>
+        </pap-codeblock>
+    </section>
 
 
-    <pap-group up left down right>
-        <button>BTN 10</button>
-        <button>BTN 11</button>
-        <button>BTN 12</button>
-    </pap-group>
+    <section>
+        <h1>List Elements</h1>
+        <pap-codeblock>
+            <pap-group aria-orientation="vertical" class="col">
+                <ul>
+                    <li tabindex="0">LI 1</li>
+                    <li tabindex="0">LI 2</li>
+                    <li tabindex="0">
+                        LI 3
+                        <ul>
+                            <li tabindex="0">LI 1</li>
+                            <li tabindex="0">LI 2</li>
+                            <li tabindex="0">LI 3</li>
+                            <li tabindex="0">LI 4</li>
+                            <li tabindex="0">LI 5</li>
+                            <li tabindex="0">LI 6</li>
+                            <li tabindex="0">LI 7</li>
+                        </ul>
+                    </li>
+                    <li tabindex="0">LI 4</li>
+                    <li tabindex="0">LI 5</li>
+                    <li tabindex="0">LI 6</li>
+                    <li tabindex="0">LI 7</li>
+                </ul>
+            </pap-group>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h1>up left down right</h1>
+        <pap-codeblock>
+
+            <pap-group up left down right>
+                <button>BTN 7</button>
+                <button>BTN 8</button>
+                <button>BTN 9</button>
+            </pap-group>
+        </pap-codeblock>
+    </section>
 </body>
 
 </html>

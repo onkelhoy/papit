@@ -51,6 +51,9 @@ export default defineConfig({
             maxDiffPixelRatio: 0.2,
         },
     },
+    testIgnore: process.env.SKIP_SNAPSHOTS === "true"
+        ? ["**/snapshot.test.ts"]
+        : [],
 
     // Configure projects for major browsers.
     projects: [

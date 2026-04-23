@@ -10,7 +10,7 @@
     "scripts": {
         "watch": "tsc -w",
         "start": "npx @papit/server --info --live",
-        "test": "npx playwright test -c tests/playwright.config.ts",
+        "test": "npx playwright test -c tests/playwright.config.ts $@",
         "preversion": "papit-version",
         "postversion": "papit-version",
         "component": "npm create @papit -- --component",
@@ -51,7 +51,9 @@
     "devDependencies": {
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
-        "typescript": "5.9.3"
+        "typescript": "5.9.3",
+        "@papit/translator": "*",
+        "@papit/codeblock": "*"
     },
     "browserslist": [
         "defaults",
