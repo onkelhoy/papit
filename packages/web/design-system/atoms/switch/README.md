@@ -4,6 +4,8 @@ A binary on/off toggle control implemented as a Web Component. Use a switch inst
 
 The component follows the **WAI-ARIA Switch Pattern**, supports **keyboard interaction**, and **participates in HTML forms** like a native input.
 
+See the pattern: [https://www.w3.org/WAI/ARIA/apg/patterns/switch/](https://www.w3.org/WAI/ARIA/apg/patterns/switch/)
+
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
