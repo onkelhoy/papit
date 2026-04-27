@@ -261,7 +261,8 @@ function onBuild(args: Args, node: PackageNode, info: OnBuildEvent) {
 
     const bundle = fs.readFileSync(importOutput, { encoding: "utf-8" });
     const updated = bundle.startsWith("#!/usr/bin/env node") ? bundle : `#!/usr/bin/env node\n${bundle}`;
-    fs.writeFileSync(importOutput, updated, { mode: 0o755 });
+    fs.writeFileSync(importOutput, updated);
+    fs.chmodSync(importOutput, 0o755);
 
     return true; // should install 
 }
