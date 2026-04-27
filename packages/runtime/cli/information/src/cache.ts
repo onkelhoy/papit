@@ -18,13 +18,13 @@ export class Cache {
         if (!this._hasloaded)
         {
             this._hasloaded = true;
-            if (!fs.existsSync(path.join(this.location, ".temp/cache.json")))
+            if (!fs.existsSync(path.join(this.location, ".temp", "cache.json")))
             {
                 this.save();
             }
             else 
             {
-                this._cache = JSON.parse(fs.readFileSync(path.join(this.location, ".temp/cache.json"), { encoding: "utf-8" }));
+                this._cache = JSON.parse(fs.readFileSync(path.join(this.location, ".temp", "cache.json"), { encoding: "utf-8" }));
             }
         }
 
@@ -46,6 +46,6 @@ export class Cache {
             fs.mkdirSync(path.join(this.location, ".temp"));
         }
 
-        fs.writeFileSync(path.join(this.location, ".temp/cache.json"), JSON.stringify(this._cache));
+        fs.writeFileSync(path.join(this.location, ".temp", "cache.json"), JSON.stringify(this._cache));
     }
 }

@@ -22,6 +22,7 @@ import { spawnCommand } from "./spawn-command.mjs";
         fs.rmSync(path.join(dirname, ".temp"), { recursive: true, force: true });
         fs.rmSync(path.join(dirname, "lib"), { recursive: true, force: true });
         fs.rmSync(path.join(dirname, "reports"), { recursive: true, force: true });
+        fs.rmSync(path.join(dirname, "node_modules"), { recursive: true, force: true }); // windows seemed to have issue ? 
 
         if (process.argv.some(a => /--?t(ests?)?/.test(a)))
         {

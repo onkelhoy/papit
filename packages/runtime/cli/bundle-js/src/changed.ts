@@ -1,12 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
 
-export function hasChanged(location: string, filenames: string[], options: Partial<{ tempSuffix: string, filter: RegExp | ((fileName: string) => boolean) }> = { }) {
-    
+export function hasChanged(location: string, filenames: string[], options: Partial<{ tempSuffix: string, filter: RegExp | ((fileName: string) => boolean) }> = {}) {
+
     if (!options.filter) options.filter = /\.(css|((j|t)s(\w|on)?))$/i;
 
-    const savedLocation = path.join(location, `.temp/mstime.${options.tempSuffix ?? "papit-bundle-js"}.json`);
-    filenames = filenames.concat(path.join(location, "package.json"), path.join(location, "tsconfig.json"));
+    const savedLocation = path.join(location, ".temp", `mstime.${options.tempSuffix ?? "papit-bundle-js"}.json`);
+    filenames = filenames
+        .concat(path.join(location, "package.json"), path.join(location, "tsconfig.json"))
+        .map(f => f.replace(/\\/g, "/"));
 
     let data: Record<string, number> = {};
     const checked: Record<string, number> = {};
@@ -19,7 +21,7 @@ export function hasChanged(location: string, filenames: string[], options: Parti
 
         for (const filename of filenames)
         {
-            if (options.filter instanceof RegExp && !options.filter.test(filename)) continue; 
+            if (options.filter instanceof RegExp && !options.filter.test(filename)) continue;
             if (typeof options.filter === "function" && !options.filter?.(filename)) continue;
 
             if (!data[filename]) return true;
@@ -42,17 +44,18 @@ export function hasChanged(location: string, filenames: string[], options: Parti
         data = {};
         for (const filename of filenames)
         {
-            if (options.filter instanceof RegExp && !options.filter.test(filename)) continue; 
+            if (options.filter instanceof RegExp && !options.filter.test(filename)) continue;
             if (typeof options.filter === "function" && !options.filter?.(filename)) continue;
 
             if (checked[filename]) data[filename] = checked[filename];
             else 
             {
-                try {
+                try
+                {
                     const stat = fs.statSync(filename);
                     if (!stat) continue;
                     data[filename] = stat.mtimeMs;
-                } catch {}
+                } catch { }
             }
         }
         const dirname = path.dirname(savedLocation);

@@ -6,10 +6,17 @@ import { Extractor, ExtractorConfig } from "@microsoft/api-extractor";
 
 const timestamp_value = performance.now();
 let timestamp_ticker = 0;
-function timestamp(args: { has: (key: string) => boolean },message?: string) {
+
+function timestamp(args: { has: (key: string) => boolean }, message?: string) {
     if (!args.has("debug")) return;
-    if (!process.env.npm_package_json?.endsWith("bundle-ts/package.json")) return;
-    if (process.env.npm_lifecycle_event === "npx" && process.env._ && !process.env._.endsWith("papit-bundle-ts")) return;
+
+    const isNpmContext = process.env.npm_package_json?.endsWith("bundle-js/package.json");
+
+    // process.argv[1] contains the resolved script path — works on Windows too
+    const isNpxContext = process.env.npm_lifecycle_event === "npx"
+        && process.argv[1]?.endsWith("papit-bundle-js");
+
+    if (!isNpmContext && !isNpxContext) return;
 
     timestamp_ticker++;
     console.log((performance.now() - timestamp_value).toFixed(3).toString() + "ms passed", "#" + timestamp_ticker, message ? "- " + message : "");
@@ -30,27 +37,29 @@ export async function tsBundle(
     const packageJSON = options?.packageJSON ?? JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
 
     let entryPointsArray: { input: string, output: string }[] = [];
-    if (options?.entryPointsArray) {
+    if (options?.entryPointsArray)
+    {
         entryPointsArray = options.entryPointsArray;
-    } else {
+    } else
+    {
         const entryPoints = options?.entryPoints ?? getEntryPoints(location, packageJSON, tsconfig);
         entryPointsArray = Object.values(entryPoints.entries).map(value => value.types).filter(v => v !== undefined);
     }
 
-    const tempOutDir = path.join(location, ".temp/ts-bundle");
+    const tempOutDir = path.join(location, ".temp", "ts-bundle");
     if (!fs.existsSync(tempOutDir)) fs.mkdirSync(tempOutDir, { recursive: true });
     timestamp(args, "before has-changed");
 
     if (
-        !(args.has("force") || args.has("f")) 
-        && !hasChanged(location, tsconfig?.fileNames, { tempSuffix: "papit-bundle-ts" }) 
+        !(args.has("force") || args.has("f"))
+        && !hasChanged(location, tsconfig?.fileNames, { tempSuffix: "papit-bundle-ts" })
         && !entryPointsArray.some(entry => !fs.existsSync(entry.output))) 
     {
         return "skipped";
     }
 
     // lets clear the output folder
-    fs.rmSync(path.join(location, "lib/ts-output"), { recursive: true, force: true });
+    fs.rmSync(path.join(location, "lib", "ts-output"), { recursive: true, force: true });
 
     // if (!fs.existsSync(path.join(location, "reports"))) {
     //     fs.mkdirSync(path.join(location, "reports"), { recursive: true });
@@ -60,7 +69,7 @@ export async function tsBundle(
     // const isBundleTS = /cli\/bundle-ts/.test(location);
     const fileNames = tsconfig?.fileNames?.filter(f => {
         // if (!isBundleTS && f.includes('/tests/')) return false; // without custom build this is not needed for running tests 
-        if (!f.includes("/src/")) return false;
+        if (!/[/\\]src[/\\]/.test(f)) return false;
         return true;
     });
 
@@ -73,9 +82,12 @@ export async function tsBundle(
     });
 
     const res = program.emit();
-    if (res.emitSkipped) {
-        for (const diag of res.diagnostics) {
-            if (diag.file) {
+    if (res.emitSkipped)
+    {
+        for (const diag of res.diagnostics)
+        {
+            if (diag.file)
+            {
                 const { line, character } = diag.file.getLineAndCharacterOfPosition(diag.start!);
                 console.error(`\nFile: ${diag.file.fileName}`);
                 console.error(`Line ${line + 1}, Column ${character + 1}`);
@@ -86,8 +98,9 @@ export async function tsBundle(
     }
     timestamp(args, "before entryPointsArray loop");
 
-    const errors = new Array<{input: string, logs: string[]}>();
-    for (const entry of entryPointsArray) {
+    const errors = new Array<{ input: string, logs: string[] }>();
+    for (const entry of entryPointsArray)
+    {
         timestamp(args, `at entry "${path.relative(location, entry.input)}"`);
 
         // const tempEntry = path.join(tempOutDir, entry.input.replace(location, '').replace(/\.ts$/, '.d.ts'));
@@ -120,11 +133,11 @@ export async function tsBundle(
                     enabled: false,
                     reportFileName: "<unscopedPackageName>.api.md",
                     reportFolder: path.join(location, "reports"),
-                    reportTempFolder: path.join(location, ".temp/api-extractor"),
+                    reportTempFolder: path.join(location, ".temp", "api-extractor"),
                 },
                 docModel: {
                     enabled: false, // if we use api-documenter we could enable this to build documentation 
-                    apiJsonFilePath: path.join(location, ".temp/api-extractor", "<unscopedPackageName>.api.json"),
+                    apiJsonFilePath: path.join(location, ".temp", "api-extractor", "<unscopedPackageName>.api.json"),
                 },
             },
             configObjectFullPath: path.join(location, "api-extractor.json"),
@@ -134,7 +147,7 @@ export async function tsBundle(
         const logs = new Array<string>();
         const originalWrite = process.stdout.write;
         process.stdout.write = (msg) => {
-            const message = msg.toString(); 
+            const message = msg.toString();
             if (!(/^Analysis will use the bundled TypeScript/.test(message) || /^\*\*\* /.test(message)))
             {
                 logs.push(message);
@@ -151,7 +164,7 @@ export async function tsBundle(
         // logs.forEach(log => originalWrite(log));
         if (logs.length > 0)
         {
-            errors.push({input: entry.input, logs});
+            errors.push({ input: entry.input, logs });
         }
     }
     timestamp(args, "final");

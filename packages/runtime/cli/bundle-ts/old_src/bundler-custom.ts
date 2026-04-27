@@ -58,10 +58,10 @@ export async function tsBundle(
         // this is stupid, but html needs it but then we cannot test this own package.. 
         // const fileNames = /cli\/bundle-ts/.test(location) ? tsconfig?.fileNames : tsconfig?.fileNames?.filter(f => !f.includes('/tests/'));
 
-        const isBundleTS = /cli\/bundle-ts/.test(location);
+        const isBundleTS = /cli[/\\]bundle-ts/.test(location);
         const fileNames = tsconfig?.fileNames?.filter(f => {
             if (!isBundleTS && f.includes('/tests/')) return false;
-            if (!f.includes("/src/")) return false;
+            if (!/[/\\]src[/\\]/.test(f)) return false;
 
             return true;
         });
@@ -81,8 +81,10 @@ export async function tsBundle(
         if (res.emitSkipped)
         {
             console.error('Declaration emit failed:');
-            for (const diag of res.diagnostics) {
-                if (diag.file) {
+            for (const diag of res.diagnostics)
+            {
+                if (diag.file)
+                {
                     const { line, character } = diag.file.getLineAndCharacterOfPosition(diag.start!);
                     console.error(`\nFile: ${diag.file.fileName}`);
                     console.error(`Line ${line + 1}, Column ${character + 1}`);

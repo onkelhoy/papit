@@ -11,8 +11,8 @@
         "analyse": "to come",
         "publish": "to come",
         "prebuild": "node bin/prebuild.mjs",
-        "clean": "node bin/clean.mjs",
         "build": "npx @papit/build",
+        "clean": "node bin/clean.mjs",
         "test": "node bin/test.mjs",
         "create": "npm create @papit -- --package --html-prefix=pap",
         "start": "npx @papit/server --info"

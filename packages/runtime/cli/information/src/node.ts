@@ -6,7 +6,6 @@ import { getEntryPoints, getExternals, getTSconfig, getTSlocation, outFolder, so
 
 import { Remote } from "./remote";
 import type { LocalPackage, RootPackage } from "./types";
-// import { getEntryPoints } from "./entrypoint";
 import { Cache } from "./cache";
 
 export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
@@ -21,7 +20,8 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
 
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
-    get location() { return this._location }
+    get location() { return path.normalize(this._location) }
+
     get sourceFolder() { return sourceFolder(this.location, this.tsconfig) }
     get outFolder() { return outFolder(this.location, this.tsconfig) }
     get name() { return this._packageJSON.name }

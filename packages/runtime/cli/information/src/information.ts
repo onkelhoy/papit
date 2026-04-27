@@ -1,3 +1,4 @@
+import path from "node:path";
 import { Arguments } from "@papit/arguments";
 import { PriorityQueue } from "@papit/data-structure";
 
@@ -14,10 +15,12 @@ export class Information {
         if (!this._scope) this._scope = this.root.name.split("/").at(0)!;
         return this._scope;
     }
+
     static get local() {
         if (!this._local) this._local = process.env.PWD ?? process.cwd();
-        return this._local;
+        return path.normalize(this._local)
     }
+
     static get root() { return PackageGraph.root }
 
     static get package(): PackageNode<LocalPackage> {
@@ -34,6 +37,7 @@ export class Information {
 
     static get packageName() { return this.package.name }
     static get location() { return this.package.location }
+
     static get sourceFolder() { return this.package.sourceFolder }
     static get outFolder() { return this.package.outFolder }
 

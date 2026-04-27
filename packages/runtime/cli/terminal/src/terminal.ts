@@ -7,17 +7,22 @@ import { option } from "./methods/option";
 import { Colors } from "./color";
 
 const originalStdoutWrite = process.stdout.write.bind(process.stdout);
-const originalStderrWrite = process.stderr.write.bind(process.stderr);
+// const originalStderrWrite = process.stderr.write.bind(process.stderr);
 
 process.stdout.write = (chunk: any, encoding?: any, cb?: any) => {
     Terminal.track(chunk.toString());
     return originalStdoutWrite(chunk, encoding, cb);
 };
 
-process.stderr.write = (chunk: any, encoding?: any, cb?: any) => {
-    Terminal.track(chunk.toString());
-    return originalStderrWrite(chunk, encoding, cb);
+process.stdout.write = (chunk: any, encoding?: any, cb?: any) => {
+    Terminal.track(Buffer.isBuffer(chunk) ? chunk.toString("utf8") : String(chunk));
+    return originalStdoutWrite(chunk, encoding, cb);
 };
+
+process.on("unhandledRejection", (reason) => {
+    Terminal.error("unhandled rejection:", reason);
+    process.exit(1);
+});
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
@@ -243,14 +248,14 @@ export class Terminal extends Colors {
     }
 
     static spawn(command: string, options: Partial<SpawnOptions>) {
-        const [cmd, ..._args] = command.split(" ");
-
         let stdout = "";
         let stderr = "";
 
-        const full = [cmd, ..._args.concat(options.args ?? [])].join(" ");
-        
-        const child = spawn(full, {
+        const fullCommand = options.args?.length
+            ? `${command} ${options.args.join(" ")}`
+            : command;
+
+        const child = spawn(fullCommand, [], {
             cwd: options.cwd,
             stdio: process.env.CI ? "inherit" : "pipe",
             shell: true,

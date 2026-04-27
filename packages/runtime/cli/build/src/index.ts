@@ -11,13 +11,19 @@ import { tsBundle } from "@papit/bundle-ts";
 
 import { npmInstall } from "helper";
 
+function canRun() {
+    return Arguments.has("run-build") || Arguments.isCLI;
+}
+
 function canPrint() {
-    return Arguments.has("run-build") || (Arguments.isCLI && !!process.env._?.endsWith("papit-build"));
+    if (!canRun()) return false;
+    // Windows-safe binary name check
+    const execPath = process.env._ ?? process.env.npm_lifecycle_script ?? "";
+    return execPath.endsWith("papit-build") || Arguments.has("run-build");
 }
 
 (async function () {
-
-    if (!canPrint()) return;
+    if (!canRun()) return;
     await build();
 }())
 
