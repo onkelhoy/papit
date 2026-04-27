@@ -1,59 +1,46 @@
 name: Publish Packages to npmjs
-
 on:
   release:
     types: [published]
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:
     inputs:
-      force_build:
-        description: 'Force build?'
+      dry_run:
+        description: 'Dry run?'
         required: false
         default: false
-        type: boolean 
-
+        type: boolean
 permissions:
-  id-token: write  # Required for OIDC
+  id-token: write
   contents: read
-  
 jobs:
-  initialise:
-    uses: ./.github/workflows/initialise.yml
-    with:
-      force_build: ${{ github.event.inputs.force_build  || false }}
-
   publish:
     runs-on: ubuntu-latest
-    needs: initialise
     steps:
       - uses: actions/checkout@v4
-
-        # setup node
-      - name: Setup Node.js environment
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
           registry-url: 'https://registry.npmjs.org'
-          always-auth: true
-
-        # caching: node_modules
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: 'node_modules'
-          key: ${{ runner.os }}-modules
-          restore-keys: ${{ runner.os }}-modules
-
-        # caching: package builds
-      - name: Cache build artifacts
+          
+      - name: Cache build output
         uses: actions/cache@v4
         with:
           path: packages/**/lib
-          key: ${{ runner.os }}-build
-          restore-keys: ${{ runner.os }}-build
+          key: build-${{ runner.os }}-${{ github.run_attempt }}
+          restore-keys: |
+            build-${{ runner.os }}-
 
-        # Publish to npm
-      - name: Publish to npmjs.com
-        run: npm run publish -- --ci --verbose
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
         env:
-          CI: true 
-          
+          CI: true
+        run: npm run build -- --ci --run-build
+
+      - name: Publish to npmjs.com
+        run: npm run publish -- --ci --provenance ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+        env:
+          CI: true
