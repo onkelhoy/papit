@@ -17,43 +17,52 @@ export class Graph {
 
     private scope = "";
 
+    public ERROR = false;
+
     constructor() {
         const location = process.cwd();
 
-        const leftovers = new Map<string, string[]>();
-        const rootPATH = findWorkspaceRoot(location);
-        const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
-        this.scope = rootJSON.name.split("/").at(0);
+        try
+        {
+            const leftovers = new Map<string, string[]>();
+            const rootPATH = findWorkspaceRoot(location);
+            const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
+            this.scope = rootJSON.name.split("/").at(0);
 
-        this.root = this.add(rootPATH, "root", leftovers, rootJSON);
-        Cache.setup(this.root.location);
+            this.root = this.add(rootPATH, "root", leftovers, rootJSON);
+            Cache.setup(this.root.location);
 
-        fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
-            .filter(loc => {
-                if (!loc.endsWith("package.json")) return false;
-                if (/[/\\]asset[/\\]/i.test(loc)) return false;
+            fs.readdirSync(path.join(rootPATH, "packages"), { recursive: true, encoding: "utf-8" })
+                .filter(loc => {
+                    if (!loc.endsWith("package.json")) return false;
+                    if (/[/\\]asset[/\\]/i.test(loc)) return false;
 
-                return true;
-            })
-            .forEach((localFilePath, index, array) => {
-                const location = path.dirname(path.join(rootPATH, "packages", localFilePath));
-                this.add(
-                    location,
-                    "local",
-                    leftovers,
-                );
+                    return true;
+                })
+                .forEach((localFilePath, index, array) => {
+                    const location = path.dirname(path.join(rootPATH, "packages", localFilePath));
+                    this.add(
+                        location,
+                        "local",
+                        leftovers,
+                    );
+                });
+
+            leftovers.forEach((dependants, name) => {
+                const node = this.get(name);
+                if (!node) return;
+                dependants.forEach(dep => {
+                    const dnode = this.get(dep);
+                    if (!dnode) return;
+                    node.children.push(dnode);
+                    dnode.parents.push(node);
+                })
             });
-
-        leftovers.forEach((dependants, name) => {
-            const node = this.get(name);
-            if (!node) return;
-            dependants.forEach(dep => {
-                const dnode = this.get(dep);
-                if (!dnode) return;
-                node.children.push(dnode);
-                dnode.parents.push(node);
-            })
-        });
+        }
+        catch
+        {
+            this.ERROR = true;
+        }
     }
 
     add(location: string): PackageNode;
@@ -138,9 +147,11 @@ export class Graph {
 
 export class PackageGraph {
     private static instance = new Graph();
+    static initialize() { this.instance = new Graph() }
     static get(name: string) { return this.instance.get(name) }
     static add(location: string) { return this.instance.add(location) }
     static get root() { return this.instance.root }
+    static get ERROR() { return this.instance.ERROR }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
     static search(location: string, compare: "start" | "end" = "end") { return this.instance.search(location, compare) }

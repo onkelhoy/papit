@@ -90,8 +90,8 @@ function runner(node, extraEnv = {}, extraArgs = []) {
             // Skip unchanged packages in CI
             if (Arguments.has("ci") || process.env.CI)
             {
-                const remote = await node.remote();
-                if (node.version === remote && remote)
+                const remote = await node.remote() ?? node.packageJSON.remoteVersion;
+                if (node.packageJSON.version === remote && remote)
                 {
                     Terminal.write(Terminal.blue("●"), node.name, Terminal.green("skipped"));
                     log({ name: node.name, status: "skipped" }, testresultstream);

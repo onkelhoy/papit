@@ -8,7 +8,6 @@ import { Arguments } from "@papit/arguments";
 import { componentRunner } from "./component";
 import { copyFolder, getFolders, selectFolder } from "components/util";
 import { getName } from "components/util/name";
-import { PackageJson } from "@papit/bundle-js";
 
 export async function packageRunner(
     createPackageLocation: string,
@@ -196,10 +195,12 @@ export async function packageRunner(
     PackageGraph.add(destination); // we need to append to graph so component-runner can run smooth 
 
 
+    Terminal.createSession();
     let shouldCommit = false;
     if (Arguments.has("no")) shouldCommit = false;
     else if (Arguments.has("yes")) shouldCommit = true;
     else shouldCommit = Arguments.true('agree') || Arguments.true('commit') || await Terminal.confirm("git commit", true);
+    Terminal.clearSession();
 
     await componentRunner(
         createPackageLocation,

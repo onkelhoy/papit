@@ -54,13 +54,13 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/icon": "^0.0.1",
-    "@papit/web-component": "*"
+    "@papit/icon": "0.1.0",
+    "@papit/web-component": "0.0.1"
   },
   "devDependencies": {
-    "@papit/codeblock": "*",
-    "@papit/theme": "*",
-    "@papit/translator": "*",
+    "@papit/codeblock": "0.1.0",
+    "@papit/theme": "0.0.1",
+    "@papit/translator": "0.1.0",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -81,5 +81,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.1"
 }

@@ -15,7 +15,7 @@ const printState = (dim, state, name) => {
     }
     else
     {
-        process.stdout.write(`● {dim} ${state} - ${name}\n`);
+        process.stdout.write(`●  ${state} - ${name}\n`);
     }
 }
 

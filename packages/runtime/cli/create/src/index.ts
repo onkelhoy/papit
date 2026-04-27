@@ -61,7 +61,7 @@ import { projectRunner } from "./components/runners/project";
     catch { }
 
 
-    let option: option | null = null;
+    let option: option | null = PackageGraph.ERROR ? { index: 2, text: "project" } : null;
     for (let i = 0; i < options.length; i++)
     {
         if (Arguments.has(options[i])) 

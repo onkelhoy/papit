@@ -15,7 +15,7 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
     const batches = Information.getBatches();
 
     for (const batch of batches)
-    {        
+    {
         for (const node of batch)
         {
             const status = await runner(node, updateDependencies);
@@ -37,18 +37,42 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
 function runner(node: PackageNode, updateDependencies: Map<string, string>) {
 
     return new Promise<boolean>(async resolve => {
+        let changed = false;
 
         // we upgrade remote version if they dont match 
         const remote = await node.remote();
-        let changed = false;
-        if (remote !== null && node.packageJSON.remoteVersion !== remote)
+
+        if (remote === null)
+        {
+            changed = true;
+        }
+        else if (node.packageJSON.remoteVersion !== remote)
         {
             node.packageJSON.remoteVersion = remote;
-            changed = true;
+        }
+
+
+        for (const [name, version] of updateDependencies)
+        {
+            if (node.packageJSON.dependencies?.[name] && node.packageJSON.dependencies[name] !== version)
+            {
+                node.packageJSON.dependencies[name] = version;
+                changed = true;
+            }
+            if (node.packageJSON.devDependencies?.[name] && node.packageJSON.devDependencies[name] !== version)
+            {
+                node.packageJSON.devDependencies[name] = version;
+                // changed = true; // also add this - devDep update is still a reason to bump
+            }
+            if (node.packageJSON.peerDependencies?.[name] && node.packageJSON.peerDependencies[name] !== version)
+            {
+                node.packageJSON.peerDependencies[name] = version;
+                // changed = true;
+            }
         }
 
         // we do a patch if we need 
-        if (!(changed || node.packageJSON.version !== node.packageJSON.remoteVersion))
+        if (changed || node.packageJSON.version !== node.packageJSON.remoteVersion)
         {
             const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
             if (match?.groups)
@@ -56,13 +80,6 @@ function runner(node: PackageNode, updateDependencies: Map<string, string>) {
                 const { major, minor, patch, semver } = match.groups;
                 node.packageJSON.version = `${major}.${minor}.${Number(patch) + 1}${semver}`;
             }
-        }
-
-        for (const [name, version] of updateDependencies)
-        {
-            if (node.packageJSON.dependencies?.[name]) node.packageJSON.dependencies[name] = version;
-            if (node.packageJSON.devDependencies?.[name]) node.packageJSON.devDependencies[name] = version;
-            if (node.packageJSON.peerDependencies?.[name]) node.packageJSON.peerDependencies[name] = version;
         }
 
         updateDependencies.set(node.packageJSON.name, node.packageJSON.version);
@@ -75,7 +92,7 @@ function runner(node: PackageNode, updateDependencies: Map<string, string>) {
         catch (e)
         {
             isSuccess = false;
-            
+
             if (Arguments.error)
             {
                 console.log(e);

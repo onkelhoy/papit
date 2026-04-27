@@ -9,7 +9,7 @@
     },
     "scripts": {
         "analyse": "to come",
-        "publish": "to come",
+        "publish": "node bin/publish.mjs",
         "prebuild": "node bin/prebuild.mjs",
         "build": "npx @papit/build",
         "clean": "node bin/clean.mjs",
