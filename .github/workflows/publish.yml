@@ -36,6 +36,6 @@ jobs:
         run: npm run build -- --ci --remote
 
       - name: Publish to npmjs.com
-        run: npm run publish -- ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+        run: npm run publish -- --provenance ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
         env:
           CI: true
