@@ -1,14 +1,17 @@
-name: Publish Packages to npmjs
+name: publish
 on:
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry run?'
+        description: 'dry-run mode'
         required: false
         default: false
         type: boolean
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 permissions:
   id-token: write
   contents: read
@@ -24,14 +27,6 @@ jobs:
           cache: npm
           registry-url: 'https://registry.npmjs.org'
           
-      - name: Cache build output
-        uses: actions/cache@v4
-        with:
-          path: packages/**/lib
-          key: build-${{ runner.os }}-${{ github.run_attempt }}
-          restore-keys: |
-            build-${{ runner.os }}-
-
       - name: Install dependencies
         run: npm ci
 
@@ -41,6 +36,6 @@ jobs:
         run: npm run build -- --ci --run-build
 
       - name: Publish to npmjs.com
-        run: npm run publish -- --ci --provenance ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+        run: npm run publish -- --ci ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
         env:
           CI: true

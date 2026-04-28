@@ -1,80 +1,59 @@
-name: Update Snapshots 
-
+name: Update Snapshots
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
     inputs:
       update_snapshots:
         description: 'Force update of snapshots?'
         required: true
         default: false
         type: boolean
-
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 jobs:
-  initialise:
-    uses: ./.github/workflows/initialise.yml
-
-  build:
-    needs: initialise
+  update-snapshots:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
 
-        # setup node
-      - name: Setup Node.js environment
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
+          cache: npm
 
-        # caching: node_modules
-      - name: Cache node modules
-        uses: actions/cache@v4
-        with:
-          path: 'node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: ${{ runner.os }}-modules-
+      - name: Install dependencies
+        run: npm ci
 
-        # caching: package builds
-      - name: Cache build artifacts
-        uses: actions/cache@v4
-        with:
-          path: packages/**/lib
-          key: ${{ runner.os }}-build
-          restore-keys: ${{ runner.os }}-build
+      - name: Build
+        env:
+          CI: true
+        run: npm run build -- --ci --run-build
 
-        # caching: package builds
-      - name: Cache Playwright binaries
+      - name: Restore Playwright cache
         uses: actions/cache@v4
-        id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright
           restore-keys: ${{ runner.os }}-playwright
 
-      # this should still respect the cached binary files for playwright but also just "install" them
-      - name: Installing Playwright
-        run: npx playwright install --with-deps 
-        
-      - name: Conditionally Update Screenshots
-        if: ${{ github.event.inputs.update_snapshots == 'true' }}
-        run: npm test -- --update-snapshots
+      - name: Install Playwright
+        run: npx playwright install --with-deps
 
-        # Run tests
-      - name: Running Tests 
-        run: npm test
+      - name: Run tests
+        env:
+          CI: true
+        run: npm test -- --ci ${{ github.event.inputs.update_snapshots == 'true' && '--update-snapshots' || '' }}
 
-      - name: Commit and Push Changes
+      - name: Commit and push snapshot changes
         continue-on-error: true
         run: |
           git fetch origin
-          git checkout main
-          git add ./packages/**/*/tests/snapshots
-
+          git add ./packages/**/tests/snapshots
           if [[ -n $(git status -s) ]]; then
-            git status -s 
-
             git config user.name "GitHub Actions"
             git config user.email "actions@github.com"
             git commit -m "add: github-runner snapshots"
-
             git push --force-with-lease
           fi

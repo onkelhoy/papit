@@ -8,17 +8,23 @@ export function spawnCommand(command, cwd, args = []) {
 
         const child = spawn(full, {
             cwd,
-            stdio: "pipe",
+            stdio: process.env.CI ? "inherit" : "pipe",
             shell: true,
             env: { ...process.env },
         });
 
-        child.stdout.on("data", data => {
-            // process.stdout.write(data);
-        });
-        child.stderr.on("data", data => {
-            process.stderr.write(data);
-        });
+        if (child.stdout) 
+        {
+            child.stdout.on("data", data => {
+                // process.stdout.write(data);
+            });
+        }
+        if (child.stderr)
+        {
+            child.stderr.on("data", data => {
+                process.stderr.write(data);
+            });
+        }
 
         child.on("close", code => {
             if (code === 0) resolve();
@@ -28,4 +34,4 @@ export function spawnCommand(command, cwd, args = []) {
             }
         });
     });
-}
+}   
