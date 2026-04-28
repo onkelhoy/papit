@@ -1,3 +1,4 @@
+import { Arguments } from "@papit/arguments";
 import { PackageGraph } from "./graph";
 import { Information } from "./information";
 import type { RemotePackage, RemotePackages } from "./types";
@@ -13,6 +14,8 @@ export class Remote {
 
         try
         {
+            if (!Arguments.has("allow-global")) return;
+
             this.abortsignal = new AbortController();
             const res = await fetch(
                 `https://registry.npmjs.org/-/v1/search?text=${scope}&size=${size}&from=${from}`,

@@ -29,7 +29,7 @@ jobs:
       - name: Build
         env:
           CI: true
-        run: npm run build -- --ci --run-build
+        run: npm run build -- --ci
 
       - name: Restore Playwright cache
         uses: actions/cache@v4
