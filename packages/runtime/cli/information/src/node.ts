@@ -22,6 +22,10 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
     get type() { return this._type }
     get location() { return path.normalize(this._location) }
 
+    savePackageJSON() {
+        fs.writeFileSync(path.join(this.location, "package.json"), JSON.stringify(this.packageJSON, null, 4), { encoding: "utf-8" });
+    }
+
     get sourceFolder() { return sourceFolder(this.location, this.tsconfig) }
     get outFolder() { return outFolder(this.location, this.tsconfig) }
     get name() { return this._packageJSON.name }

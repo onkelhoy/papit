@@ -54,7 +54,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/placement": "^0.0.1",
+    "@papit/placement": "0.0.1",
     "@papit/web-component": "0.0.1"
   },
   "devDependencies": {
