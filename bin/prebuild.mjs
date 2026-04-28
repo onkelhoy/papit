@@ -22,14 +22,14 @@ const prebuilds = [
 
     for (const { name, location } of prebuilds)
     {
-        console.log('running prebuild', name);
+        if (!process.env.CI) console.log('running prebuild', name);
         await spawnCommand("node bin/prebuild.mjs", path.join(root, location));
     }
 
-    console.log('running build @papit/build');
+    if (!process.env.CI) console.log('running build @papit/build');
     await spawnCommand("npm run build -- --force", path.join(root, "packages/runtime/cli/build"));
 
-    console.log('running build @papit/server');
+    if (!process.env.CI) console.log('running build @papit/server');
     await spawnCommand("npm run build", path.join(root, "packages/runtime/cli/server")); // making sure we can start things like test server for CI 
 
     await spawnCommand(process.env.CI ? "npm ci" : "npm install", root);

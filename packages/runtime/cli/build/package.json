@@ -10,9 +10,9 @@
   "version": "0.0.2",
   "scripts": {
     "prebuild": "node bin/prebuild.mjs",
-    "build": "node lib/bundle.js --error --run-build",
+    "build": "node lib/bin.js --error",
     "watch": "tsc -w",
-    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "start": "npm run build -- --dev && node ./lib/bin.js",
     "test": "node --test tests/**/*.test.js",
     "test:only": "node --test --test-only tests/**/*.test.js",
     "preversion": "papit-version",
@@ -33,7 +33,7 @@
     }
   },
   "bin": {
-    "papit-build": "./lib/bundle.js"
+    "papit-build": "./lib/bin.js"
   },
   "author": "henry",
   "private": false,

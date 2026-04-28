@@ -33,7 +33,7 @@ jobs:
       - name: Build
         env:
           CI: true
-        run: npm run build -- --ci --run-build
+        run: npm run build -- --ci
 
       - name: Publish to npmjs.com
         run: npm run publish -- --ci ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
