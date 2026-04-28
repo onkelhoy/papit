@@ -19,7 +19,8 @@ function runner(node, extraEnv = {}, extraArgs = []) {
         let buffer = "";
         process.env.LOCATION = path.relative(Information.root.location, node.location);
 
-        const child = Terminal.spawn("npm publish --access public  --verbose", {
+        const dryRun = Arguments.has("dry-run") ? "--dry-run" : "";
+        const child = Terminal.spawn(`npm publish --access public --loglevel verbose --provenance ${dryRun}`, {
             cwd: node.location,
             args: [...process.argv.slice(2), ...extraArgs],
             env: { ...process.env, ...extraEnv },
