@@ -39,7 +39,7 @@ jobs:
       - name: Build
         env: 
           CI: true
-        run: npm run build -- --ci --run-build
+        run: npm run build -- --ci --run-build --remote
 
       # Long-lived Playwright cache (read-only in PRs)
       - name: Restore Playwright cache

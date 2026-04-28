@@ -60,7 +60,7 @@
     "@papit/bundle-js": "0.0.2",
     "@papit/deep-merge": "0.0.1",
     "@papit/html": "0.0.1",
-    "@papit/information": "0.0.4",
+    "@papit/information": "0.0.3",
     "@papit/terminal": "0.0.1",
     "chokidar": "^5.0.0",
     "esbuild": "0.27.2"

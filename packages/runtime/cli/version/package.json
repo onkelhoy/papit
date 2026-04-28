@@ -55,7 +55,7 @@
   },
   "dependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.4",
+    "@papit/information": "0.0.3",
     "@papit/terminal": "0.0.1"
   },
   "devDependencies": {

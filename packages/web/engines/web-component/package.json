@@ -57,7 +57,7 @@
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.4",
+    "@papit/information": "0.0.3",
     "@papit/translator": "0.1.0",
     "@papit/codeblock": "0.1.0",
     "typescript": "5.9.3"

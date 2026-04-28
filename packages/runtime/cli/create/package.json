@@ -1,7 +1,7 @@
 {
   "name": "@papit/create",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.3",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -49,7 +49,7 @@
   },
   "dependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.4",
+    "@papit/information": "0.0.3",
     "@papit/terminal": "0.0.1"
   },
   "devDependencies": {

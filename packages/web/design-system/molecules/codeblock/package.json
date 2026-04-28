@@ -56,8 +56,8 @@
   "dependencies": {
     "@papit/data-structure": "0.0.1",
     "@papit/icon": "0.1.0",
-    "@papit/lexer": "^0.0.1",
-    "@papit/splitter": "^0.0.1",
+    "@papit/lexer": "0.0.1",
+    "@papit/splitter": "0.0.1",
     "@papit/switch": "0.1.0",
     "@papit/tooltip": "0.0.1",
     "@papit/web-component": "0.0.1"

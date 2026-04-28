@@ -72,7 +72,17 @@ function runner(node: PackageNode, updateDependencies: Map<string, string>) {
         }
 
         // we do a patch if we need 
-        if (changed || node.packageJSON.version !== node.packageJSON.remoteVersion)
+        // if (changed || node.packageJSON.version === node.packageJSON.remoteVersion)
+        // {
+        //     const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
+        //     if (match?.groups)
+        //     {
+        //         const { major, minor, patch, semver } = match.groups;
+        //         node.packageJSON.version = `${major}.${minor}.${Number(patch) + 1}${semver}`;
+        //     }
+        // }
+
+        if (changed && node.packageJSON.version === node.packageJSON.remoteVersion)
         {
             const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
             if (match?.groups)
