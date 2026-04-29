@@ -11,7 +11,8 @@ export async function projectRunner(createPackageLocation: string) {
     let linebetween = false;
     let name = Arguments.string("name");
 
-    if (name === undefined) {
+    if (name === undefined)
+    {
         const answer = await Terminal.prompt("name", true);
         name = answer.input;
         linebetween = true;
@@ -22,15 +23,17 @@ export async function projectRunner(createPackageLocation: string) {
     if (location === undefined)
     {
         if (linebetween) Terminal.write();
-        const answer = await Terminal.prompt("location");
-        location = answer.path;
+        Terminal.write(`[${process.cwd()}]`)
+        const answer = await Terminal.prompt("location", false, process.cwd());
+        location = path.join(answer.path, name);
         linebetween = true;
     }
 
     await Terminal.sessionBlock(async () => {
         if (linebetween) Terminal.write();
         if (!fs.existsSync(location)) return;
-        const canremove = await Terminal.confirm("confirm to remove it");
+
+        const canremove = await Terminal.confirm(`confirm to remove it [${location}]`);
         if (canremove)
         {
             fs.rmSync(location, { recursive: true, force: true });
@@ -44,7 +47,7 @@ export async function projectRunner(createPackageLocation: string) {
 
 
     if (linebetween) Terminal.write();
-    const confirmcreatinglocation = await Terminal.confirm(Terminal.blue("confirm") + ` [${Terminal.yellow(location)}]`, true);
+    const confirmcreatinglocation = await Terminal.confirm("confirm location" + ` [${Terminal.yellow(location)}]`, true);
     if (!confirmcreatinglocation) 
     {
 
@@ -94,7 +97,15 @@ export async function projectRunner(createPackageLocation: string) {
     const initgit = Arguments.has("git") || await Terminal.confirm("init with git?");
     if (initgit)
     {
+        const { close, update } = Terminal.loading("git init", 3000, frame => {
+            if (frame > 400) update("runnign slow");
+            else if (frame > 800) update("something seems wrong");
+            else if (frame > 1500) update("yeah somethign is very wrong");
+        })
         await Terminal.execute("git init", { cwd: location });
+
+        Terminal.clearSession();
+        close();
     }
 
     // Copy package template
@@ -115,4 +126,7 @@ export async function projectRunner(createPackageLocation: string) {
         await Terminal.execute("git add .", { cwd: location });
         await Terminal.execute(`git commit -m "init: ${name} initialized"`, { cwd: location });
     }
+
+    Terminal.write("project initialized");
+    process.exit(0);
 }
