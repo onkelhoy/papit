@@ -1,0 +1,68 @@
+:host {
+    dialog {
+        padding-inline: var(--space-1, 0.25rem);
+        padding-top: var(--space-1, 0.25rem);
+        padding-bottom: var(--space-3, 0.75rem);
+        border-radius: var(--space-2, 0.5rem);
+        border: none;
+
+        max-height: 90vh;
+
+        &:open {
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+
+        &::backdrop {
+            background-color: color-mix(var(--background-inverse, light-dark(oklch(17% 0 0), oklch(96% 0 0))), 95% transparent);
+        }
+    }
+
+    header {
+        display: flex;
+        gap: var(--space-2, 0.5rem);
+        padding-left: var(--space-2, 0.5rem);
+
+        div {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            padding-top: var(--space-1, 0.25rem);
+
+            h1 {
+                margin: 0;
+            }
+        }
+
+        span {
+            margin-left: auto;
+
+            button {
+                background: none;
+                border: none;
+                cursor: pointer;
+                display: flex;
+                padding: 0;
+                padding: var(--space-2, 0.5rem);
+                color: var(--foreground, light-dark(oklch(24% 0 0), oklch(86% 0 0)));
+
+                pap-icon {
+                    margin: auto;
+                    color: inherit;
+                    width: var(--space-3, 0.75rem);
+                    height: var(--space-3, 0.75rem);
+                }
+            }
+        }
+    }
+
+    main {
+        padding-inline: var(--space-2, 0.5rem);
+        overflow-y: auto;
+    }
+
+    footer {
+        padding: var(--space-2, 0.5rem);
+        padding-bottom: 0;
+    }
+}

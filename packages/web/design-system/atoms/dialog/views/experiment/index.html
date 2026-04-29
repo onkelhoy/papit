@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dialog | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Dialog | experiment</h1>
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock>
+            <button command="show-modal" commandfor="example1">Open module</button>
+            <pap-dialog id="example1">
+                Hello World
+            </pap-dialog>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Outside Click</h2>
+        <pap-codeblock>
+            <button command="show-modal" commandfor="example-outside">Open module</button>
+            <pap-dialog id="example-outside" close-outside-click>
+                Hello World
+            </pap-dialog>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Example Header</h2>
+        <pap-codeblock>
+            <button command="show-modal" commandfor="example2">Open module</button>
+            <pap-dialog id="example2" header="Header">
+                Hello World
+            </pap-dialog>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Example Header + Footer</h2>
+        <pap-codeblock>
+            <button command="show-modal" commandfor="example3">Open module</button>
+            <pap-dialog id="example3">
+                <span slot="header">Header</span>
+                Hello World
+                <span slot="footer">Footer</span>
+            </pap-dialog>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Overflow Example</h2>
+        <pap-codeblock>
+            <button command="show-modal" commandfor="long-example">Open module</button>
+            <pap-dialog id="long-example" header="Hello World">
+                <div slot="header">
+                    Hello world
+                </div>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+                <p>hello im inside the dialog hello im inside the dialog hello im inside the dialog</p>
+
+                <div slot="footer">
+                    FOOTER
+                </div>
+            </pap-dialog>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>
