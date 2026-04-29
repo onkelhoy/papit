@@ -18,6 +18,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: npm
     steps:
       - uses: actions/checkout@v4
       - name: Setup Node.js
@@ -33,9 +34,9 @@ jobs:
       - name: Build
         env:
           CI: true
-        run: npm run build -- --ci
+        run: npm run build -- --ci --remote
 
       - name: Publish to npmjs.com
-        run: npm run publish -- --ci ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
+        run: npm run publish -- --provenance ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}
         env:
           CI: true
