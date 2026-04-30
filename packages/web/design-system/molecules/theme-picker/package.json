@@ -60,9 +60,9 @@
     "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
-    "@papit/theme": "0.0.1",
+    "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.2",
+    "@papit/codeblock": "0.1.3",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"

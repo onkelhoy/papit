@@ -59,6 +59,8 @@
         /* headings, emphasis */
 
         --focus-color: light-dark(blue, cornflowerblue);
+        --shade-0: light-dark(black, white);
+        --shade-1: light-dark(white, black);
     }
 
     /* make sure web-components are hidden intially to avoid flashes */
