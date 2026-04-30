@@ -16,8 +16,8 @@
         "test": "node bin/test.mjs",
         "create": "npm create @papit -- --package --html-prefix=pap",
         "start": "npx @papit/server --info",
-        "version-reset": "npx @papit/version --reset",
-        "version-sync": "npx @papit/version --sync"
+        "version:reset": "npx @papit/version --reset",
+        "version:sync": "npx @papit/version --sync"
     },
     "keywords": [
         "typescript"

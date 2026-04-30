@@ -1,10 +1,30 @@
-import { html, CustomElement, property, query, bind, debounce, } from "@papit/web-component";
+import { html, CustomElement, property, query, bind, debounce, context } from "@papit/web-component";
+
+// --- Consumer ---
+class ContextConsumer extends CustomElement {
+    @context hello = "";
+
+    render() {
+        return html`<span data-key="hello">${this.hello}</span>`;
+    }
+}
+customElements.define("context-consumer", ContextConsumer);
+
+// --- Provider (custom element with context flag) ---
+class ContextProvider extends CustomElement {
+    @property({ context: true, rerender: true }) hello = "from-provider";
+
+    render() {
+        return html`<slot></slot>`;
+    }
+}
+customElements.define("context-provider", ContextProvider);
 
 class Component extends CustomElement {
 
     // properties
     @property({ attribute: "yes-im-different" }) withDifferentAttribute = "";
-    @property({ readonly: true }) readonly = 3;
+    @property({ readonly: true, type: Number }) readonly = 3;
     @property string = "";
     @property({ type: Number }) number = 0;
     @property({ type: Number, rerender: true }) counter = 0;

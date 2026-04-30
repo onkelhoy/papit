@@ -7,7 +7,7 @@
     "typescript",
     "dialog"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -55,12 +55,12 @@
   },
   "dependencies": {
     "@papit/icon": "0.1.0",
-    "@papit/web-component": "*"
+    "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
     "@papit/theme": "0.0.1",
     "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.0",
+    "@papit/codeblock": "0.1.1",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -81,5 +81,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.1"
 }

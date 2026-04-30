@@ -10,7 +10,9 @@
         "build": "npx @papit/build",
         "test": "node bin/test.mjs",
         "create": "npm create @papit -- --package",
-        "start": "npx @papit/server --serve --info"
+        "start": "npx @papit/server --serve --info",
+        "version:reset": "npx @papit/version --reset",
+        "version:sync": "npx @papit/version --sync"
     },
     "keywords": [
         "typescript"

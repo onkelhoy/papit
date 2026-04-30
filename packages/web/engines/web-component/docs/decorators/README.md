@@ -6,3 +6,4 @@
 - [@query](./query.md) — Select and assign DOM elements directly to class fields after render.
 - [@debounce](./debounce.md) — Delay method execution to reduce high-frequency calls.
 - [@bind](./bind.md) — Ensure methods are always called with the correct `this` context.
+- [@context](./context.md) — Subscribe a property to a value provided by a parent element in the DOM tree.

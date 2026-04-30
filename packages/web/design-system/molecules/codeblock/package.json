@@ -7,7 +7,7 @@
     "typescript",
     "codeblock"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -60,7 +60,7 @@
     "@papit/splitter": "0.0.1",
     "@papit/switch": "0.1.0",
     "@papit/tooltip": "0.0.1",
-    "@papit/web-component": "0.0.1"
+    "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
     "@papit/theme": "0.0.1",
