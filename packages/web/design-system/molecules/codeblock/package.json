@@ -7,7 +7,7 @@
     "typescript",
     "codeblock"
   ],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -59,7 +59,7 @@
     "@papit/lexer": "0.0.1",
     "@papit/splitter": "0.0.1",
     "@papit/switch": "0.1.0",
-    "@papit/tooltip": "0.0.1",
+    "@papit/tooltip": "0.0.2",
     "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
@@ -86,5 +86,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.0"
+  "remoteVersion": "0.1.1"
 }
