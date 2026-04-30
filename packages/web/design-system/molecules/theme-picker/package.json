@@ -7,7 +7,7 @@
     "typescript",
     "theme-picker"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -54,15 +54,15 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/icon": "0.1.0",
-    "@papit/menu": "0.0.1",
-    "@papit/tooltip": "0.0.1",
-    "@papit/web-component": "0.0.1"
+    "@papit/icon": "0.1.1",
+    "@papit/menu": "0.0.2",
+    "@papit/tooltip": "0.0.2",
+    "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
     "@papit/theme": "0.0.1",
     "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.0",
+    "@papit/codeblock": "0.1.1",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"

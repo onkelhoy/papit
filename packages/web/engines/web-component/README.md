@@ -85,6 +85,16 @@ This launches a demo server from the `views` folder.
 
 ---
 
+```md
+## Decorators
+
+`@papit/web-component` ships five decorators — `@property`, `@query`, `@bind`, `@debounce`, and `@context`.
+
+📄 **[Decorator docs →](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component/docs/decorators)**
+```
+
+---
+
 ## Example — Creating a Counter Component
 
 Below is a small but complete example showing several key features in `@papit/web-component`:

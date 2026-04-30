@@ -16,4 +16,5 @@ export * from "./functions/resolve";
 export * from "./decorators/bind";
 export * from "./decorators/property";
 export * from "./decorators/debounce";
-export * from "./decorators/query"; // 
+export * from "./decorators/query";
+export * from "./decorators/context"; 

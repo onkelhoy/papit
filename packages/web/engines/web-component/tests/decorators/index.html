@@ -1,16 +1,43 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Core Decorator test</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Core Decorator test</title>
 
-  <script type="module" defer src="main.js"></script>
+    <script type="module" defer src="main.js"></script>
 </head>
 
 <body>
-  <core-decorators data-testid="a"></core-decorators>
-  <core-decorators data-testid="b" initial-value-2="initial-attribute"></core-decorators>
+    <core-decorators data-testid="a"></core-decorators>
+    <core-decorators data-testid="b" initial-value-2="initial-attribute"></core-decorators>
+
+
+    <!-- Case A: plain div as provider (attribute-only, MutationObserver path) -->
+    <div data-testid="div-provider" hello="bajs">
+        <context-consumer data-testid="consumer-a"></context-consumer>
+    </div>
+
+    <!-- Case B: custom element provider (@property({ context: true }) path) -->
+    <context-provider data-testid="provider-b">
+        <context-consumer data-testid="consumer-b"></context-consumer>
+    </context-provider>
+
+    <!-- Case C: nested consumers - subcontext marker must skip inner consumers -->
+    <div data-testid="nested-div-provider" hello="nested-value">
+        <context-consumer data-testid="consumer-c-outer"></context-consumer>
+        <div>
+            <context-consumer data-testid="consumer-c-inner"></context-consumer>
+        </div>
+    </div>
+
+    <!-- Case D: no provider in tree — should not crash -->
+    <context-consumer data-testid="consumer-no-provider"></context-consumer>
+
+    <!-- Case E: disconnect/reconnect -->
+    <div data-testid="div-provider-e" hello="before-disconnect">
+        <context-consumer data-testid="consumer-e"></context-consumer>
+    </div>
 </body>
 
 </html>

@@ -1,7 +1,7 @@
 {
   "name": "@papit/create",
   "description": "",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -69,5 +69,5 @@
     },
     "components": {}
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }
