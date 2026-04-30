@@ -58,7 +58,7 @@
     "@papit/web-component": "0.0.2"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.1",
+    "@papit/codeblock": "0.1.2",
     "@papit/theme": "0.0.1",
     "@papit/translator": "0.1.0",
     "@playwright/test": "1.58.0",
@@ -82,5 +82,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.1"
+  "remoteVersion": "0.0.2"
 }
