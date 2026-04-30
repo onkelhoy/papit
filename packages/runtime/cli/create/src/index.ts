@@ -43,6 +43,12 @@ import { projectRunner } from "./components/runners/project";
     Terminal.write();
 
     const localRunnerSet = new Set<string>();
+    if (PackageGraph.ERROR)
+    {
+        await projectRunner(createPackageLocation);
+        return;
+    }
+
     const localRunnersLocation = path.join(Information.root.location, "bin/runners");
     const options = ["package", "component", "project", "showcase"];
     try
@@ -61,7 +67,7 @@ import { projectRunner } from "./components/runners/project";
     catch { }
 
 
-    let option: option | null = PackageGraph.ERROR ? { index: 2, text: "project" } : null;
+    let option: option | null = null;
     for (let i = 0; i < options.length; i++)
     {
         if (Arguments.has(options[i])) 

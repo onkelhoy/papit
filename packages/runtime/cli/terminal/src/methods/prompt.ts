@@ -26,6 +26,7 @@ class Output {
 let input = "";
 let cursor = 0;
 let suggestions: Array<{ name: string, location: string }> = [];
+let tabbing = false;
 
 export async function prompt(
     instance: typeof Terminal,
@@ -36,31 +37,33 @@ export async function prompt(
     input = "";
     cursor = 0;
     suggestions = [];
+    tabbing = false;
+
+    const wasRaw = process.stdin.isRaw;
+    if (process.stdin.isTTY) process.stdin.setRawMode(true);
+    if (process.stdin.isPaused()) process.stdin.resume();
+
+
+    // Write prompt text first
+    let starttext: string;
+    if (inline) starttext = promptText + ": ";
+    else
+    {
+        starttext = "> ";
+        process.stdout.write(promptText + "\n");
+    }
+    process.stdout.write(starttext);
+
+    // Reserve suggestion row BEFORE writing starttext
+    process.stdout.write("\n\x1b[1A");
+
+    process.stdout.write(starttext);
+    const anchorPos = await getCursorPos();
+    // NOW hand over to readline
+    readline.emitKeypressEvents(process.stdin);
 
     return new Promise<Output>((resolve) => {
-
         const startSession = instance.createSession();
-
-        if (process.stdin.isPaused()) process.stdin.resume();
-
-        readline.emitKeypressEvents(process.stdin);
-
-        const wasRaw = process.stdin.isRaw;
-        if (process.stdin.isTTY) process.stdin.setRawMode(true);
-
-        // Print prompt once
-        let starttext: string;
-        if (inline) starttext = promptText + ": ";
-        else 
-        {
-            starttext = "> ";
-            process.stdout.write(promptText + "\n");
-        }
-        process.stdout.write(starttext);
-
-        // 🔒 Save cursor position (ANCHOR)
-        process.stdout.write("\x1b[s");
-        // let tab_timestamp = performance.now();
 
         const cleanup = () => {
             suggestions = [];
@@ -68,6 +71,15 @@ export async function prompt(
             process.stdout.removeListener("resize", redraw);
             process.stdin.removeListener("keypress", handleKeydown);
             if (process.stdin.isTTY) process.stdin.setRawMode(wasRaw ?? false);
+        };
+
+        const redraw = () => {
+            process.stdout.write(`\x1b[${anchorPos.row};1H`); // col 1, not anchorPos.col
+            process.stdout.write("\x1b[J");
+            process.stdout.write(starttext); // always rewrite "> " or "name: "
+            drawInput();
+            drawSuggestions();
+            restoreCursor();
         };
 
         const drawInput = () => {
@@ -78,57 +90,20 @@ export async function prompt(
 
         const drawSuggestions = () => {
             if (suggestions.length < 2) return;
-            const cols = process.stdout.columns ?? 80;
-
-            process.stdout.write("\n");
-            let length = 0;
+            process.stdout.write("\r\n");
             suggestions.forEach(suggestion => {
-                length += suggestion.name.length;
-                length += 8 - (length % 8) // tab
                 process.stdout.write(instance.dim(suggestion.name) + "\t");
             });
-
-            const rows = Math.max(1, Math.ceil(length / cols));
-            for (let i = 0; i < rows; i++)
-            {
-                process.stdout.write("\x1b[1A"); // move one line up 
-            }
-        }
+            // restoreCursor jumps back absolutely — no need to move up
+        };
 
         const restoreCursor = () => {
             const cols = process.stdout.columns ?? 80;
-            const absolute = starttext.length + cursor;
-
-            // If absolute is divisible by cols, the cursor is visually on the next row
-            const atWrap = absolute > 0 && absolute % cols === 0;
-
-            const rowOffset = Math.floor(absolute / cols) - (atWrap ? 1 : 0);
+            const absolute = (anchorPos.col - 1) + cursor; // col is 1-based
+            const rowOffset = Math.floor(absolute / cols);
             const colOffset = (absolute % cols) + 1;
 
-            // Move down only if rowOffset > 0
-            if (rowOffset > 0)
-            {
-                // process.stdout.write(`\x1b[${rowOffset}B`);
-            }
-
-            // Move to correct column
-            process.stdout.write(`\x1b[${colOffset}G`);
-
-            // If exactly at wrap, move down one more
-            if (atWrap)
-            {
-                process.stdout.write(`\x1b[1B`);
-            }
-        };
-
-        const redraw = () => {
-            process.stdout.write("\x1b[u"); // go to anchor
-            process.stdout.write("\x1b[J"); // clear down
-
-            drawInput();
-            drawSuggestions();
-
-            restoreCursor();
+            process.stdout.write(`\x1b[${anchorPos.row + rowOffset};${colOffset}H`);
         };
 
         const word_minus = () => {
@@ -200,7 +175,15 @@ export async function prompt(
             }
             else if (/right/i.test(key.name)) 
             {
-                if (cursor < input.length) cursor++;
+
+                if (tabbing)
+                {
+                    // confirm selection, clear suggestions
+                    tabbing = false;
+                    suggestions = [];
+                    suggestion_index = 0;
+                }
+                else if (cursor < input.length) cursor++;
             }
             else if (/home/i.test(key.name)) 
             {
@@ -217,10 +200,19 @@ export async function prompt(
             }
             else if (/backspace/i.test(key.name)) 
             {
+                // if (cursor > 0)
+                // {
+                //     input = input.slice(0, cursor - 1) + input.slice(cursor);
+                //     cursor--;
+                // }
+
                 if (cursor > 0)
                 {
                     input = input.slice(0, cursor - 1) + input.slice(cursor);
                     cursor--;
+                    tabbing = false;
+                    suggestions = [];
+                    suggestion_index = 0;
                 }
             }
             else if (/tab/i.test(key.name))
@@ -229,6 +221,10 @@ export async function prompt(
             }
             else if (!key.meta && !key.ctrl && (str || str === " "))
             {
+                // any character typed cancels tab cycling
+                tabbing = false;
+                suggestions = [];
+                suggestion_index = 0;
                 input = input.slice(0, cursor) + str + input.slice(cursor);
                 cursor++;
             }
@@ -242,7 +238,7 @@ export async function prompt(
 // dealing with tabbing
 
 let suggestion_index = 0;
-let tab_timestamp = performance.now();
+// let tab_timestamp = performance.now();
 let base_path = ""; // Track the directory we're completing in
 
 const normalizeInputPath = (input: string, cwd?: string): string => {
@@ -250,6 +246,21 @@ const normalizeInputPath = (input: string, cwd?: string): string => {
     if (!/^[\.|\/]/.test(input)) return path.join(cwd ?? process.cwd(), input);
     return input;
 };
+
+function getCursorPos(): Promise<{ row: number; col: number }> {
+    return new Promise((resolve) => {
+        const onData = (data: Buffer) => {
+            const match = data.toString().match(/\[(\d+);(\d+)R/);
+            if (match)
+            {
+                process.stdin.removeListener("data", onData);
+                resolve({ row: parseInt(match[1]), col: parseInt(match[2]) });
+            }
+        };
+        process.stdin.on("data", onData);
+        process.stdout.write("\x1b[6n");
+    });
+}
 
 function getSuggestions(cwd?: string) {
     const currentpath = normalizeInputPath(input, cwd);
@@ -310,63 +321,17 @@ function getSuggestions(cwd?: string) {
         .filter(v => v !== null);
 };
 
+
 function handleTab(cwd?: string) {
-    const now = performance.now();
-    const isRecentTab = now - tab_timestamp < 1500;
-    const basename = path.basename(input);
-
-    if (suggestions.length === 1)
-    {
-        const s = suggestions.at(0);
-        if (s?.name.startsWith(basename))
-        {
-            input = base_path + s.name;
-            suggestions = [];
-            suggestion_index = 0;
-            cursor = input.length;
-        }
-    }
-
-    // First tab or no suggestions - get them
     if (suggestions.length === 0)
     {
-        tab_timestamp = now;
         getSuggestions(cwd);
+        tabbing = suggestions.length > 0;
         return;
     }
 
-    // Recent tab - cycle through current suggestions
-    if (isRecentTab)
-    {
-        suggestion_index = (suggestion_index + 1) % suggestions.length;
-        const selected = suggestions[suggestion_index];
-        input = base_path + selected.name;
-        cursor = input.length;
-        tab_timestamp = now;
-        return;
-    }
-
-    // Stale tab - check if we need to drill down or refresh
-    tab_timestamp = now;
-    const currentpath = normalizeInputPath(input);
-
-    // If input is now a directory, drill into it
-    if (fs.existsSync(currentpath) && fs.statSync(currentpath).isDirectory())
-    {
-        getSuggestions(cwd);
-        return;
-    }
-
-    // Otherwise, filter current suggestions by new input
-    const filtered = suggestions.filter(s => s.name.startsWith(basename));
-
-    if (filtered.length > 0)
-    {
-        suggestions = filtered.sort((a, b) => a.name.length - b.name.length);
-        suggestion_index = 0;
-    } else
-    {
-        // No matches, refresh suggestions
-        getSuggestions(cwd);
-    }
-};
+    suggestion_index = (suggestion_index + 1) % suggestions.length;
+    input = base_path + suggestions[suggestion_index].name;
+    cursor = input.length;
+    tabbing = true;
+}
