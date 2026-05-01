@@ -176,7 +176,7 @@ export class Codeblock extends CustomElement {
                     </pap-tooltip>
                 </header>
                 <pap-splitter value="90">
-                    <section slot="primary">
+                    <section slot="primary" part="primary">
                         <slot></slot>
                     </section>
                     <div slot="secondary"></div>

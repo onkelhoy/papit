@@ -1,0 +1,36 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>button test</title>
+
+    <script defer src="main.js"></script>
+</head>
+
+<body>
+    <pap-button data-testid="base-target">fallback</pap-button>
+
+    <div data-snapshot>
+        <pap-button color="primary">fallback</pap-button>
+        <pap-button color="secondary">fallback</pap-button>
+        <pap-button color="tertiary">fallback</pap-button>
+        <pap-button color="error">fallback</pap-button>
+        <pap-button color="warning">fallback</pap-button>
+        <pap-button color="information">fallback</pap-button>
+        <pap-button color="success">fallback</pap-button>
+        <pap-button size="small">fallback</pap-button>
+        <pap-button size="medium">fallback</pap-button>
+        <pap-button size="large">fallback</pap-button>
+        <pap-button size="icon">fallback</pap-button>
+    </div>
+
+    <form data-testid="form">
+        <input value="value" name="a" data-testid="a" />
+        <input value="value" name="b" data-testid="b" />
+        <pap-button data-testid="reset" type="reset">reset</pap-button>
+        <pap-button data-testid="submit" type="submit">submit</pap-button>
+    </form>
+</body>
+
+</html>

@@ -1,0 +1,129 @@
+:host {
+    --btn-background: transparent;
+    --btn-color: var(--text);
+
+    -webkit-user-select: none;
+    /* Safari */
+    -ms-user-select: none;
+    /* IE 10 and IE 11 */
+    user-select: none;
+    /* Standard syntax */
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding-inline: var(--space-2, 8px);
+
+    border: 2px solid var(--btn-border);
+    box-sizing: border-box;
+    border-radius: var(--space-1, 4px);
+
+    background-color: var(--btn-background);
+    color: var(--btn-color);
+
+    --btn-hover: color-mix(var(--btn-background), 10% var(--shade-0));
+    --btn-active: color-mix(var(--btn-background), 20% var(--shade-0));
+}
+
+:host(:hover) {
+    background-color: var(--btn-hover);
+}
+
+:host(:state(active)),
+:host(:active) {
+    background-color: var(--btn-active);
+}
+
+:host(:focus-visible) {
+    outline: 2px solid var(--focus-color);
+}
+
+/* color */
+:host([color="primary"]) {
+    --btn-background: var(--button-primary, var(--primary));
+    --btn-border: var(--button-primary, var(--primary));
+    --btn-color: var(--button-primary-color, var(--text-inverse));
+}
+
+:host([color="secondary"]) {
+    --btn-background: var(--button-secondary, var(--secondary));
+    --btn-border: var(--button-secondary, var(--secondary));
+    --btn-color: var(--button-secondary-color, var(--text));
+}
+
+:host([color="tiertery"]) {
+    --btn-background: var(--button-tiertery, var(--tiertery));
+    --btn-border: var(--button-tiertery, var(--tiertery));
+    --btn-color: var(--button-tiertery-color, var(--text));
+}
+
+:host([color="success"]) {
+    --btn-background: var(--button-success, var(--success));
+    --btn-border: var(--button-success, var(--success));
+    --btn-color: var(--button-success-color, var(--text-inverse));
+}
+
+:host([color="information"]) {
+    --btn-background: var(--button-information, var(--info));
+    --btn-border: var(--button-information, var(--info));
+    --btn-color: var(--button-information-color, var(--text-inverse));
+}
+
+:host([color="error"]) {
+    --btn-background: var(--button-error, var(--error));
+    --btn-border: var(--button-error, var(--error));
+    --btn-color: var(--button-error-color, var(--text-inverse));
+}
+
+:host([color="warning"]) {
+    --btn-background: var(--button-warning, var(--warning));
+    --btn-border: var(--button-warning, var(--warning));
+    --btn-color: var(--button-warning-color, var(--text-inverse));
+}
+
+/* variant */
+:host([variant="filled"]) {
+    --btn-border: transparent;
+}
+
+:host([variant="outline"]) {
+    --btn-color: var(--text);
+    --btn-background: transparent;
+}
+
+:host([variant="clear"]) {
+    --btn-color: var(--text);
+    --btn-background: transparent;
+    --btn-border: transparent;
+}
+
+/* color + variant */
+:host([variant="filled"][color="primary"]) {
+    --btn-hover: color-mix(var(--btn-background), 15% var(--shade-1));
+    --btn-active: color-mix(var(--btn-background), 30% var(--shade-1));
+}
+
+/* size */
+:host([size="small"]) {
+    height: var(--space-6, 24px);
+}
+
+:host([size="medium"]) {
+    height: var(--space-8, 32px);
+}
+
+:host([size="large"]) {
+    height: var(--space-10, 40px);
+}
+
+:host([size="icon"]) {
+    width: var(--space-6, 24px);
+    height: var(--space-6, 24px);
+    aspect-ratio: 1;
+    padding-inline: 0;
+}
+
+:host([disabled]) {
+    cursor: not-allowed;
+    outline: none;
+}

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Button | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Button | experiment</h1>
+    <section>
+        <h2>Colors</h2>
+        <pap-codeblock>
+            <pap-button color="primary">primary</pap-button>
+            <pap-button color="secondary">secondary</pap-button>
+            <pap-button color="tiertery">tiertery</pap-button>
+            <pap-button color="success">success</pap-button>
+            <pap-button color="information">information</pap-button>
+            <pap-button color="error">error</pap-button>
+            <pap-button color="warning">warning</pap-button>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Variant</h2>
+        <pap-codeblock>
+            <pap-button variant="filled">filled</pap-button>
+            <pap-button variant="outline">outline</pap-button>
+            <pap-button variant="clear">clear</pap-button>
+        </pap-codeblock>
+    </section>
+
+
+    <section>
+        <h2>Variant + Color</h2>
+        <pap-codeblock>
+            <div class="flex-col">
+                <pap-button variant="filled" color="primary">filled primary</pap-button>
+                <pap-button variant="filled" color="secondary">filled secondary</pap-button>
+                <pap-button variant="filled" color="tiertery">filled tiertery</pap-button>
+                <pap-button variant="filled" color="success">filled success</pap-button>
+                <pap-button variant="filled" color="information">filled information</pap-button>
+                <pap-button variant="filled" color="error">filled error</pap-button>
+                <pap-button variant="filled" color="warning">filled warning</pap-button>
+            </div>
+            <div class="flex-col">
+                <pap-button variant="outline" color="primary">outline primary</pap-button>
+                <pap-button variant="outline" color="secondary">outline secondary</pap-button>
+                <pap-button variant="outline" color="tiertery">outline tiertery</pap-button>
+                <pap-button variant="outline" color="success">outline success</pap-button>
+                <pap-button variant="outline" color="information">outline information</pap-button>
+                <pap-button variant="outline" color="error">outline error</pap-button>
+                <pap-button variant="outline" color="warning">outline warning</pap-button>
+            </div>
+            <div class="flex-col">
+                <pap-button variant="clear" color="primary">clear primary</pap-button>
+                <pap-button variant="clear" color="secondary">clear secondary</pap-button>
+                <pap-button variant="clear" color="tiertery">clear tiertery</pap-button>
+                <pap-button variant="clear" color="success">clear success</pap-button>
+                <pap-button variant="clear" color="information">clear information</pap-button>
+                <pap-button variant="clear" color="error">clear error</pap-button>
+                <pap-button variant="clear" color="warning">clear warning</pap-button>
+            </div>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Form</h2>
+        <pap-codeblock>
+            <form>
+                <div>
+                    <label>A</label>
+                    <input value="testing" name="a" />
+                </div>
+                <br />
+                <div>
+                    <label>B</label>
+                    <input value="testing" name="b" />
+                </div>
+                <br />
+                <br />
+
+                <pap-button size="small" color="secondary" type="submit">submit</pap-button>
+                <br />
+                <pap-button size="small" color="secondary" variant="outline" type="reset">reset</pap-button>
+            </form>
+            <script>
+                document.addEventListener("DOMContentLoaded", () =>
+                {
+                    document.querySelector('form').onsubmit = (e) =>
+                    {
+                        e.preventDefault();
+                        const data = new FormData(e.target);
+                        alert(`a: ${data.get('a')}, b: ${data.get('b')}`);
+                    }
+                });
+            </script>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>
