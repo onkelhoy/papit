@@ -81,8 +81,6 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             if (settings.verbose) console.log(`[context] found provider`, parent);
 
             const update = () => {
-                if (settings.verbose) console.log(`[context] update '${String(settings.name)}'`);
-
                 let next: any;
 
                 if (String(settings.name) in parent)
@@ -93,7 +91,19 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
                     next = parent.getAttribute(String(settings.attribute));
                 }
 
+                if (typeof settings.update === "function")
+                {
+                    (settings.update as Function).call(this, next);
+                }
+
                 this[propertyKey] = next;
+
+                // ✅ Reflect back to attribute on the consumer too
+                if (settings.attribute && settings.applyattribute)
+                {
+                    this.setAttribute(String(settings.attribute), String(next ?? ""));
+                }
+
                 if (settings.rerender) this.requestUpdate?.();
             };
 

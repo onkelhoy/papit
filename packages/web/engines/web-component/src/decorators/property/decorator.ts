@@ -132,7 +132,7 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             if (settings.set) 
             {
                 isInitial = false;
-                value = await resolve(settings.set(value));
+                value = await resolve(settings.set.call(this, value));
             }
 
             const oldVal = this[privateKey];

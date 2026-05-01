@@ -20,7 +20,7 @@ div[part="content"] {
 
     pap-icon {
         rotate: -90deg;
-        width: var(--space-3, 12px);
+        width: var(--space-4, 16px);
     }
 }
 

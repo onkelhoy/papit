@@ -1,0 +1,31 @@
+:host {
+    display: grid;
+    grid-template-rows: 0;
+
+    transition: grid-template-rows ease 100ms;
+    overflow: hidden;
+    --_border-default: color-mix(in srgb, var(--foreground), transparent 70%);
+
+    div {
+        padding-inline: var(--space-2);
+    }
+}
+
+:host([open="true"]) {
+    grid-template-rows: 1fr;
+}
+
+:host(:first-of-type) {
+    div {
+        padding-top: var(--space-2);
+        border-top: 1px solid var(--border, var(--_border-default));
+    }
+}
+
+:host(:last-of-type) {
+    /* border-bottom: 1px solid var(--border, var(--_border-default)); */
+
+    div {
+        padding-bottom: var(--space-2);
+    }
+}

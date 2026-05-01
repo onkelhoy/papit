@@ -55,12 +55,12 @@
   },
   "dependencies": {
     "@papit/data-structure": "0.0.1",
-    "@papit/icon": "0.1.0",
+    "@papit/icon": "0.1.2",
     "@papit/lexer": "0.0.1",
-    "@papit/splitter": "0.0.1",
-    "@papit/switch": "0.1.1",
-    "@papit/tooltip": "0.0.2",
-    "@papit/web-component": "0.0.2"
+    "@papit/splitter": "0.0.3",
+    "@papit/switch": "0.1.2",
+    "@papit/tooltip": "0.0.3",
+    "@papit/web-component": "0.0.3"
   },
   "devDependencies": {
     "@papit/theme": "0.0.2",

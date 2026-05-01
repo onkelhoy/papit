@@ -17,7 +17,7 @@ export class Button extends CustomElementInternals {
     connectedCallback(): void {
         super.connectedCallback();
         this.setAttribute("role", "button");
-        this.setAttribute("tabindex", "0");
+        if (!this.hasAttribute("tabindex")) this.setAttribute("tabindex", "0");
 
         this.addEventListener("click", this.handleclick, true);
         this.addEventListener('keydown', this.handlekeydown);

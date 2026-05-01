@@ -100,7 +100,7 @@ function runner(node, extraEnv = {}, extraArgs = []) {
             }
 
             const playwright = isPlaywright(node);
-            const skipSnapshots = !force && playwright && !hasSnapshots(node);
+            const skipSnapshots = Arguments.has("ci") || (!force && playwright && !hasSnapshots(node));
             const extraEnv = skipSnapshots ? { SKIP_SNAPSHOTS: "true" } : {};
 
             if (skipSnapshots)

@@ -7,7 +7,7 @@
     "typescript",
     "treeview"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -54,8 +54,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/icon": "0.1.0",
-    "@papit/web-component": "0.0.2"
+    "@papit/icon": "0.1.2",
+    "@papit/web-component": "0.0.3"
   },
   "devDependencies": {
     "@papit/codeblock": "0.1.3",
