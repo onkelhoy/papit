@@ -1,0 +1,33 @@
+:host {
+    --_border-default: color-mix(in srgb, var(--foreground), transparent 70%);
+
+    pap-button {
+        display: flex;
+        align-items: center;
+        justify-content: left;
+        gap: var(--space-2);
+        cursor: pointer;
+        user-select: none;
+        padding: var(--space-1) var(--space-2);
+        border-radius: 0;
+
+        color: inherit;
+
+        pap-icon {
+            opacity: 0.6;
+            transition: transform 80ms ease;
+            width: var(--space-5, 20px);
+            transform: rotate(-180deg);
+        }
+    }
+}
+
+:host([open]) {
+
+    pap-button {
+        pap-icon {
+            transform: rotate(0deg);
+            opacity: 1;
+        }
+    }
+}

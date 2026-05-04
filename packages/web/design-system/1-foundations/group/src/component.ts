@@ -61,7 +61,7 @@ export class Group extends CustomElement {
 
     connectedCallback(): void {
         super.connectedCallback();
-        this.setAttribute("role", "toolbar");
+        if (!this.hasAttribute("role")) this.setAttribute("role", "toolbar");
         this.addEventListener("focus", this.handlefocus);
         this.addEventListener("keydown", this.handlekeydown);
         this.addEventListener("focusout", this.handlefocusout);
@@ -116,7 +116,9 @@ export class Group extends CustomElement {
         this.deligateFocus(this.active);
     }
     private handlefocusout = (e: FocusEvent) => {
-        if (this.contains(e.relatedTarget as Node)) return;
+        const related = e.relatedTarget as Node;
+        if (this.contains(related)) return;
+        if (related instanceof HTMLElement && this.elements.includes(related)) return;
         this.tabIndex = 0;
     }
     private handleslotchange = (e: Event) => {

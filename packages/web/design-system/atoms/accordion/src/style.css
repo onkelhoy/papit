@@ -1,0 +1,12 @@
+:host {
+    display: block;
+
+    --border: color-mix(in srgb, var(--foreground), transparent 70%);
+    border: 1px solid var(--border);
+    border-radius: var(--space-2);
+    overflow: hidden;
+}
+
+::slotted([role="region"]:not(:last-child)) {
+    border-bottom: 1px solid var(--border, var(--_border-default));
+}

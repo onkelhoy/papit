@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accordion | tests</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="stylesheet" href="style.css" />
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Accordion | tests</h1>
+
+    <!-- section 0 : basic — used by availability + open/close + keyboard (first header) tests -->
+    <section>
+        <h2>Default</h2>
+        <pap-accordion>
+            <pap-accordion-header>Header</pap-accordion-header>
+            <pap-accordion-panel>im some content</pap-accordion-panel>
+        </pap-accordion>
+    </section>
+
+    <!-- section 1 : nested single — used by keyboard + single mode tests -->
+    <section>
+        <h2>Nested (single)</h2>
+        <pap-accordion>
+            <div role="region">
+                <pap-accordion-header>Header 1</pap-accordion-header>
+                <pap-accordion-panel>content 1a</pap-accordion-panel>
+                <pap-accordion-panel>content 1b</pap-accordion-panel>
+            </div>
+            <div role="region">
+                <pap-accordion-header>Header 2</pap-accordion-header>
+                <pap-accordion-panel>content 2a</pap-accordion-panel>
+                <pap-accordion-panel>content 2b</pap-accordion-panel>
+            </div>
+            <div role="region">
+                <pap-accordion-header>Header 3</pap-accordion-header>
+                <pap-accordion-panel>content 3a</pap-accordion-panel>
+                <pap-accordion-panel>content 3b</pap-accordion-panel>
+            </div>
+        </pap-accordion>
+    </section>
+
+    <!-- section 2 : nested multiple — used by multiple mode tests -->
+    <section>
+        <h2>Nested (multiple)</h2>
+        <pap-accordion mode="multiple">
+            <div role="region">
+                <pap-accordion-header>Header 1</pap-accordion-header>
+                <pap-accordion-panel>content 1a</pap-accordion-panel>
+                <pap-accordion-panel>content 1b</pap-accordion-panel>
+            </div>
+            <div role="region">
+                <pap-accordion-header>Header 2</pap-accordion-header>
+                <pap-accordion-panel>content 2a</pap-accordion-panel>
+                <pap-accordion-panel>content 2b</pap-accordion-panel>
+            </div>
+            <div role="region">
+                <pap-accordion-header>Header 3</pap-accordion-header>
+                <pap-accordion-panel>content 3a</pap-accordion-panel>
+                <pap-accordion-panel>content 3b</pap-accordion-panel>
+            </div>
+        </pap-accordion>
+    </section>
+
+    <!-- focusable element before and after accordion for shift+tab / tab exit tests -->
+    <button id="before-accordion">Before accordion</button>
+
+    <!-- section 3 : tab order regression -->
+    <section>
+        <h2>Tab order regression</h2>
+        <pap-accordion>
+            <div role="region">
+                <pap-accordion-header>Header 1</pap-accordion-header>
+                <pap-accordion-panel>content</pap-accordion-panel>
+            </div>
+            <div role="region">
+                <pap-accordion-header>Header 2</pap-accordion-header>
+                <pap-accordion-panel>content</pap-accordion-panel>
+            </div>
+        </pap-accordion>
+    </section>
+
+    <button id="after-accordion">After accordion</button>
+</body>
+
+</html>

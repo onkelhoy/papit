@@ -54,7 +54,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/web-component": "*"
+    "@papit/web-component": "0.0.3"
   },
   "devDependencies": {
     "@playwright/test": "1.58.0",
