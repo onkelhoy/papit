@@ -8,29 +8,32 @@ import { copyFolder } from "../util";
 export async function projectRunner(createPackageLocation: string) {
     Terminal.write("Project Creation\n")
     Terminal.createSession();
-    let linebetween = false;
-    let name = Arguments.string("name");
 
+    let name = Arguments.string("name");
     if (name === undefined)
     {
         const answer = await Terminal.prompt("name", true);
         name = answer.input;
-        linebetween = true;
+    }
+
+    let description = Arguments.string("description");
+    if (description === undefined)
+    {
+        const ans = await Terminal.prompt("description", true);
+        description = ans.input;
     }
 
     let location = Arguments.string("location");
-
     if (location === undefined)
     {
-        if (linebetween) Terminal.write();
-        Terminal.write(`[${process.cwd()}]`)
-        const answer = await Terminal.prompt("location", false, process.cwd());
+        const answer = await Terminal.prompt(process.cwd(), true, process.cwd());
         location = path.join(answer.path, name);
-        linebetween = true;
     }
 
+    Terminal.write();
+
+    Terminal.createSession();
     await Terminal.sessionBlock(async () => {
-        if (linebetween) Terminal.write();
         if (!fs.existsSync(location)) return;
 
         const canremove = await Terminal.confirm(`confirm to remove it [${location}]`);
@@ -45,8 +48,6 @@ export async function projectRunner(createPackageLocation: string) {
         }
     });
 
-
-    if (linebetween) Terminal.write();
     const confirmcreatinglocation = await Terminal.confirm("confirm location" + ` [${Terminal.yellow(location)}]`, true);
     if (!confirmcreatinglocation) 
     {
@@ -57,44 +58,34 @@ export async function projectRunner(createPackageLocation: string) {
 
     fs.mkdirSync(location, { recursive: true });
 
-    let description = Arguments.string("description");
-    if (description === undefined)
-    {
-        if (linebetween) Terminal.write();
-        const ans = await Terminal.prompt("description");
-        description = ans.input;
-        linebetween = true;
-    }
+    Terminal.clearSession();
+    Terminal.write();
+    let license = Arguments.string("license") ?? "MIT";
 
-    let license = Arguments.string("license");
     if (license === undefined)
     {
-        if (linebetween) Terminal.write();
         const ans = await Terminal.prompt("license (default MIT)");
         license = ans.input;
-        linebetween = true;
     }
 
-    if (license)
-    {
-        let licensefilelocation = Arguments.string("license-file-location");
-        if (licensefilelocation === undefined)
-        {
-            if (linebetween) Terminal.write();
-            const ans = await Terminal.prompt("license file location");
-            licensefilelocation = ans.input;
-            linebetween = true;
-        }
+    // if (license)
+    // {
+    //     let licensefilelocation = Arguments.string("license-file-location");
+    //     if (licensefilelocation === undefined)
+    //     {
+    //         const ans = await Terminal.prompt("license file location");
+    //         licensefilelocation = ans.input;
+    //     }
 
-        if (fs.existsSync(licensefilelocation)) 
-        {
-            fs.copyFileSync(licensefilelocation, path.join(location, 'LICENSE'));
-        }
-    }
+    //     if (fs.existsSync(licensefilelocation)) 
+    //     {
+    //         fs.copyFileSync(licensefilelocation, path.join(location, 'LICENSE'));
+    //     }
+    // }
 
     Terminal.clearSession();
 
-    const initgit = Arguments.has("git") || await Terminal.confirm("init with git?");
+    const initgit = !Arguments.has("skip-git"); //  || await Terminal.confirm("init with git?");
     if (initgit)
     {
         const { close, update } = Terminal.loading("git init", 3000, frame => {
@@ -127,6 +118,17 @@ export async function projectRunner(createPackageLocation: string) {
         await Terminal.execute(`git commit -m "init: ${name} initialized"`, { cwd: location });
     }
 
+    const { close } = Terminal.loading("installing", 20000);
+    await Terminal.execute("npm install", { cwd: location });
+    close();
+
+    Terminal.clearSession();
+
+    Terminal.write();
     Terminal.write("project initialized");
+    Terminal.write("try it:");
+    Terminal.write(" (1)", Terminal.yellow(`cd ${location}`));
+    Terminal.write(" (2)", Terminal.yellow("npm start"));
+
     process.exit(0);
 }

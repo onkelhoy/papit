@@ -7,7 +7,7 @@
     "typescript",
     "dialog"
   ],
-  "version": "0.0.3",
+  "version": "0.0.4",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -82,5 +82,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.2"
+  "remoteVersion": "0.0.3"
 }
