@@ -92,7 +92,7 @@ export class Dialog extends CustomElement {
     }) private dialogElement!: HTMLDialogElement;
     @property({
         rerender: true,
-        aria: ""
+        attribute: "aria-header"
     }) header?: string;
     @property({
         type: Boolean,

@@ -102,11 +102,11 @@ export async function packageRunner(
 
     if (!rootPackage.repository?.url)
     {
-        Terminal.error("root package.json does not have 'repository.url'");
-        process.exit(1);
+        Terminal.warn("root package.json does not have 'repository.url'");
+        // process.exit(1);
     }
 
-    const repository = rootPackage.repository.url.replace(/\.git$/, '');
+    const repository = (rootPackage.repository?.url ?? "").replace(/\.git$/, '');
     const lockfile_location = path.join(Information.root.location, "package-lock.json");
 
     Terminal.clearSession(session); // this will also create session

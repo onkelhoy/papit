@@ -15,7 +15,8 @@
         "version:sync": "npx @papit/version --sync"
     },
     "keywords": [
-        "typescript"
+        "typescript",
+        "papit"
     ],
     "packageManager": "npm@11.6.2",
     "engines": {
