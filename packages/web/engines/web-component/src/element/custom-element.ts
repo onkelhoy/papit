@@ -220,24 +220,6 @@ export class CustomElement extends HTMLElement {
      */
     requestUpdate() { }
 
-    /**
-     * Queries for the first matching element within this element's render root.
-     * @param selectors A valid CSS selector string
-     */
-    querySelector<K extends keyof HTMLElementTagNameMap>(selector: K): HTMLElementTagNameMap[K] | null;
-    querySelector<E extends Element = Element>(selector: string): E | null;
-    querySelector(selector: string): Element | null {
-        return this.root.querySelector(selector);
-    }
-    /**
-     * Queries for all matching elements within this element's render root.
-     * @param selectors A valid CSS selector string
-     */
-    querySelectorAll<K extends keyof HTMLElementTagNameMap>(selector: K): NodeListOf<HTMLElementTagNameMap[K]>;
-    querySelectorAll<E extends Element = Element>(selector: string): NodeListOf<E>;
-    querySelectorAll(selector: string): NodeListOf<Element> {
-        return this.root.querySelectorAll(selector);
-    }
 
     shadowClosest<K extends keyof HTMLElementTagNameMap>(
         selector: K
