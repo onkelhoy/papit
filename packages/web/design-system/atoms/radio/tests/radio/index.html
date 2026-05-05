@@ -1,0 +1,29 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>radio test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- Basic group: mutual exclusion tested at Radio level via checkedMap -->
+    <form id="main-form">
+        <pap-radio id="r1" name="plan" value="free">Free</pap-radio>
+        <pap-radio id="r2" name="plan" value="pro" defaultchecked>Pro</pap-radio>
+        <pap-radio id="r3" name="plan" value="enterprise">Enterprise</pap-radio>
+
+        <pap-radio id="r-disabled" name="plan" value="vip" disabled>VIP (disabled)</pap-radio>
+        <pap-radio id="r-readonly" name="other" value="ro" readonly>Readonly</pap-radio>
+
+        <button type="reset" id="reset-btn">Reset</button>
+    </form>
+
+    <!-- Standalone (no name) -->
+    <pap-radio id="r-standalone" value="solo">Standalone</pap-radio>
+
+</body>
+
+</html>

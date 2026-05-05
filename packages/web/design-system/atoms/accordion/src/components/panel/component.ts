@@ -17,7 +17,7 @@ export class AccordionPanel extends CustomElement {
     }
 
     render() {
-        return "<div><slot></slot></div>";
+        return '<div part="content"><slot></slot></div>';
     }
 }
 
