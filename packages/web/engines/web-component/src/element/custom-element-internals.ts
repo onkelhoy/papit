@@ -61,8 +61,8 @@ export class CustomElementInternals extends CustomElement {
     @property({ rerender: false, type: Boolean, aria: 'aria-disabled', removeAttribute: true })
     disabled: boolean | undefined = undefined;
 
-    constructor(setting?: Partial<Setting>) {
-        super(setting);
+    constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<Setting>) {
+        super(shadowRootInit);
         this._internals = this.attachInternals();
     }
 
