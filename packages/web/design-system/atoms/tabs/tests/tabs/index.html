@@ -1,0 +1,137 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>tabs test</title>
+
+    <style>
+        /* Minimal reset so layout doesn't interfere with tests */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: sans-serif;
+            padding: 2rem;
+        }
+
+        h2 {
+            margin: 2rem 0 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #888;
+        }
+
+        /* Panel visibility — driven by :state(selected) */
+        pap-tabpanel {
+            display: none;
+        }
+
+        pap-tabpanel:state(selected) {
+            display: block;
+            padding: 1rem 0;
+        }
+
+        /* Minimal tab styling so focus is visible during keyboard tests */
+        pap-tab {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            display: inline-block;
+        }
+
+        pap-tab:state(selected) {
+            border-bottom: 2px solid #000;
+            font-weight: bold;
+        }
+
+        pap-tab:focus-visible {
+            outline: 2px solid royalblue;
+            outline-offset: 2px;
+        }
+    </style>
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!--
+      ── Fixture 1: Default horizontal tabs (3 tabs) ──────────────────────────
+      Used by:
+        - presence tests
+        - ARIA role tests
+        - aria-orientation default test
+        - selection / aria-selected tests
+        - aria-controls ↔ aria-labelledby cross-reference tests
+        - keyboard interaction tests
+        - tabindex tests
+    -->
+    <h2>Fixture 1 — Horizontal (default)</h2>
+    <pap-tabs id="tabs-default">
+        <pap-tab value="alpha">Alpha</pap-tab>
+        <pap-tab value="beta">Beta</pap-tab>
+        <pap-tab value="gamma">Gamma</pap-tab>
+
+        <pap-tabpanel value="alpha">
+            <p>Alpha panel content.</p>
+            <!-- Contains a focusable element so Tab key can land here -->
+            <a href="#" id="alpha-link">Alpha link</a>
+        </pap-tabpanel>
+        <pap-tabpanel value="beta">
+            <p>Beta panel content.</p>
+            <a href="#" id="beta-link">Beta link</a>
+        </pap-tabpanel>
+        <pap-tabpanel value="gamma">
+            <p>Gamma panel content.</p>
+            <a href="#" id="gamma-link">Gamma link</a>
+        </pap-tabpanel>
+    </pap-tabs>
+
+    <!--
+      ── Fixture 2: Vertical orientation ──────────────────────────────────────
+      Used by:
+        - aria-orientation="vertical" reflection test
+        - (optional) Up/Down arrow keyboard tests
+    -->
+    <h2>Fixture 2 — Vertical</h2>
+    <pap-tabs id="tabs-vertical" aria-orientation="vertical">
+        <pap-tab value="one">One</pap-tab>
+        <pap-tab value="two">Two</pap-tab>
+
+        <pap-tabpanel value="one">
+            <p>One panel.</p>
+        </pap-tabpanel>
+        <pap-tabpanel value="two">
+            <p>Two panel.</p>
+        </pap-tabpanel>
+    </pap-tabs>
+
+    <!--
+      ── Fixture 3: Programmatic value test ───────────────────────────────────
+      Used by:
+        - "setting pap-tabs value attribute selects the matching tab" test
+      Isolated so mutations on fixture 1 don't interfere.
+    -->
+    <h2>Fixture 3 — Programmatic selection</h2>
+    <pap-tabs id="tabs-programmatic">
+        <pap-tab value="x">X</pap-tab>
+        <pap-tab value="y">Y</pap-tab>
+        <pap-tab value="z">Z</pap-tab>
+
+        <pap-tabpanel value="x">
+            <p>X panel.</p>
+        </pap-tabpanel>
+        <pap-tabpanel value="y">
+            <p>Y panel.</p>
+        </pap-tabpanel>
+        <pap-tabpanel value="z">
+            <p>Z panel.</p>
+        </pap-tabpanel>
+    </pap-tabs>
+</body>
+
+</html>

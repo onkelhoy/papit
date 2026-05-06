@@ -1,0 +1,26 @@
+:host {
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+
+    pap-group {
+        display: flex;
+    }
+}
+
+:host([aria-orientation="vertical"]) {
+    flex-direction: row;
+
+    pap-group {
+        flex-direction: column;
+
+        ::slotted([role="tab"]) {
+
+            border-left-width: 2px;
+            border-left-style: solid;
+            border-bottom-style: none;
+        }
+    }
+
+
+}

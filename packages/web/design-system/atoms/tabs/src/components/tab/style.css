@@ -1,0 +1,20 @@
+:host {
+    cursor: pointer;
+    border-bottom-width: 2px;
+    border-bottom-style: solid;
+    border-color: color-mix(var(--background-dark), var(--shade-0) 15%);
+
+    padding-block: var(--space-1, 0.25rem);
+    padding-inline: var(--space-2, 0.5rem);
+
+    color: var(--foreground);
+}
+
+:host(:hover) {
+    background-color: color-mix(transparent, var(--shade-0) 8%);
+}
+
+:host(:state(selected)) {
+    border-color: var(--shade-0);
+    color: var(--shade-0);
+}
