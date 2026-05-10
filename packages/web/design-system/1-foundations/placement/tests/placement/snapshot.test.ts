@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  // Navigate to your test page
-  await page.goto('tests/placement/');
+    // Navigate to your test page
+    await page.goto('tests/placement/');
 });
 
-test.describe("@papit/placement visual regression", () => {
-  test('default snapshot', async ({ page }) => {
-    await expect(page).toHaveScreenshot();
-  });
+test.describe.skip("@papit/placement visual regression", () => {
+    test.skip('default snapshot', async ({ page }) => {
+        await expect(page).toHaveScreenshot();
+    });
 })

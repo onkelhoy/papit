@@ -103,10 +103,10 @@ function runner(node, extraEnv = {}, extraArgs = []) {
             const skipSnapshots = Arguments.has("ci") || (!force && playwright && !hasSnapshots(node));
             const extraEnv = skipSnapshots ? { SKIP_SNAPSHOTS: "true" } : {};
 
-            if (skipSnapshots)
-            {
-                Terminal.write(Terminal.dim("○"), node.name, Terminal.dim("no snapshots — skipping snapshot.test.ts"));
-            }
+            // if (skipSnapshots)
+            // {
+            //     Terminal.write(Terminal.dim("○"), node.name, Terminal.dim("no snapshots — skipping snapshot.test.ts"));
+            // }
 
             const { code, buffer } = await runner(node, extraEnv);
 

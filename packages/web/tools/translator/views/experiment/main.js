@@ -10,7 +10,7 @@ window.onload = () => {
 
     const select = document.querySelector("select");
     const input = document.querySelector("input");
-    const { t } = useTranslator();
+    const t = useTranslator();
 
     effect(() => {
         select.innerHTML = translator.list().map(lang =>

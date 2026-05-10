@@ -1,0 +1,317 @@
+:host {
+    --size: 100%;
+    position: relative;
+
+    div[part="carousel"] {
+        display: grid;
+        gap: var(--space-4, 1rem);
+        grid-auto-flow: column;
+        grid-auto-columns: var(--size);
+
+        scroll-snap-type: x mandatory;
+        overflow-x: auto;
+        overflow-y: hidden;
+        /* Firefox */
+        scrollbar-width: none;
+    }
+
+    div[part="carousel"]::-webkit-scrollbar {
+        display: none;
+        /* Chrome, Safari, Edge */
+    }
+
+    pap-button,
+    pap-group {
+        z-index: 2;
+    }
+
+    pap-button[part="play"] {
+        display: none;
+    }
+
+    pap-button:not([part="play"]) {
+        padding: var(--space-2, 0.5rem);
+        border-radius: 50%;
+        width: var(--space-8, 2rem);
+        height: var(--space-8, 2rem);
+        aspect-ratio: 1/1;
+
+        pap-icon {
+            width: var(--space-4, 1rem);
+        }
+
+        &[part="prev"] {
+            pap-icon {
+                rotate: 0.25turn;
+                translate: -10% 0;
+            }
+        }
+
+        &[part="next"] {
+            pap-icon {
+                rotate: -0.25turn;
+                translate: 10% 0;
+            }
+        }
+    }
+
+    pap-group[part="dots"] {
+        display: flex;
+        align-items: center;
+        padding: var(--space-1, 0.25rem);
+        border-radius: 1000px;
+
+        background-color: color-mix(Canvas, 70% transparent);
+
+        button {
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            width: var(--space-6, 24px);
+            height: var(--space-6, 24px);
+            background: none;
+            display: inline-flex;
+            border-radius: 50%;
+
+            &::after {
+                margin: auto;
+                content: "";
+                width: var(--space-2, 0.5rem);
+                height: var(--space-2, 0.5rem);
+
+                border-radius: 50%;
+                border: 1px solid var(--foreground);
+            }
+
+            &[aria-disabled="true"] {
+                &::after {
+                    background-color: var(--foreground);
+                }
+            }
+        }
+    }
+}
+
+:host([autoplay]) {
+    pap-button[part="play"] {
+        display: flex;
+        border-radius: 50%;
+        pointer-events: all;
+        position: relative;
+
+        pap-icon {
+            display: none;
+            width: var(--space-8);
+            height: var(--space-8);
+        }
+    }
+
+    pap-button[part="play"]::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+
+        background:
+            conic-gradient(from 0deg,
+                currentColor calc(var(--progress) * 360deg),
+                transparent 0deg);
+
+        mask:
+            radial-gradient(farthest-side,
+                transparent calc(100% - 2px),
+                white calc(100% - 1.25px));
+
+        pointer-events: none;
+    }
+}
+
+:host([autoplay][play="true"]) {
+    pap-button[part="play"] {
+        pap-icon[name="pause"] {
+            display: block;
+        }
+    }
+}
+
+:host([autoplay][play="false"]) {
+    pap-button[part="play"] {
+        pap-icon[name="play"] {
+            display: block;
+        }
+    }
+}
+
+::slotted([slot="clone-prev"]),
+::slotted([slot="slide"]),
+::slotted([slot="clone-next"]) {
+    scroll-snap-align: center;
+}
+
+:host {
+    display: grid;
+    gap: var(--space-2, 0.5rem);
+    grid-template-columns: auto auto 1fr auto auto;
+    grid-template-rows: auto auto 1fr auto auto;
+
+    --top: 1;
+    --bottom: 6;
+
+    /* Default: carousel is the inner 3 rows */
+    div[part="carousel"] {
+        grid-column: 1 / 6;
+        grid-row: var(--top) / var(--bottom);
+        /* top-inside → main → bottom-inside */
+    }
+
+    /* Default: all controls sit below (under) */
+    pap-button[part="prev"] {
+        grid-row: 5;
+        grid-column: 1;
+        align-self: center;
+    }
+
+    pap-group[part="dots"] {
+        grid-row: 5;
+        grid-column: 1/6;
+        justify-self: center;
+    }
+
+    pap-button[part="next"] {
+        grid-row: 5;
+        grid-column: 5;
+        align-self: center;
+    }
+}
+
+/* ── outside above ─────────────────────────────────────────── */
+:host([arrow-placement="over"]) {
+    --top: 2;
+
+    pap-button[part="prev"],
+    pap-button[part="next"] {
+        grid-row: 1;
+    }
+}
+
+:host([dot-placement="over"]) {
+    --top: 2;
+
+    pap-group[part="dots"] {
+        background-color: transparent;
+        grid-row: 1;
+    }
+}
+
+/* ── inside overlays (carousel span unchanged) ─────────────── */
+:host([arrow-placement="top"]) {
+
+    pap-button[part="prev"],
+    pap-button[part="next"] {
+        grid-row: 2;
+        align-self: start;
+
+        mix-blend-mode: difference;
+        border-color: white;
+
+        pap-icon {
+            color: white;
+        }
+    }
+}
+
+:host([dot-placement="top"]) {
+    pap-group[part="dots"] {
+        grid-row: 2;
+        align-self: start;
+    }
+}
+
+:host([arrow-placement="center-inside"]) {
+
+    pap-button[part="prev"],
+    pap-button[part="next"] {
+        align-self: center;
+
+        grid-row: var(--top) / var(--bottom);
+        border-radius: 0;
+        border: none;
+        height: 100%;
+
+        pap-icon {
+            color: white;
+            mix-blend-mode: difference;
+        }
+    }
+}
+
+:host([arrow-placement="bottom"]) {
+
+    pap-button[part="prev"],
+    pap-button[part="next"] {
+        grid-row: 4;
+        align-self: end;
+        mix-blend-mode: difference;
+        border-color: white;
+        /* margin-inline: var(--space-2, ) */
+
+        pap-icon {
+            color: white;
+        }
+    }
+
+
+    pap-button[part="prev"] {
+        grid-column: 2;
+    }
+
+    pap-button[part="next"] {
+        grid-column: 4;
+    }
+}
+
+:host([dot-placement="bottom"]) {
+    pap-group[part="dots"] {
+        grid-row: 4;
+        align-self: end;
+    }
+}
+
+/* ── outside below (explicit, same as default — for mixing) ─── */
+:host([arrow-placement="under"]) {
+    --bottom: 5;
+
+    pap-button[part="prev"],
+    pap-button[part="next"] {
+        grid-row: 5;
+    }
+}
+
+:host([dot-placement="under"]) {
+    --bottom: 5;
+
+    pap-group[part="dots"] {
+        background-color: transparent;
+        grid-row: 5;
+    }
+}
+
+/* ── center-outside: arrows flank the carousel, carousel narrows ─ */
+:host([arrow-placement="center-outside"]) {
+    [part="carousel"] {
+        grid-column: 2 / 5;
+    }
+
+    /* shrink to center col only */
+    pap-button[part="prev"] {
+        grid-row: var(--top) / var(--bottom);
+        grid-column: 1;
+        align-self: center;
+    }
+
+    pap-button[part="next"] {
+        grid-row: var(--top) / var(--bottom);
+        grid-column: 5;
+        align-self: center;
+    }
+}
