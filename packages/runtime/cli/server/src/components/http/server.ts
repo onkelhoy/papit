@@ -163,6 +163,16 @@ export function start(
 
                 if (stat.isDirectory() || path.extname(url.absolute) === ".html")
                 {
+                    if (req.headers["x-router"])
+                    {
+
+                        const raw = fs.readFileSync(url.absolute, { encoding: "utf-8" });
+                        res.statusCode = 200;
+                        res.setHeader("Content-Type", "text/html");
+                        res.end(raw);
+                        return;
+                    }
+
                     const document = await getHTML(url, assets, importmap, serverPackageLocation, htmlcache);
                     res.statusCode = 200;
 
