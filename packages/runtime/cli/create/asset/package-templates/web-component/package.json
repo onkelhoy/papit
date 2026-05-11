@@ -9,6 +9,7 @@
     ],
     "version": "0.0.1",
     "scripts": {
+        "analyse": "npx @papit/analyse -o component.json",
         "build": "npx @papit/build --error",
         "watch": "tsc -w",
         "start": "npx @papit/server --info --live",

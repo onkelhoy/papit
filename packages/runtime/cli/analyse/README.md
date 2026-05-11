@@ -1,6 +1,7 @@
 # @papit/analyse
 
 this will analyse a package and output analyse.json file which can be used to generate a bunch
+note that this primarly focuses on "web-component" packages
 
 ![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
