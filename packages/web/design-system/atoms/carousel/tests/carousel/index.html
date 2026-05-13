@@ -1,0 +1,53 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>carousel test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- Basic 3-slide carousel (loop on by default) -->
+    <pap-carousel id="basic" aria-label="Basic carousel">
+        <div id="basic-slide-0" data-slide="0" style="background:#f0f;">Slide 1</div>
+        <div data-slide="1" style="background:#0ff;">Slide 2</div>
+        <div data-slide="2" style="background:#ff0;">Slide 3</div>
+    </pap-carousel>
+
+    <!-- No-loop carousel -->
+    <pap-carousel id="no-loop" loop="false" aria-label="No-loop carousel">
+        <div data-slide="0" style="background:#faa;">Slide A</div>
+        <div data-slide="1" style="background:#afa;">Slide B</div>
+        <div data-slide="2" style="background:#aaf;">Slide C</div>
+    </pap-carousel>
+
+    <!-- Single-slide carousel (clones should NOT be created) -->
+    <pap-carousel id="single" aria-label="Single slide carousel">
+        <div data-slide="0" style="background:#ccc;">Only slide</div>
+    </pap-carousel>
+
+    <!-- Autoplay carousel with short duration for testing -->
+    <pap-carousel id="autoplay" autoplay duration="800" aria-label="Autoplay carousel">
+        <div data-slide="0" style="background:#fca;">Slide 1</div>
+        <div data-slide="1" style="background:#acf;">Slide 2</div>
+        <div data-slide="2" style="background:#cfa;">Slide 3</div>
+    </pap-carousel>
+
+    <!-- Two carousels side by side — tests debounce isolation -->
+    <pap-carousel id="multi-a" aria-label="Multi test A">
+        <div data-slide="0" style="background:#ebb;">M-A Slide 1</div>
+        <div data-slide="1" style="background:#beb;">M-A Slide 2</div>
+        <div data-slide="2" style="background:#bbe;">M-A Slide 3</div>
+    </pap-carousel>
+
+    <pap-carousel id="multi-b" aria-label="Multi test B">
+        <div data-slide="0" style="background:#fdd;">M-B Slide 1</div>
+        <div data-slide="1" style="background:#dfd;">M-B Slide 2</div>
+        <div data-slide="2" style="background:#ddf;">M-B Slide 3</div>
+    </pap-carousel>
+
+</body>
+
+</html>

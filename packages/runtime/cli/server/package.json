@@ -7,7 +7,7 @@
     "typescript",
     "dev-server"
   ],
-  "version": "1.0.3",
+  "version": "1.0.4",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -56,11 +56,11 @@
   },
   "dependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/build": "0.0.3",
+    "@papit/build": "0.0.4",
     "@papit/bundle-js": "0.0.2",
     "@papit/deep-merge": "0.0.1",
     "@papit/html": "0.0.1",
-    "@papit/information": "0.0.4",
+    "@papit/information": "0.0.5",
     "@papit/terminal": "0.0.2",
     "chokidar": "^5.0.0",
     "esbuild": "0.27.2"
@@ -97,5 +97,5 @@
       }
     }
   },
-  "remoteVersion": "1.0.2"
+  "remoteVersion": "1.0.3"
 }

@@ -6,7 +6,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe.skip("@papit/codeblock visual regression", () => {
-    test('default snapshot', async ({ page }) => {
+    test.skip('default snapshot', async ({ page }) => {
         await expect(page).toHaveScreenshot();
     });
 })

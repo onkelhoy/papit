@@ -139,18 +139,27 @@ function define(
     descriptor: PropertyDescriptor
 ) {
     const original = descriptor.value;
-    const debouncedFn = debounceFn(original, options.delay);
+    const timerKey = Symbol(`debounce_${String(key)}`);
+
+    function debounced(this: any, ...args: any[]) {
+        if (this[timerKey]) clearTimeout(this[timerKey]);
+        this[timerKey] = setTimeout(() => {
+            original.apply(this, args);
+            this[timerKey] = null;
+        }, options.delay);
+    }
 
     if (options.name)
     {
-        Object.defineProperty(target, String(options.name ?? key), {
+        Object.defineProperty(target, String(options.name), {
             configurable: true,
             enumerable: false,
             writable: true,
-            value: debouncedFn,
+            value: debounced,
         });
-    } else
+    }
+    else
     {
-        descriptor.value = debouncedFn;
+        descriptor.value = debounced;
     }
 }

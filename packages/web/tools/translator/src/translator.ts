@@ -19,8 +19,22 @@ export function getTranslator(
     const [list, setList] = signal<LanguageJson[]>([]);
     const [locale] = computed(() => current()?.meta?.language ?? null);
 
+    const resolve = (translations: Record<string, unknown>, key: string): string => {
+        const parts = key.split('.');
+        let value: unknown = translations;
+        for (const part of parts)
+        {
+            if (typeof value !== 'object' || value === null) return key;
+            value = (value as Record<string, unknown>)[part];
+        }
+        return value !== undefined ? String(value) : key;
+    }
+
     const translate = (key: string, variables?: Record<string, unknown>) => {
-        let value = current()?.translations[key] ?? key;
+        const translations = current()?.translations;
+        if (!translations) return key;
+
+        let value = resolve(translations, key);
 
         if (variables)
         {

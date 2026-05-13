@@ -8,6 +8,7 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
 
     Arguments.set("remote", true);
     Arguments.set('descendants', true);
+    Arguments.set("exclude-devdependencies", true);
 
     const updateDependencies = new Map<string, string>();
     updateDependencies.set(packageJSON.name, packageJSON.version);
@@ -29,6 +30,24 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
             }
         }
     }
+
+    for (const batch of batches)
+    {
+        for (const node of batch)
+        {
+            let dirty = false;
+            for (const [name, version] of updateDependencies)
+            {
+                if (node.packageJSON.devDependencies?.[name] && node.packageJSON.devDependencies[name] !== version)
+                {
+                    node.packageJSON.devDependencies[name] = version;
+                    dirty = true;
+                }
+            }
+            if (dirty) fs.writeFileSync(path.join(node.location, "package.json"), JSON.stringify(node.packageJSON, null, 2));
+        }
+    }
+
 
     fs.renameSync(lockfilepath, path.join(Information.root.location, "package-lock.json"));
 }

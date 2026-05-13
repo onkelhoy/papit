@@ -3,6 +3,7 @@ import path from "node:path";
 import type { LocalPackage, Package, RootPackage } from "./types";
 import { PackageNode } from "./node";
 import { Cache } from "./cache";
+import { Arguments } from "@papit/arguments";
 
 export class Graph {
     root!: PackageNode<RootPackage>;
@@ -86,7 +87,10 @@ export class Graph {
 
         const node = this._nodes.get(packageJSON.name)!;
 
-        for (const dependencyType of ["dependencies", "devDependencies", "peerDependencies"] as const)
+        const deparray: Array<"dependencies" | "peerDependencies" | "devDependencies"> = ["dependencies", "peerDependencies"]; // devDependencies
+        if (!Arguments.has("exclude-devdependencies")) deparray.push("devDependencies")
+
+        for (const dependencyType of deparray)
         {
             for (const key in packageJSON[dependencyType])
             {
@@ -113,10 +117,16 @@ export class Graph {
         const map = new Map<string, string[]>();
         const batches: PackageNode[][] = [];
 
+        const packageNames = new Set(packages.map(p => p.name));
+
         for (const node of packages)
         {
             if (node.name === this.root.name) continue;
-            map.set(node.name, node.ancestors.map(n => n.name));
+            // direct deps only, scoped to the provided set
+            map.set(
+                node.name,
+                node.parents.map(n => n.name).filter(n => packageNames.has(n))
+            );
         }
 
         while (map.size > 0)

@@ -5,7 +5,7 @@ import "@papit/icon";
 import "@papit/splitter";
 import "@papit/switch";
 import "@papit/tooltip";
-import { useTranslator, translator, TransalatorFn } from "@papit/translator/browser";
+import { useTranslator, translator, TransalatorFn, translate } from "@papit/translator/browser";
 import { Switch } from "@papit/switch";
 
 // local 
@@ -36,8 +36,7 @@ export class Codeblock extends CustomElement {
 
     private content = "";
     private timer: NodeJS.Timeout | null = null;
-    private t = useTranslator().t;
-    private dispose?: () => void;
+    @translate private t = useTranslator();
 
     //#region COLOR-SCHEME
     private ambientScheme!: "light" | "dark";
@@ -90,9 +89,6 @@ export class Codeblock extends CustomElement {
             node = node.parentElement;
         }
 
-        this.dispose = translator.subscribe(() => {
-            this.requestUpdate();
-        })
         this.updateAmbient();
     }
 
@@ -100,8 +96,6 @@ export class Codeblock extends CustomElement {
         super.disconnectedCallback?.();
         this.mediaQuery.removeEventListener("change", this.handleschemechange);
         this.observer.disconnect();
-
-        if (this.dispose) this.dispose();
     }
 
 

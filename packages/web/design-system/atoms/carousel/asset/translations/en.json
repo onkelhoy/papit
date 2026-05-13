@@ -1,0 +1,17 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en-UK"
+    },
+    "carousel": "carousel",
+    "aria": {
+        "prev": "previous slide",
+        "next": "next slide",
+        "slide": "{index} of {size}",
+        "dots": "Choose slide to display",
+        "lastclone": "Duplicate of last slide",
+        "firstclone": "Duplicate of first slide",
+        "play": "Start slide rotation",
+        "pause": "Stop slide rotation"
+    }
+}
