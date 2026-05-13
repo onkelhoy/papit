@@ -12,6 +12,7 @@ export class Args extends Loglevel {
         return [String(value)];
     }
 
+    delete(key: string) { delete this.flags[key] }
     toggle(key: string) { this.set(key, !this.has(key)) }
     get(key: string) { return this.flags[key] }
     set(key: string, value: Input) {
@@ -89,6 +90,8 @@ export class Arguments {
     static true(key: string) { return this.instance.true(key) }
     static string(key: string) { return this.instance.string(key) }
     static number(key: string) { return this.instance.number(key) }
+    static delete(key: string) { return this.instance.delete(key) }
+
 
     static get level() { return this.instance.level }
     static set level(value: Level) { this.instance.level = value }

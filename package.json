@@ -5,7 +5,7 @@
     "private": true,
     "repository": {
         "type": "git",
-        "url": "https://github.com/onkelhoy/papit.git"
+        "url": "git+https://github.com/onkelhoy/papit.git"
     },
     "scripts": {
         "analyse": "to come",
