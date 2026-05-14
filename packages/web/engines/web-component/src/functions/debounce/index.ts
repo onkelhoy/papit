@@ -1,7 +1,7 @@
 export {
-  Function as debounceFn,
+    Function as debounceFn,
 } from "./function";
 
 export {
-  STANDARD_DELAY
-} from "./constants";
+    STANDARD_DELAY
+} from "../../constants";

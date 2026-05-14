@@ -665,7 +665,7 @@ describe.skip('@papit/bundle-ts', () => {
             );
         });
 
-        it.only("should handle web-component case", async () => {
+        it("should handle web-component case", async () => {
             await tsBundle(
                 new Set(),
                 import.meta.dirname,

@@ -96,7 +96,7 @@ export class Carousel extends CustomElement {
 
 
     // styling properties 
-    @property({ attribute: "arrow-placement" }) arrowplacement!: "bottom" | "top" | "under" | "over" | "center-outside" | "center-inside";
+    @property({ attribute: "arrow-placement" }) arrowplacement!: "bottom" | "top" | "under" | "over" | "outside" | "inside";
     @property({ attribute: "dot-placement" }) dotplacement!: "bottom" | "top" | "under" | "over";
     @property({
         after(this: Carousel, _value, _old, initial) {
@@ -112,15 +112,15 @@ export class Carousel extends CustomElement {
                     break;
                 case "inside":
                     if (!initial || !this.dotplacement) this.dotplacement = "bottom";
-                    if (!initial || !this.arrowplacement) this.arrowplacement = "center-inside";
+                    if (!initial || !this.arrowplacement) this.arrowplacement = "inside";
                     break;
                 case "outside":
                     if (!initial || !this.dotplacement) this.dotplacement = "under";
-                    if (!initial || !this.arrowplacement) this.arrowplacement = "center-outside";
+                    if (!initial || !this.arrowplacement) this.arrowplacement = "outside";
                     break;
                 case "mix":
                     if (!initial || !this.dotplacement) this.dotplacement = "bottom";
-                    if (!initial || !this.arrowplacement) this.arrowplacement = "center-outside";
+                    if (!initial || !this.arrowplacement) this.arrowplacement = "outside";
                     break;
             }
         }

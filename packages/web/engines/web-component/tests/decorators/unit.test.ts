@@ -169,6 +169,140 @@ test.describe("decorators - debounce", () => {
     });
 });
 
+test.describe("decorators - throttle", () => {
+
+    // leading fires immediately (unlike debounce which always defers)
+    test('throttle standard - leading edge', async ({ page }) => {
+        const component = page.getByTestId("a");
+        await component.evaluate((el: any) => el.throttleStandard());
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1); // fired immediately
+        await page.waitForTimeout(300);
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1); // no pending calls, stays at 1
+    });
+
+    // calls within the window are held and the last one fires as trailing
+    test('throttle standard - trailing edge', async ({ page }) => {
+        const component = page.getByTestId("a");
+        await component.evaluate((el: any) => {
+            el.throttleStandard(); // leading → 1
+            el.throttleStandard(); // pending (overwritten)
+            el.throttleStandard(); // pending (latest)
+        });
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1); // only leading fired synchronously
+        await page.waitForTimeout(300);
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // trailing fired after window
+    });
+
+    // only one pending is kept — intermediate calls are discarded
+    test('throttle standard - intermediate calls discarded', async ({ page }) => {
+        const component = page.getByTestId("a");
+        await component.evaluate((el: any) => {
+            el.throttleStandard(); // leading → 1
+            el.throttleStandard(); // pending
+            el.throttleStandard(); // overwrites pending
+            el.throttleStandard(); // overwrites pending (latest wins)
+        });
+        await page.waitForTimeout(300); // first window
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // trailing fired once, not 4 times
+        await page.waitForTimeout(300); // second window — no more pending
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // stopped
+    });
+
+    test('throttle delay case', async ({ page }) => {
+        const component = page.getByTestId("a");
+        await component.evaluate((el: any) => {
+            el.throttleDelay(); // leading → 1
+            el.throttleDelay(); // pending
+        });
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1);
+        await page.waitForTimeout(300); // not enough for 600ms delay
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1);
+        await page.waitForTimeout(300); // total 600ms
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // trailing fires
+    });
+
+    test('throttle name case', async ({ page }) => {
+        const component = page.getByTestId("a");
+        // original is unthrottled — always fires immediately
+        await component.evaluate((el: any) => el.throttleName());
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1);
+
+        // throttled version — leading fires, second becomes pending
+        await component.evaluate((el: any) => el.throttleNameThrottled());
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // leading
+        await component.evaluate((el: any) => el.throttleNameThrottled());
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2); // still in window
+        await page.waitForTimeout(300);
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(3); // trailing
+    });
+
+    test('throttle full case', async ({ page }) => {
+        const component = page.getByTestId("a");
+        // original is unthrottled
+        await component.evaluate((el: any) => el.throttleFull());
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1);
+
+        // throttled version with 600ms delay
+        await component.evaluate((el: any) => {
+            el.throttleFullThrottled(); // leading → 2
+            el.throttleFullThrottled(); // pending
+        });
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2);
+        await page.waitForTimeout(300); // 600ms delay — not yet
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2);
+        await page.waitForTimeout(300); // total 600ms
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(3); // trailing fires
+    });
+
+    // the progress scenario — windows keep rescheduling as long as calls arrive
+    test('throttle continuous - rescheduling across multiple windows', async ({ page }) => {
+        const component = page.getByTestId("a");
+
+        // first burst
+        await component.evaluate((el: any) => {
+            el.throttleStandard(); // leading → 1
+            el.throttleStandard(); // pending
+        });
+        let number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(1);
+
+        await page.waitForTimeout(300); // window 1 expires → trailing → 2, reschedules
+
+        // second burst arrives while second window is open
+        await component.evaluate((el: any) => {
+            el.throttleStandard(); // pending in second window
+        });
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(2);
+
+        await page.waitForTimeout(300); // window 2 expires → trailing → 3
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(3);
+
+        await page.waitForTimeout(300); // window 3 expires — no pending
+        number = await component.evaluate((el: any) => el.number);
+        expect(number).toBe(3); // stopped cleanly
+    });
+
+});
+
 test.describe("decorators - context", () => {
 
     test.describe("plain div provider", () => {

@@ -41,6 +41,7 @@ import { TemplateInstance, partFactory } from 'html/part';
 import { debounceFn } from "functions/debounce";
 import { nextParent } from "functions/next-parent";
 import type { PropertyMeta, QueryMeta, Setting } from "./types";
+import { throttleFn } from "functions/throttle";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
     mode: "open",
@@ -98,6 +99,7 @@ export class CustomElement extends HTMLElement {
 
         if (!settings.lightDOM) this.attachShadow(settings);
         this.requestUpdate = debounceFn(this.update, settings.requestUpdateTimeout ?? 50);
+        this.throttleUpdate = throttleFn(this.update, settings.throttleUpdateTimeout ?? 50);
         this.originalAttributes = Array.from(this.attributes);
     }
 
@@ -108,7 +110,6 @@ export class CustomElement extends HTMLElement {
      */
     connectedCallback() {
         this.update();
-
     }
 
     /**
@@ -219,6 +220,7 @@ export class CustomElement extends HTMLElement {
      * The update is debounced according to `requestUpdateTimeout`.
      */
     requestUpdate() { }
+    throttleUpdate() { }
 
 
     shadowClosest<K extends keyof HTMLElementTagNameMap>(

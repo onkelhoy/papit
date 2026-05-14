@@ -1,0 +1,1 @@
+import '@papit/file-input';

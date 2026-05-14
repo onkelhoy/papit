@@ -1,5 +1,6 @@
 export type Setting = {
     requestUpdateTimeout: number;
+    throttleUpdateTimeout: number;
     lightDOM: boolean;
 }
 
