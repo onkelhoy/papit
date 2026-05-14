@@ -1,7 +1,7 @@
 {
   "name": "@papit/create",
   "description": "",
-  "version": "0.0.8",
+  "version": "0.0.10",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -37,7 +37,7 @@
   "license": "Papit-1.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/onkelhoy/papit.git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
     "directory": "packages/runtime/cli/create"
   },
   "sideEffects": true,
@@ -45,11 +45,11 @@
     "node": ">=18"
   },
   "bin": {
-    "papit-create": "./lib/bundle.js"
+    "papit-create": "lib/bundle.js"
   },
   "dependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.5",
+    "@papit/information": "0.0.6",
     "@papit/terminal": "0.0.2"
   },
   "devDependencies": {
@@ -69,5 +69,5 @@
     },
     "components": {}
   },
-  "remoteVersion": "0.0.7"
+  "remoteVersion": "0.0.9"
 }

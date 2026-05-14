@@ -8,13 +8,13 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
 
     Arguments.set("remote", true);
     Arguments.set('descendants', true);
-    Arguments.set("exclude-devdependencies", true);
 
     const updateDependencies = new Map<string, string>();
     updateDependencies.set(packageJSON.name, packageJSON.version);
     const lockfilepath = path.join(Information.root.location, "temp-package-lock.json");
     const batches = Information.getBatches();
 
+    // initial run 
     for (const batch of batches)
     {
         for (const node of batch)
@@ -31,6 +31,7 @@ export async function post(packageJSON: LocalPackage | RootPackage) {
         }
     }
 
+    // cleanup run to catch any dev-updates 
     for (const batch of batches)
     {
         for (const node of batch)
@@ -81,26 +82,14 @@ function runner(node: PackageNode, updateDependencies: Map<string, string>) {
             if (node.packageJSON.devDependencies?.[name] && node.packageJSON.devDependencies[name] !== version)
             {
                 node.packageJSON.devDependencies[name] = version;
-                // changed = true; // also add this - devDep update is still a reason to bump
             }
             if (node.packageJSON.peerDependencies?.[name] && node.packageJSON.peerDependencies[name] !== version)
             {
                 node.packageJSON.peerDependencies[name] = version;
-                // changed = true;
             }
         }
 
         // we do a patch if we need 
-        // if (changed || node.packageJSON.version === node.packageJSON.remoteVersion)
-        // {
-        //     const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);
-        //     if (match?.groups)
-        //     {
-        //         const { major, minor, patch, semver } = match.groups;
-        //         node.packageJSON.version = `${major}.${minor}.${Number(patch) + 1}${semver}`;
-        //     }
-        // }
-
         if (changed && node.packageJSON.version === node.packageJSON.remoteVersion)
         {
             const match = node.packageJSON.version.match(/^(?<major>\d+)\.(?<minor>\d+)\.(?<patch>\d+)(?<semver>.*)$/);

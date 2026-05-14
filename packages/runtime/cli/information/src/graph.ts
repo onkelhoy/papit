@@ -87,8 +87,8 @@ export class Graph {
 
         const node = this._nodes.get(packageJSON.name)!;
 
-        const deparray: Array<"dependencies" | "peerDependencies" | "devDependencies"> = ["dependencies", "peerDependencies"]; // devDependencies
-        if (!Arguments.has("exclude-devdependencies")) deparray.push("devDependencies")
+        const deparray: Array<"dependencies" | "peerDependencies" | "devDependencies"> = ["dependencies", "peerDependencies"];
+        if (Arguments.has("include-devdependencies")) deparray.push("devDependencies")
 
         for (const dependencyType of deparray)
         {
@@ -117,16 +117,10 @@ export class Graph {
         const map = new Map<string, string[]>();
         const batches: PackageNode[][] = [];
 
-        const packageNames = new Set(packages.map(p => p.name));
-
         for (const node of packages)
         {
             if (node.name === this.root.name) continue;
-            // direct deps only, scoped to the provided set
-            map.set(
-                node.name,
-                node.parents.map(n => n.name).filter(n => packageNames.has(n))
-            );
+            map.set(node.name, node.ancestors.map(n => n.name));
         }
 
         while (map.size > 0)

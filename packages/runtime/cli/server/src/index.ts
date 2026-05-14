@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { Information } from "@papit/information";
+import { Information, PackageGraph } from "@papit/information";
 
 import { extractAssets, getAssetFolders, Translations } from "components/asset";
 import { close as httpExit, start as httpStart } from "components/http";
@@ -14,6 +14,8 @@ export * from "components/http"
 
 export async function setup() {
 
+    Arguments.set("include-devdependencies", true);
+    PackageGraph.initialize();
     const serverPackageLocation = getPackageLocationFromImportMeta(import.meta.url);
 
     if (serverPackageLocation == null)

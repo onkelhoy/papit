@@ -7,7 +7,7 @@
     "typescript",
     "build"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "prebuild": "node bin/prebuild.mjs",
     "build": "node lib/bin.js --error",
@@ -33,7 +33,7 @@
     }
   },
   "bin": {
-    "papit-build": "./lib/bin.js"
+    "papit-build": "lib/bin.js"
   },
   "author": "henry",
   "private": false,
@@ -48,7 +48,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/onkelhoy/papit.git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
     "directory": "packages/runtime/cli/build"
   },
   "sideEffects": true,
@@ -58,7 +58,7 @@
   "dependencies": {
     "@papit/arguments": "0.0.1",
     "@papit/data-structure": "0.0.1",
-    "@papit/information": "0.0.5",
+    "@papit/information": "0.0.6",
     "@papit/terminal": "0.0.2",
     "@papit/bundle-ts": "0.0.1",
     "@papit/bundle-js": "0.0.2"
@@ -87,5 +87,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }

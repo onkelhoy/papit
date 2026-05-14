@@ -18,7 +18,7 @@
         "component": "npm create @papit -- --component"
     },
     "bin": {
-        "papit-signal-server": "./lib/bundle.js"
+        "papit-signal-server": "lib/bundle.js"
     },
     "main": "./lib/bundle.js",
     "types": "./lib/bundle.d.ts",
@@ -46,7 +46,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "https://github.com/onkelhoy/papit.git",
+        "url": "git+https://github.com/onkelhoy/papit.git",
         "directory": "packages/network/signal-server"
     },
     "sideEffects": true,

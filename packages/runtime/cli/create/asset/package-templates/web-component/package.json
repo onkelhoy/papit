@@ -46,7 +46,7 @@
     },
     "repository": {
         "type": "git",
-        "url": "VARIABLE_GITHUB_REPO.git",
+        "url": "git+VARIABLE_GITHUB_REPO.git",
         "directory": "VARIABLE_LOCAL_DESTINATION"
     },
     "sideEffects": true,
