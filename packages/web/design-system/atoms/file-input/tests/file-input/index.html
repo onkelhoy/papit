@@ -1,0 +1,30 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>file-input test</title>
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- base: no attributes -->
+    <pap-file-input data-testid="base-target"></pap-file-input>
+
+    <!-- with indicator -->
+    <pap-file-input data-testid="indicator-target" indicator></pap-file-input>
+
+    <!-- with dropzone -->
+    <pap-file-input data-testid="dropzone-target" dropzone indicator></pap-file-input>
+
+    <!-- multiple -->
+    <pap-file-input data-testid="multiple-target" multiple indicator></pap-file-input>
+
+    <!-- accept -->
+    <pap-file-input data-testid="accept-target" accept="image/*"></pap-file-input>
+
+    <!-- disabled -->
+    <pap-file-input data-testid="disabled-target" disabled indicator></pap-file-input>
+</body>
+
+</html>

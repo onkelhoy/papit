@@ -1,4 +1,4 @@
-import { html, CustomElement, property, query, bind, debounce, context } from "@papit/web-component";
+import { html, CustomElement, property, query, bind, debounce, context, throttle } from "@papit/web-component";
 
 // --- Consumer ---
 class ContextConsumer extends CustomElement {
@@ -66,6 +66,19 @@ class Component extends CustomElement {
     handleB() {
         if (this.bindCase !== undefined) this.bindCase++;
     }
+
+    // throttle cases
+    @throttle
+    throttleStandard() { this.number++; }
+
+    @throttle(600)
+    throttleDelay() { this.number++; }
+
+    @throttle("throttleNameThrottled")
+    throttleName() { this.number++; }
+
+    @throttle({ delay: 600, name: "throttleFullThrottled" })
+    throttleFull() { this.number++; }
 
 
     // debouce cases

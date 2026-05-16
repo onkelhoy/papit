@@ -38,6 +38,7 @@
 
         pap-icon {
             width: var(--space-4, 1rem);
+            height: var(--space-4, 1rem);
         }
 
         &[part="prev"] {
@@ -211,11 +212,11 @@
         grid-row: 2;
         align-self: start;
 
-        mix-blend-mode: difference;
-        border-color: white;
+        color: var(--shade-1);
+        border-color: var(--shade-1);
 
         pap-icon {
-            color: white;
+            color: var(--shade-1);
         }
     }
 }
@@ -227,7 +228,7 @@
     }
 }
 
-:host([arrow-placement="center-inside"]) {
+:host([arrow-placement="inside"]) {
 
     pap-button[part="prev"],
     pap-button[part="next"] {
@@ -239,8 +240,8 @@
         height: 100%;
 
         pap-icon {
-            color: white;
-            mix-blend-mode: difference;
+            color: var(--shade-1);
+            border-radius: 50%;
         }
     }
 }
@@ -251,15 +252,12 @@
     pap-button[part="next"] {
         grid-row: 4;
         align-self: end;
-        mix-blend-mode: difference;
-        border-color: white;
-        /* margin-inline: var(--space-2, ) */
+        border-color: var(--shade-1);
 
         pap-icon {
-            color: white;
+            color: var(--shade-1);
         }
     }
-
 
     pap-button[part="prev"] {
         grid-column: 2;
@@ -296,8 +294,8 @@
     }
 }
 
-/* ── center-outside: arrows flank the carousel, carousel narrows ─ */
-:host([arrow-placement="center-outside"]) {
+/* ── outside: arrows flank the carousel, carousel narrows ─ */
+:host([arrow-placement="outside"]) {
     [part="carousel"] {
         grid-column: 2 / 5;
     }

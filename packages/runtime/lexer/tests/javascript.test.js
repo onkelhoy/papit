@@ -7,7 +7,7 @@ function sem(input) {
     return lexer(input).filter(t => t.type !== "whitespace");
 }
 
-describe.only("javascript", () => {
+describe("javascript", () => {
 
     describe("basic tokens", () => {
         it("should tokenize identifiers and keywords", () => {

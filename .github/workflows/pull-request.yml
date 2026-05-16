@@ -34,7 +34,7 @@ jobs:
             build-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install # was ci before but esbuild appearently introduced some problems
 
       - name: Build
         env: 

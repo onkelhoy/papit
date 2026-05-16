@@ -284,7 +284,7 @@ describe("Node / Element", () => {
             assert.strictEqual(doc.title, "hejsan banan");
         });
 
-        it.only("should move childNodes from one document body to another", () => {
+        it("should move childNodes from one document body to another", () => {
             const source = new Document();
             source.innerHTML = `
                 <html>
@@ -438,7 +438,7 @@ describe("Node / Element", () => {
         });
     });
 
-    describe.only("edge cases", () => {
+    describe("edge cases", () => {
         let doc;
 
         beforeEach(() => {

@@ -1,0 +1,15 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en-UK"
+    },
+    "file-input": "file-input",
+    "upload": "Upload",
+    "Accepted file types": "Accepted file types: {accept}",
+    "all": "All",
+    "opens in new tab": "opens in new tab {name}",
+    "file size": "file size",
+    "delete": "delete {name}",
+    "Drag and drop your files here": "Drag and drop your files here",
+    "selected": "{count} files selected"
+}
