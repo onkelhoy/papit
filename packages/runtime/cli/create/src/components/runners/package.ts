@@ -106,7 +106,7 @@ export async function packageRunner(
         // process.exit(1);
     }
 
-    const repository = (rootPackage.repository?.url ?? "").replace(/\.git$/, '');
+    const repository = (rootPackage.repository?.url ?? "").replace(/\.git$/, '').replace(/^git\+/, '');
     const lockfile_location = path.join(Information.root.location, "package-lock.json");
 
     Terminal.clearSession(session); // this will also create session
@@ -267,5 +267,6 @@ export async function packageRunner(
     {
         // Terminal.clearSession();
     }
+    Terminal.write(Terminal.yellow(path.relative(Information.root.location, destination)));
     Terminal.write(`${fullName} created\n`);
 }

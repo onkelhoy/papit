@@ -1,13 +1,13 @@
 {
-    "name": "@papit/tooltip",
-    "description": "Elegant and easy to use tooltip covering the required WCAG specs",
+    "name": "@papit/field",
+    "description": "a extendable class for form elements to deal with basics like error and warnings ",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "tooltip"
+        "field"
     ],
-    "version": "0.0.6",
+    "version": "0.0.1",
     "scripts": {
         "build": "npx @papit/build --error",
         "watch": "tsc -w",
@@ -40,27 +40,26 @@
         "registry": "https://registry.npmjs.org/"
     },
     "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/tooltip",
+    "homepage": "git+https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/field",
     "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
+        "url": "git+https://github.com/onkelhoy/papit/issues"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/web/design-system/atoms/tooltip"
+        "directory": "packages/web/design-system/1-foundations/field"
     },
     "sideEffects": true,
     "engines": {
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/placement": "0.0.6",
-        "@papit/web-component": "0.0.6"
+        "@papit/web-component": "*"
     },
     "devDependencies": {
-        "@papit/theme": "0.0.2",
-        "@papit/translator": "0.1.0",
-        "@papit/codeblock": "0.1.6",
+        "@papit/codeblock": "*",
+        "@papit/theme": "*",
+        "@papit/translator": "^0.1.0",
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
         "typescript": "5.9.3"
@@ -73,14 +72,13 @@
     "papit": {
         "publish": true,
         "type": "web-component",
-        "main": "tooltip",
+        "main": "field",
         "htmlprefix": "pap",
         "components": {
-            "tooltip": {
-                "className": "Tooltip",
+            "field": {
+                "className": "Field",
                 "htmlprefix": "pap"
             }
         }
-    },
-    "remoteVersion": "0.0.6"
+    }
 }
