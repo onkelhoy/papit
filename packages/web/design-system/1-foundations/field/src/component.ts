@@ -101,6 +101,7 @@ export class Field extends CustomElementInternals {
         if (this._target)
         {
             // cleanup 
+            this._target.removeEventListener("input", this.handlechange);
             this._target.removeEventListener("change", this.handlechange);
             this._target.removeEventListener("invalid", this.handleinvalid);
         }
@@ -109,6 +110,7 @@ export class Field extends CustomElementInternals {
 
         if (!value) return;
 
+        value.addEventListener("input", this.handlechange);
         value.addEventListener("change", this.handlechange);
         value.addEventListener("invalid", this.handleinvalid);
     }
@@ -215,25 +217,25 @@ export class Field extends CustomElementInternals {
 
             // field-specific translation
             const specific = this.t(`fields.${fieldName}.${mapref}.${customKey}`);
-            if (specific) return specific;
+            if (specific && specific !== `fields.${fieldName}.${mapref}.${customKey}`) return specific;
 
             // global translation
             const global = this.t(`fields.global.${customKey}`);
-            if (global) return global;
+            if (global && global !== `fields.global.${customKey}`) return global;
 
             return customKey;
         }
 
         // 3. Field-specific translation (e.g. fields.email.error.tooShort)
         const specific = this.t(`fields.${fieldName}.${mapref}.${key}`);
-        if (specific) return specific;
+        if (specific && specific !== `fields.${fieldName}.${mapref}.${key}`) return specific;
 
         // 4. Global translation (e.g. fields.global.tooShort)
         const global = this.t(`fields.global.${key}`);
-        if (global) return global;
+        if (global && global !== `fields.global.${key}`) return global;
 
         // 5. Fallback
-        return "";
+        return key;
     }
 
     private isTarget(element: Element | null): element is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
@@ -242,25 +244,26 @@ export class Field extends CustomElementInternals {
     }
 
     protected renderStates() {
-        const errorEntries = Object.entries(this.errorState);
-        const warningEntries = Object.entries(this.warningState);
+        const errorEntries = Object.entries(this.errorState).flatMap(([key, msg]) => msg.map((m, index) => m));
+        const warningEntries = Object.entries(this.warningState).flatMap(([key, msg]) => msg.map((m, index) => m));
 
         if (!errorEntries.length && !warningEntries.length) return null;
+
 
         return html`
             <div part="states">
                 ${errorEntries.length ? html`
                     <ul part="errors">
-                        ${errorEntries.map(([key, msg]) => msg.map((m, index) => html`
-                            <li part="error" data-key="${key}-${index}">${m}</li>
-                        `))}
+                        ${errorEntries.map(value => html`
+                            <li part="error">${value}</li>
+                        `)}
                     </ul>
                 ` : null}
                 ${warningEntries.length ? html`
                     <ul part="warnings">
-                        ${warningEntries.map(([key, msg]) => msg.map((m, index) => html`
-                            <li part="warning" data-key="${key}-${index}">${m}</li>
-                        `))}
+                        ${warningEntries.map(value => html`
+                            <li part="warning">${value}</li>
+                        `)}
                     </ul>
                 ` : null}
             </div>

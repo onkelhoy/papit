@@ -1,5 +1,7 @@
+// graph.ts
 import fs from "node:fs";
 import path from "node:path";
+import { Graph as BaseGraph, GraphNode } from "@papit/data-structure";
 import type { LocalPackage, Package, RootPackage } from "./types";
 import { PackageNode } from "./node";
 import { Cache } from "./cache";
@@ -7,20 +9,26 @@ import { Arguments } from "@papit/arguments";
 
 export class Graph {
     root!: PackageNode<RootPackage>;
+    private graph: BaseGraph<PackageNode, string, string>;
     private _nodes = new Map<string, PackageNode<LocalPackage>>();
 
-    get nodes() { return Array.from(this._nodes.values()) }
+    get nodes() {
+        // Filter root out for external API
+        return Array.from(this._nodes.values()); //.filter(node => node.type !== "root");
+    }
+
     get(name: string) { return this._nodes.get(name) as PackageNode<LocalPackage> }
+
     search(location: string, compare: "start" | "end" = "end") {
         if (compare === "end") return this.nodes.find(node => node.location.endsWith(location));
         return this.nodes.find(node => location.startsWith(node.location));
     }
 
     private scope = "";
-
     public ERROR = false;
 
     constructor() {
+        this.graph = new BaseGraph<PackageNode, string, string>(false);
         const location = process.cwd();
 
         try
@@ -37,31 +45,27 @@ export class Graph {
                 .filter(loc => {
                     if (!loc.endsWith("package.json")) return false;
                     if (/[/\\]asset[/\\]/i.test(loc)) return false;
-
                     return true;
                 })
-                .forEach((localFilePath, index, array) => {
+                .forEach((localFilePath) => {
                     const location = path.dirname(path.join(rootPATH, "packages", localFilePath));
-                    this.add(
-                        location,
-                        "local",
-                        leftovers,
-                    );
+                    this.add(location, "local", leftovers);
                 });
 
+            // Process leftovers (dependencies that weren't found yet)
             leftovers.forEach((dependants, name) => {
                 const node = this.get(name);
                 if (!node) return;
                 dependants.forEach(dep => {
                     const dnode = this.get(dep);
                     if (!dnode) return;
-                    node.children.push(dnode);
-                    dnode.parents.push(node);
-                })
+                    // Add edge in the graph
+                    this.graph.addEdge(node.name, dnode.name, "dependency");
+                });
             });
-        }
-        catch
+        } catch (error)
         {
+            console.error("Error initializing graph:", error);
             this.ERROR = true;
         }
     }
@@ -81,14 +85,13 @@ export class Graph {
                 type,
                 location,
             );
-
             this._nodes.set(packageJSON.name, node);
+            // Add node to graph
+            this.graph.addNode(node);
         }
 
         const node = this._nodes.get(packageJSON.name)!;
-
-        const deparray: Array<"dependencies" | "peerDependencies" | "devDependencies"> = ["dependencies", "peerDependencies"];
-        if (Arguments.has("include-devdependencies")) deparray.push("devDependencies")
+        const deparray = ["dependencies", "peerDependencies", "devDependencies"];
 
         for (const dependencyType of deparray)
         {
@@ -96,13 +99,12 @@ export class Graph {
             {
                 if (!key.startsWith(this.scope)) continue;
 
-                const existingNode = this._nodes.get(key); // ?? this.createNode(scope, );
+                const existingNode = this._nodes.get(key);
                 if (existingNode)
                 {
-                    node.parents.push(existingNode);
-                    existingNode.children.push(node as PackageNode<LocalPackage>);
-                }
-                else if (leftovers)
+                    // Add edge: dependency (key) → dependent (node)
+                    this.graph.addEdge(key, node.name, dependencyType);
+                } else if (leftovers)
                 {
                     if (leftovers.has(key)) leftovers.get(key)?.push(node.name);
                     else leftovers.set(key, [node.name]);
@@ -113,42 +115,120 @@ export class Graph {
         return node;
     }
 
-    public getOrder(packages: PackageNode<LocalPackage>[]) {
-        const map = new Map<string, string[]>();
-        const batches: PackageNode[][] = [];
+    // In your Graph class
+    public getOrder(
+        packages: PackageNode<LocalPackage>[],
+        sortFilter: string[] = ["dependencies", "peerDependencies"],      // Used for topological sorting
+        includeFilter: string[] = ["devDependencies"]   // Used for which nodes to include
+    ): PackageNode[][] {
+        // Get all nodes we want to include
+        const allPackageIds = packages.map(p => p.name);
+        const subgraph = this.graph.subgraph(allPackageIds);
 
-        for (const node of packages)
+        // Get sorted order based on sortFilter (production deps only)
+        const order = subgraph.toposort(sortFilter);
+
+        // Convert to batches (same as before)
+        const batches: PackageNode[][] = [];
+        const processed = new Set<string>();
+
+        for (const id of order)
         {
-            if (node.name === this.root.name) continue;
-            map.set(node.name, node.ancestors.map(n => n.name));
+            const node = this.get(id);
+            if (node && !processed.has(id))
+            {
+                const ancestors = subgraph.ancestors(id, sortFilter);
+                const allDepsProcessed = ancestors.every(ancestor => processed.has(ancestor.id));
+
+                if (allDepsProcessed)
+                {
+                    const batch = order.filter(currentId => {
+                        const currentNode = this.get(currentId);
+                        if (!currentNode || processed.has(currentId)) return false;
+                        const currentAncestors = subgraph.ancestors(currentId, sortFilter);
+                        return currentAncestors.every(ancestor => processed.has(ancestor.id));
+                    });
+
+                    if (batch.length > 0)
+                    {
+                        batches.push(batch.map(id => this.get(id)!));
+                        batch.forEach(id => processed.add(id));
+                    }
+                }
+            }
         }
 
-        while (map.size > 0)
+        // If we need to include devDeps that weren't in the sort order
+        if (includeFilter?.includes("devDependencies"))
         {
-            const batch: PackageNode[] = [];
-
-            const sorted = Array.from(map.keys()).map(name => {
-                const deps = map.get(name)!;
-                return { name, count: deps.filter(dep => map.has(dep)).length };
-            }).sort((a, b) => a.count - b.count);
-
-            let current: number | undefined;
-            for (const item of sorted)
+            const allIncluded = new Set(batches.flatMap(b => b.map(n => n.name)));
+            const missing = packages.filter(p => !allIncluded.has(p.name));
+            if (missing.length > 0)
             {
-                if (current === undefined) current = item.count;
-                if (current !== item.count) break;
-
-                map.delete(item.name);
-                batch.push(this.get(item.name)!);
+                batches.push(missing);
             }
-
-            batches.push(batch);
         }
 
         return batches;
     }
+
+    // public getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[]): PackageNode[][] {
+    //     // Get the subgraph with only the packages we care about
+    //     const packageIds = packages.map(p => p.name);
+    //     const subgraph = this.graph.subgraph(packageIds);
+
+    //     // Get topological order
+    //     const order = subgraph.toposort(typeFilter);
+
+    //     // Convert back to batches (groups of nodes that can be built in parallel)
+    //     const batches: PackageNode[][] = [];
+    //     const processed = new Set<string>();
+
+    //     // Process nodes in topological order, batching those with no unprocessed dependencies
+    //     for (const id of order)
+    //     {
+    //         const node = this.get(id);
+    //         if (node && !processed.has(id))
+    //         {
+    //             // Check if all dependencies of this node are already processed
+    //             const ancestors = subgraph.ancestors(id, typeFilter);
+    //             const allDepsProcessed = ancestors.every(ancestor => processed.has(ancestor.id));
+
+    //             if (allDepsProcessed)
+    //             {
+    //                 // Find all nodes at this level (no unprocessed dependencies)
+    //                 const batch = order.filter(currentId => {
+    //                     const currentNode = this.get(currentId);
+    //                     if (!currentNode || processed.has(currentId)) return false;
+
+    //                     const currentAncestors = subgraph.ancestors(currentId, typeFilter);
+    //                     return currentAncestors.every(ancestor => processed.has(ancestor.id));
+    //                 });
+
+    //                 if (batch.length > 0)
+    //                 {
+    //                     batches.push(batch.map(id => this.get(id)!));
+    //                     batch.forEach(id => processed.add(id));
+    //                 }
+    //             }
+    //         }
+    //     }
+
+    //     return batches;
+    // }
+
+    public getDescendants(name: string, typeFilter?: string[]): PackageNode[] {
+        const descendants = this.graph.descendants(name, typeFilter);
+        return descendants.map(node => this.get(node.id)!);
+    }
+
+    public getAncestors(name: string, typeFilter?: string[]): PackageNode[] {
+        const ancestors = this.graph.ancestors(name, typeFilter);
+        return ancestors.map(node => this.get(node.id)!);
+    }
 }
 
+// PackageGraph remains the same
 export class PackageGraph {
     private static instance = new Graph();
     static initialize() { this.instance = new Graph() }
@@ -159,26 +239,32 @@ export class PackageGraph {
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
     static search(location: string, compare: "start" | "end" = "end") { return this.instance.search(location, compare) }
-    static getOrder(packages: PackageNode<LocalPackage>[]) { return this.instance.getOrder(packages) }
+    static getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[]) {
+        return this.instance.getOrder(packages, typeFilter)
+    }
+    static getDescendants(name: string, typeFilter?: string[]) {
+        return this.instance.getDescendants(name, typeFilter)
+    }
+    static getAncestors(name: string, typeFilter?: string[]) {
+        return this.instance.getAncestors(name, typeFilter)
+    }
 }
 
-// helper functions 
+// Helper functions remain the same...
 function findWorkspaceRoot(startDir: string): string {
     if (process.env.npm_config_local_prefix && isRoot(process.env.npm_config_local_prefix)) return process.env.npm_config_local_prefix;
 
     let dir = startDir;
     while (dir !== path.dirname(dir))
-    { // stop at filesystem root
-        if (isRoot(dir)) return dir; // found monorepo root
-
+    {
+        if (isRoot(dir)) return dir;
         dir = path.dirname(dir);
     }
-    return startDir; // fallback
+    return startDir;
 }
 
 function isRoot(dir: string) {
     if (!fs.existsSync(path.join(dir, "package.json"))) return false;
-
     const pkg = JSON.parse(fs.readFileSync(path.join(dir, "package.json"), "utf-8"));
     return !!pkg.workspaces;
 }

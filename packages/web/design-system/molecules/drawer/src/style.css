@@ -1,0 +1,145 @@
+:host {
+    display: contents;
+}
+
+dialog {
+    /* reset UA dialog defaults that fight full-edge spanning */
+    margin: 0;
+    padding: 0;
+    border: none;
+    max-width: none;
+    max-height: none;
+    z-index: 10;
+    position: relative;
+
+    overflow: hidden;
+    background-color: var(--shade-1);
+    box-sizing: border-box;
+
+    transition:
+        width var(--timing, 180ms),
+        height var(--timing, 180ms),
+        overlay var(--timing, 180ms) allow-discrete,
+        display var(--timing, 180ms) allow-discrete;
+
+    .wrap {
+        padding: var(--space-3, 0.75rem);
+        overflow: auto;
+        width: 100%;
+        height: 100%;
+        box-sizing: border-box;
+    }
+
+
+
+    &:backdrop {
+        background: rgb(0 0 0 / 0.3);
+        opacity: 0;
+        transition:
+            opacity var(--timing-fast, 80ms),
+            overlay var(--timing-fast, 80ms) allow-discrete,
+            display var(--timing-fast, 80ms) allow-discrete;
+    }
+
+    &[open] {
+
+        &::backdrop {
+            opacity: 1;
+        }
+    }
+}
+
+:host([static]) {
+    dialog {
+        position: fixed;
+    }
+}
+
+/* ── Horizontal ── */
+
+:host([placement="left"]) dialog,
+:host([placement="right"]) dialog {
+    top: 0;
+    /* use explicit dvh — don't rely on bottom:0, UA max-height fights it */
+    height: 100%;
+    width: 0;
+
+    .wrap {
+        min-width: max-content;
+    }
+}
+
+:host([static][placement="left"]) dialog,
+:host([static][placement="right"]) dialog {
+    height: 100dvh;
+}
+
+:host([placement="right"]) dialog {
+    right: 0;
+    left: auto;
+}
+
+:host([placement="left"]) dialog {
+    left: 0;
+    right: auto;
+}
+
+:host([placement="right"]) dialog[open],
+:host([placement="left"]) dialog[open] {
+    width: calc-size(auto, size);
+}
+
+/* ── Vertical ── */
+
+:host([placement="top"]) dialog,
+:host([placement="bottom"]) dialog {
+    left: 0;
+    /* explicit dvw for same reason */
+    width: 100%;
+    height: 0;
+
+    .wrap {
+        min-height: max-content;
+    }
+}
+
+:host([static][placement="top"]) dialog,
+:host([static][placement="bottom"]) dialog {
+    width: 100dvw;
+}
+
+:host([placement="top"]) dialog {
+    top: 0;
+    bottom: auto;
+}
+
+:host([placement="bottom"]) dialog {
+    bottom: 0;
+    top: auto;
+}
+
+:host([placement="top"]) dialog[open],
+:host([placement="bottom"]) dialog[open] {
+    height: calc-size(auto, size);
+}
+
+:host(:not([static])) {
+    display: inline;
+    background-color: var(--shade-1);
+}
+
+@starting-style {
+    dialog[open]::backdrop {
+        opacity: 0;
+    }
+
+    :host([placement="right"]) dialog[open],
+    :host([placement="left"]) dialog[open] {
+        width: 0;
+    }
+
+    :host([placement="top"]) dialog[open],
+    :host([placement="bottom"]) dialog[open] {
+        height: 0;
+    }
+}

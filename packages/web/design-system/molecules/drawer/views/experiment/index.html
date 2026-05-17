@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drawer | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Drawer | experiment</h1>
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock>
+            <pap-drawer static id="drawer-right" aria-label="Right drawer">
+                <p>Right drawer content</p>
+                <button commandfor="drawer-right" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer static id="drawer-left" placement="left" aria-label="Left drawer">
+                <p>Left drawer content</p>
+                <button commandfor="drawer-left" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer static id="drawer-top" placement="top" aria-label="Top drawer">
+                <p>Top drawer content</p>
+                <button commandfor="drawer-top" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer static id="drawer-bottom" placement="bottom" aria-label="Bottom drawer">
+                <p>Bottom drawer content</p>
+                <button commandfor="drawer-bottom" command="close">Close</button>
+            </pap-drawer>
+            <!-- Right (default) -->
+            <button commandfor="drawer-right" command="toggle">Open Right</button>
+
+            <!-- Left -->
+            <button commandfor="drawer-left" command="toggle">Open Left</button>
+
+            <!-- Top -->
+            <button commandfor="drawer-top" command="toggle">Open Top</button>
+
+            <!-- Bottom -->
+            <button commandfor="drawer-bottom" command="toggle">Open Bottom</button>
+        </pap-codeblock>
+    </section>
+
+
+    <section>
+        <h2>Non Static</h2>
+        <pap-codeblock class="non-static">
+            <style>
+                pap-codeblock.non-static {
+                    &::part(primary) {
+                        position: relative;
+                        min-height: 20rem;
+                        display: grid;
+
+                        grid-template-rows: auto 1fr auto;
+                        grid-template-columns: auto 1fr auto;
+                    }
+
+                    .center {
+                        grid-column: 2;
+                        grid-row: 2;
+                    }
+
+                    #drawer-right-non {
+                        grid-column: 3;
+                        grid-row: 1/4;
+                    }
+
+                    #drawer-left-non {
+                        grid-column: 1;
+                        grid-row: 1/4;
+                    }
+
+                    #drawer-top-non {
+                        grid-row: 1;
+                        grid-column: 1/4;
+                    }
+
+                    #drawer-bottom-non {
+                        grid-row: 3;
+                        grid-column: 1/4;
+                    }
+                }
+            </style>
+
+            <pap-drawer id="drawer-right-non" aria-label="Right drawer">
+                <p>Right drawer content</p>
+                <button commandfor="drawer-right-non" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer id="drawer-left-non" placement="left" aria-label="Left drawer">
+                <p>Left drawer content</p>
+                <button commandfor="drawer-left-non" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer id="drawer-top-non" placement="top" aria-label="Top drawer">
+                <p>Top drawer content</p>
+                <button commandfor="drawer-top-non" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer id="drawer-bottom-non" placement="bottom" aria-label="Bottom drawer">
+                <p>Bottom drawer content</p>
+                <button commandfor="drawer-bottom-non" command="close">Close</button>
+            </pap-drawer>
+
+            <div class="center">
+                <!-- Right (default) -->
+                <button commandfor="drawer-right-non" command="toggle">Open Right</button>
+
+                <!-- Left -->
+                <button commandfor="drawer-left-non" command="toggle">Open Left</button>
+
+                <!-- Top -->
+                <button commandfor="drawer-top-non" command="toggle">Open Top</button>
+
+                <!-- Bottom -->
+                <button commandfor="drawer-bottom-non" command="toggle">Open Bottom</button>
+            </div>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

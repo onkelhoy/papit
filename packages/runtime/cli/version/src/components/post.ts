@@ -76,8 +76,8 @@ function runner(node: PackageNode, updateDependencies: Map<string, string>) {
         {
             if (node.packageJSON.dependencies?.[name] && node.packageJSON.dependencies[name] !== version)
             {
+                if (node.packageJSON.dependencies[name] !== "*") changed = true;
                 node.packageJSON.dependencies[name] = version;
-                changed = true;
             }
             if (node.packageJSON.devDependencies?.[name] && node.packageJSON.devDependencies[name] !== version)
             {

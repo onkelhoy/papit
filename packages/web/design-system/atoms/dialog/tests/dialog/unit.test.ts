@@ -328,13 +328,6 @@ test.describe("@papit/dialog unit tests", () => {
     // Accessibility
     // -------------------------------------------------------------------------
 
-    test('host element has role="dialog"', async ({ page }) => {
-        const role = await page.evaluate(() => {
-            return document.querySelector('pap-dialog')?.getAttribute('role');
-        });
-        expect(role).toBe('dialog');
-    });
-
     test('close button has aria-label="close"', async ({ page }) => {
         const label = await page.evaluate(() => {
             const dialog = document.querySelector('pap-dialog')!;

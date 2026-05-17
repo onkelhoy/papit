@@ -42,24 +42,34 @@ export class Information {
     static get outFolder() { return this.package.outFolder }
 
     static getBatches(args = Arguments.instance) {
+        // Determine which edge types to include
+        const typeFilter = args.get("type-filter") ?? ["dependencies", "peerDependencies", "devDependencies"];
+
         if (!args.has("individual") && (args.has("all") || Information.package.name === Information.root.name))
         {
-            return PackageGraph.getOrder(PackageGraph.nodes)
+            return PackageGraph.getOrder(PackageGraph.nodes.filter(n => n.type !== "root"), typeFilter);
         }
 
         if (!args.has("individual") && args.has("bloodline"))
         {
-            return PackageGraph.getOrder(Information.package.ancestors.concat(Information.package, ...Information.package.descendants));
+            const ancestors = PackageGraph.getAncestors(Information.package.name, typeFilter);
+            const descendants = PackageGraph.getDescendants(Information.package.name, typeFilter);
+            const nodes = [...ancestors, Information.package, ...descendants];
+            return PackageGraph.getOrder(nodes, typeFilter);
         }
 
         if (!args.has("individual") && args.has("descendants"))
         {
-            return PackageGraph.getOrder(Information.package.descendants.concat(Information.package));
+            const descendants = PackageGraph.getDescendants(Information.package.name, typeFilter);
+            const nodes = [...descendants, Information.package];
+            return PackageGraph.getOrder(nodes, typeFilter);
         }
 
         if (!args.has("individual") && args.has("ancestors"))
         {
-            return PackageGraph.getOrder(Information.package.ancestors.concat(Information.package));
+            const ancestors = PackageGraph.getAncestors(Information.package.name, typeFilter);
+            const nodes = [...ancestors, Information.package];
+            return PackageGraph.getOrder(nodes, typeFilter);
         }
 
         // individual 

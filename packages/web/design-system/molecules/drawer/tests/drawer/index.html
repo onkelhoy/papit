@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drawer test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- Non-modal drawer (pushes content) -->
+    <pap-drawer id="base-target" data-testid="base-target">fallback</pap-drawer>
+
+    <!-- Modal drawer (overlay with backdrop) -->
+    <pap-drawer id="modal-target" data-testid="modal-target" modal>modal drawer</pap-drawer>
+
+    <button id="trigger-right" commandfor="base-target" command="toggle">Toggle right</button>
+    <button id="close-right" commandfor="base-target" command="close">Close right</button>
+
+    <button id="trigger-modal" commandfor="modal-target" command="toggle">Toggle modal</button>
+    <button id="close-modal" commandfor="modal-target" command="close">Close modal</button>
+
+    <pap-drawer id="drawer-left" data-testid="drawer-left" placement="left">left</pap-drawer>
+    <pap-drawer id="drawer-top" data-testid="drawer-top" placement="top">top</pap-drawer>
+    <pap-drawer id="drawer-bottom" data-testid="drawer-bottom" placement="bottom">bottom</pap-drawer>
+
+    <button commandfor="drawer-left" command="show-modal">Open left</button>
+    <button commandfor="drawer-top" command="show-modal">Open top</button>
+    <button commandfor="drawer-bottom" command="show-modal">Open bottom</button>
+</body>
+
+</html>
