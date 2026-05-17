@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Field | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Field | experiment</h1>
+
+    <!-- ============================================================
+     1. Basic wrapper
+     ============================================================ -->
+    <section>
+        <h2>Basic</h2>
+        <p>Wrapping a plain input. No constraints — no errors will fire.</p>
+        <pap-codeblock>
+            <pap-field>
+                <input type="text" name="username" placeholder="Enter username" />
+            </pap-field>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     2. Required — triggers valueMissing
+     ============================================================ -->
+    <section>
+        <h2>Required field</h2>
+        <p>Submit the form empty to trigger a <code style="padding-inline:0.25rem">valueMissing</code> error.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <input type="text" name="username" placeholder="Username" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     3. Email — triggers typeMismatch
+     ============================================================ -->
+    <section>
+        <h2>Type mismatch</h2>
+        <p>Type something that isn't a valid email, then submit.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <input type="email" name="email" placeholder="email@example.com" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     4. Pattern mismatch
+     ============================================================ -->
+    <section>
+        <h2>Pattern</h2>
+        <p>Only lowercase letters and hyphens. Triggers <code style="padding-left:0.25rem">patternMismatch</code>.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <input type="text" name="slug" placeholder="only-lowercase" pattern="[a-z\-]+" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     5. Length constraints — tooShort / tooLong
+     ============================================================ -->
+    <section>
+        <h2>Length constraints</h2>
+        <p>Between 4 and 12 characters. Triggers <code style="padding-inline:0.25rem">tooShort</code> or <code
+                style="padding-left:0.25rem">tooLong</code>.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <input type="text" name="handle" placeholder="4–12 chars" minlength="4" maxlength="12" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     6. Custom error messages via prop
+     ============================================================ -->
+    <section>
+        <h2>Custom error messages</h2>
+        <p>The <code style="padding-inline:0.25rem">error</code> prop overrides the default message per validity key.
+        </p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field id="custom-error-demo">
+                    <input type="email" name="email" placeholder="email@example.com" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+            <script type="module">
+                document.getElementById('custom-error-demo').error = {
+                    valueMissing: 'Please enter your email address.',
+                    typeMismatch: "That doesn't look like a valid email.",
+                };
+            </script>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     7. Error message as a function
+     ============================================================ -->
+    <section>
+        <h2>Error message as function</h2>
+        <p>Values in the <code style="padding-inline:0.25rem">error</code> prop can be functions — useful when the
+            message depends on runtime state.
+        </p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field id="fn-error-demo">
+                    <input type="text" name="code" placeholder="Invite code" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+            <script type="module">
+                document.getElementById('fn-error-demo').error = {
+                    valueMissing: () => `Required — attempted at ${new Date().toLocaleTimeString()}`,
+                };
+            </script>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     8. Custom validity (setCustomValidity / customError)
+     ============================================================ -->
+    <section>
+        <h2>Custom validity</h2>
+        <p>
+            <code style="padding-right:0.25rem">setCustomValidity</code> lets you attach any string key to the input.
+            The <code style="padding-inline:0.25rem">error</code> prop maps that key to a friendly message.
+            Try typing <strong>WRONG</strong> and submitting.
+        </p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field id="custom-validity-demo">
+                    <input type="text" name="invite" placeholder="Enter invite code" />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+            <script type="module">
+                const field = document.getElementById('custom-validity-demo');
+                const input = field.querySelector('input');
+
+                field.error = {
+                    invalid_code: 'That invite code is not recognised.',
+                };
+
+                input.addEventListener('change', () =>
+                {
+                    input.setCustomValidity(input.value === 'WRONG' ? 'invalid_code' : '');
+                });
+            </script>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     9. Warning
+     ============================================================ -->
+    <section>
+        <h2>Warning</h2>
+        <p>
+            Warnings appear when the field is valid but you still want non-blocking feedback.
+            Type at least 8 characters to satisfy <code style="padding-inline:0.25rem">minlength</code>, then change —
+            the warning surfaces.
+        </p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field id="warning-demo">
+                    <input type="text" name="password" placeholder="Password" minlength="8" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+            <script type="module">
+                document.getElementById('warning-demo').warning = {
+                    tooShort: 'Consider a longer password for better security.',
+                };
+            </script>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     10. Textarea
+     ============================================================ -->
+    <section>
+        <h2>Textarea</h2>
+        <p>Works the same with a <code style="padding-inline:0.25rem">&lt;textarea&gt;</code> in the slot.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <textarea name="bio" placeholder="Tell us about yourself" minlength="20" required></textarea>
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     11. Select
+     ============================================================ -->
+    <section>
+        <h2>Select</h2>
+        <p>Also works with a <code style="padding-inline:0.25rem">&lt;select&gt;</code>.</p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field>
+                    <select name="country" required>
+                        <option value="">-- Pick a country --</option>
+                        <option value="se">Sweden</option>
+                        <option value="no">Norway</option>
+                        <option value="dk">Denmark</option>
+                    </select>
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+    </section>
+
+    <!-- ============================================================
+     12. Translation fallback chain
+     ============================================================ -->
+    <section>
+        <h2>Translation</h2>
+        <p>
+            The <code style="padding-inline:0.25rem">name</code> attribute on <code
+                style="padding-inline:0.25rem">&lt;pap-field&gt;</code> scopes the translation
+            lookup to <code style="padding-inline:0.25rem">fields.email.error.*</code> before falling back to <code
+                style="padding-left:0.25rem">fields.global.*</code>.
+        </p>
+        <pap-codeblock>
+            <form action="javascript:void(0)">
+                <pap-field name="email">
+                    <input type="email" name="email" placeholder="email@example.com" required />
+                </pap-field>
+                <button type="submit">Submit</button>
+            </form>
+        </pap-codeblock>
+        <details>
+            <summary>Expected <code style="padding-inline:0.25rem">en.json</code> shape</summary>
+            <pre>
+                <code>
+                    {
+                        "fields": {
+                            "global": {
+                                "valueMissing": "This field is required.",
+                                "typeMismatch": "Please enter a valid value."
+                            },
+                            "email": {
+                                "error": {
+                                    "typeMismatch": "Please enter a valid email address."
+                                }
+                            }
+                        }
+                    }
+                </code>
+            </pre>
+        </details>
+    </section>

@@ -1,0 +1,9 @@
+:host {
+    div[part="states"] {
+        ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+    }
+}

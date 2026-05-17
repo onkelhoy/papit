@@ -1,0 +1,93 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>field test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- base: just the component in DOM -->
+    <pap-field data-testid="base-target">
+        fallback
+    </pap-field>
+
+    <!-- slotted input -->
+    <pap-field data-testid="slotted-input">
+        <input type="text" name="email" />
+    </pap-field>
+
+    <!-- slotted textarea -->
+    <pap-field data-testid="slotted-textarea">
+        <textarea name="message"></textarea>
+    </pap-field>
+
+    <!-- slotted select -->
+    <pap-field data-testid="slotted-select">
+        <select name="country">
+            <option value="">Pick one</option>
+            <option value="se">Sweden</option>
+        </select>
+    </pap-field>
+
+    <!-- name attribute on pap-field (fieldName resolution) -->
+    <pap-field data-testid="named-field" name="myField">
+        <input type="text" />
+    </pap-field>
+
+    <!-- warning configured (no minlength constraint so it won't block) -->
+    <pap-field data-testid="warning-field" id="warning-field">
+        <input type="text" name="password" />
+    </pap-field>
+
+    <!-- form for triggering native constraint validation -->
+    <form action="javascript:void(0)">
+
+        <!-- required field — triggers valueMissing -->
+        <pap-field data-testid="required-field">
+            <input type="text" name="username" required />
+        </pap-field>
+
+        <!-- email field — triggers typeMismatch -->
+        <pap-field data-testid="email-field">
+            <input type="email" name="email" required />
+        </pap-field>
+
+        <!-- custom error string prop -->
+        <pap-field data-testid="custom-error-field" id="custom-error-field">
+            <input type="text" name="custom" required />
+        </pap-field>
+
+        <!-- error prop as function -->
+        <pap-field data-testid="fn-error-field" id="fn-error-field">
+            <input type="text" name="fn-field" required />
+        </pap-field>
+
+        <button type="submit">Submit</button>
+    </form>
+
+
+    <script type="module">
+        // Set up the warning prop (can't do this declaratively with objects)
+        const warningField = document.getElementById('warning-field');
+        warningField.warning = {
+            tooShort: 'Consider a longer value for better security',
+        };
+
+        // Set up custom error string prop
+        const customErrorField = document.getElementById('custom-error-field');
+        customErrorField.error = {
+            valueMissing: 'Custom required message',
+        };
+
+        // Set up function-based error prop
+        const fnErrorField = document.getElementById('fn-error-field');
+        fnErrorField.error = {
+            valueMissing: () => 'Computed required message',
+        };
+    </script>
+</body>
+
+</html>
