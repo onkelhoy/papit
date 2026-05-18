@@ -9,7 +9,7 @@
     ],
     "version": "0.0.1",
     "scripts": {
-        "build": "npx @papit/build -- --error --ancestors",
+        "build": "npx @papit/build --error",
         "watch": "tsc -w",
         "start": "npm run build -- --dev && node ./lib/bundle.js",
         "test": "node --test tests/**/*.test.js",
@@ -18,7 +18,7 @@
         "component": "npm create @papit -- --component"
     },
     "bin": {
-        "papit-signal-server": "lib/bundle.js"
+        "papit-signal-server": "lib/bin.js"
     },
     "main": "./lib/bundle.js",
     "types": "./lib/bundle.d.ts",
@@ -54,6 +54,7 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/meta-json": "^0.0.1",
         "ws": "8.19.0"
     },
     "devDependencies": {
@@ -67,7 +68,6 @@
         "not dead"
     ],
     "papit": {
-        "skip": true,
         "publish": true,
         "type": "node",
         "main": "signal-server",
