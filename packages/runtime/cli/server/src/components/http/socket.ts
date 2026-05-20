@@ -5,7 +5,7 @@ import path from "node:path";
 
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { Information, PackageNode } from "@papit/information";
+import { Information, PackageGraph, PackageNode } from "@papit/information";
 import { getPACKAGE } from "./url";
 
 const connectedClients = new Map<Duplex, PackageNode>();
@@ -105,7 +105,8 @@ export function update(node: PackageNode) {
         connectedClients.forEach((socketNode, socket) => {
             if (socketNode.name !== node.name)
             {
-                if (!node?.descendants.some(n => n.name === socketNode.name)) return;
+                const descendants = PackageGraph.getDescendants(node.name);
+                if (!descendants.some(n => n.name === socketNode.name)) return;
             }
 
             if (!socket || !socket.writable)

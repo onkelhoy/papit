@@ -7,16 +7,16 @@ import { getEntryPoints, getExternals, getTSconfig, getTSlocation, outFolder, so
 import { Remote } from "./remote";
 import type { LocalPackage, RootPackage } from "./types";
 import { Cache } from "./cache";
+import { GraphNode } from "@papit/data-structure";
 
-export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
-    parents: PackageNode<LocalPackage>[] = [];
-    children: PackageNode<LocalPackage>[] = [];
-
+export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> extends GraphNode {
     constructor(
         private _packageJSON: T,
         private _type: "external" | "root" | "local",
         private _location: string,
-    ) { }
+    ) {
+        super(_packageJSON.name);
+    }
 
     get packageJSON() { return this._packageJSON }
     get type() { return this._type }
@@ -101,44 +101,5 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> {
         }
 
         return this._tsconfig;
-    }
-
-    get descendants() {
-        const output: PackageNode[] = [];
-        const visited = new Set<PackageNode>();
-        const stack = [...this.children];
-
-        while (stack.length)
-        {
-            const node = stack.pop()!;
-            if (visited.has(node)) continue;
-
-            visited.add(node);
-            output.push(node);
-            stack.push(...node.children);
-        }
-
-        return output;
-    }
-    get ancestors() {
-        const output: PackageNode[] = [];
-        const visited = new Set<PackageNode>();
-        const stack = [...this.parents];
-
-        while (stack.length)
-        {
-            const node = stack.pop()!;
-            if (visited.has(node)) 
-            {
-                // need to push higher up for dependency order 
-                continue;
-            }
-
-            visited.add(node);
-            output.push(node);
-            stack.push(...node.parents);
-        }
-
-        return output;
     }
 }

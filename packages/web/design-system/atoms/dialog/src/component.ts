@@ -9,38 +9,13 @@ import "@papit/icon";
 import sheet from "./style.css" assert { type: "css" };
 
 /**
- * A wrapper around the native `<dialog>` element that adds slot-based composition,
- * a built-in close button, optional backdrop-click dismissal, and imperative API methods.
- * Supports the WAI-ARIA Dialog (Modal) pattern.
+ * Wrapper around native `<dialog>` with slots, close button, and backdrop click support.
  *
- * @element pap-dialog
- *
- * @slot - Default slot — the main body content of the dialog
- * @slot header - Optional header content; overrides the `header` attribute when provided
- * @slot footer - Optional footer content; hidden (zero padding) when empty
- *
- * @attr {string}  header              - Text rendered as an `<h1>` inside the header area.
- *                                       Ignored when the `header` slot is filled.
- * @attr {boolean} open                - Reflects the open state of the underlying `<dialog>`.
- *                                       Set programmatically or via the public methods.
- * @attr {boolean} close-outside-click - When present, clicking the backdrop closes the dialog.
- *
- * @csspart dialog - The native `<dialog>` element
- * @csspart header - The `<header>` bar containing the title area and close button
- * @csspart main   - The `<main>` scrollable content area
- * @csspart footer - The `<footer>` slot container
- *
- * @method show()        - Opens the dialog as a non-modal (maps to `HTMLDialogElement.show()`)
- * @method showModal()   - Opens the dialog as a modal with backdrop (maps to `HTMLDialogElement.showModal()`)
- * @method showPopover() - (NOT TESTED) Opens the dialog via the Popover API (maps to `HTMLDialogElement.showPopover()`)
- * @method close()       - Closes the dialog (maps to `HTMLDialogElement.close()`)
- *
- * @example Basic modal dialog triggered by a button
+ * @example
  * ```html
  * <button commandfor="my-dialog" command="show-modal">Open</button>
- *
- * <pap-dialog id="my-dialog" header="Confirm action">
- *   <p>Are you sure you want to continue?</p>
+ * <pap-dialog id="my-dialog" header="Confirm">
+ *   <p>Are you sure?</p>
  *   <div slot="footer">
  *     <button commandfor="my-dialog" command="close">Cancel</button>
  *     <button>Confirm</button>
@@ -48,52 +23,37 @@ import sheet from "./style.css" assert { type: "css" };
  * </pap-dialog>
  * ```
  *
- * @example Non-modal dialog opened imperatively
- * ```html
- * <pap-dialog id="info-dialog" header="Info">
- *   <p>This is a non-modal dialog.</p>
- * </pap-dialog>
+ * @slot - Main content
+ * @slot header - Replaces header text
+ * @slot footer - Action buttons (hidden when empty)
  *
- * <script type="module">
- *   document.querySelector('#info-dialog').show();
- * </script>
- * ```
+ * @attr {string} header - Dialog title
+ * @attr {boolean} open - Open state
+ * @attr {boolean} close-outside-click - Close on backdrop click
+ * @attr {boolean} modal - Use showModal() in toggle() (default: true)
  *
- * @example Dismiss on backdrop click
- * ```html
- * <pap-dialog header="Click outside to close" close-outside-click>
- *   <p>Dialog content</p>
- * </pap-dialog>
- * ```
+ * @method show() - Open non-modal
+ * @method showModal() - Open modal with backdrop
+ * @method close() - Close dialog
+ * @method toggle() - Toggle based on `modal` attr
  *
- * @example Custom header via slot
- * ```html
- * <pap-dialog>
- *   <div slot="header">
- *     <pap-icon name="warning"></pap-icon>
- *     <strong>Warning</strong>
- *   </div>
- *   <p>Something went wrong.</p>
- * </pap-dialog>
- * ```
- *
+ * @csspart dialog - Native `<dialog>` element
+ * @csspart header - Header bar
+ * @csspart main - Content area
+ * @csspart footer - Footer container
+ * 
  * @see {@link https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/ WAI-ARIA Dialog (Modal) Pattern}
  */
-
 export class Dialog extends CustomElement {
     static sheet = sheet;
 
     @query({
         selector: "dialog",
         load(this: Dialog, element: HTMLDialogElement) {
-            element.addEventListener("click", this.handledialogclick);
-            element.addEventListener("close", this.handlativedialogclose);
+            element.setAttribute("aria-modal", String(this.ismodal));
         }
     }) private dialogElement!: HTMLDialogElement;
-    @property({
-        rerender: true,
-        attribute: "aria-header"
-    }) header?: string;
+    @property({ rerender: true }) header?: string;
     @property({
         type: Boolean,
         after(this: Dialog) {
@@ -105,7 +65,15 @@ export class Dialog extends CustomElement {
             if (this.dialogElement) this.dialogElement.open = this.open;
         }
     }) open: boolean = false;
-    @property({ type: Boolean, attribute: "close-outside-click" }) closeoutsideclick = false;
+    @property({ type: Boolean, attribute: "close-outside-click" }) protected closeoutsideclick = false;
+    @property({
+        attribute: "modal",
+        type: Boolean,
+        after(this: Dialog) {
+            if (!this.dialogElement) return;
+            this.dialogElement.setAttribute("aria-modal", String(this.ismodal));
+        }
+    }) protected ismodal = true;
 
     private refs: Element[] = [];
     private _internalopen = false;
@@ -114,8 +82,6 @@ export class Dialog extends CustomElement {
 
     connectedCallback(): void {
         super.connectedCallback();
-
-        this.setAttribute("role", "dialog");
 
         const root = this.getRootNode();
         this.refs = [];
@@ -148,11 +114,13 @@ export class Dialog extends CustomElement {
         this._internalopen = true;
         this.open = true;
         this.dialogElement.show();
+        this.ismodal = false;
     }
     public showModal() {
         this._internalopen = true;
         this.open = true;
         this.dialogElement.showModal();
+        this.ismodal = true;
     }
 
     /**
@@ -169,9 +137,12 @@ export class Dialog extends CustomElement {
         this.open = false;
         this.dialogElement.close();
     }
+    public toggle() {
+        this.open ? this.close() : (this.ismodal ? this.showModal() : this.show());
+    }
 
     @bind
-    private handleCommandRefClick(e: Event) {
+    protected handleCommandRefClick(e: Event) {
         const { currentTarget } = e;
         if (!(currentTarget instanceof HTMLElement)) return;
 
@@ -184,17 +155,21 @@ export class Dialog extends CustomElement {
         {
             this.show();
         }
+        else if (command === "toggle")
+        {
+            this.toggle();
+        }
         else if (command === "close")
         {
             this.close();
         }
     }
     @bind
-    private handlePopoverRefClick() {
+    protected handlePopoverRefClick() {
         this.showPopover();
     }
     @bind
-    private handleheaderslot(e: Event) {
+    protected handleheaderslot(e: Event) {
         if (!(e.currentTarget instanceof HTMLSlotElement)) return;
 
         if (e.currentTarget.assignedNodes().length > 0) 
@@ -205,7 +180,7 @@ export class Dialog extends CustomElement {
         this.requestUpdate();
     }
     @bind
-    private handlefooterslot(e: Event) {
+    protected handlefooterslot(e: Event) {
         if (!(e.currentTarget instanceof HTMLSlotElement)) return;
 
         if (e.currentTarget.assignedNodes().length > 0) 
@@ -216,7 +191,7 @@ export class Dialog extends CustomElement {
         this.requestUpdate();
     }
     @bind
-    private handledialogclick(e: MouseEvent) {
+    protected handledialogclick(e: MouseEvent) {
         if (!this.closeoutsideclick) return;
         if (!this.open) return;
 
@@ -234,14 +209,19 @@ export class Dialog extends CustomElement {
         }
     }
     @bind
-    private handlativedialogclose() {
+    protected handledialogclose() {
         this._internalopen = true;
         this.open = false;
     }
 
     render() {
         return html`
-            <dialog id="dialog" part="dialog">
+            <dialog 
+                id="dialog" 
+                part="dialog"
+                @click="${this.handledialogclick}"
+                @close="${this.handledialogclose}"
+            >
                 <header part="header">
                     <div>
                         <slot @slotchange="${this.handleheaderslot}" name="header"></slot>

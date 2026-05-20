@@ -111,20 +111,22 @@ The footer area is hidden (zero padding) when no content is slotted into it, so 
 
 ### Attributes / Properties
 
-| Name                  | Type      | Default | Description                                                             |
-| --------------------- | --------- | ------- | ----------------------------------------------------------------------- |
-| `header`              | `string`  | —       | Text rendered as `<h1>` in the header. Overridden by the `header` slot. |
-| `open`                | `boolean` | `false` | Reflects the open state of the underlying `<dialog>`.                   |
-| `close-outside-click` | `boolean` | `false` | When set, clicking outside the dialog (on the backdrop) closes it.      |
+| Name                  | Type      | Default | Description                                                                  |
+| --------------------- | --------- | ------- | ---------------------------------------------------------------------------- |
+| `header`              | `string`  | —       | Text rendered as `<h1>` in the header. Overridden by the `header` slot.      |
+| `open`                | `boolean` | `false` | Reflects the open state of the underlying `<dialog>`.                        |
+| `close-outside-click` | `boolean` | `false` | When set to `true`, clicking outside the dialog (on the backdrop) closes it. |
+| `modal`               | `boolean` | `true`  | Determines if `toggle()` uses `showModal()` (`true`) or `show()` (`false`).  |
 
 ### Methods
 
-| Method          | Description                              |
-| --------------- | ---------------------------------------- |
-| `show()`        | Opens as a non-modal dialog.             |
-| `showModal()`   | Opens as a modal dialog with a backdrop. |
-| `showPopover()` | Opens via the Popover API. (NOT TESTED)  |
-| `close()`       | Closes the dialog.                       |
+| Method          | Description                                                               |
+| --------------- | ------------------------------------------------------------------------- |
+| `show()`        | Opens as a non-modal dialog.                                              |
+| `showModal()`   | Opens as a modal dialog with a backdrop.                                  |
+| `showPopover()` | Opens via the Popover API. (NOT TESTED)                                   |
+| `close()`       | Closes the dialog.                                                        |
+| `toggle()`      | Toggles between open and closed. Uses `modal` property to determine mode. |
 
 ### Slots
 
@@ -147,11 +149,12 @@ The footer area is hidden (zero padding) when no content is slotted into it, so 
 
 The component integrates with the native `command` / `commandfor` attribute pattern:
 
-| `command` value | Effect                         |
-| --------------- | ------------------------------ |
-| `show-modal`    | Opens the dialog as a modal.   |
-| `show`          | Opens the dialog as non-modal. |
-| `close`         | Closes the dialog.             |
+| `command` value | Effect                                                            |
+| --------------- | ----------------------------------------------------------------- |
+| `show-modal`    | Opens the dialog as a modal.                                      |
+| `show`          | Opens the dialog as non-modal.                                    |
+| `toggle`        | Toggles the dialog. Uses the `modal` attribute to determine mode. |
+| `close`         | Closes the dialog.                                                |
 
 The component also responds to `popovertarget` to open via the Popover API.
 
@@ -161,9 +164,12 @@ The component also responds to `popovertarget` to open via the Popover API.
 
 `pap-dialog` follows the [WAI-ARIA Dialog (Modal) Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/):
 
-- The host element carries `role="dialog"`.
-- The built-in close button receives `autofocus` when the dialog opens, keeping focus inside the modal.
-- `showModal()` traps focus within the dialog and blocks interaction with inert background content, matching the native `<dialog>` behaviour.
+- The native `<dialog>` element provides implicit `role="dialog"` for proper semantics.
+- The `aria-modal` attribute is automatically set to `true` when using `showModal()`.
+- When opened as a modal (`showModal()`), focus is automatically managed:
+  - Focus moves to the built-in close button for immediate keyboard access
+  - This predictable behavior helps users understand how to close the dialog
+  - Users can also press the `Escape` key to close, as provided by the native `<dialog>`
 - The backdrop provides a visual overlay; combine with `close-outside-click` for pointer-driven dismissal.
 
 ---

@@ -14,8 +14,7 @@ export * from "components/http"
 
 export async function setup() {
 
-    Arguments.set("include-devdependencies", true);
-    PackageGraph.initialize();
+    // PackageGraph.initialize();
     const serverPackageLocation = getPackageLocationFromImportMeta(import.meta.url);
 
     if (serverPackageLocation == null)

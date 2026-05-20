@@ -54,10 +54,19 @@ export class LinkedList<T> implements ILinkedList<T, ListNode<T>> {
     }
 
     append(value: T): void {
-        const node = this.create(value);
+        const node = new ListNode<T>(value);
 
-        this.rear!.next = node;
-        this.rear = node;
+        if (!this.front)
+        {
+            // First node
+            this.front = node;
+            this.rear = node;
+        } else
+        {
+            // Add to end
+            this.rear!.next = node;
+            this.rear = node;
+        }
         this._size++;
     }
     insert(value: T, target?: T | undefined): void {

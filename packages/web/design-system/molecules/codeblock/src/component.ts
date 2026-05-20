@@ -157,13 +157,13 @@ export class Codeblock extends CustomElement {
             <div part="display">
                 <header>
                     <pap-tooltip>
-                        <span>${this.t("Theme Toggle")}</span>
-                        <pap-switch slot="target" @change="${this.handleswitch}"></pap-switch>
+                        <span id="theme-toggle">${this.t("Theme Toggle")}</span>
+                        <pap-switch aria-labelledby="theme-toggle" slot="target" @change="${this.handleswitch}"></pap-switch>
                     </pap-tooltip>
 
                     <pap-tooltip placement="top-right">
-                        <span>${this.t("Copy Code")}</span>
-                        <button slot="target" @click="${this.handlecopy}">
+                        <span id="copy-code">${this.t("Copy Code")}</span>
+                        <button aria-labelledby="copy-code" slot="target" @click="${this.handlecopy}">
                             <pap-icon name="done"></pap-icon>
                             <pap-icon name="copy"></pap-icon>
                         </button>
@@ -178,10 +178,10 @@ export class Codeblock extends CustomElement {
             </div>
 
             <div part="code">
-                <pre><code>${unsafeHTML(this.content)}</code></pre>
+                <pre><code aria-hidden="true">${unsafeHTML(this.content)}</code></pre>
                 <details>
-                    <summary>
-                        <pap-icon name="chevron-down"></pap-icon>
+                    <summary aria-label="${this.t("Expand to see more")}">
+                        <pap-icon aria-hidden="true" name="chevron-down"></pap-icon>
                     </summary>
                 </details>
             </div>
