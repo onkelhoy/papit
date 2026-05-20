@@ -73,6 +73,9 @@ export class Tabs extends CustomElement {
     @property({
         context: true,
         attribute: "value",
+        after(this: Tabs) {
+            this.dispatchEvent(new Event("change"));
+        }
     }) value?: string;
 
     @property({ context: true }) mode: "scroll" | "default" = "default"; // TODO 

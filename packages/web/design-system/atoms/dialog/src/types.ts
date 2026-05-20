@@ -1,1 +1,1 @@
-export type ClickEvent = { timestamp: number };
+export const FOCUSABLE = '[autofocus], button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"]), [data-focusable]';

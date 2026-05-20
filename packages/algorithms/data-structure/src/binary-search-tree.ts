@@ -59,12 +59,12 @@ export class BinarySearchTree<T> {
         return current;
     }
 
-    find(value: T): BSTNode<T> | undefined {
+    find(value: T, compare?: (a: T, b: T) => number): BSTNode<T> | undefined {
         let current = this.root;
 
         while (current)
         {
-            const cmp = this.compare(value, current.value);
+            const cmp = compare ? compare(value, current.value) : this.compare(value, current.value);
 
             if (cmp === 0) return current;
             current = cmp < 0 ? current.left : current.right;
@@ -150,4 +150,55 @@ export class BinarySearchTree<T> {
         return true;
     }
 
+    private preDFS(order: T[], target?: BSTNode<T>) {
+        if (!target) return order;
+
+        // Pre-order: root, left, right
+        order.push(target.value);
+        this.preDFS(order, target.left);
+        this.preDFS(order, target.right);
+
+        return order;
+    }
+
+    private postDFS(order: T[], target?: BSTNode<T>) {
+        if (!target) return order;
+
+        // Post-order: left, right, root
+        this.postDFS(order, target.left);
+        this.postDFS(order, target.right);
+        order.push(target.value);
+
+        return order;
+    }
+
+    private inDFS(order: T[], target?: BSTNode<T>) {
+        if (!target) return order;
+
+        // In-order: left, root, right
+        this.inDFS(order, target.left);
+        order.push(target.value);
+        this.inDFS(order, target.right);
+
+        return order;
+    }
+
+    DFS(type: "pre" | "post" | "in" = "pre") {
+        const order: T[] = [];
+
+        switch (type)
+        {
+            case "pre":
+                this.preDFS(order, this.root);
+                break;
+            case "post":
+                this.postDFS(order, this.root);
+                break;
+            case "in":
+                this.inDFS(order, this.root);
+                break;
+        }
+
+        return order;
+    }
 }

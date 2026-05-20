@@ -29,27 +29,23 @@
             background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
             border-bottom: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
 
-            pap-tooltip {
-                margin-left: auto;
-            }
-
             pap-switch {
+                margin-left: auto;
                 --padding: 2px;
-                --size: 12px;
+                --size: var(--space-3, 0.75rem);
+                width: var(--space-7, 1.75rem);
             }
 
-            button {
-                background: none;
+            pap-button {
+                margin-left: auto;
                 border: none;
                 display: flex;
+                justify-content: center;
+                align-items: center;
 
                 cursor: pointer;
                 gap: var(--space-1, 0.25rem);
-                padding: var(--space-2, 0.5rem);
-
-                &:hover {
-                    background-color: var(--hover);
-                }
+                border-radius: 0;
 
                 pap-icon {
                     margin: auto;
@@ -221,7 +217,7 @@
                 padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
             }
 
-            color: var(--text, light-dark(oklch(10% 0 0), oklch(95% 0 0)));
+            color: contrast-color(var(--background));
         }
 
         pap-splitter::part(secondary) {

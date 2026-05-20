@@ -1,0 +1,45 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>table-of-content test</title>
+    <script type="module" defer src="main.js"></script>
+    <style>
+        section {
+            min-height: 100vh;
+            padding: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <pap-table-of-content data-testid="base-target">
+        fallback
+    </pap-table-of-content>
+
+    <main>
+        <section>
+            <!-- No h1 — h2s are the hierarchy roots -->
+            <h2 data-testid="h2-a">Getting Started</h2>
+            <p>Content for getting started.</p>
+            <h3 data-testid="h3-a">Prerequisites</h3>
+            <p>Content for prerequisites.</p>
+            <h3 data-testid="h3-b">Installation</h3>
+            <p>Content for installation.</p>
+        </section>
+        <section>
+            <h2 data-testid="h2-b" data-icon="code">API Reference</h2>
+            <p>Content for API reference.</p>
+            <h4 data-testid="h4-a">Methods</h4>
+            <p>Content for methods.</p>
+        </section>
+        <section>
+            <!-- These must be excluded by the default query -->
+            <h2 aria-hidden="true" data-testid="hidden-heading">Hidden heading</h2>
+            <h2 data-skipped data-testid="skipped-heading">Skipped heading</h2>
+        </section>
+    </main>
+</body>
+
+</html>

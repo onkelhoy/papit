@@ -4,7 +4,7 @@
 
 ```bash
 npm install @papit/web-component
-````
+```
 
 ## Your First Component
 
@@ -31,8 +31,9 @@ customElements.define("hello-world", HelloWorld);
 
 ---
 
-## Usage in React 
-> NOTE: react suppoet is not yet implemented 
+## Usage in React
+
+> NOTE: react suppoet is not yet implemented
 
 ```jsx
 import { HelloWorld } from "@papit/web-component/react";

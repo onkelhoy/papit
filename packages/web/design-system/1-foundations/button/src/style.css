@@ -1,6 +1,5 @@
 :host {
     --btn-background: transparent;
-    --btn-color: var(--text);
 
     -webkit-user-select: none;
     /* Safari */
@@ -19,19 +18,21 @@
     border-radius: var(--space-1, 4px);
 
     background-color: var(--btn-background);
-    color: var(--btn-color);
+    color: contrast-color(var(--btn-background));
 
-    --btn-hover: color-mix(var(--btn-background), 10% var(--shade-0));
-    --btn-active: color-mix(var(--btn-background), 20% var(--shade-0));
+    --btn-hover: color-mix(var(--btn-background), 5% var(--shade-0));
+    --btn-active: color-mix(var(--btn-background), 10% var(--shade-0));
 }
 
 :host(:hover) {
     background-color: var(--btn-hover);
+    color: contrast-color(var(--btn-hover));
 }
 
 :host(:state(active)),
 :host(:active) {
     background-color: var(--btn-active);
+    color: contrast-color(var(--btn-active));
 }
 
 :host(:focus-visible) {
@@ -42,43 +43,36 @@
 :host([color="primary"]) {
     --btn-background: var(--button-primary, var(--primary));
     --btn-border: var(--button-primary, var(--primary));
-    --btn-color: var(--button-primary-color, var(--text-inverse));
 }
 
 :host([color="secondary"]) {
     --btn-background: var(--button-secondary, var(--secondary));
     --btn-border: var(--button-secondary, var(--secondary));
-    --btn-color: var(--button-secondary-color, var(--text));
 }
 
 :host([color="tiertery"]) {
     --btn-background: var(--button-tiertery, var(--tiertery));
     --btn-border: var(--button-tiertery, var(--tiertery));
-    --btn-color: var(--button-tiertery-color, var(--text));
 }
 
 :host([color="success"]) {
     --btn-background: var(--button-success, var(--success));
     --btn-border: var(--button-success, var(--success));
-    --btn-color: var(--button-success-color, var(--text-inverse));
 }
 
 :host([color="information"]) {
     --btn-background: var(--button-information, var(--info));
     --btn-border: var(--button-information, var(--info));
-    --btn-color: var(--button-information-color, var(--text-inverse));
 }
 
 :host([color="error"]) {
     --btn-background: var(--button-error, var(--error));
     --btn-border: var(--button-error, var(--error));
-    --btn-color: var(--button-error-color, var(--text-inverse));
 }
 
 :host([color="warning"]) {
     --btn-background: var(--button-warning, var(--warning));
     --btn-border: var(--button-warning, var(--warning));
-    --btn-color: var(--button-warning-color, var(--text-inverse));
 }
 
 /* variant */
@@ -87,12 +81,10 @@
 }
 
 :host([variant="outline"]) {
-    --btn-color: var(--text);
     --btn-background: transparent;
 }
 
 :host([variant="clear"]) {
-    --btn-color: var(--text);
     --btn-background: transparent;
     --btn-border: transparent;
 }

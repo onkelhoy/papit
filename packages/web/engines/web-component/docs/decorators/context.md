@@ -1,6 +1,5 @@
 **`docs/decorators/context.md`**
 
-````md
 # `@context` — Property decorator
 
 > File: `docs/decorators/context.md`  
@@ -92,4 +91,3 @@ Every time `hello` changes on the provider, it dispatches a `context-hello` even
 ## Related
 
 - [`@property`](./property.md) — `context: true` option makes a property broadcast changes.
-````

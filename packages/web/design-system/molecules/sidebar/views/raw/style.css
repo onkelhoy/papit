@@ -1,0 +1,34 @@
+@import "@papit/theme";
+
+body {
+    margin: 0;
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 5rem 150vh 5rem;
+
+    grid-template-areas:
+        "sidebar header"
+        "sidebar article"
+        "sidebar footer";
+
+    header {
+        grid-area: header;
+        background-color: orange;
+    }
+
+    pap-sidebar {
+        grid-area: sidebar;
+    }
+
+    article {
+        grid-area: article;
+        background-color: cornflowerblue;
+    }
+
+    footer {
+        background-color: rgb(88, 88, 88);
+        grid-area: footer;
+        color: white;
+    }
+}

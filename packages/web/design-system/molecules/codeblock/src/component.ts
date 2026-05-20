@@ -1,12 +1,19 @@
 // import statements 
 // system 
 import { bind, CustomElement, debounce, html, property, query, unsafeHTML } from "@papit/web-component";
+
+// foundations
 import "@papit/icon";
+import "@papit/tooltip";
+import "@papit/button";
+
+// atoms 
 import "@papit/splitter";
 import "@papit/switch";
-import "@papit/tooltip";
-import { useTranslator, translator, TransalatorFn, translate } from "@papit/translator/browser";
 import { Switch } from "@papit/switch";
+
+// tools 
+import { useTranslator, translator, TransalatorFn, translate } from "@papit/translator/browser";
 
 // local 
 import sheet from "./style.css" assert { type: "css" };
@@ -22,7 +29,7 @@ export class Codeblock extends CustomElement {
     // static sheets = [githubTheme];
 
     // properties 
-    @query("div[part=\"display\"] button") copyButton!: HTMLButtonElement;
+    @query("div[part=\"display\"] pap-button") copyButton!: HTMLButtonElement;
 
     /**
      * Background style for the preview area.
@@ -156,18 +163,20 @@ export class Codeblock extends CustomElement {
         return html`
             <div part="display">
                 <header>
-                    <pap-tooltip>
+                    <pap-tooltip id="theme-toggle-tooltip" placement="top">
                         <span id="theme-toggle">${this.t("Theme Toggle")}</span>
-                        <pap-switch aria-labelledby="theme-toggle" slot="target" @change="${this.handleswitch}"></pap-switch>
                     </pap-tooltip>
+                    
+                    <pap-switch popovertarget="theme-toggle-tooltip" aria-labelledby="theme-toggle" slot="target" @change="${this.handleswitch}"></pap-switch>
 
-                    <pap-tooltip placement="top-right">
-                        <span id="copy-code">${this.t("Copy Code")}</span>
-                        <button aria-labelledby="copy-code" slot="target" @click="${this.handlecopy}">
-                            <pap-icon name="done"></pap-icon>
-                            <pap-icon name="copy"></pap-icon>
-                        </button>
+                    <pap-tooltip id="copy-code-tooltip" placement="top-right">
+                        <span >${this.t("Copy Code")}</span>
                     </pap-tooltip>
+                    
+                    <pap-button variant="clear" popovertarget="copy-code-tooltip" aria-labelledby="copy-code" slot="target" @click="${this.handlecopy}">
+                        <pap-icon aria-hidden="true" name="done"></pap-icon>
+                        <pap-icon aria-hidden="true" name="copy"></pap-icon>
+                    </pap-button>
                 </header>
                 <pap-splitter value="90">
                     <section slot="primary" part="primary">

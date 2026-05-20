@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Popover | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Popover | experiment</h1>
+    <section>
+        <h2>Default trigger</h2>
+        <pap-codeblock>
+            <pap-popover id="popover1">Hello im popover1</pap-popover>
+            <button popovertarget="popover1">trigger</button>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Toggle Trigger</h2>
+        <pap-codeblock>
+            <pap-popover id="popover2">Hello im popover2</pap-popover>
+            <button popovertarget="popover2" popovertargetaction="toggle">trigger</button>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Show/Hide Trigger</h2>
+        <pap-codeblock>
+            <pap-popover id="popover3">Hello im popover3</pap-popover>
+            <button popovertarget="popover3" popovertargetaction="show">show</button>
+            <button popovertarget="popover3" popovertargetaction="hide">hide</button>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Hover Trigger</h2>
+        <pap-codeblock>
+            <pap-popover id="popover4">Hello im popover4</pap-popover>
+            <button popovertarget="popover4" popovertargetaction="hover">trigger</button>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Placement</h2>
+        <pap-codeblock>
+            <pap-popover placement="top" id="popover5">top<br /><br /><br /></pap-popover>
+            <pap-popover placement="top-left" id="popover5">top-left</pap-popover>
+            <pap-popover placement="top-right" id="popover5">top-right</pap-popover>
+            <pap-popover placement="top-center" id="popover5">top-center</pap-popover>
+
+            <pap-popover placement="bottom" id="popover5"><br /><br />bottom</pap-popover>
+            <pap-popover placement="bottom-left" id="popover5">bottom-left</pap-popover>
+            <pap-popover placement="bottom-right" id="popover5">bottom-right</pap-popover>
+            <pap-popover placement="bottom-center" id="popover5">bottom-center</pap-popover>
+
+            <pap-popover placement="left-top" id="popover5">left-top</pap-popover>
+            <pap-popover placement="left-bottom" id="popover5">left-bottom</pap-popover>
+            <pap-popover placement="left-center" id="popover5">left-center ------</pap-popover>
+            <pap-popover placement="left" id="popover5">left</pap-popover>
+
+            <pap-popover placement="right-top" id="popover5">right-top</pap-popover>
+            <pap-popover placement="right-bottom" id="popover5">right-bottom</pap-popover>
+            <pap-popover placement="right-center" id="popover5">-------- right-center</pap-popover>
+            <pap-popover placement="right" id="popover5">right</pap-popover>
+
+            <button style="padding:8rem;margin:auto;" popovertarget="popover5"
+                popovertargetaction="toggle">trigger</button>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

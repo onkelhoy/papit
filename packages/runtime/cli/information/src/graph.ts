@@ -60,7 +60,7 @@ export class Graph {
                     const dnode = this.get(dep);
                     if (!dnode) return;
                     // Add edge in the graph
-                    this.graph.addEdge(node.name, dnode.name, "dependency");
+                    this.graph.addEdge(node.name, dnode.name, "dependencies");
                 });
             });
         } catch (error)
@@ -171,51 +171,6 @@ export class Graph {
 
         return batches;
     }
-
-    // public getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[]): PackageNode[][] {
-    //     // Get the subgraph with only the packages we care about
-    //     const packageIds = packages.map(p => p.name);
-    //     const subgraph = this.graph.subgraph(packageIds);
-
-    //     // Get topological order
-    //     const order = subgraph.toposort(typeFilter);
-
-    //     // Convert back to batches (groups of nodes that can be built in parallel)
-    //     const batches: PackageNode[][] = [];
-    //     const processed = new Set<string>();
-
-    //     // Process nodes in topological order, batching those with no unprocessed dependencies
-    //     for (const id of order)
-    //     {
-    //         const node = this.get(id);
-    //         if (node && !processed.has(id))
-    //         {
-    //             // Check if all dependencies of this node are already processed
-    //             const ancestors = subgraph.ancestors(id, typeFilter);
-    //             const allDepsProcessed = ancestors.every(ancestor => processed.has(ancestor.id));
-
-    //             if (allDepsProcessed)
-    //             {
-    //                 // Find all nodes at this level (no unprocessed dependencies)
-    //                 const batch = order.filter(currentId => {
-    //                     const currentNode = this.get(currentId);
-    //                     if (!currentNode || processed.has(currentId)) return false;
-
-    //                     const currentAncestors = subgraph.ancestors(currentId, typeFilter);
-    //                     return currentAncestors.every(ancestor => processed.has(ancestor.id));
-    //                 });
-
-    //                 if (batch.length > 0)
-    //                 {
-    //                     batches.push(batch.map(id => this.get(id)!));
-    //                     batch.forEach(id => processed.add(id));
-    //                 }
-    //             }
-    //         }
-    //     }
-
-    //     return batches;
-    // }
 
     public getDescendants(name: string, typeFilter?: string[]): PackageNode[] {
         const descendants = this.graph.descendants(name, typeFilter);

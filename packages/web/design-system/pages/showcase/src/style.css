@@ -1,0 +1,43 @@
+:host {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 5rem 1fr 5rem;
+
+    grid-template-areas:
+        "sidebar header"
+        "sidebar article"
+        "sidebar footer";
+
+    header {
+        grid-area: header;
+        border-bottom: 1px solid var(--background-dark);
+
+        display: flex;
+        align-items: center;
+        padding: var(--space-4, 1rem);
+
+        pap-theme-picker {
+            margin-left: auto;
+
+            &::part(trigger) {
+                border-radius: 50%;
+            }
+        }
+    }
+
+    pap-sidebar {
+        grid-area: sidebar;
+        border-right: 1px solid var(--background-dark);
+    }
+
+    article {
+        grid-area: article;
+        background-color: var(--background-dark);
+    }
+
+    footer {
+        grid-area: footer;
+        border-top: 1px solid var(--background-dark);
+    }
+}

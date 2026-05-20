@@ -163,7 +163,6 @@ class Graph<N extends Node<ID>, ID = string, EdgeType = string> {
     }
 }
 
-
 export {
     Graph,
     Edge as GraphEdge,

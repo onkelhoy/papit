@@ -54,6 +54,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@papit/button": "^0.1.2",
     "@papit/data-structure": "0.0.2",
     "@papit/icon": "0.1.5",
     "@papit/lexer": "0.0.1",

@@ -3,7 +3,6 @@
 import { bind, CustomElement, debounce, html, property } from "@papit/web-component";
 
 // local
-import sheet from "./style.css" assert { type: "css" };
 import { Treeitem } from "components/treeitem";
 
 /**
@@ -50,7 +49,6 @@ import { Treeitem } from "components/treeitem";
  * @see {@link https://www.w3.org/WAI/ARIA/apg/patterns/treeview/ APG: Tree View Pattern}
  */
 export class Treeview extends CustomElement {
-    static sheet = sheet;
 
     /**
      * When true, only elements explicitly marked with `role="treeitem"` are
@@ -106,9 +104,12 @@ export class Treeview extends CustomElement {
         if (from && this.contains(from))
         {
             this.tabIndex = 0; // restore so browser continues past host
+            this.dispatchEvent(new Event("inactive"));
             return;
         }
         this.tabIndex = -1;
+        this.dispatchEvent(new Event("active"));
+
         const active = this.getFocus();
         if (active !== -1)
         {
@@ -129,6 +130,7 @@ export class Treeview extends CustomElement {
         if (!this.contains(e.relatedTarget as Node))
         {
             this.tabIndex = 0;
+            this.dispatchEvent(new Event("inactive"));
         }
     }
 
@@ -242,6 +244,7 @@ export class Treeview extends CustomElement {
         const prev = this.getFocus();
         if (prev !== -1) this.nodes[prev].tabIndex = -1;
         this.tabIndex = -1; // step aside while navigating
+        this.dispatchEvent(new Event("active"));
         this.nodes[index].tabIndex = 0;
         this.nodes[index].focus();
     }
@@ -379,6 +382,9 @@ export class Treeview extends CustomElement {
             {
                 this.select(focus);
             }
+
+            el.dispatchEvent(new Event("enter"));
+            return;
         }
         else if (/ /.test(e.key))
         {

@@ -2,7 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { Information, PackageGraph } from "@papit/information";
+import { Information } from "@papit/information";
 
 import { extractAssets, getAssetFolders, Translations } from "components/asset";
 import { close as httpExit, start as httpStart } from "components/http";
@@ -12,9 +12,7 @@ import { getPackageLocationFromImportMeta } from "components/http/url";
 
 export * from "components/http"
 
-export async function setup() {
-
-    // PackageGraph.initialize();
+export async function meta() {
     const serverPackageLocation = getPackageLocationFromImportMeta(import.meta.url);
 
     if (serverPackageLocation == null)
@@ -102,6 +100,29 @@ export async function setup() {
 
         }
     }
+
+    return {
+        importmap,
+        importmapFolder,
+        createdImportMapFolder,
+        serverPackageLocation,
+        translations,
+        assets,
+        themes
+    }
+}
+
+export async function setup() {
+
+    const {
+        importmap,
+        importmapFolder,
+        createdImportMapFolder,
+        serverPackageLocation,
+        translations,
+        assets,
+        themes
+    } = await meta();
 
     const shutdown = () => {
         if (importmapFolder && createdImportMapFolder && !Arguments.has("import-map"))

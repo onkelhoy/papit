@@ -87,6 +87,14 @@ function runner(node, extraEnv = {}, extraArgs = []) {
     {
         for (const node of batch)
         {
+
+            if (node.packageJSON.papit.skip)
+            {
+                Terminal.write(Terminal.blue("●"), node.name, Terminal.green("skipped"));
+                log({ name: node.name, status: "skipped" }, testresultstream);
+                continue;
+            }
+
             // Skip unchanged packages in CI
             if (Arguments.has("ci") || process.env.CI)
             {

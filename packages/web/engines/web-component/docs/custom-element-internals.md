@@ -11,6 +11,7 @@
 The `CustomElementInternals` base class extends [`CustomElement`](./custom-element.md) with **Form-associated Custom Elements** (FACE) support via [`ElementInternals`](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals).
 
 This enables:
+
 - Native form participation (`formAssociated = true`)
 - Synchronization with `<form>` behavior (submission, reset, validation)
 - Accessibility through `aria-disabled` integration
@@ -42,7 +43,7 @@ export class CustomElementInternals extends CustomElement {
   protected reportValidity(): boolean { ... }
   protected setValidity(flags?: ValidityStateFlags, message?: string, anchor?: HTMLElement) { ... }
 }
-````
+```
 
 ---
 
@@ -56,9 +57,9 @@ static formAssociated = true;
 
 This signals the browser that your custom element:
 
-* Can be placed inside a `<form>`
-* Will participate in submission and reset events
-* Can provide custom validation logic
+- Can be placed inside a `<form>`
+- Will participate in submission and reset events
+- Can provide custom validation logic
 
 Internally, it calls:
 
@@ -81,15 +82,15 @@ disabled?: boolean;
 
 Behaves as:
 
-* Boolean type → coerced to `true`/`false`
-* Syncs with `aria-disabled` for accessibility
-* Automatically removed from DOM when `false`
-* Does **not** trigger re-renders (`rerender: false`) to avoid unnecessary DOM updates
+- Boolean type → coerced to `true`/`false`
+- Syncs with `aria-disabled` for accessibility
+- Automatically removed from DOM when `false`
+- Does **not** trigger re-renders (`rerender: false`) to avoid unnecessary DOM updates
 
 The value is updated when:
 
-* The form disables the element via `formDisabledCallback()`
-* You set `this.disabled = true` manually
+- The form disables the element via `formDisabledCallback()`
+- You set `this.disabled = true` manually
 
 ---
 
@@ -147,7 +148,7 @@ class MyInput extends CustomElementInternals {
           this.value = (e.target as HTMLInputElement).value;
           this._internals.setFormValue(this.value);
         }}
-      >
+      />
     `;
   }
 }
@@ -159,17 +160,17 @@ customElements.define("my-input", MyInput);
 
 ## 7. Integration Tips
 
-* Always call `this._internals.setFormValue()` to set the value submitted with the form
-* Use `setValidity()` to show error messages before submission
-* Combine with `@property` decorators for reactivity
-* Works with both `shadowRoot` and light DOM
+- Always call `this._internals.setFormValue()` to set the value submitted with the form
+- Use `setValidity()` to show error messages before submission
+- Combine with `@property` decorators for reactivity
+- Works with both `shadowRoot` and light DOM
 
 ---
 
 ## 8. Related Links
 
-* [MDN: ElementInternals API](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals)
-* [CustomElement](./custom-element.md)
-* [HTML Tagged Templates](./html/README.md)
-* [Parts System](./parts.md)
-* [Decorators](./decorators/README.md)
+- [MDN: ElementInternals API](https://developer.mozilla.org/en-US/docs/Web/API/ElementInternals)
+- [CustomElement](./custom-element.md)
+- [HTML Tagged Templates](./html/README.md)
+- [Parts System](./parts.md)
+- [Decorators](./decorators/README.md)
