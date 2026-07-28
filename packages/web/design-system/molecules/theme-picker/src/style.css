@@ -1,7 +1,7 @@
 :host {
-    display: contents;
+    display: block;
 
-    button {
+    /* button {
         width: var(--size, var(--space-6, 24px));
         height: var(--size, var(--space-6, 24px));
         display: flex;
@@ -16,6 +16,10 @@
         &:hover {
             background-color: color-mix(in oklch, var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0))) 40%, transparent);
         }
+    } */
+
+    pap-button {
+        padding: var(--space-6, 24px);
     }
 
     pap-menuitem {

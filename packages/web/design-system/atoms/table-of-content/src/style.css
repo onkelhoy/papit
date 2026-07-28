@@ -1,0 +1,46 @@
+:host {
+    pap-treeview {
+        list-style: none;
+        padding: 0;
+
+        pap-treeitem {
+
+            a {
+                color: currentColor;
+                text-decoration: none;
+            }
+
+            &:hover {
+                &>a {
+                    text-decoration: underline;
+                }
+            }
+
+            &::part(content) {
+                padding-inline: var(--space-3, 0.75rem);
+            }
+
+            &:has(pap-treeitem.marked) {
+
+                &::part(content) {
+                    background-color: var(--background);
+                }
+
+                pap-treeitem:not(.marked) {
+                    &::part(content) {
+                        background-color: var(--background);
+                    }
+                }
+            }
+
+
+            &:hover,
+            &.marked {
+                &::part(content) {
+                    background-color: var(--background-dark);
+                }
+            }
+
+        }
+    }
+}

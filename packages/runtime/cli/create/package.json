@@ -49,7 +49,8 @@
     },
     "dependencies": {
         "@papit/arguments": "0.0.1",
-        "@papit/information": "0.0.6",
+        "@papit/information": "0.0.7",
+        "@papit/server": "^1.0.6",
         "@papit/terminal": "0.0.2"
     },
     "devDependencies": {

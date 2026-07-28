@@ -1,57 +1,121 @@
 :host {
-    anchor-name: --anchor;
-    display: inline-flex;
+    /* opacity: 0; */
+    border: none;
+    background: transparent;
+    margin: 0;
+    padding: 0.35rem;
+    --bg: color-mix(var(--background-inverse), var(--shade-1) 30%);
+
+    [part="container"] {
+        background-color: var(--bg);
+        color: contrast-color(var(--bg));
+
+        padding: var(--space-1, 0.25rem);
+        border-radius: var(--space-1, 0.25rem);
+        max-width: var(--max-tooltip-width, 30rem);
+        border: none;
+        font-size: 0.75rem;
+    }
+
+
+    &::after {
+        content: "";
+        position: absolute;
+        display: block;
+
+        width: 6px;
+        height: 6px;
+        clip-path: polygon(0 0, 100% 0, 50% 100%);
+        /* default style is arrow */
+        background: var(--bg);
+    }
 }
 
-@keyframes tooltip-in {
-    from {
-        opacity: 0;
-        display: flex;
-    }
+:host([marker="false"]) {
 
-    to {
-        opacity: 1;
-        display: flex;
-    }
-}
-
-@keyframes tooltip-out {
-    from {
-        opacity: 1;
-        display: flex;
-    }
-
-    to {
-        opacity: 0;
+    &::after {
         display: none;
     }
 }
 
+/* MARKER STYLES */
 
-pap-placement {
-    position-anchor: --anchor;
-    display: none;
-    opacity: 0;
-    background-color: var(--background-inverse);
-    color: var(--text-inverse);
-    padding: var(--space-2, 0.5rem);
-    border-radius: var(--space-2, 0.5rem);
-    max-width: var(--max-tooltip-width, 30rem);
+/* TOP — marker points down, sits at bottom edge */
+:host([placement="top"])::after,
+:host([placement="top-center"])::after {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-3px);
 }
 
-pap-placement[data-closing] {
-    display: flex;
-    gap: var(--space-1, 0.25rem);
-    animation: tooltip-out 120ms ease forwards;
+:host([placement="top-left"])::after {
+    bottom: 0;
+    left: var(--space-2, 0.5rem);
+    transform: translateY(-3px);
 }
 
-pap-placement[data-open] {
-    display: flex;
-    gap: var(--space-1, 0.25rem);
-    animation: tooltip-in 120ms ease forwards;
+:host([placement="top-right"])::after {
+    bottom: 0;
+    right: var(--space-2, 0.5rem);
+    transform: translateY(-3px);
 }
 
+/* BOTTOM — marker points up, sits at top edge */
+:host([placement="bottom"])::after,
+:host([placement="bottom-center"])::after {
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(3px) rotate(180deg);
+}
 
-pap-placement::after {
-    display: block;
+:host([placement="bottom-left"])::after {
+    top: 0;
+    left: var(--space-2, 0.5rem);
+    transform: translateY(3px) rotate(180deg);
+}
+
+:host([placement="bottom-right"])::after {
+    top: 0;
+    right: var(--space-2, 0.5rem);
+    transform: translateY(3px) rotate(180deg);
+}
+
+/* LEFT — marker points right, sits at right edge */
+:host([placement="left"])::after,
+:host([placement="left-center"])::after {
+    right: 0;
+    top: 50%;
+    transform: translateX(-3px) translateY(-50%) rotate(-90deg);
+}
+
+:host([placement="left-top"])::after {
+    right: 0;
+    top: var(--space-2, 0.5rem);
+    transform: translateX(-3px) rotate(-90deg);
+}
+
+:host([placement="left-bottom"])::after {
+    right: 0;
+    bottom: var(--space-2, 0.5rem);
+    transform: translateX(-3px) rotate(-90deg);
+}
+
+/* RIGHT — marker points left, sits at left edge */
+:host([placement="right"])::after,
+:host([placement="right-center"])::after {
+    left: 0;
+    top: 50%;
+    transform: translateX(3px) translateY(-50%) rotate(90deg);
+}
+
+:host([placement="right-top"])::after {
+    left: 0;
+    top: var(--space-2, 0.5rem);
+    transform: translateX(3px) rotate(90deg);
+}
+
+:host([placement="right-bottom"])::after {
+    left: 0;
+    bottom: var(--space-2, 0.5rem);
+    transform: translateX(3px) rotate(90deg);
 }

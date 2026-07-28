@@ -4,15 +4,16 @@ import { CustomElement, html, property, query } from "@papit/web-component";
 
 // foundstions 
 import "@papit/icon";
+import "@papit/button";
+import { Button } from "@papit/button";
 
 // atoms 
 import "@papit/menu";
 import "@papit/tooltip";
-
+import { Tooltip } from "@papit/tooltip";
 
 // local 
 import sheet from "./style.css" assert { type: "css" };
-import { Tooltip } from "@papit/tooltip";
 
 export class ThemePicker extends CustomElement {
     static sheet = sheet;
@@ -22,7 +23,7 @@ export class ThemePicker extends CustomElement {
     private internal = false;
 
     @query("pap-tooltip") private tooltipElement!: Tooltip;
-    @query("button") private buttonElement!: HTMLButtonElement;
+    @query("pap-button") private buttonElement!: Button;
 
     // properties 
     @property({
@@ -184,29 +185,47 @@ export class ThemePicker extends CustomElement {
         if (this.value === "light") iconName = "sun";
         if (this.value === "dark") iconName = "moon";
 
-
         return html`
-            <pap-tooltip placement="top" >
+            <pap-tooltip placement="top">
                 <span>${t("theme picker")}</span>
-                <button @blur="${this.handletargetblur}" slot="target" popovertarget="menu">
-                    <pap-icon name="${"/icons/" + iconName + ".svg"}"></pap-icon>
-                </button>
             </pap-tooltip>
+            
+            <pap-button 
+                part="trigger"
+                size="icon" 
+                variant="clear" 
+                color="secondary" 
+                slot="target" 
+                popovertarget="menu"
+                @blur="${this.handletargetblur}" 
+            >
+                <pap-icon name="${"/icons/" + iconName + ".svg"}"></pap-icon>
+            </pap-button>
+
             <pap-menu 
                 id="menu" 
                 placement="bottom-right"
                 @open="${this.handlemenuopen}"
                 @close="${this.handlemenuclose}"
             >
-                <pap-menuitem @click="${() => this.value = 'light'}">
+                <pap-menuitem 
+                    aria-expanded="${this.value === "light"}" 
+                    @click="${() => this.value = 'light'}"
+                >
                     <pap-icon name="/icons/sun.svg"></pap-icon>
                     <span>${t("light")}</span>
                 </pap-menuitem>
-                <pap-menuitem @click="${() => this.value = 'dark'}">
+                <pap-menuitem 
+                    aria-expanded="${this.value === "dark"}" 
+                    @click="${() => this.value = 'dark'}"
+                >
                     <pap-icon name="/icons/moon.svg"></pap-icon>
                     <span>${t("dark")}</span>
                 </pap-menuitem>
-                <pap-menuitem @click="${() => this.value = 'system'}">
+                <pap-menuitem 
+                    aria-expanded="${this.value === "system"}" 
+                    @click="${() => this.value = 'system'}"
+                >
                     <pap-icon name="/icons/computer.svg"></pap-icon>
                     <span>${t("system")}</span>
                 </pap-menuitem>

@@ -3,12 +3,12 @@
 import { generateUUID, html, property, query } from "@papit/web-component";
 
 // foundations
-import { Placement } from "@papit/placement";
 
 // local 
 import sheet from "./style.css" assert { type: "css" };
 import "@papit/group";
 import { Group } from "@papit/group";
+import { Popover } from "@papit/popover";
 
 /**
  * A menu component that presents a list of choices to the user,
@@ -55,7 +55,8 @@ import { Group } from "@papit/group";
  *
  * @see {@link https://www.w3.org/WAI/ARIA/apg/patterns/menubar/ WAI-ARIA Menu and Menubar Pattern}
  */
-export class Menu extends Placement {
+export class Menu extends Popover {
+    static sheets = [Popover.sheet];
     static sheet = sheet;
 
     @query("pap-group") private groupElement!: Group;
@@ -128,10 +129,12 @@ export class Menu extends Placement {
                 this.groupElement.first();
             });
             this.dispatchEvent(new Event("open"));
+            this.show();
         }
         else 
         {
             this.dispatchEvent(new Event("close"));
+            this.hide();
         }
 
         if (this.triggerElement)

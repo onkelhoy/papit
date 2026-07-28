@@ -31,17 +31,17 @@ const template = html`
     <h2>${title}</h2>
     <p>${content}</p>
     <ul>
-      ${items.map(item => html`<li key=${item.id}>${item.label}</li>`)}
+      ${items.map((item) => html`<li key=${item.id}>${item.label}</li>`)}
     </ul>
   </div>
 `;
-````
+```
 
 **Key Points:**
 
-* The `html` function **returns an `Element`** (the root of your template).
-* Dynamic values (`${}`) are not inserted immediately — they are replaced with markers in the initial DOM.
-* When `TemplateInstance` runs `.update(values)`, the markers are replaced with the correct dynamic content.
+- The `html` function **returns an `Element`** (the root of your template).
+- Dynamic values (`${}`) are not inserted immediately — they are replaced with markers in the initial DOM.
+- When `TemplateInstance` runs `.update(values)`, the markers are replaced with the correct dynamic content.
 
 ---
 
@@ -53,12 +53,13 @@ When `html()` is called:
 2. This HTML string is parsed into a `DocumentFragment` using a `<template>` element internally.
 3. Every dynamic position is replaced by:
 
-   * A **comment node** marker (`<!--marker-->`) for single values.
-   * A **comment node** list marker (`<!--list-marker-->`) for arrays.
+   - A **comment node** marker (`<!--marker-->`) for single values.
+   - A **comment node** list marker (`<!--list-marker-->`) for arrays.
+
 4. A set of **Part descriptors** is generated to record:
 
-   * Where the marker is in the DOM.
-   * Whether it’s an attribute, event, text node, or list.
+   - Where the marker is in the DOM.
+   - Whether it’s an attribute, event, text node, or list.
 
 ---
 
@@ -66,8 +67,8 @@ When `html()` is called:
 
 Markers are special invisible nodes inserted where dynamic values will be rendered.
 
-* **`<!--marker-->`** → A single-slot placeholder for a `ValuePart` or `NestedPart`.
-* **`<!--list-marker-->`** → Marks a list location for a `ListPart`.
+- **`<!--marker-->`** → A single-slot placeholder for a `ValuePart` or `NestedPart`.
+- **`<!--list-marker-->`** → Marks a list location for a `ListPart`.
 
 **Example:**
 
@@ -80,9 +81,7 @@ Markers are special invisible nodes inserted where dynamic values will be render
 Later, `ValuePart.apply("Hello")` changes this to:
 
 ```html
-<div>
-  Hello
-</div>
+<div>Hello</div>
 ```
 
 ---
@@ -93,12 +92,12 @@ Later, `ValuePart.apply("Hello")` changes this to:
 Walks the DOM of a compiled template and **returns a flat array of initial dynamic values**
 and a **parallel array of Part descriptors**.
 
-* For each dynamic position:
+- For each dynamic position:
 
-  * If it’s an attribute: create an `AttributePart` descriptor.
-  * If it’s an event: create an `EventPart` descriptor.
-  * If it’s in text/child position: create a `ValuePart` descriptor.
-  * If it’s an array position: create a `ListPart` descriptor.
+  - If it’s an attribute: create an `AttributePart` descriptor.
+  - If it’s an event: create an `EventPart` descriptor.
+  - If it’s in text/child position: create a `ValuePart` descriptor.
+  - If it’s an array position: create a `ListPart` descriptor.
 
 **Signature:**
 
@@ -130,8 +129,8 @@ const tmpl = html`<button @click=${onClick}>${label}</button>`;
 
 ```json
 [
-  { kind: "event", element: "button", name: "click" },
-  { kind: "value", marker: "<!--marker-->" }
+  { "kind": "event", "element": "button", "name": "click" },
+  { "kind": "value", "marker": "<!--marker-->" }
 ]
 ```
 
@@ -143,8 +142,8 @@ const tmpl = html`<button @click=${onClick}>${label}</button>`;
 
 `TemplateInstance.update(values)` then:
 
-* Sets `@click` listener.
-* Inserts label into the text position.
+- Sets `@click` listener.
+- Inserts label into the text position.
 
 ---
 
@@ -167,21 +166,21 @@ Arrays are rendered using `ListPart` and `<!--list-marker-->`:
 
 ```ts
 html`<ul>
-  ${items.map(item => html`<li key=${item.id}>${item.label}</li>`)}
-</ul>`
+  ${items.map((item) => html`<li key=${item.id}>${item.label}</li>`)}
+</ul>`;
 ```
 
 When updated:
 
-* `ListPart` diffs old/new arrays by key.
-* Reuses or creates `ValuePart`s for each array element.
-* Removes orphaned DOM nodes.
+- `ListPart` diffs old/new arrays by key.
+- Reuses or creates `ValuePart`s for each array element.
+- Removes orphaned DOM nodes.
 
 ---
 
 ## 8. Related Links
 
-* [Parts System](../parts.md)
-* [Advanced Rendering Internals](../advanced.md)
-* [Custom Elements](../custom-element.md)
-* [Decorators](../decorators/README.md)
+- [Parts System](../parts.md)
+- [Advanced Rendering Internals](../advanced.md)
+- [Custom Elements](../custom-element.md)
+- [Decorators](../decorators/README.md)

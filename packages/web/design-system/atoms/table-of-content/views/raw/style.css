@@ -1,0 +1,69 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: contrast-color(var(--background));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4, 16px);
+
+    padding-block: 5rem;
+
+    h1 {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+    }
+
+    section {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+    }
+
+    pap-table-of-content {
+        position: fixed;
+        top: 5rem;
+        right: 0;
+        translate: calc(100% - 1rem) 0;
+
+        background-color: white;
+        padding: 1rem;
+        padding-right: 0;
+        border-top-left-radius: 1rem;
+        border-bottom-left-radius: 1rem;
+
+        transition: translate 500ms ease;
+
+        pap-icon[name="chevron-down"] {
+            position: absolute;
+            top: 25%;
+            left: 0.5rem;
+            translate: -50% -50%;
+            rotate: 90deg;
+            transition: opacity 200ms ease;
+            opacity: 1;
+
+            width: 0.5rem;
+        }
+
+        &:hover,
+        &:state(scrolling),
+        &:state(active) {
+            translate: 0 0;
+
+            pap-icon[name="chevron-down"] {
+                opacity: 0;
+            }
+        }
+
+        &::part(anchor) {
+            padding-right: 0.5rem;
+        }
+    }
+}

@@ -10,7 +10,6 @@ export function extractImportmap(
     map: Importmap,
     mapFolder: string,
 ) {
-
     extractPackageJSON(
         node.name,
         node.location,
@@ -45,6 +44,7 @@ function extractPackageJSON(
     map: Importmap,
     external = false,
 ) {
+
     const append = (name: string, packagepath: string) => {
         if (map.imports[name]) return;
 

@@ -25,7 +25,7 @@ class SearchBox {
     console.log("Search:", (e.target as HTMLInputElement).value);
   }
 }
-````
+```
 
 ### Keep original method & add a named debounced version
 
@@ -41,8 +41,8 @@ class Form {
 }
 
 // usage
-form.submit();           // immediate/original
-form.submitDebounced();  // debounced version
+form.submit(); // immediate/original
+form.submitDebounced(); // debounced version
 ```
 
 ---
@@ -64,16 +64,18 @@ You can call the decorator in several ways:
 
 1. Arguments are normalized into a `{ delay, name? }` options object.
 
-   * number → `{ delay }`
-   * string → `{ delay: STANDARD_DELAY, name }`
-   * object → merged with defaults
+   - number → `{ delay }`
+   - string → `{ delay: STANDARD_DELAY, name }`
+   - object → merged with defaults
+
 2. A debounced wrapper is created using `debounceFn(original, delay)`.
 3. If `name` is provided:
 
-   * the decorator defines a new property on the prototype (or instance) with that name and assigns the debounced function to it. The original method is left unchanged.
+   - the decorator defines a new property on the prototype (or instance) with that name and assigns the debounced function to it. The original method is left unchanged.
+
 4. If `name` is **not** provided:
 
-   * the decorator replaces `descriptor.value` with the debounced function (so calling the method invokes the debounced version).
+   - the decorator replaces `descriptor.value` with the debounced function (so calling the method invokes the debounced version).
 
 This design gives you the option to either replace the original method or keep it and expose a separate debounced variant.
 
@@ -101,11 +103,11 @@ class Demo {
 
 ## Gotchas & best practices
 
-* **Arrow methods**: Decorators attach to the prototype. If you define a method as an arrow function on the instance (e.g. `method = () => {}`), decorators will not wrap that instance arrow. Use normal methods to benefit from the decorator.
-* **Named version (`name`)**: Be careful not to shadow existing properties with the same name — the decorator will assign the debounced function to the provided `name`.
-* **Per-instance timer**: The timer is per-instance (the debounced function uses instance-scoped state), so multiple instances don't share a single timer.
-* **`this` binding**: The debounced wrapper calls the original method with the same `this`, so use normal methods to preserve `this`.
-* **Cancelling**: The simple decorator does not expose cancel/flush APIs. If you need them, use `debounceFn` directly to build a richer wrapper.
+- **Arrow methods**: Decorators attach to the prototype. If you define a method as an arrow function on the instance (e.g. `method = () => {}`), decorators will not wrap that instance arrow. Use normal methods to benefit from the decorator.
+- **Named version (`name`)**: Be careful not to shadow existing properties with the same name — the decorator will assign the debounced function to the provided `name`.
+- **Per-instance timer**: The timer is per-instance (the debounced function uses instance-scoped state), so multiple instances don't share a single timer.
+- **`this` binding**: The debounced wrapper calls the original method with the same `this`, so use normal methods to preserve `this`.
+- **Cancelling**: The simple decorator does not expose cancel/flush APIs. If you need them, use `debounceFn` directly to build a richer wrapper.
 
 ---
 
@@ -124,5 +126,4 @@ function debounceFn<T extends (...args: any[]) => any>(execute: T, delay = STAND
 
 ## Related
 
-* [`debounceFn`](../functions/debounceFn.md)
-
+- [`debounceFn`](../functions/debounceFn.md)

@@ -40,8 +40,7 @@ import sheet from "./style.css" assert { type: "css" };
 export class Drawer extends Dialog {
     static sheet = sheet;
 
-    @property({ rerender: true })
-    placement: "left" | "right" | "top" | "bottom" = "right";
+    @property placement: "left" | "right" | "top" | "bottom" = "right";
 
     @property({
         type: Boolean,
@@ -60,6 +59,7 @@ export class Drawer extends Dialog {
                 part="panel"
                 @click="${this.handledialogclick}"
                 @close="${this.handledialogclose}"
+                tabindex="-1"
             >
                 <div class="wrap">
                     <slot></slot>

@@ -15,17 +15,17 @@ It performs the query lazily (on first access) and stores the result for future 
 import { query } from "@papit/web-component";
 
 class MyEl extends HTMLElement {
-  @query('button.submit')
+  @query("button.submit")
   submitButton!: HTMLButtonElement;
 
   connectedCallback() {
     console.log(this.submitButton); // <button class="submit">...</button>
   }
 }
-````
+```
 
-* The first time `this.submitButton` is accessed, the decorator queries for `button.submit` inside the element’s shadow DOM (or light DOM if no shadow root) and caches it.
-* All subsequent calls return the cached reference.
+- The first time `this.submitButton` is accessed, the decorator queries for `button.submit` inside the element’s shadow DOM (or light DOM if no shadow root) and caches it.
+- All subsequent calls return the cached reference.
 
 ---
 
@@ -46,24 +46,26 @@ query(selector: string, all?: boolean): any
 
 ### Return value
 
-* If `all` is `false` → single `Element` or `null`.
-* If `all` is `true` → `Element[]` (may be empty).
+- If `all` is `false` → single `Element` or `null`.
+- If `all` is `true` → `Element[]` (may be empty).
 
 ---
 
 ## Behavior
 
-* Looks up the element’s `renderRoot` property if present (typical for web components with shadow DOM).
+- Looks up the element’s `renderRoot` property if present (typical for web components with shadow DOM).
   Falls back to `this` (light DOM) if `renderRoot` is undefined.
-* On first access:
+- On first access:
 
-  * Performs `querySelector` or `querySelectorAll` depending on `all`.
-  * If `all` is `true`, converts the `NodeList` to an array.
-  * Stores the result in a hidden property named `__<propertyName>` on the instance.
-* On subsequent access:
+  - Performs `querySelector` or `querySelectorAll` depending on `all`.
+  - If `all` is `true`, converts the `NodeList` to an array.
+  - Stores the result in a hidden property named `__<propertyName>` on the instance.
 
-  * Returns the cached value without running the query again.
-* You can manually clear the cache by deleting the hidden property:
+- On subsequent access:
+
+  - Returns the cached value without running the query again.
+
+- You can manually clear the cache by deleting the hidden property:
 
   ```ts
   delete this.__submitButton;
@@ -101,11 +103,11 @@ renderItems() {
 class MyShadowEl extends HTMLElement {
   constructor() {
     super();
-    this.attachShadow({ mode: 'open' });
+    this.attachShadow({ mode: "open" });
     this.shadowRoot!.innerHTML = `<button>Click</button>`;
   }
 
-  @query('button')
+  @query("button")
   btn!: HTMLButtonElement;
 }
 ```
@@ -133,30 +135,30 @@ export function query(selector: string, all: boolean = false) {
         return this[privateKey];
       },
       enumerable: true,
-      configurable: true
+      configurable: true,
     });
   };
 }
 ```
 
-* Uses `Object.defineProperty` to create a getter.
-* Private cache uses `__<propertyKey>`.
-* Checks `this.renderRoot` to support shadow DOM patterns.
-* Uses `Array.from` to make sure a NodeList is turned into a real array for `all: true`.
+- Uses `Object.defineProperty` to create a getter.
+- Private cache uses `__<propertyKey>`.
+- Checks `this.renderRoot` to support shadow DOM patterns.
+- Uses `Array.from` to make sure a NodeList is turned into a real array for `all: true`.
 
 ---
 
 ## Edge cases & notes
 
-* **Dynamic DOM changes**: Because the decorator caches results, newly added matching elements won’t be found unless you manually clear the cache (`delete this.__propName`).
-* **Shadow DOM vs light DOM**: If you use `renderRoot` in your base class, the decorator automatically respects it; otherwise it queries the element itself.
-* **Multiple matches with `all=false`**: Only the first match is returned; if you need multiple elements, set `all: true`.
-* **Performance**: Ideal for static or rarely-changing DOM structures where repeated `querySelector` calls would be wasteful.
+- **Dynamic DOM changes**: Because the decorator caches results, newly added matching elements won’t be found unless you manually clear the cache (`delete this.__propName`).
+- **Shadow DOM vs light DOM**: If you use `renderRoot` in your base class, the decorator automatically respects it; otherwise it queries the element itself.
+- **Multiple matches with `all=false`**: Only the first match is returned; if you need multiple elements, set `all: true`.
+- **Performance**: Ideal for static or rarely-changing DOM structures where repeated `querySelector` calls would be wasteful.
 
 ---
 
 ## Related docs
 
-* [CustomElement](../custom-element.md)
+- [CustomElement](../custom-element.md)
 
 ---

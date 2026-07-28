@@ -20,10 +20,10 @@ class MyEl extends HTMLElement {
   }
 
   connectedCallback() {
-    this.addEventListener('click', this.handleClick);
+    this.addEventListener("click", this.handleClick);
   }
 }
-````
+```
 
 Without `@bind`, `this` inside `handleClick` could be `undefined` or refer to the wrong object when used as a callback.
 
@@ -51,18 +51,19 @@ bind<T>(
 
 ### Return value
 
-* Returns a modified descriptor where the getter binds the original method to the instance on first access.
+- Returns a modified descriptor where the getter binds the original method to the instance on first access.
 
 ---
 
 ## Behavior
 
-* The first time the decorated method is accessed:
+- The first time the decorated method is accessed:
 
   1. The original function is bound to the instance (`this`).
   2. The bound function is **assigned directly** to the instance, replacing the getter for future calls.
-* Subsequent accesses call the already-bound method without additional binding overhead.
-* Avoids creating a new bound function for each call (better performance vs inline `this.method.bind(this)`).
+
+- Subsequent accesses call the already-bound method without additional binding overhead.
+- Avoids creating a new bound function for each call (better performance vs inline `this.method.bind(this)`).
 
 ---
 
@@ -78,7 +79,7 @@ class MyButton extends HTMLElement {
   }
 
   connectedCallback() {
-    this.addEventListener('click', this.onClick);
+    this.addEventListener("click", this.onClick);
   }
 }
 ```
@@ -89,8 +90,8 @@ class MyButton extends HTMLElement {
 class MyAsyncEl extends HTMLElement {
   @bind
   async fetchData() {
-    const data = await fetch('/api/data').then(r => r.json());
-    console.log('Data for', this, ':', data);
+    const data = await fetch("/api/data").then((r) => r.json());
+    console.log("Data for", this, ":", data);
   }
 
   connectedCallback() {
@@ -119,36 +120,37 @@ export function bind<T>(
       Object.defineProperty(this, propertyKey, {
         value: boundFn,
         configurable: true,
-        writable: true
+        writable: true,
       });
       return boundFn;
-    }
+    },
   } as TypedPropertyDescriptor<T>;
 }
 ```
 
-* Grabs the original method from the descriptor.
-* Defines a **getter** that:
+- Grabs the original method from the descriptor.
+- Defines a **getter** that:
 
-  * Binds the method to the current instance.
-  * Caches the bound method directly on the instance (no more getter calls next time).
-* Uses `Object.defineProperty` so the method behaves like a normal property afterwards.
+  - Binds the method to the current instance.
+  - Caches the bound method directly on the instance (no more getter calls next time).
+
+- Uses `Object.defineProperty` so the method behaves like a normal property afterwards.
 
 ---
 
 ## Edge cases & notes
 
-* Only works for **methods**, not properties or arrow functions defined in the constructor.
-* If you override a bound method in a subclass, it will bind the new method instead.
-* Binding happens **once per instance per method**, not per call — this is why it’s efficient.
-* Ideal for:
+- Only works for **methods**, not properties or arrow functions defined in the constructor.
+- If you override a bound method in a subclass, it will bind the new method instead.
+- Binding happens **once per instance per method**, not per call — this is why it’s efficient.
+- Ideal for:
 
-  * Event listeners in web components
-  * Methods passed to external libraries that lose context
-  * Async callbacks where `this` should refer to the class instance
+  - Event listeners in web components
+  - Methods passed to external libraries that lose context
+  - Async callbacks where `this` should refer to the class instance
 
 ---
 
 ## Related docs
 
-* [CustomElement](../custom-element.md)
+- [CustomElement](../custom-element.md)

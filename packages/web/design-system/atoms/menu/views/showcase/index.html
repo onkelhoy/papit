@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menu</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <article>
+        <pap-tabs class="individual-showcase" value="showcase">
+
+            <header>
+                <h1>Menu</h1>
+
+                <pap-tab slot="tab" value="showcase">showcase</pap-tab><pap-tab slot="tab" value="experiment">experiment</pap-tab>
+            </header>
+
+            <pap-router class="individual-showcase">
+                <pap-tabpanel value="showcase" path=":view" view="showcase" realpath="views/:view"></pap-tabpanel> <pap-tabpanel value="experiment" path=":view" view="experiment" realpath="views/:view"></pap-tabpanel>
+            </pap-router>
+        </pap-tabs>
+    </article>
+</body>
+
+</html>

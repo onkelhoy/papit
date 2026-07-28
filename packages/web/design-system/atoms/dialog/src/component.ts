@@ -7,6 +7,7 @@ import "@papit/icon";
 
 // local 
 import sheet from "./style.css" assert { type: "css" };
+import { FOCUSABLE } from "types";
 
 /**
  * Wrapper around native `<dialog>` with slots, close button, and backdrop click support.
@@ -57,6 +58,18 @@ export class Dialog extends CustomElement {
     @property({
         type: Boolean,
         after(this: Dialog) {
+            if (this.open) 
+            {
+                // safaribug but first element of this dialog should get focus 
+                let firstfocus = this.root.querySelector<HTMLElement>(FOCUSABLE);
+                if (!firstfocus)
+                {
+                    firstfocus = this.querySelector<HTMLElement>(FOCUSABLE);
+                }
+
+                if (firstfocus) requestAnimationFrame(() => requestAnimationFrame(() => firstfocus.focus()));
+            }
+
             if (this._internalopen) 
             {
                 this._internalopen = false;
@@ -91,6 +104,7 @@ export class Dialog extends CustomElement {
             .querySelectorAll(`[commandfor="${this.id}"]`)
             .forEach(elm => {
                 elm.addEventListener("click", this.handleCommandRefClick);
+                if (!elm.hasAttribute("tabindex")) elm.setAttribute("tabindex", "0"); // safari bug 
                 this.refs.push(elm);
             });
 

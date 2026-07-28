@@ -1,0 +1,13 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: contrast-color(var(--background));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4, 16px);
+}
+
+header {
+    margin-bottom: var(--space-2, 8px);
+}

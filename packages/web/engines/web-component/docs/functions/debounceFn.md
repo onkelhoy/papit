@@ -20,7 +20,7 @@ function debounceFn<T extends (...args: any[]) => any>(
   execute: T,
   delay?: number
 ): (...args: Parameters<T>) => void;
-````
+```
 
 ---
 
@@ -37,10 +37,10 @@ function debounceFn<T extends (...args: any[]) => any>(
 
 A **new function** that:
 
-* Shares the same parameters as `execute`.
-* Resets its internal timer on every call.
-* Calls `execute` only after `delay` ms have passed since the last call.
-* Preserves `this` when called as a method.
+- Shares the same parameters as `execute`.
+- Resets its internal timer on every call.
+- Calls `execute` only after `delay` ms have passed since the last call.
+- Preserves `this` when called as a method.
 
 ---
 
@@ -105,12 +105,12 @@ export function debounceFn<T extends (...args: any[]) => any>(
 
 ## Gotchas & Notes
 
-* **No cancel/flush** — This minimal implementation doesn't expose `cancel()` or `flush()` methods. If you need these, you can wrap `debounceFn` to add them.
-* **Garbage Collection** — Because the timer is stored in a closure, it won't leak memory as long as the debounced function itself isn't leaked.
-* **Instance safety** — If used inside a class method, each instance needs its own debounced wrapper (use it in the constructor or via the `@debounce` decorator).
+- **No cancel/flush** — This minimal implementation doesn't expose `cancel()` or `flush()` methods. If you need these, you can wrap `debounceFn` to add them.
+- **Garbage Collection** — Because the timer is stored in a closure, it won't leak memory as long as the debounced function itself isn't leaked.
+- **Instance safety** — If used inside a class method, each instance needs its own debounced wrapper (use it in the constructor or via the `@debounce` decorator).
 
 ---
 
 ## Related
 
-* [`@debounce`](../decorators/debounce.md) — method decorator using `debounceFn` under the hood.
+- [`@debounce`](../decorators/debounce.md) — method decorator using `debounceFn` under the hood.

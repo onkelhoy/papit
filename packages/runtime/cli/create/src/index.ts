@@ -11,6 +11,7 @@ import { packageRunner } from "./components/runners/package";
 import { componentRunner } from "./components/runners/component";
 import { getFolders } from "./components/util";
 import { projectRunner } from "./components/runners/project";
+import { showcaseRunner } from "./components/runners/showcase";
 
 (async function () {
     Arguments.init(process.argv, ["install", "commit", "agree"])
@@ -94,6 +95,9 @@ import { projectRunner } from "./components/runners/project";
             break;
         case 2:
             await projectRunner(createPackageLocation);
+            break;
+        case 3:
+            await showcaseRunner(createPackageLocation);
             break;
         default: {
             if (!localRunnerSet.has(option.text))

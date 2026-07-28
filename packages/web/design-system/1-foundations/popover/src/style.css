@@ -1,0 +1,96 @@
+:host {
+    position: absolute;
+    position-area: top;
+    justify-self: anchor-center;
+    width: max-content;
+}
+
+:host([placement^="top"]) {
+    padding-inline: 0;
+    padding-top: 0;
+    /* padding-bottom: var(--gap); */
+}
+
+:host([placement^="bottom"]) {
+    padding-inline: 0;
+    padding-bottom: 0;
+    /* padding-top: var(--gap); */
+}
+
+:host([placement^="left"]) {
+    padding-block: 0;
+    padding-left: 0;
+    /* padding-right: var(--gap); */
+}
+
+:host([placement^="right"]) {
+    padding-block: 0;
+    padding-right: 0;
+    /* padding-left: var(--gap); */
+}
+
+
+/* TOP */
+:host([placement="top"]),
+:host([placement="top-center"]) {
+    position-area: top;
+    justify-self: anchor-center;
+}
+
+:host([placement="top-left"]) {
+    position-area: top span-right;
+    justify-self: start;
+}
+
+:host([placement="top-right"]) {
+    position-area: top span-left;
+    justify-self: end;
+}
+
+
+/* BOTTOM */
+:host([placement="bottom"]),
+:host([placement="bottom-center"]) {
+    position-area: bottom;
+    justify-self: anchor-center;
+}
+
+:host([placement="bottom-left"]) {
+    position-area: bottom span-right;
+    justify-self: start;
+}
+
+:host([placement="bottom-right"]) {
+    position-area: bottom span-left;
+    justify-self: end;
+}
+
+/* LEFT */
+:host([placement="left"]),
+:host([placement="left-center"]) {
+    position-area: left;
+    align-self: anchor-center;
+}
+
+:host([placement="left-top"]) {
+    position-area: span-bottom left;
+}
+
+:host([placement="left-bottom"]) {
+    position-area: span-top left;
+}
+
+/* RIGHT */
+:host([placement="right"]),
+:host([placement="right-center"]) {
+    position-area: right;
+    align-self: anchor-center;
+}
+
+:host([placement="right-top"]) {
+    position-area: span-bottom right;
+}
+
+:host([placement="right-bottom"]) {
+    position-area: span-top right;
+}

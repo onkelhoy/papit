@@ -80,6 +80,7 @@ export function intermediate(url: string | undefined, routes: Route[]): Route | 
             p.default = urlparam[name];
         }
     }
+    else console.log('no target rute')
 
     return route;
 }
@@ -136,16 +137,20 @@ export function* candidateGenerator(route: Route, browser_url: string, router: R
                 browser = browser.replace(":" + variable, output[variable]);
             }
 
-            yield {
+
+            const candiate = {
                 url: route.url,
                 browser: format(join(browser_url, router.hashbased ? "#" : "", assign(browser, params)), router.trailingslash),
                 request: format(join(browser_url, assign(copy, params)), true),
                 params, // assign will also affect param to its latest value (if param-value is dynamic aka another variable)
             };
+            console.log({ candiate, output, copy, browser, browser_url, route, variablemap })
+
+            yield candiate;
         }
     }
 }
-function* generateCombinations(variables: Variable[] | undefined, i: number = 0, currentOutput: Output = {}): Generator<Output> {
+export function* generateCombinations(variables: Variable[] | undefined, i: number = 0, currentOutput: Output = {}): Generator<Output> {
     if (variables === undefined) return {};
 
     if (i >= variables.length)

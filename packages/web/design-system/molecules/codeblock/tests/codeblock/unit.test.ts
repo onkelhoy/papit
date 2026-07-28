@@ -72,20 +72,20 @@ test.describe("@papit/codeblock", () => {
         });
 
         test("copy button adds .copied class", async ({ page }) => {
-            const button = page.locator('pap-codeblock div[part="display"] button');
+            const button = page.locator('pap-codeblock div[part="display"] pap-button');
             await button.click();
             await expect(button).toHaveClass(/copied/);
         });
 
         test(".copied class is removed after 2s", async ({ page }) => {
-            const button = page.locator('pap-codeblock div[part="display"] button');
+            const button = page.locator('pap-codeblock div[part="display"] pap-button');
             await button.click();
             await expect(button).toHaveClass(/copied/);
             await expect(button).not.toHaveClass(/copied/, { timeout: 3000 });
         });
 
         test("clipboard contains slot content", async ({ page }) => {
-            const button = page.locator('pap-codeblock div[part="display"] button');
+            const button = page.locator('pap-codeblock div[part="display"] pap-button');
             await button.click();
             const text = await page.evaluate(() => navigator.clipboard.readText());
             expect(text.length).toBeGreaterThan(0);

@@ -1,0 +1,123 @@
+:host {
+
+    [part="panel"] {
+        display: block;
+        position: sticky;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        z-index: 1000;
+        width: 4rem;
+        transition: width var(--timing-fast, 80ms) ease-in-out;
+        flex-shrink: 0;
+    }
+
+    [part="container"] {
+        position: fixed;
+        top: 0;
+        height: 100%;
+        width: inherit;
+        background-color: var(--shade-1, white);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        gap: var(--space-4, 1rem);
+        grid-template-rows: auto 1fr auto;
+        padding-block: var(--space-4, 1rem);
+        box-sizing: border-box;
+    }
+
+    /* Header styles */
+    header {
+        display: flex;
+        justify-content: space-between;
+        gap: var(--space-2, 0.5rem);
+        padding-inline: var(--space-4, 1rem);
+        flex-shrink: 0;
+
+        div {
+            display: none;
+            padding-top: var(--space-1, 0.25rem);
+            overflow: hidden;
+            min-width: max-content;
+        }
+
+        pap-button[part="hamburger"] {
+            padding: var(--space-4, 1rem);
+            border: none;
+
+            pap-icon:not([name="sidebar"]) {
+                display: none;
+                width: var(--space-5, 1.25rem);
+            }
+        }
+    }
+
+    /* Navigation */
+    nav {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        padding-inline: var(--space-4, 1rem);
+
+        overflow-y: auto;
+
+        div {
+            flex: 1;
+        }
+    }
+
+    /* Footer */
+    footer {
+        flex-shrink: 0;
+        padding-inline: var(--space-4, 1rem);
+    }
+}
+
+:host(:state(hover)) {
+    pap-button[part="hamburger"] {
+        pap-icon:not([name="expand"]) {
+            display: none;
+        }
+
+        pap-icon[name="expand"] {
+            display: inline;
+        }
+    }
+}
+
+/* Slotted elements */
+::slotted(ul) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+::slotted([slot="header"]) {
+    margin: 0;
+}
+
+/* Closed state */
+:host(:not([open])) {
+    nav div {
+        cursor: pointer;
+    }
+}
+
+/* Open state */
+:host([open]) {
+
+    [part="panel"] {
+        width: 280px;
+
+        header {
+            div {
+                display: inline;
+            }
+
+            pap-button[part="hamburger"] {
+                margin-left: auto;
+            }
+        }
+    }
+}

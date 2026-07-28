@@ -4,17 +4,19 @@ import { CustomElement, property, html, debounce, query, bind, generateUUID } fr
 // local imports
 import { Route, AddRoute, MappedRoute, SourceElement, SourceType } from "./types";
 // helper imports 
-import { extract, intermediate, candidateGenerator } from "helper/route";
+import { extract, intermediate, candidateGenerator, generateCombinations } from "helper/route";
 import { fetchURL } from "helper/fetch";
 import { format, join, tidy } from "helper/url";
 import { hash } from "helper/utils";
 import { proxy } from "helper/proxy";
+import { ParamRegex } from "helper/param";
 
 export class Router extends CustomElement {
 
     // static variables
     private static parser: DOMParser;
     private static encoder: TextEncoder;
+
     // private variables
     private sources: Set<string> = new Set();
     private hasinitiated = false;
@@ -24,6 +26,7 @@ export class Router extends CustomElement {
     public safeUUID!: string;
     public routes: Route[] = [];
     public browser_url: string | undefined = undefined;
+    public base_url: string | undefined = undefined;
     public route: MappedRoute | null = null;
     public abortcontrollers: Set<AbortController> = new Set();
 
@@ -49,7 +52,7 @@ export class Router extends CustomElement {
 
     // properties
     @property({ type: Boolean, rerender: false, attribute: "update-title" }) updatetitle: boolean = true;
-    @property({ type: Boolean, rerender: false, attribute: "update-url", after: console.log }) updateurl: boolean = true;
+    @property({ type: Boolean, rerender: false, attribute: "update-url" }) updateurl: boolean = true;
     @property({
         type: Boolean,
         rerender: false,
@@ -99,11 +102,6 @@ export class Router extends CustomElement {
         this.abortcontrollers.forEach(control => control.abort("router disconnected"));
         this.abortcontrollers.clear();
         window.removeEventListener("popstate", this.handlewindowpopstate);
-    }
-    firstRender(): void {
-        super.firstRender();
-
-        // init url 
     }
 
     // event handlers 
@@ -164,17 +162,50 @@ export class Router extends CustomElement {
 
         if (this.browser_url === undefined)
         {
-            let browser_url = tidy(window.location.pathname);
-            let url = tidy(this.url);
+            const pathname = tidy(window.location.pathname);
+            let resolvedBase: string | undefined = undefined;
 
-            if (!url.startsWith(browser_url))
+            outer:
+            for (const route of this.routes)
             {
-                // this means url is set aside from browser_url thus found initial browser_url
-                this.browser_url = "/" + browser_url;
+                for (const reroute of route.reroute)
+                {
+                    const variables = (reroute.match(ParamRegex) ?? []).filter((v, i, arr) => arr.indexOf(v) === i);
+                    const paramOptions = variables.map(name => {
+                        const p = route.params[name];
+                        const values = [p?.default, ...(p?.fallback ?? [])].filter((v): v is string => !!v);
+                        return { name, options: values };
+                    });
+
+                    for (const combo of generateCombinations(paramOptions))
+                    {
+                        let resolved = reroute;
+                        for (const name in combo) resolved = resolved.replace(":" + name, combo[name]);
+                        resolved = tidy(resolved);
+
+                        if (pathname === resolved)
+                        {
+                            resolvedBase = "";
+                            break outer;
+                        }
+                        if (resolved && pathname.endsWith("/" + resolved))
+                        {
+                            resolvedBase = pathname.slice(0, pathname.length - resolved.length - 1);
+                            break outer;
+                        }
+                    }
+                }
+            }
+
+            if (resolvedBase !== undefined)
+            {
+                this.browser_url = resolvedBase ? "/" + resolvedBase : "";
             }
             else
             {
-                this.browser_url = "";
+                // fallback: no route resolves against current pathname (e.g. hash-based tests, plain root loads)
+                let url = tidy(this.url);
+                this.browser_url = !url.startsWith(pathname) ? "/" + pathname : "";
             }
         }
 
@@ -183,6 +214,7 @@ export class Router extends CustomElement {
         if (this.url === undefined)
         {
             let browser_url = this.browser_url;
+
             if (this.hashbased)
             {
                 this.url = tidy(window.location.hash.replace("#", ""));
@@ -199,6 +231,7 @@ export class Router extends CustomElement {
             return;
         }
 
+
         this.route = null;
         const route = intermediate(this.url, this.routes);
         if (!route) return;
@@ -206,13 +239,13 @@ export class Router extends CustomElement {
         const gen = candidateGenerator(route, this.browser_url, this);
         for (let candidate of gen)
         {
+            if (candidate.params['no-fetch']) continue;
             const data = await fetchURL(candidate.request, candidate, this);
             if (!(data.response && data.response.ok)) continue;
 
             this.route = candidate;
             if (this.updateurl && !this.internalpopstate)
             {
-
                 const REALBROWSERURL = window.location.href.slice(window.location.origin.length);
                 if (this.route.browser !== REALBROWSERURL)
                 {
@@ -383,12 +416,12 @@ export class Router extends CustomElement {
 
     render() {
         return html`
-      <slot @slotchange="${this.handleslotchange}"></slot>
-      <div id="router-dom">
-        <div id="router-head"></div>
-        <div id="router-body"></div>
-      </div>
-    `
+            <slot @slotchange="${this.handleslotchange}"></slot>
+            <div id="router-dom">
+                <div id="router-head"></div>
+                <div id="router-body"></div>
+            </div>
+        `
     }
 }
 

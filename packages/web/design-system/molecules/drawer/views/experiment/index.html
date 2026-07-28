@@ -50,6 +50,39 @@
         </pap-codeblock>
     </section>
 
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock>
+            <pap-drawer modal static id="drawer-right-modal" aria-label="Right drawer">
+                <p>Right drawer content</p>
+                <button commandfor="drawer-right-modal" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer modal static id="drawer-left-modal" placement="left" aria-label="Left drawer">
+                <p>Left drawer content</p>
+                <button commandfor="drawer-left-modal" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer modal static id="drawer-top-modal" placement="top" aria-label="Top drawer">
+                <p>Top drawer content</p>
+                <button commandfor="drawer-top-modal" command="close">Close</button>
+            </pap-drawer>
+            <pap-drawer modal static id="drawer-bottom-modal" placement="bottom" aria-label="Bottom drawer">
+                <p>Bottom drawer content</p>
+                <button commandfor="drawer-bottom-modal" command="close">Close</button>
+            </pap-drawer>
+            <!-- Right (default) -->
+            <button commandfor="drawer-right-modal" command="toggle">Open Right</button>
+
+            <!-- Left -->
+            <button commandfor="drawer-left-modal" command="toggle">Open Left</button>
+
+            <!-- Top -->
+            <button commandfor="drawer-top-modal" command="toggle">Open Top</button>
+
+            <!-- Bottom -->
+            <button commandfor="drawer-bottom-modal" command="toggle">Open Bottom</button>
+        </pap-codeblock>
+    </section>
+
 
     <section>
         <h2>Non Static</h2>
