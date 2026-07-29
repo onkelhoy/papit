@@ -177,5 +177,114 @@ test.describe('@papit/checkbox unit tests', () => {
         });
         expect(value).toBeNull();
     });
+});
+
+test.describe('@papit/checkbox group (aria-controls) tests', () => {
+
+    test('clicking the group checkbox checks all children', async ({ page }) => {
+        await page.locator('#group-parent').click();
+
+        for (const id of ['#child-a', '#child-b', '#child-c'])
+        {
+            expect(await page.locator(id).evaluate((n: any) => n.checked)).toBe(true);
+        }
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'true');
+    });
+
+    test('clicking the group checkbox twice unchecks all children', async ({ page }) => {
+        await page.locator('#group-parent').click(); // check all
+        await page.locator('#group-parent').click(); // uncheck all
+
+        for (const id of ['#child-a', '#child-b', '#child-c'])
+        {
+            expect(await page.locator(id).evaluate((n: any) => n.checked)).toBe(false);
+        }
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'false');
+    });
+
+    test('checking one child puts the group into indeterminate state', async ({ page }) => {
+        await page.locator('#child-a').click();
+
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'mixed');
+        expect(await page.locator('#group-parent').evaluate((n: any) => n.checked)).toBe(false);
+    });
+
+    test('checking all children individually fully checks the group', async ({ page }) => {
+        await page.locator('#child-a').click();
+        await page.locator('#child-b').click();
+        await page.locator('#child-c').click();
+
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'true');
+        expect(await page.locator('#group-parent').evaluate((n: any) => n.indeterminate)).toBeFalsy();
+    });
+
+    test('unchecking all children individually fully unchecks the group', async ({ page }) => {
+        await page.locator('#group-parent').click(); // check all first
+        await page.locator('#child-a').click();
+        await page.locator('#child-b').click();
+        await page.locator('#child-c').click();
+
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'false');
+        expect(await page.locator('#group-parent').evaluate((n: any) => n.indeterminate)).toBeFalsy();
+    });
+
+    // Regression test for: clicking a mixed group checkbox once didn't
+    // cascade to children, requiring extra clicks to fully check them.
+    test('activating a mixed group checkbox checks all children in a single click', async ({ page }) => {
+        await page.locator('#child-a').click(); // -> group becomes indeterminate
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'mixed');
+
+        await page.locator('#group-parent').click(); // one click while mixed
+
+        for (const id of ['#child-a', '#child-b', '#child-c'])
+        {
+            expect(await page.locator(id).evaluate((n: any) => n.checked)).toBe(true);
+        }
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'true');
+        expect(await page.locator('#group-parent').evaluate((n: any) => n.indeterminate)).toBeFalsy();
+    });
+
+    test('group checkbox is not both checked and indeterminate at the same time', async ({ page }) => {
+        await page.locator('#child-a').click(); // group -> indeterminate
+
+        const state = await page.locator('#group-parent').evaluate((n: any) => ({
+            checked: n.checked,
+            indeterminate: n.indeterminate
+        }));
+        expect(state.indeterminate).toBe(true);
+        expect(state.checked).toBe(false);
+    });
+
+    // Programmatic assignment (e.g. from external app code) should behave
+    // the same as a user click — it should still cascade to children.
+    test('setting checked programmatically on the group cascades to children', async ({ page }) => {
+        await page.locator('#group-parent').evaluate((n: any) => { n.checked = true; });
+
+        for (const id of ['#child-a', '#child-b', '#child-c'])
+        {
+            expect(await page.locator(id).evaluate((n: any) => n.checked)).toBe(true);
+        }
+    });
+
+    test('unsetting checked programmatically on the group cascades to children', async ({ page }) => {
+        await page.locator('#group-parent').evaluate((n: any) => { n.checked = true; }); // check all first
+        await page.locator('#group-parent').evaluate((n: any) => { n.checked = false; });
+
+        for (const id of ['#child-a', '#child-b', '#child-c'])
+        {
+            expect(await page.locator(id).evaluate((n: any) => n.checked)).toBe(false);
+        }
+    });
+
+    // Setting indeterminate directly is purely a display flag on the group —
+    // it must NOT force children into an unchecked state.
+    test('assigning indeterminate directly does not force children unchecked', async ({ page }) => {
+        await page.locator('#child-a').click(); // child-a checked directly by user
+
+        await page.locator('#group-parent').evaluate((n: any) => { n.indeterminate = true; });
+
+        expect(await page.locator('#child-a').evaluate((n: any) => n.checked)).toBe(true);
+        await expect(page.locator('#group-parent')).toHaveAttribute('aria-checked', 'mixed');
+    });
 
 });
