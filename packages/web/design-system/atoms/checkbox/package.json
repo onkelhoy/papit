@@ -1,13 +1,13 @@
 {
-    "name": "@papit/sidebar",
-    "description": "a propper sidebar component which is a nice touch on all preexising components ",
+    "name": "@papit/checkbox",
+    "description": "a WCAG complient checkbox component with intermediate state ",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "sidebar"
+        "checkbox"
     ],
-    "version": "0.0.2",
+    "version": "0.0.1",
     "scripts": {
         "build": "npx @papit/build --error",
         "watch": "tsc -w",
@@ -40,36 +40,29 @@
         "registry": "https://registry.npmjs.org/"
     },
     "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/organism/sidebar",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/checkbox",
     "bugs": {
         "url": "https://github.com/onkelhoy/papit/issues"
     },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/web/design-system/organism/sidebar"
+        "directory": "packages/web/design-system/atoms/checkbox"
     },
     "sideEffects": true,
     "engines": {
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/button": "0.1.2",
-        "@papit/drawer": "0.0.1",
-        "@papit/icon": "0.1.5",
-        "@papit/tooltip": "^0.0.6",
-        "@papit/treeview": "0.0.6",
         "@papit/web-component": "*"
     },
     "devDependencies": {
-        "@papit/codeblock": "*",
-        "@papit/router": "^0.1.2",
-        "@papit/tabs": "^0.1.2",
-        "@papit/theme": "*",
-        "@papit/translator": "^0.1.0",
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
-        "typescript": "5.9.3"
+        "typescript": "5.9.3",
+        "@papit/theme": "*",
+        "@papit/translator": "*",
+        "@papit/codeblock": "*"
     },
     "browserslist": [
         "defaults",
@@ -79,14 +72,14 @@
     "papit": {
         "publish": true,
         "type": "web-component",
-        "main": "sidebar",
+        "main": "checkbox",
         "htmlprefix": "pap",
         "components": {
-            "sidebar": {
-                "className": "Sidebar",
+            "checkbox": {
+                "className": "Checkbox",
                 "htmlprefix": "pap"
             }
         }
     },
-    "remoteVersion": "0.0.2"
+    "remoteVersion": "0.0.1"
 }

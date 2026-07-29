@@ -11,7 +11,7 @@
     padding: var(--padding);
     cursor: pointer;
 
-    outline-offset: 1px;
+    outline-offset: 2px;
 
     &::after {
         content: ' ';

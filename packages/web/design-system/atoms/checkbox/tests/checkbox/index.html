@@ -1,0 +1,28 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>checkbox test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <form id="main-form">
+        <pap-checkbox id="c1" name="agree" value="yes">I agree</pap-checkbox>
+        <pap-checkbox id="c2" name="newsletter" value="yes" defaultchecked>Subscribe</pap-checkbox>
+
+        <pap-checkbox id="c-indeterminate" name="select-all" value="yes" indeterminate>Select all</pap-checkbox>
+        <pap-checkbox id="c-disabled" name="disabled-field" value="yes" disabled>Disabled</pap-checkbox>
+        <pap-checkbox id="c-readonly" name="readonly-field" value="yes" readonly>Readonly</pap-checkbox>
+
+        <button type="reset" id="reset-btn">Reset</button>
+    </form>
+
+    <!-- Standalone (no form) -->
+    <pap-checkbox id="c-standalone" value="solo" data-testid="base-target">Standalone</pap-checkbox>
+
+</body>
+
+</html>
