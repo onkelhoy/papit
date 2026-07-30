@@ -23,6 +23,16 @@
     <!-- Standalone (no form) -->
     <pap-checkbox id="c-standalone" value="solo" data-testid="base-target">Standalone</pap-checkbox>
 
+    <!-- Group / aria-controls fixture -->
+    <div class="group-fixture">
+        <pap-checkbox id="group-parent" aria-controls="child-a child-b child-c">Select all fruits</pap-checkbox>
+        <ul>
+            <li><pap-checkbox id="child-a" value="apple">Apple</pap-checkbox></li>
+            <li><pap-checkbox id="child-b" value="banana">Banana</pap-checkbox></li>
+            <li><pap-checkbox id="child-c" value="cherry">Cherry</pap-checkbox></li>
+        </ul>
+    </div>
+
 </body>
 
 </html>
