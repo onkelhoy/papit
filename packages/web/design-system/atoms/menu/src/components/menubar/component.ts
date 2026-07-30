@@ -2,7 +2,7 @@
 // system 
 import { CustomElement, html, query } from "@papit/web-component";
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import "@papit/group";
 import { Group } from "@papit/group";
 

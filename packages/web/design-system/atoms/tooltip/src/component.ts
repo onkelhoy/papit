@@ -3,7 +3,7 @@
 import { bind, debounce, html, property } from "@papit/web-component";
 import { Popover } from "@papit/popover";
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 export class Tooltip extends Popover {
     static sheets = [Popover.sheet, sheet];

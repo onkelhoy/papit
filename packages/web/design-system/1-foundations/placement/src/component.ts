@@ -3,7 +3,7 @@
 import { CustomElement, html, property } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 /**
  * `Placement` is a helper component that handles automatic repositioning

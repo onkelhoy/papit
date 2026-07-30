@@ -4,7 +4,7 @@ import { Terminal } from "@papit/terminal";
 
 export async function reset() {
 
-    const batches = Information.getPriorityBatches();
+    const batches = Information.getPriorityBatches(Arguments.instance, p => p.name.startsWith(Information.scope));
     const updateDependencies = new Map<string, string>();
 
     for (const batch of batches)

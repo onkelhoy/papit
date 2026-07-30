@@ -5,7 +5,7 @@ import { generateUUID, html, property, query } from "@papit/web-component";
 // foundations
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import "@papit/group";
 import { Group } from "@papit/group";
 import { Popover } from "@papit/popover";
@@ -67,13 +67,14 @@ export class Menu extends Popover {
     private previousFocusedElement: Element | null = null;
 
     connectedCallback(): void {
+        const hadPopoverAttribute = this.hasAttribute("popover");
         super.connectedCallback();
         this.setAttribute("role", "menu");
 
         // lets find our dear trigger
 
         if (!this.id) this.id = generateUUID();
-        if (!this.hasAttribute("popover")) this.setAttribute("popover", "auto");
+        if (!hadPopoverAttribute) this.setAttribute("popover", "auto");
 
         this.addEventListener("toggle", this.handletoggle);
 

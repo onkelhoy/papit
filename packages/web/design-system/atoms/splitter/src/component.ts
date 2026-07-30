@@ -3,7 +3,7 @@
 import { CustomElement, html, property, query } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 /**
  * A resizable split-pane component that allows users to adjust the relative
  * size of two panels by dragging a separator or using keyboard controls.

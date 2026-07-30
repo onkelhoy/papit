@@ -3,7 +3,7 @@
 import { CustomElement, html, property } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { ClickEvent } from "./types";
 
 export class VARIABLE_CLASS_NAME extends CustomElement {

@@ -3,7 +3,7 @@
 import { bind, CustomElementInternals, html, property } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 /**
  * Accessible toggle switch web component.

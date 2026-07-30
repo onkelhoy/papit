@@ -6,7 +6,7 @@ import { bind, CustomElement, html, property, query } from "@papit/web-component
 import "@papit/icon";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { FOCUSABLE } from "types";
 
 /**

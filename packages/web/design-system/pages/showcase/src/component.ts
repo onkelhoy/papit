@@ -13,7 +13,7 @@ import "@papit/sidebar";
 import "@papit/router";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { translate, useTranslator } from "@papit/translator";
 
 export class Showcase extends CustomElement {

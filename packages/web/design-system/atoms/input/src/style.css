@@ -1,0 +1,53 @@
+:host {
+    display: inline-block;
+    color: var(--text);
+
+    div[part="wrapper"] {
+        padding: var(--space-1, 4px);
+        background-color: var(--shade-1, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+        border: 1px solid var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0)));
+        border-radius: 4px;
+        display: flex;
+        gap: var(--space-1, 4px);
+
+        input {
+            all: unset;
+            flex: 1;
+            background: none;
+        }
+
+        button {
+            /* opacity: 0.5; */
+            border-radius: 50%;
+
+            border: none;
+            background: none;
+            padding-inline: 0;
+            padding-block: 0;
+            width: var(--space-4, 16px);
+            height: var(--space-4, 16px);
+            margin-block: auto;
+            display: inline;
+
+            cursor: pointer;
+
+            pap-icon {
+                width: 100%;
+                height: 100%;
+            }
+
+            &[part="clear"] {
+                width: 14px;
+                height: 14px;
+            }
+        }
+    }
+}
+
+:host(:focus-within) {
+    div[part="wrapper"] {
+
+        outline: 2px solid AccentColor;
+        outline-offset: 1px;
+    }
+}

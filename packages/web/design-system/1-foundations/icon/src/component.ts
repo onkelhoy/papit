@@ -1,5 +1,5 @@
 import { CustomElement, html, property, unsafeHTML } from "@papit/web-component";
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { CountryEmojiSet } from "types";
 
 export class Icon extends CustomElement {

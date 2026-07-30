@@ -7,7 +7,7 @@
     "typescript",
     "switch"
   ],
-  "version": "0.1.5",
+  "version": "0.1.6",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -54,7 +54,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/web-component": "0.0.6"
+    "@papit/web-component": "0.0.7"
   },
   "devDependencies": {
     "@playwright/test": "1.58.0",
@@ -62,7 +62,7 @@
     "typescript": "5.9.3",
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.7"
+    "@papit/codeblock": "0.1.8"
   },
   "browserslist": [
     "defaults",
