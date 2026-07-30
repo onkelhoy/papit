@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confetti | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Confetti | experiment</h1>
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock>
+            <style>
+                pap-confetti {
+                    width: 400px;
+                    height: 400px;
+                    outline: 2px solid cornflowerblue;
+                }
+            </style>
+            <pap-confetti click></pap-confetti>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Placement</h2>
+        <pap-codeblock>
+            <pap-confetti aria-controls="btn" placement="top-right"></pap-confetti>
+            <button id="btn">RUN</button>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>
