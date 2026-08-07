@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Input | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Input | experiment</h1>
+    <section>
+        <h2>Basic Example</h2>
+        <pap-codeblock>
+            <pap-input></pap-input>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>With Prefix and Sufix</h2>
+        <pap-codeblock>
+            <div>
+                <pap-input>
+                    <span slot="prefix">Prefix</span>
+                </pap-input>
+            </div>
+            <div>
+                <pap-input>
+                    <span slot="sufix">Sufix</span>
+                </pap-input>
+            </div>
+            <div>
+                <pap-input>
+                    <span slot="prefix">Prefix</span>
+                    <span slot="sufix">Sufix</span>
+                </pap-input>
+            </div>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Form example</h2>
+        <pap-codeblock>
+            <form>
+                <pap-input name="a" required></pap-input>
+                <pap-input name="b" format="X-XX" value="bbb"></pap-input>
+                <pap-input name="c" defaultValue="ccc"></pap-input>
+                <button type="submit">submit</button>
+                <button type="reset">reset</button>
+            </form>
+            <script>
+                document.addEventListener("DOMContentLoaded", () =>
+                {
+                    const inputA = document.querySelector("pap-input[name=\"a\"]");
+                    inputA.error = {
+                        valueMissing: () => `Required — attempted at ${new Date().toLocaleTimeString()}`,
+                    };
+                    document.querySelector('form').onsubmit = (e) =>
+                    {
+                        e.preventDefault();
+                        const data = new FormData(e.target);
+                        console.log({ a: data.get('a'), b: data.get('b'), c: data.get('c') });
+                    };
+                });
+            </script>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Format Example</h2>
+        <pap-codeblock>
+            <pap-input format="XXX-XXX-XXX"></pap-input>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>With Clear</h2>
+        <pap-codeblock>
+            <label for="a">Input With Clear</label>
+            <pap-input id="a" clear autocomplete="off"></pap-input>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Password</h2>
+        <pap-codeblock>
+            <pap-input autocomplete="off" type="password"></pap-input>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

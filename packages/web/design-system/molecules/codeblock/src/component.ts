@@ -16,7 +16,7 @@ import { Switch } from "@papit/switch";
 import { useTranslator, translator, TransalatorFn, translate } from "@papit/translator/browser";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { html as formatHTML } from "formatters/html";
 
 /**

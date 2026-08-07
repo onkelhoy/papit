@@ -1,10 +1,10 @@
 // import statements 
 // system 
-import { bind, CustomElementInternals, html, property, query } from "@papit/web-component";
+import { bind, CustomElementInternals, ElementSetting, html, property, query } from "@papit/web-component";
 
 import { translate, useTranslator } from "@papit/translator";
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 type State = Partial<Record<keyof ValidityState, Array<string>>>;
 type StateMap = Partial<Record<(keyof ValidityState | (string & {})), string | string[] | (() => string | string[])>>;
@@ -53,6 +53,8 @@ export class Field extends CustomElementInternals {
 
     static sheets = [sheet];
 
+    @property({ type: Boolean, attribute: "hide-states" }) hideStates = false;
+
     @property({ type: Object })
     error: StateMap = {}
 
@@ -69,6 +71,24 @@ export class Field extends CustomElementInternals {
 
     private get fieldName() {
         return this.getAttribute("name") ?? this.target?.name ?? "";
+    }
+
+    protected syncValidity() {
+        if (!this.target)
+        {
+            this.setValidity({});
+            return;
+        }
+
+        const validity = this.target.validity;
+        const flags: ValidityStateFlags = {};
+        for (const key in validity)
+        {
+            const k = key as keyof ValidityState;
+            if (k !== "valid" && validity[k]) flags[k] = true;
+        }
+
+        this.setValidity(flags, this.target.validationMessage, this.target);
     }
 
     private _target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement | null = null;
@@ -108,11 +128,21 @@ export class Field extends CustomElementInternals {
 
         this._target = value;
 
-        if (!value) return;
+        if (!value) 
+        {
+            this.setValidity({});
+            return;
+        }
 
         value.addEventListener("input", this.handlechange);
         value.addEventListener("change", this.handlechange);
         value.addEventListener("invalid", this.handleinvalid);
+        this.syncValidity();
+    }
+
+    constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<ElementSetting>) {
+        super(shadowRootInit);
+        this.addEventListener("invalid", this.handleinvalid); // host-level, for form-associated proxying
     }
 
     disconnectedCallback(): void {
@@ -162,6 +192,7 @@ export class Field extends CustomElementInternals {
     @bind
     private handlechange(e: Event) {
         this.errorState = {};
+        this.syncValidity();
 
         if (!this.target) return;
 
@@ -244,11 +275,12 @@ export class Field extends CustomElementInternals {
     }
 
     protected renderStates() {
+        if (this.hideStates) return null;
+
         const errorEntries = Object.entries(this.errorState).flatMap(([key, msg]) => msg.map((m, index) => m));
         const warningEntries = Object.entries(this.warningState).flatMap(([key, msg]) => msg.map((m, index) => m));
 
         if (!errorEntries.length && !warningEntries.length) return null;
-
 
         return html`
             <div part="states">

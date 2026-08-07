@@ -61,13 +61,12 @@ function runner(node, extraEnv = {}, extraArgs = []) {
     if (Arguments.has("ci")) Arguments.set("remote", true);
     if (Arguments.has("ci")) process.env.CI = "true";
 
-    const summery = [];
+    // const summery = [];
 
     await setup();
 
     const force = Arguments.has("force");
-    const batches = Information.getBatches();
-
+    const batches = Information.getBatches(Arguments.instance, p => p.name.startsWith(Information.scope));
 
     const testresult_location = path.join(Information.root.location, "test-result.log");
     if (!Arguments.has("ci") && fs.existsSync(testresult_location)) fs.rmSync(testresult_location);

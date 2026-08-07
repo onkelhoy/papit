@@ -9,7 +9,7 @@ import "@papit/button";
 import "@papit/icon";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 type FileItem = { id: string, url: string, data: File, progress?: number, error: boolean };
 

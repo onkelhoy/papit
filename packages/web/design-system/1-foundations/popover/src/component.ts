@@ -3,7 +3,7 @@
 import { bind, CustomElement, debounce, generateUUID, html, property } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 /**
  * `Popover` is a positioned overlay component built on the native Popover API

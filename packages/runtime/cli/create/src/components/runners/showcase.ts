@@ -114,7 +114,7 @@ async function generate(node: PackageNode<LocalPackage>, viewfolders: string[], 
 
 function getBatches(filter: string[]) {
     return Information
-        .getPriorityBatches()
+        .getPriorityBatches(Arguments.instance, p => p.name.startsWith(Information.scope))
         .map(batch => batch.filter(node => {
             if (node.packageJSON.papit.skip) return false;
             if (typeof node.packageJSON.papit.type === "string")

@@ -41,13 +41,13 @@ export class Information {
     static get sourceFolder() { return this.package.sourceFolder }
     static get outFolder() { return this.package.outFolder }
 
-    static getBatches(args = Arguments.instance) {
+    static getBatches(args = Arguments.instance, filterCallback?: (node: PackageNode) => boolean) {
         // Determine which edge types to include
         const typeFilter = args.get("type-filter") ?? ["dependencies", "peerDependencies", "devDependencies"];
 
         if (!args.has("individual") && (args.has("all") || Information.package.name === Information.root.name))
         {
-            return PackageGraph.getOrder(PackageGraph.nodes.filter(n => n.type !== "root"), typeFilter);
+            return PackageGraph.getOrder(PackageGraph.nodes.filter(n => n.type !== "root"), typeFilter, filterCallback);
         }
 
         if (!args.has("individual") && args.has("bloodline"))
@@ -55,29 +55,29 @@ export class Information {
             const ancestors = PackageGraph.getAncestors(Information.package.name, typeFilter);
             const descendants = PackageGraph.getDescendants(Information.package.name, typeFilter);
             const nodes = [...ancestors, Information.package, ...descendants];
-            return PackageGraph.getOrder(nodes, typeFilter);
+            return PackageGraph.getOrder(nodes, typeFilter, filterCallback);
         }
 
         if (!args.has("individual") && args.has("descendants"))
         {
             const descendants = PackageGraph.getDescendants(Information.package.name, typeFilter);
             const nodes = [...descendants, Information.package];
-            return PackageGraph.getOrder(nodes, typeFilter);
+            return PackageGraph.getOrder(nodes, typeFilter, filterCallback);
         }
 
         if (!args.has("individual") && args.has("ancestors"))
         {
             const ancestors = PackageGraph.getAncestors(Information.package.name, typeFilter);
             const nodes = [...ancestors, Information.package];
-            return PackageGraph.getOrder(nodes, typeFilter);
+            return PackageGraph.getOrder(nodes, typeFilter, filterCallback);
         }
 
         // individual 
         return [[Information.package]];
     }
 
-    static getPriorityBatches(args = Arguments.instance) {
-        const batches = this.getBatches(args);
+    static getPriorityBatches(args = Arguments.instance, filterCallback?: (node: PackageNode) => boolean) {
+        const batches = this.getBatches(args, filterCallback);
         const prioQueue = new PriorityQueue<PackageNode>();
         const prioSet = new Set<string>();
 
@@ -85,7 +85,7 @@ export class Information {
         {
             for (const node of batch)
             {
-                if (node.packageJSON.papit.priority === undefined) continue;
+                if (node.packageJSON.papit?.priority === undefined) continue;
                 if (this.package.name === node.name) continue;
                 prioQueue.enqueue(node, node.packageJSON.papit.priority);
                 prioSet.add(node.name);

@@ -104,7 +104,7 @@ export class CustomElementInternals extends CustomElement {
         message?: string | undefined,
         anchor?: HTMLElement | undefined
     ) {
-        if (!this._internals === undefined) return;
+        if (this._internals === undefined) return;
         this._internals.setValidity(flags, message, anchor || undefined);
     }
 }

@@ -3,7 +3,7 @@
 import { bind, context, CustomElement, generateUUID, html, property, query } from "@papit/web-component";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 // foundations
 import "@papit/button";

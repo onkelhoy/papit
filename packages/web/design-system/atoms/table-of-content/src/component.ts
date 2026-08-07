@@ -6,7 +6,7 @@ import { bind, CustomElementInternals, debounce, html, property, unsafeHTML } fr
 import "@papit/treeview";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 type Link = {
     href: string;

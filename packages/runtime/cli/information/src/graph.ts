@@ -24,7 +24,7 @@ export class Graph {
         return this.nodes.find(node => location.startsWith(node.location));
     }
 
-    private scope = "";
+    public scope = "";
     public ERROR = false;
 
     constructor() {
@@ -115,14 +115,19 @@ export class Graph {
         return node;
     }
 
-    // In your Graph class
-    public getOrder(
+    public getOrder({
+        packages,
+        sortFilter = ["dependencies", "peerDependencies"], // Used for topological sorting
+        includeFilter = ["devDependencies"], // Used for which nodes to include
+        filterCallback = () => true,
+    }: {
         packages: PackageNode<LocalPackage>[],
-        sortFilter: string[] = ["dependencies", "peerDependencies"],      // Used for topological sorting
-        includeFilter: string[] = ["devDependencies"]   // Used for which nodes to include
-    ): PackageNode[][] {
+        sortFilter?: string[],
+        includeFilter?: string[],
+        filterCallback?: (node: PackageNode) => boolean
+    }): PackageNode[][] {
         // Get all nodes we want to include
-        const allPackageIds = packages.map(p => p.name);
+        const allPackageIds = packages.filter(filterCallback).map(p => p.name);
         const subgraph = this.graph.subgraph(allPackageIds);
 
         // Get sorted order based on sortFilter (production deps only)
@@ -162,7 +167,7 @@ export class Graph {
         if (includeFilter?.includes("devDependencies"))
         {
             const allIncluded = new Set(batches.flatMap(b => b.map(n => n.name)));
-            const missing = packages.filter(p => !allIncluded.has(p.name));
+            const missing = packages.filter(p => !allIncluded.has(p.name) && filterCallback(p));
             if (missing.length > 0)
             {
                 batches.push(missing);
@@ -194,8 +199,12 @@ export class PackageGraph {
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
     static search(location: string, compare: "start" | "end" = "end") { return this.instance.search(location, compare) }
-    static getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[]) {
-        return this.instance.getOrder(packages, typeFilter)
+    static getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[], filterCallback?: (node: PackageNode) => boolean) {
+        return this.instance.getOrder({
+            packages,
+            sortFilter: typeFilter,
+            filterCallback
+        });
     }
     static getDescendants(name: string, typeFilter?: string[]) {
         return this.instance.getDescendants(name, typeFilter)

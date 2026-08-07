@@ -6,7 +6,7 @@ import { html, property } from "@papit/web-component";
 import { Dialog } from "@papit/dialog";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 
 /**

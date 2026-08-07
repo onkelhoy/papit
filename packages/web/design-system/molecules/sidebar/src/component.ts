@@ -14,7 +14,7 @@ import "@papit/tooltip";
 import { translate, useTranslator } from "@papit/translator";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 /**
  * Collapsible sidebar navigation panel. Expands on hamburger click or by clicking/hovering

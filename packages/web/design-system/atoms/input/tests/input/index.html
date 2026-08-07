@@ -1,0 +1,32 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>input test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <pap-input data-testid="base-target">
+        fallback
+    </pap-input>
+
+    <pap-input data-testid="format-target" format="(xxx) xxx-xxxx"></pap-input>
+
+    <pap-input data-testid="clear-target" clear></pap-input>
+
+    <pap-input data-testid="password-target" type="password"></pap-input>
+
+    <form>
+        <pap-input data-testid="reset-target" name="reset-field" defaultvalue="default"></pap-input>
+        <button type="reset" data-testid="reset-button">Reset</button>
+    </form>
+
+    <form>
+        <pap-input data-testid="required-target" name="required-field" required></pap-input>
+    </form>
+</body>
+
+</html>

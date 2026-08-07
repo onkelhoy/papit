@@ -13,7 +13,7 @@ import "@papit/tooltip";
 import { Tooltip } from "@papit/tooltip";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 export class ThemePicker extends CustomElement {
     static sheet = sheet;

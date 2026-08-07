@@ -8,7 +8,7 @@ import "@papit/group";
 
 // local 
 import { Tab } from "components/tab/component";
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 
 /**
  * # Tabs

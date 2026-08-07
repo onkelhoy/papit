@@ -6,7 +6,7 @@ import { bind, context, CustomElement, generateUUID, html, property } from "@pap
 import "@papit/button";
 
 // local 
-import sheet from "./style.css" assert { type: "css" };
+import sheet from "./style.css" with { type: "css" };
 import { Helper } from "components/helper";
 
 /**

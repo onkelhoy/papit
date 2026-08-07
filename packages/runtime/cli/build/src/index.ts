@@ -39,7 +39,7 @@ export async function build(
         return;
     }
 
-    const ordered = Information.getPriorityBatches(args);
+    const ordered = Information.getPriorityBatches(args, p => p.name.startsWith(Information.scope));
 
     let hasprintedPriority = false;
 
