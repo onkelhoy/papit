@@ -60,9 +60,11 @@
   "devDependencies": {
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.8",
+    "@papit/codeblock": "0.1.9",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
+    "@papit/router": "0.1.3",
+    "@papit/tabs": "0.1.3",
     "typescript": "5.9.3"
   },
   "browserslist": [
@@ -82,5 +84,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.8"
+  "remoteVersion": "0.0.9"
 }
