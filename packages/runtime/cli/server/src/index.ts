@@ -70,12 +70,25 @@ export async function meta() {
 
     const batches = Information.getBatches();
 
+    // Workaround: @papit/information's getBatches() excludes any node with
+    // type === "root". In a real monorepo that's correct (it's the workspace
+    // meta-package). In a standalone project, root === package, so this
+    // silently drops the only package there is. Add it back as its own batch.
+    const ownIncluded = batches.some(batch =>
+        batch.some(node => node.name === Information.package.name)
+    );
+    if (!ownIncluded)
+    {
+        batches.push([Information.package]);
+    }
 
     for (const batch of batches)
     {
         for (const node of batch) 
         {
-            if (node.packageJSON.papit.type === "theme")
+            const papitType = node.packageJSON.papit?.type ?? "app";
+
+            if (papitType === "theme")
             {
                 const output = node.entrypoints.entries.theme?.import?.output ?? node.entrypoints.entries.bundle?.import?.output;
                 if (output)
@@ -90,7 +103,7 @@ export async function meta() {
                 extractImportmap(node, importmap, importmapFolder);
             }
 
-            if (!Arguments.has("include-node") && node.packageJSON.papit.type === "node") continue;
+            if (!Arguments.has("include-node") && papitType === "node") continue;
 
             await extractAssets(
                 node.location,
