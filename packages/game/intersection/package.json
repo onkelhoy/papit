@@ -52,16 +52,15 @@
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {},
   "devDependencies": {
-    "@playwright/test": "1.58.0",
-    "playwright": "1.58.0",
-    "typescript": "5.9.3",
-    "@papit/theme": "*",
-    "@papit/translator": "*",
     "@papit/codeblock": "*",
     "@papit/game-engine": "*",
-    "@papit/vector": "*"
+    "@papit/theme": "*",
+    "@papit/translator": "*",
+    "@papit/vector": "^0.0.1",
+    "@playwright/test": "1.58.0",
+    "playwright": "1.58.0",
+    "typescript": "5.9.3"
   },
   "browserslist": [
     "defaults",
@@ -79,6 +78,10 @@
       },
       "triangle": {
         "className": "Triangle",
+        "htmlprefix": "pap"
+      },
+      "rectangle": {
+        "className": "Rectangle",
         "htmlprefix": "pap"
       }
     }
