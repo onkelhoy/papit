@@ -83,6 +83,10 @@
       "rectangle": {
         "className": "Rectangle",
         "htmlprefix": "pap"
+      },
+      "polygon": {
+        "className": "Polygon",
+        "htmlprefix": "pap"
       }
     }
   }
