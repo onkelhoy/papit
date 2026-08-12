@@ -1,112 +1,112 @@
 {
-  "name": "@papit/intersection",
-  "description": "a collection of intersection game logic ",
-  "keywords": [
-    "papit",
-    "game",
-    "typescript",
-    "intersection"
-  ],
-  "version": "0.0.1",
-  "scripts": {
-    "build": "npx @papit/build -- --error --ancestors",
-    "watch": "tsc -w",
-    "start": "npx @papit/server --info --live",
-    "test": "npx playwright test -c tests/playwright.config.ts $@",
-    "preversion": "papit-version",
-    "postversion": "papit-version",
-    "component": "npm create @papit -- --component",
-    "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
-    "test:chrome": "npm test -- --project=chromium"
-  },
-  "main": "./lib/bundle.js",
-  "types": "./lib/bundle.d.ts",
-  "type": "module",
-  "files": [
-    "asset/",
-    "lib/"
-  ],
-  "exports": {
-    ".": {
-      "import": "./lib/bundle.js",
-      "types": "./lib/bundle.d.ts"
+    "name": "@papit/game-intersection",
+    "description": "a collection of intersection game logic ",
+    "keywords": [
+        "papit",
+        "game",
+        "typescript",
+        "intersection"
+    ],
+    "version": "0.0.1",
+    "scripts": {
+        "build": "npx @papit/build -- --error --ancestors",
+        "watch": "tsc -w",
+        "start": "npx @papit/server --info --live",
+        "test": "npx playwright test -c tests/playwright.config.ts $@",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit -- --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium"
+    },
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/intersection",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/onkelhoy/papit.git",
+        "directory": "packages/game/intersection"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "devDependencies": {
+        "@papit/codeblock": "*",
+        "@papit/game-engine": "*",
+        "@papit/theme": "*",
+        "@papit/translator": "*",
+        "@papit/vector": "^0.0.1",
+        "@playwright/test": "1.58.0",
+        "playwright": "1.58.0",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "game",
+        "main": "intersection",
+        "components": {
+            "intersection": {
+                "className": "Intersection",
+                "htmlprefix": "pap"
+            },
+            "triangle": {
+                "className": "Triangle",
+                "htmlprefix": "pap"
+            },
+            "rectangle": {
+                "className": "Rectangle",
+                "htmlprefix": "pap"
+            },
+            "polygon": {
+                "className": "Polygon",
+                "htmlprefix": "pap"
+            },
+            "line": {
+                "className": "Line",
+                "htmlprefix": "pap"
+            },
+            "circle": {
+                "className": "Circle",
+                "htmlprefix": "pap"
+            },
+            "sat": {
+                "className": "SAT",
+                "htmlprefix": "pap"
+            },
+            "gjk": {
+                "className": "GJK",
+                "htmlprefix": "pap"
+            }
+        }
+    },
+    "dependencies": {
+        "@papit/game-shape": "^0.0.1"
     }
-  },
-  "author": "henry",
-  "private": false,
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "license": "LicenseRef-Papit-1.0",
-  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/intersection",
-  "bugs": {
-    "url": "https://github.com/onkelhoy/papit/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/onkelhoy/papit.git",
-    "directory": "packages/game/intersection"
-  },
-  "sideEffects": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "devDependencies": {
-    "@papit/codeblock": "*",
-    "@papit/game-engine": "*",
-    "@papit/theme": "*",
-    "@papit/translator": "*",
-    "@papit/vector": "^0.0.1",
-    "@playwright/test": "1.58.0",
-    "playwright": "1.58.0",
-    "typescript": "5.9.3"
-  },
-  "browserslist": [
-    "defaults",
-    "not IE 11",
-    "not dead"
-  ],
-  "papit": {
-    "publish": true,
-    "type": "game",
-    "main": "intersection",
-    "components": {
-      "intersection": {
-        "className": "Intersection",
-        "htmlprefix": "pap"
-      },
-      "triangle": {
-        "className": "Triangle",
-        "htmlprefix": "pap"
-      },
-      "rectangle": {
-        "className": "Rectangle",
-        "htmlprefix": "pap"
-      },
-      "polygon": {
-        "className": "Polygon",
-        "htmlprefix": "pap"
-      },
-      "line": {
-        "className": "Line",
-        "htmlprefix": "pap"
-      },
-      "circle": {
-        "className": "Circle",
-        "htmlprefix": "pap"
-      },
-      "sat": {
-        "className": "SAT",
-        "htmlprefix": "pap"
-      },
-      "gjk": {
-        "className": "GJK",
-        "htmlprefix": "pap"
-      }
-    }
-  },
-  "dependencies": {
-    "@papit/game-shape": "^0.0.1"
-  }
 }

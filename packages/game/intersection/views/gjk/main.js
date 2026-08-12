@@ -2,7 +2,7 @@
 import { Engine, InputEvents } from '@papit/game-engine';
 
 // component
-import '@papit/intersection';
+import '@papit/game-intersection';
 
 let engine, events;
 
