@@ -5,11 +5,17 @@ import { Information, PackageNode } from "@papit/information";
 import { type Importmap } from "./types";
 import { pathToFileURL } from "node:url";
 
+const TOOLCHAIN_PACKAGES = ["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"];
+
 export function extractImportmap(
     node: PackageNode,
     map: Importmap,
     mapFolder: string,
+    seen: Set<string> = new Set(),
 ) {
+    if (seen.has(node.name)) return;
+    seen.add(node.name);
+
     extractPackageJSON(
         node.name,
         node.location,
@@ -17,43 +23,55 @@ export function extractImportmap(
         map,
     );
 
-    for (const name in node.packageJSON.dependencies) 
+    for (const depsField of ["dependencies", "devDependencies"] as const)
     {
-        if (name.startsWith(Information.scope)) continue;
-        if (["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"].includes(name)) continue;
+        for (const name in node.packageJSON[depsField])
+        {
+            if (seen.has(name)) continue;
+            if (TOOLCHAIN_PACKAGES.includes(name)) continue;
+            // local/batch @papit packages get resolved via their own batch
+            // entry in the caller's loop — skip only at that top level.
+            if (name.startsWith(Information.scope) && node.name === Information.package.name) continue;
 
-        const location = path.join(Information.root.location, "node_modules", name);
-        const pkgLoc = path.join(location, "package.json");
-        if (!fs.existsSync(pkgLoc)) continue;
-        const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
+            const location = resolveNodeModule(node.location, name);
+            if (!location) continue;
 
-        extractPackageJSON(
-            name,
-            location,
-            packageJSON,
-            map,
-            true,
-        );
+            const pkgLoc = path.join(location, "package.json");
+            if (!fs.existsSync(pkgLoc)) continue;
+            const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
+
+            extractPackageJSON(
+                name,
+                location,
+                packageJSON,
+                map,
+                true,
+            );
+
+            extractImportmap(
+                { name, location, packageJSON } as PackageNode,
+                map,
+                mapFolder,
+                seen,
+            );
+        }
     }
+}
 
-    for (const name in node.packageJSON.devDependencies) 
+// Walk up from `from`, checking each ancestor's node_modules/<name>,
+// same resolution order Node itself uses for unhoisted/nested deps.
+function resolveNodeModule(from: string, name: string): string | null {
+    let dir = from;
+    while (true)
     {
-        if (name.startsWith(Information.scope)) continue;
-        if (["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"].includes(name)) continue;
+        const candidate = path.join(dir, "node_modules", name);
+        if (fs.existsSync(candidate)) return candidate;
 
-        const location = path.join(Information.root.location, "node_modules", name);
-        const pkgLoc = path.join(location, "package.json");
-        if (!fs.existsSync(pkgLoc)) continue;
-        const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
-
-        extractPackageJSON(
-            name,
-            location,
-            packageJSON,
-            map,
-            true,
-        );
+        const parent = path.dirname(dir);
+        if (parent === dir) break;
+        dir = parent;
     }
+    return null;
 }
 
 function extractPackageJSON(
