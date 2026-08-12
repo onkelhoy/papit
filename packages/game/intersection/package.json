@@ -95,6 +95,10 @@
       "circle": {
         "className": "Circle",
         "htmlprefix": "pap"
+      },
+      "sat": {
+        "className": "SAT",
+        "htmlprefix": "pap"
       }
     }
   }
