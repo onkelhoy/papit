@@ -26,7 +26,7 @@ The library is intentionally low‑level, allocation‑aware, and predictable �
 - ✅ Built‑in support for **TRS transforms**
 - ✅ Perspective, orthographic & frustum projections
 - ✅ Right‑handed & left‑handed coordinate systems
-- ✅ Zero external dependencies (except `@papit/game-vector`)
+- ✅ Zero external dependencies (except `@papit/vector`)
 
 ---
 

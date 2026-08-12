@@ -1,0 +1,1 @@
+export { LineIntersection, SegmentIntersection } from "@papit/game-shape";

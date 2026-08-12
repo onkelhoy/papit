@@ -1,5 +1,5 @@
 {
-  "name": "@papit/shape",
+  "name": "@papit/game-shape",
   "description": "a simple collection of game shapes ",
   "keywords": [
     "papit",
@@ -75,6 +75,22 @@
     "components": {
       "shape": {
         "className": "Shape",
+        "htmlprefix": "pap"
+      },
+      "rectangle": {
+        "className": "Rectangle",
+        "htmlprefix": "pap"
+      },
+      "line": {
+        "className": "Line",
+        "htmlprefix": "pap"
+      },
+      "circle": {
+        "className": "Circle",
+        "htmlprefix": "pap"
+      },
+      "polygon": {
+        "className": "Polygon",
         "htmlprefix": "pap"
       }
     }

@@ -1,0 +1,1 @@
+export { isPointInPolygonTriangles, isPointInPolygonRayCasting } from "@papit/game-shape";

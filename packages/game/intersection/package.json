@@ -105,5 +105,8 @@
         "htmlprefix": "pap"
       }
     }
+  },
+  "dependencies": {
+    "@papit/game-shape": "^0.0.1"
   }
 }
