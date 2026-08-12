@@ -1,6 +1,6 @@
 // import statements 
 
-export class GameShape {
+export class Shape {
   constructor() {
 
   }

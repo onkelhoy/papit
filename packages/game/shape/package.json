@@ -1,11 +1,11 @@
 {
-  "name": "@papit/game-shape",
-  "description": "a collection of simple game shapes, line, rectangle etc ",
+  "name": "@papit/shape",
+  "description": "a simple collection of game shapes ",
   "keywords": [
     "papit",
     "game",
     "typescript",
-    "game-shape"
+    "shape"
   ],
   "version": "0.0.1",
   "scripts": {
@@ -39,14 +39,14 @@
     "registry": "https://registry.npmjs.org/"
   },
   "license": "LicenseRef-Papit-1.0",
-  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/game-shape",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/shape",
   "bugs": {
     "url": "https://github.com/onkelhoy/papit/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/onkelhoy/papit.git",
-    "directory": "packages/game/game-shape"
+    "directory": "packages/game/shape"
   },
   "sideEffects": true,
   "engines": {
@@ -71,22 +71,10 @@
   "papit": {
     "publish": true,
     "type": "game",
-    "main": "game-shape",
+    "main": "shape",
     "components": {
-      "game-shape": {
-        "className": "GameShape",
-        "htmlprefix": "pap"
-      },
-      "line": {
-        "className": "Line",
-        "htmlprefix": "pap"
-      },
-      "rectangle": {
-        "className": "Rectangle",
-        "htmlprefix": "pap"
-      },
-      "circle": {
-        "className": "Circle",
+      "shape": {
+        "className": "Shape",
         "htmlprefix": "pap"
       }
     }

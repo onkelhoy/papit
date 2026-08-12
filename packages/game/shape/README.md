@@ -1,6 +1,6 @@
-# @papit/game-shape
+# @papit/shape
 
-a collection of simple game shapes, line, rectangle etc 
+a simple collection of game shapes 
 
 ![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
@@ -8,14 +8,14 @@ a collection of simple game shapes, line, rectangle etc
 
 ![Type](https://img.shields.io/badge/Type-game-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
-[![NPM version](https://img.shields.io/npm/v/@papit/game-shape.svg?logo=npm)](https://www.npmjs.com/package/@papit/game-shape)
+[![NPM version](https://img.shields.io/npm/v/@papit/shape.svg?logo=npm)](https://www.npmjs.com/package/@papit/shape)
 
 ---
 
 ## installation
 
 ```bash
-npm install @papit/game-shape
+npm install @papit/shape
 ```
 
 ## Contributing

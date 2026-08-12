@@ -2,7 +2,7 @@
 import { Engine, InputEvents } from '@papit/game-engine';
 
 // component
-import '@papit/game-shape';
+import '@papit/shape';
 
 let engine, events;
 

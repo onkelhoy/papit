@@ -3,7 +3,7 @@ import { Engine } from '@papit/game-engine';
 import { InputEvents } from "@papit/game-input-events";
 
 // component
-import '@papit/game-shape';
+import '@papit/shape';
 
 let engine, events;
 
