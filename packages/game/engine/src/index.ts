@@ -1,3 +1,5 @@
 // exports
-export * from "./canvas";
+export * from "./engine";
 export * from "./types";
+export * from "./utils";
+export * from "./input";

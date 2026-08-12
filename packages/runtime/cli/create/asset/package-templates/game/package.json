@@ -61,8 +61,7 @@
         "@papit/translator": "*",
         "@papit/codeblock": "*",
         "@papit/game-engine": "*",
-        "@papit/game-input-events": "*",
-        "@papit/game-vector": "*"
+        "@papit/vector": "*"
     },
     "browserslist": [
         "defaults",

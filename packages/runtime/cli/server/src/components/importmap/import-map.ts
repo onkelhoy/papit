@@ -35,6 +35,25 @@ export function extractImportmap(
             true,
         );
     }
+
+    for (const name in node.packageJSON.devDependencies) 
+    {
+        if (name.startsWith(Information.scope)) continue;
+        if (["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"].includes(name)) continue;
+
+        const location = path.join(Information.root.location, "node_modules", name);
+        const pkgLoc = path.join(location, "package.json");
+        if (!fs.existsSync(pkgLoc)) continue;
+        const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
+
+        extractPackageJSON(
+            name,
+            location,
+            packageJSON,
+            map,
+            true,
+        );
+    }
 }
 
 function extractPackageJSON(
