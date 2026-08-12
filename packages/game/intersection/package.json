@@ -99,6 +99,10 @@
       "sat": {
         "className": "SAT",
         "htmlprefix": "pap"
+      },
+      "gjk": {
+        "className": "GJK",
+        "htmlprefix": "pap"
       }
     }
   }
