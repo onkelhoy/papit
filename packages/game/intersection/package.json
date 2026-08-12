@@ -76,6 +76,10 @@
       "intersection": {
         "className": "Intersection",
         "htmlprefix": "pap"
+      },
+      "triangle": {
+        "className": "Triangle",
+        "htmlprefix": "pap"
       }
     }
   }
