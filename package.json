@@ -1,55 +1,55 @@
 {
-    "name": "@papit/root",
-    "version": "0.0.0",
-    "description": "A ecosystem designed to be generic and easy to extend. Intended use for creating packages in a monorepo setup",
-    "private": true,
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git"
-    },
-    "scripts": {
-        "analyse": "to come",
-        "publish": "node bin/publish.mjs",
-        "prebuild": "node bin/prebuild.mjs",
-        "build": "npx @papit/build",
-        "clean": "node bin/clean.mjs",
-        "test": "node bin/test.mjs",
-        "create": "npm create @papit -- --package --html-prefix=pap",
-        "start": "npx @papit/server --info",
-        "showcase": "npm create @papit -- --showcase",
-        "version:reset": "npx @papit/version --reset",
-        "version:sync": "npx @papit/version --sync"
-    },
-    "keywords": [
-        "typescript"
-    ],
-    "packageManager": "npm@11.6.2",
-    "engines": {
-        "node": ">=20"
-    },
-    "author": "Henry Pap",
-    "license": "LicenseRef-Papit-1.0",
-    "workspaces": [
-        "packages/**/*",
-        "!packages/**/asset/**"
-    ],
-    "devDependencies": {
-        "@papit/arguments": "0.0.1",
-        "@papit/build": "0.0.1",
-        "@papit/bundle-js": "0.0.1",
-        "@papit/bundle-ts": "0.0.1",
-        "@papit/create": "0.0.1",
-        "@papit/information": "0.0.1",
-        "@papit/server": "0.0.1",
-        "@papit/terminal": "0.0.1",
-        "@papit/version": "0.0.1",
-        "esbuild": "0.27.2",
-        "typescript": "5.9.3"
-    },
-    "papit": {
-        "htmlprefix": "pap"
-    },
-    "dependencies": {
-        "@microsoft/api-extractor": "7.58.12"
-    }
+  "name": "@papit/root",
+  "version": "0.0.0",
+  "description": "A ecosystem designed to be generic and easy to extend. Intended use for creating packages in a monorepo setup",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git"
+  },
+  "scripts": {
+    "analyse": "to come",
+    "publish": "node bin/publish.mjs",
+    "prebuild": "node bin/prebuild.mjs",
+    "build": "npx @papit/build",
+    "clean": "node bin/clean.mjs",
+    "test": "node bin/test.mjs",
+    "create": "npm create @papit -- --package --html-prefix=pap",
+    "start": "npx @papit/server --info",
+    "showcase": "npm create @papit -- --showcase",
+    "version:reset": "npx @papit/version --reset",
+    "version:sync": "npx @papit/version --sync"
+  },
+  "keywords": [
+    "typescript"
+  ],
+  "packageManager": "npm@11.6.2",
+  "engines": {
+    "node": ">=20"
+  },
+  "author": "Henry Pap",
+  "license": "LicenseRef-Papit-1.0",
+  "workspaces": [
+    "packages/**/*",
+    "!packages/**/asset/**"
+  ],
+  "devDependencies": {
+    "@papit/arguments": "0.0.1",
+    "@papit/build": "0.0.1",
+    "@papit/bundle-js": "0.0.1",
+    "@papit/bundle-ts": "0.0.1",
+    "@papit/create": "0.0.11",
+    "@papit/information": "0.0.1",
+    "@papit/server": "1.0.7",
+    "@papit/terminal": "0.0.1",
+    "@papit/version": "0.0.1",
+    "esbuild": "0.27.2",
+    "typescript": "5.9.3"
+  },
+  "papit": {
+    "htmlprefix": "pap"
+  },
+  "dependencies": {
+    "@microsoft/api-extractor": "7.58.12"
+  }
 }
