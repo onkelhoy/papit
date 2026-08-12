@@ -14,6 +14,7 @@ const polygons = [];
 window.onload = () => {
     engine = new Engine("canvas");
     events = new InputEvents(engine.canvas, { mouse: { pointerlock: false } });
+    engine.resizeCanvasToDisplaySize();
 
     events.on("mouse-up", handlemouseup);
     events.on("mouse-down", handlemousedown);
@@ -99,8 +100,8 @@ function handlemousedown(e) {
             {
                 selected = {
                     polygon,
-                    mouse: e.target.position.copy(),
-                    original: polygon.verticies.map(v => v.copy())
+                    mouse: e.target.position.clone,
+                    original: polygon.verticies.map(v => v.clone)
                 }
                 break;
             }
@@ -126,7 +127,7 @@ function handlemouseup(e) {
         }
         else
         {
-            creating.verticies.push(e.target.position.copy());
+            creating.verticies.push(e.target.position.clone);
         }
         // polygons.push(creating);
         // creating.recalculate();

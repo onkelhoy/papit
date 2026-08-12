@@ -4,6 +4,7 @@ import { Line, Circle } from "@papit/game-shape";
 
 // component
 import { isPointInCircle, LineIntersection, SegmentIntersection } from '@papit/game-intersection';
+import { Vector2 } from '@papit/vector';
 
 let engine, events;
 let selected = null;
@@ -18,6 +19,8 @@ window.onload = () => {
     events.on("mouse-up", handlemouseup);
     events.on("mouse-down", handlemousedown);
     events.on("mouse-move", handlemousemove);
+
+    engine.resizeCanvasToDisplaySize();
 
     document.querySelector('select').addEventListener('change', handleselectchange);
 }
@@ -116,9 +119,10 @@ function handlemousedown(e) {
 
     if (!selected)
     {
+
         creating = new Line(
-            e.target.position.copy(),
-            e.target.position.copy(),
+            new Vector2(e.target.position),
+            new Vector2(e.target.position),
         );
     }
 

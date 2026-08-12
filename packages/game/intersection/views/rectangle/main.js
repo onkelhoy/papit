@@ -1,6 +1,7 @@
 // core
 import { Engine, InputEvents } from '@papit/game-engine';
 import { Rectangle } from "@papit/game-shape";
+import { Vector2 } from "@papit/vector";
 
 // component
 import { isPointInRectangle, AABB } from '@papit/game-intersection';
@@ -13,6 +14,7 @@ const rectangles = [];
 window.onload = () => {
     engine = new Engine("canvas");
     events = new InputEvents(engine.canvas, { mouse: { pointerlock: false } });
+    engine.resizeCanvasToDisplaySize();
 
     events.on("mouse-up", handlemouseup);
     events.on("mouse-down", handlemousedown);
@@ -71,7 +73,7 @@ function draw() {
 function handlemousemove(e) {
     if (selected)
     {
-        selected.rectangle.set(e.target.position.Sub(selected.offset))
+        selected.rectangle.set(Vector2.subtract(e.target.position, selected.offset))
     }
     else if (creating)
     {
@@ -86,7 +88,7 @@ function handlemousedown(e) {
         {
             selected = {
                 rectangle: rec,
-                offset: e.target.position.Sub(rec),
+                offset: Vector2.subtract(e.target.position, rec),
             }
             break;
         }
@@ -95,8 +97,8 @@ function handlemousedown(e) {
     if (!selected)
     {
         creating = {
-            a: e.target.position.copy(),
-            b: e.target.position.copy(),
+            a: e.target.position.clone,
+            b: e.target.position.clone,
         }
     }
 

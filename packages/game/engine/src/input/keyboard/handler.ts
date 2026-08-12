@@ -70,7 +70,7 @@ export class Keyboard extends EventTarget {
         const name = (e.key || e.code).toLowerCase();
         if (!this.keys[name])
         {
-            throw new Error("keyup event fired but no key registered: " + name);
+            // throw new Error("keyup event fired but no key registered: " + name);
         }
 
         this.keys[name].clicked = false;

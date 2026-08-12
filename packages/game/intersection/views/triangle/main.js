@@ -13,6 +13,7 @@ const rectangles = [];
 window.onload = () => {
     engine = new Engine("canvas");
     events = new InputEvents(engine.canvas, { mouse: { pointerlock: false } });
+    engine.resizeCanvasToDisplaySize();
 
     events.on("mouse-up", handlemouseup);
     events.on("mouse-down", handlemousedown);

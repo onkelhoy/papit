@@ -1,7 +1,7 @@
 // core
 import { Engine, InputEvents } from '@papit/game-engine';
 import { Circle } from "@papit/game-shape";
-import { Vector } from "@papit/vector";
+import { Vector, Vector2 } from "@papit/vector";
 
 // component
 import { isPointInCircle, CircleIntersection } from '@papit/game-intersection';
@@ -14,6 +14,7 @@ const circles = [];
 window.onload = () => {
     engine = new Engine("canvas");
     events = new InputEvents(engine.canvas, { mouse: { pointerlock: false } });
+    engine.resizeCanvasToDisplaySize();
 
     events.on("mouse-up", handlemouseup);
     events.on("mouse-down", handlemousedown);
@@ -82,11 +83,11 @@ function draw() {
 function handlemousemove(e) {
     if (selected)
     {
-        selected.circle.set(e.target.position.Sub(selected.offset));
+        selected.circle.set(Vector2.subtract(e.target.position, selected.offset));
     }
     else if (creating)
     {
-        creating.r = Vector.Distance(creating, e.target.position);
+        creating.r = Vector2.distance(creating, e.target.position);
     }
 }
 function handlemousedown(e) {
@@ -97,7 +98,7 @@ function handlemousedown(e) {
         {
             selected = {
                 circle,
-                offset: e.target.position.Sub(circle),
+                offset: Vector2.subtract(e.target.position, circle),
             }
         }
     }

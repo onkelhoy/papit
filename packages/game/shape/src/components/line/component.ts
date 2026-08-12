@@ -28,31 +28,41 @@ export class Line {
         this.b = Vector2.add(this.a, this._direction);
     }
 
-    // draw(ctx: CanvasRenderingContext2D, color = "black", r = 1) {
-    //   ctx.strokeStyle = color;
-    //   this.a.drawDot(ctx, color, r * 5);
+    draw(ctx: CanvasRenderingContext2D, color = "black", r = 1) {
+        ctx.strokeStyle = color;
+        Line.drawDot(this.a, ctx, color, r * 5);
 
-    //   let a: VectorValue = this.a;
-    //   let b: VectorValue | undefined = undefined;
+        let a: Vector2 = this.a;
+        let b: Vector2 | undefined = undefined;
 
-    //   if (this.b)
-    //   {
-    //     this.b.drawDot(ctx, color, r * 5);
-    //     b = this.b;
-    //   }
-    //   else 
-    //   {
-    //     a = { x: this.a.x - this.direction.x * 10_000, y: this.a.y - this.direction.y * 10_000 }
-    //     b = { x: this.a.x + this.direction.x * 10_000, y: this.a.y + this.direction.y * 10_000 }
-    //   }
+        if (this.b)
+        {
+            Line.drawDot(this.b, ctx, color, r * 5);
+            b = this.b;
+        }
+        else 
+        {
+            a = new Vector2({ x: this.a.x - this.direction.x * 10_000, y: this.a.y - this.direction.y * 10_000 })
+            b = new Vector2({ x: this.a.x + this.direction.x * 10_000, y: this.a.y + this.direction.y * 10_000 })
+        }
 
-    //   ctx.lineWidth = r;
-    //   ctx.beginPath();
-    //   ctx.moveTo(a.x, a.y);
-    //   ctx.lineTo(b.x, b.y);
-    //   ctx.stroke();
-    //   ctx.closePath();
-    // }
+        ctx.lineWidth = r;
+        ctx.beginPath();
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+        ctx.stroke();
+        ctx.closePath();
+    }
+
+    static drawDot(v: Vector2, ctx: CanvasRenderingContext2D, color = "black", r = 1) {
+        ctx.beginPath();
+        ctx.arc(v.x, v.y, r, 0, Math.PI * 2);
+        ctx.fillStyle = color;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.fill();
+        ctx.closePath();
+    }
 
     static DirectionLine(a: Vector2, direction: Vector2) {
         const l = new Line(a);
