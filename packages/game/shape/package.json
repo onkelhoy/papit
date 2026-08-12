@@ -76,6 +76,10 @@
       "game-shape": {
         "className": "GameShape",
         "htmlprefix": "pap"
+      },
+      "line": {
+        "className": "Line",
+        "htmlprefix": "pap"
       }
     }
   }
