@@ -84,7 +84,7 @@ export class Confetti extends CustomElement {
             speedMin: 2,
             speedMax: 6,
             sizeMin: 4,
-            sizeMax: 10,
+            sizeMax: 15,
             spread: Math.PI * 1.0,
             upwardBias: 0.8,
             canvasWidth: width,
@@ -166,10 +166,12 @@ export class Confetti extends CustomElement {
         amount = 100,
         sound = true,
         placement,
+        clear = false,
     }: Partial<{
         amount: number,
-        sound: boolean,
+        sound: boolean | Partial<{ pop: boolean, yay: boolean, horn: boolean }>,
         placement: Placement,
+        clear: boolean,
     }> = {}) {
         if (placement)
         {
@@ -179,26 +181,35 @@ export class Confetti extends CustomElement {
         // Play sounds
         if (sound)
         {
-            Confetti.popSound.pause();
-            Confetti.popSound.currentTime = 0;
-            Confetti.popSound.volume = 0.3;
-            Confetti.popSound.play();
+            if (sound === true || sound.pop)
+            {
+                Confetti.popSound.pause();
+                Confetti.popSound.currentTime = 0;
+                Confetti.popSound.volume = 0.3;
+                Confetti.popSound.play();
+            }
 
-            Confetti.yaySound.pause();
-            Confetti.yaySound.currentTime = 0;
-            Confetti.yaySound.volume = 0.23;
-            Confetti.yaySound.play();
+            if (sound === true || sound.yay)
+            {
+                Confetti.yaySound.pause();
+                Confetti.yaySound.currentTime = 0;
+                Confetti.yaySound.volume = 0.23;
+                Confetti.yaySound.play();
+            }
 
-            setTimeout(() => {
-                Confetti.hornSound.pause();
-                Confetti.hornSound.currentTime = 0;
-                Confetti.hornSound.volume = 0.08;
-                Confetti.hornSound.play();
-            }, 100);
+            if (sound === true || sound.horn)
+            {
+                setTimeout(() => {
+                    Confetti.hornSound.pause();
+                    Confetti.hornSound.currentTime = 0;
+                    Confetti.hornSound.volume = 0.08;
+                    Confetti.hornSound.play();
+                }, 100);
+            }
         }
 
         this.engine.resizeCanvasToDisplaySize();
-        this.particleSystem.clear();
+        if (clear) this.particleSystem.clear();
 
         this.particleSystem.config.canvasWidth = this.engine.width;
         this.particleSystem.config.canvasHeight = this.engine.height;
