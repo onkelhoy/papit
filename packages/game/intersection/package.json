@@ -87,6 +87,10 @@
       "polygon": {
         "className": "Polygon",
         "htmlprefix": "pap"
+      },
+      "line": {
+        "className": "Line",
+        "htmlprefix": "pap"
       }
     }
   }
