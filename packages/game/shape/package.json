@@ -80,6 +80,10 @@
       "line": {
         "className": "Line",
         "htmlprefix": "pap"
+      },
+      "rectangle": {
+        "className": "Rectangle",
+        "htmlprefix": "pap"
       }
     }
   }
