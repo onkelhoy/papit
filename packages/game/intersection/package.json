@@ -91,6 +91,10 @@
       "line": {
         "className": "Line",
         "htmlprefix": "pap"
+      },
+      "circle": {
+        "className": "Circle",
+        "htmlprefix": "pap"
       }
     }
   }
