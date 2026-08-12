@@ -84,6 +84,10 @@
       "rectangle": {
         "className": "Rectangle",
         "htmlprefix": "pap"
+      },
+      "circle": {
+        "className": "Circle",
+        "htmlprefix": "pap"
       }
     }
   }
