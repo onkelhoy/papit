@@ -1,7 +1,7 @@
-import { Vector, VectorValue } from "@papit/vector";
+import { Vector3, VectorValue } from "@papit/vector";
 import { RectangleObject } from "components/rectangle";
 
-export abstract class Shape extends Vector {
+export abstract class Shape extends Vector3 {
 
     // these needs to be implemented in the classes
     abstract get boundary(): RectangleObject;
@@ -9,7 +9,7 @@ export abstract class Shape extends Vector {
     /**
      * function used by GJK algorithm to determine furthest point
      * @param {VectorValue} direction 
-     * @returns {Vector2Object} support-point
+     * @returns {VectorValue} support-point
      */
     abstract supportFunction(direction: VectorValue): VectorValue;
 }

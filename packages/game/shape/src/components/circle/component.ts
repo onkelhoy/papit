@@ -1,15 +1,23 @@
-import { Vector2, VectorObject } from "@papit/vector";
+import { Vector2, VectorObject, VectorValue } from "@papit/vector";
 import { CircleObject } from "./types";
 import { Shape } from "component";
 
-export class Circle extends Shape implements CircleObject {
+export class Circle extends Shape {
+
+    public radius: number;
+
+    constructor(vector: VectorValue, radius: number) {
+        super(vector);
+
+        this.radius = radius;
+    }
 
     get r() {
-        return this[2];
+        return this.radius;
     }
 
     set r(value: number) {
-        this[2] = value;
+        this.radius = value;
     }
 
     get boundary() {
@@ -26,6 +34,7 @@ export class Circle extends Shape implements CircleObject {
     }
 
     draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)") {
+        console.log("DRARING", { x: this.x, y: this.y, r: this.r })
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
         ctx.strokeStyle = strokecolor;
@@ -36,10 +45,12 @@ export class Circle extends Shape implements CircleObject {
         ctx.closePath();
     }
 
-    static toCircle(value: CircleObject, r: number) {
-        const c = new Circle(value);
-        c.r = r;
-
+    static toCircle(value: VectorValue, r: number) {
+        const c = new Circle(value, r);
         return c;
+    }
+
+    toString() {
+        return String({ x: this.x, y: this.y, z: this.z, r: this.r });
     }
 }

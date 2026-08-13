@@ -1,7 +1,7 @@
 // core
 import { Engine, InputEvents } from '@papit/game-engine';
 import { Circle } from "@papit/game-shape";
-import { Vector, Vector2 } from "@papit/vector";
+import { Vector2 } from "@papit/vector";
 
 // component
 import { isPointInCircle, CircleIntersection } from '@papit/game-intersection';
@@ -20,12 +20,13 @@ window.onload = () => {
     events.on("mouse-down", handlemousedown);
     events.on("mouse-move", handlemousemove);
 
-    engine.loop(draw); // cool function
+    // engine.loop(draw); // cool function
 }
 
 
 function draw() {
     engine.ctx.clearRect(0, 0, engine.width, engine.height);
+    console.log("DRAW");
     const checked = {};
     for (let i = 0; i < circles.length; i++)
     {
