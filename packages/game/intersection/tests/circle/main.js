@@ -1,6 +1,5 @@
 // core
-import { Engine } from '@papit/game-engine';
-import { InputEvents } from "@papit/game-input-events";
+import { Engine, InputEvents } from '@papit/game-engine';
 
 // component
 import '@papit/game-intersection';

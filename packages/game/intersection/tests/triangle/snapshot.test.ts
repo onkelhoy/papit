@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
     await page.goto('tests/triangle/');
 });
 
-test.describe.skip("@papit/intersection visual regression", () => {
+test.describe.skip("@papit/game-intersection visual regression", () => {
     test.skip('default snapshot', async ({ page }) => {
         await expect(page).toHaveScreenshot();
     });
