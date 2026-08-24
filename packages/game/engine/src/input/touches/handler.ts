@@ -1,6 +1,6 @@
 import { Vector2 } from "@papit/vector";
 import { TouchesEventMap } from "./types";
-import { logscreen } from "utils";
+import { logscreen } from "utils/helper";
 
 export class ExtendedTouch {
     position: Vector2;

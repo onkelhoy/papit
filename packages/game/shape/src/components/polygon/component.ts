@@ -81,7 +81,7 @@ export class Polygon {
 
     }
 
-    recalculate() {
+    recalculate(verbose = false) {
         // setting properties
         this.centeroffset = Vector2.zero;
         this.boundaryindex = [];
@@ -175,8 +175,26 @@ export class Polygon {
         this.concave = convex > 0 && concave > 0;
 
         // set the center to median of verticies 
+        if (verbose)
+        {
+            console.log(this.centeroffset.x, this.centeroffset.y, {
+                length: this.verticies.length,
+                first: this.verticies[0],
+                new: this.centeroffset.clone.divide(this.verticies.length)
+            })
+        }
         this.centeroffset.divide(this.verticies.length);
+        if (verbose)
+        {
+            console.log(this.centeroffset.x, this.centeroffset.y)
+        }
+
         this.centeroffset.subtract(this.verticies[0]);
+
+        if (verbose)
+        {
+            console.log(this.centeroffset.x, this.centeroffset.y)
+        }
 
         // call triangulation
         this.triangulate();
@@ -203,69 +221,77 @@ export class Polygon {
         return triangles;
     }
 
-    // draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)", r = 1) {
-    //   ctx.strokeStyle = strokecolor;
+    draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)", r = 1) {
+        ctx.strokeStyle = strokecolor;
 
-    //   this.verticies.forEach((v, i) => {
-    //     Vector2.Draw(v, ctx, strokecolor, r * 3);
+        this.verticies.forEach((v, i) => {
 
-    //     ctx.fillText(String(i), v.x, v.y - 10);
-    //   });
+            ctx.beginPath();
+            ctx.arc(v.x, v.y, r, 0, Math.PI * 2);
+            ctx.strokeStyle = strokecolor;
+            ctx.fillStyle = fillcolor;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.fill();
+            ctx.closePath();
 
-    //   const c = this.center;
-    //   ctx.fillText(String(this.id), c.x, c.y);
+            ctx.fillText(String(i), v.x, v.y - 10);
+        });
 
-    //   ctx.lineWidth = r / 2;
-    //   ctx.setLineDash([10, 15]);
-    //   for (let i = 0; i < this.triangles.length; i += 3)
-    //   {
-    //     const a = this.verticies[this.triangles[i]];
-    //     const b = this.verticies[this.triangles[i + 1]];
-    //     const c = this.verticies[this.triangles[i + 2]];
+        const c = this.center;
+        ctx.fillText(String(this.id), c.x, c.y);
 
-    //     ctx.beginPath();
-    //     ctx.moveTo(a.x, a.y);
-    //     ctx.lineTo(b.x, b.y);
-    //     ctx.lineTo(c.x, c.y);
-    //     ctx.lineTo(a.x, a.y);
-    //     ctx.stroke();
-    //     ctx.closePath();
-    //   }
+        ctx.lineWidth = r / 2;
+        ctx.setLineDash([10, 15]);
+        for (let i = 0; i < this.triangles.length; i += 3)
+        {
+            const a = this.verticies[this.triangles[i]];
+            const b = this.verticies[this.triangles[i + 1]];
+            const c = this.verticies[this.triangles[i + 2]];
 
-    //   ctx.setLineDash([]);
-    //   ctx.lineWidth = r;
-    //   if (this.verticies.length > 1)
-    //   {
-    //     ctx.beginPath();
-    //     for (let i = 0; i < this.verticies.length; i++)
-    //     {
-    //       if (i === 0)
-    //       {
-    //         ctx.moveTo(this.verticies[i].x, this.verticies[i].y);
-    //       }
-    //       else 
-    //       {
-    //         ctx.lineTo(this.verticies[i].x, this.verticies[i].y);
-    //       }
-    //     }
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.lineTo(c.x, c.y);
+            ctx.lineTo(a.x, a.y);
+            ctx.stroke();
+            ctx.closePath();
+        }
 
-    //     ctx.lineTo(this.verticies[0].x, this.verticies[0].y);
+        ctx.setLineDash([]);
+        ctx.lineWidth = r;
+        if (this.verticies.length > 1)
+        {
+            ctx.beginPath();
+            for (let i = 0; i < this.verticies.length; i++)
+            {
+                if (i === 0)
+                {
+                    ctx.moveTo(this.verticies[i].x, this.verticies[i].y);
+                }
+                else 
+                {
+                    ctx.lineTo(this.verticies[i].x, this.verticies[i].y);
+                }
+            }
 
-    //     ctx.stroke();
-    //     ctx.fillStyle = fillcolor;
-    //     ctx.fill();
-    //     ctx.closePath();
+            ctx.lineTo(this.verticies[0].x, this.verticies[0].y);
 
-    //     const boundary = this.boundary;
-    //     if (boundary)
-    //     {
-    //       ctx.beginPath();
-    //       ctx.lineWidth = r / 2;
-    //       ctx.setLineDash([10, 15]);
-    //       ctx.rect(boundary.x, boundary.y, boundary.w, boundary.h);
-    //       ctx.stroke();
-    //       ctx.closePath();
-    //     }
-    //   }
-    // }
+            ctx.stroke();
+            ctx.fillStyle = fillcolor;
+            ctx.fill();
+            ctx.closePath();
+
+            const boundary = this.boundary;
+            if (boundary)
+            {
+                ctx.beginPath();
+                ctx.lineWidth = r / 2;
+                ctx.setLineDash([10, 15]);
+                ctx.rect(boundary.x, boundary.y, boundary.w, boundary.h);
+                ctx.stroke();
+                ctx.closePath();
+            }
+        }
+    }
 }

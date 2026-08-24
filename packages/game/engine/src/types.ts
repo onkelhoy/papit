@@ -3,6 +3,7 @@ export type SettingCallback = (delta: number) => void;
 export type BaseSetting = {
     query: string;
     state: "running" | "paused";
+    global: boolean;
     width: number;
     height: number;
     timer: null | number;

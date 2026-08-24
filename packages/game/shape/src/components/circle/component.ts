@@ -34,7 +34,6 @@ export class Circle extends Shape {
     }
 
     draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)") {
-        console.log("DRARING", { x: this.x, y: this.y, r: this.r })
         ctx.beginPath();
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
         ctx.strokeStyle = strokecolor;

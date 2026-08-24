@@ -70,25 +70,26 @@ export function html(template: string): Node;
 export function html(templateStringArray: TemplateStringsArray, ...values: unknown[]): Node;
 
 export function html(templateOrStrings: string | TemplateStringsArray, ...values: unknown[]): Node {
-  if (typeof templateOrStrings === "string")
-  {
-    const t = document.createElement("template");
-    t.innerHTML = templateOrStrings;
-    return normalizeRoot(t.content.cloneNode(true) as DocumentFragment);
-  }
+    if (typeof templateOrStrings === "string")
+    {
+        const t = document.createElement("template");
+        t.innerHTML = templateOrStrings;
+        return normalizeRoot(t.content.cloneNode(true) as DocumentFragment);
+    }
 
-  // Compile or get cached DOM for this template string array
-  const proto = compile(templateOrStrings, values);
+    // Compile or get cached DOM for this template string array
+    const proto = compile(templateOrStrings, values);
 
-  const root = proto.cloneNode(true);
+    const root = proto.cloneNode(true);
 
-  // mark this clone as an actual template root and attach its values
-  (root as any).__isTemplateRoot = true;
+    // mark this clone as an actual template root and attach its values
+    (root as any).__isTemplateRoot = true;
+    (root as any).__templateId = templateOrStrings; // identity of the template call site
 
-  // Store the dynamic values associated with this root element
-  metadataMap.set(root, values);
+    // Store the dynamic values associated with this root element
+    metadataMap.set(root, values);
 
-  return root;
+    return root;
 }
 
 /**
@@ -99,76 +100,76 @@ export function html(templateOrStrings: string | TemplateStringsArray, ...values
  * @returns Root Element of the compiled template
  */
 function compile(templateStringArray: TemplateStringsArray, values: unknown[]): Node {
-  // Return cached root element if it exists
-  if (cachedElements.has(templateStringArray))
-  {
-    return cachedElements.get(templateStringArray)!;
-  }
-
-  // Create a <template> element for safe HTML parsing
-  const template = document.createElement('template');
-
-  // This flag helps fix attribute quoting issues by adding quotes where needed
-  let expectQuote = false;
-  let insideTag = false;
-
-  // Join template strings inserting comment markers to mark dynamic parts
-  let result = '';
-  for (let i = 0; i < templateStringArray.length; i++)
-  {
-    let fixedStr = templateStringArray[i];
-
-    // Determine if we're entering or exiting a tag
-    if (fixedStr.lastIndexOf('<') > fixedStr.lastIndexOf('>')) insideTag = true;
-    if (fixedStr.lastIndexOf('>') > fixedStr.lastIndexOf('<')) insideTag = false;
-
-    // If last string ended with '=', ensure next string starts with '"'
-    if (expectQuote)
+    // Return cached root element if it exists
+    if (cachedElements.has(templateStringArray))
     {
-      if (!fixedStr.startsWith('"')) fixedStr = '"' + fixedStr;
-      expectQuote = false;
+        return cachedElements.get(templateStringArray)!;
     }
 
-    // If current string ends with '=', prepare to add opening quote next time
-    if (fixedStr.endsWith('='))
+    // Create a <template> element for safe HTML parsing
+    const template = document.createElement('template');
+
+    // This flag helps fix attribute quoting issues by adding quotes where needed
+    let expectQuote = false;
+    let insideTag = false;
+
+    // Join template strings inserting comment markers to mark dynamic parts
+    let result = '';
+    for (let i = 0; i < templateStringArray.length; i++)
     {
-      fixedStr += '"';
-      expectQuote = true;
+        let fixedStr = templateStringArray[i];
+
+        // Determine if we're entering or exiting a tag
+        if (fixedStr.lastIndexOf('<') > fixedStr.lastIndexOf('>')) insideTag = true;
+        if (fixedStr.lastIndexOf('>') > fixedStr.lastIndexOf('<')) insideTag = false;
+
+        // If last string ended with '=', ensure next string starts with '"'
+        if (expectQuote)
+        {
+            if (!fixedStr.startsWith('"')) fixedStr = '"' + fixedStr;
+            expectQuote = false;
+        }
+
+        // If current string ends with '=', prepare to add opening quote next time
+        if (fixedStr.endsWith('='))
+        {
+            fixedStr += '"';
+            expectQuote = true;
+        }
+
+        result += fixedStr;
+
+        // guess this case should not happend but just for sanity 
+        if (i >= values.length) continue;
+
+        const val = values[i];
+
+        if (insideTag)
+        {
+            if (/='?"?$/.test(fixedStr))
+                result += '__marker__';
+            else
+                result += `marker-standalone-${i}="${i}"`;
+        }
+        else
+        {
+            // Regular DOM content: use comment markers
+            result += Array.isArray(val) ? '<!--list-marker-->' : '<!--marker-->';
+        }
     }
 
-    result += fixedStr;
+    template.innerHTML = result;
 
-    // guess this case should not happend but just for sanity 
-    if (i >= values.length) continue;
+    // Clone content from the template element to create a DocumentFragment
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
 
-    const val = values[i];
+    // Normalize the fragment into a root Element (unwraps single node or wraps multiple in a div)
+    const root = normalizeRoot(fragment);
 
-    if (insideTag)
-    {
-      if (/='?"?$/.test(fixedStr))
-        result += '__marker__';
-      else
-        result += `marker-standalone-${i}="${i}"`;
-    }
-    else
-    {
-      // Regular DOM content: use comment markers
-      result += Array.isArray(val) ? '<!--list-marker-->' : '<!--marker-->';
-    }
-  }
+    // Cache the compiled root element for reuse
+    cachedElements.set(templateStringArray, root);
 
-  template.innerHTML = result;
-
-  // Clone content from the template element to create a DocumentFragment
-  const fragment = template.content.cloneNode(true) as DocumentFragment;
-
-  // Normalize the fragment into a root Element (unwraps single node or wraps multiple in a div)
-  const root = normalizeRoot(fragment);
-
-  // Cache the compiled root element for reuse
-  cachedElements.set(templateStringArray, root);
-
-  return root;
+    return root;
 }
 
 /**
@@ -178,7 +179,7 @@ function compile(templateStringArray: TemplateStringsArray, values: unknown[]): 
  * @returns Array of dynamic values or undefined if none stored
  */
 export function getValues(node: Node) {
-  return metadataMap.get(node);
+    return metadataMap.get(node);
 }
 
 /**
@@ -188,10 +189,10 @@ export function getValues(node: Node) {
  * @returns True if the node is a text node and empty/whitespace only
  */
 function isNotEmptyTextNode(node: Node): boolean {
-  return !(
-    node.nodeType === Node.TEXT_NODE &&
-    !/\S/.test(node.textContent || '')
-  );
+    return !(
+        node.nodeType === Node.TEXT_NODE &&
+        !/\S/.test(node.textContent || '')
+    );
 }
 
 /**
@@ -209,13 +210,13 @@ function isNotEmptyTextNode(node: Node): boolean {
  */
 
 function normalizeRoot(fragment: DocumentFragment): Node {
-  const filtered = Array.from(fragment.childNodes).filter(isNotEmptyTextNode);
+    const filtered = Array.from(fragment.childNodes).filter(isNotEmptyTextNode);
 
-  if (filtered.length === 0) return document.createDocumentFragment();
-  if (filtered.length === 1) return filtered[0];
+    if (filtered.length === 0) return document.createDocumentFragment();
+    if (filtered.length === 1) return filtered[0];
 
-  // Return a DocumentFragment with multiple children (do not wrap in div)
-  const wrapper = document.createDocumentFragment();
-  filtered.forEach(node => wrapper.appendChild(node));
-  return wrapper;
+    // Return a DocumentFragment with multiple children (do not wrap in div)
+    const wrapper = document.createDocumentFragment();
+    filtered.forEach(node => wrapper.appendChild(node));
+    return wrapper;
 }

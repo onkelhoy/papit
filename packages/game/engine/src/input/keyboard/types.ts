@@ -1,5 +1,5 @@
 export type KeyInfo = {
-    clicked: boolean;
+    pressed: boolean;
     start: null | number;
     stop: null | number;
 }

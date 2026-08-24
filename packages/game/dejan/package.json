@@ -54,15 +54,19 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@papit/2d-spritesheet": "^0.0.1",
+    "@papit/game-intersection": "^0.0.1",
+    "@papit/game-shape": "^0.0.1",
+    "@papit/vector": "^0.0.1",
     "@papit/web-component": "*"
   },
   "devDependencies": {
-    "@playwright/test": "1.58.0",
-    "playwright": "1.58.0",
-    "typescript": "5.9.3",
+    "@papit/codeblock": "*",
     "@papit/theme": "*",
     "@papit/translator": "*",
-    "@papit/codeblock": "*"
+    "@playwright/test": "1.58.0",
+    "playwright": "1.58.0",
+    "typescript": "5.9.3"
   },
   "browserslist": [
     "defaults",

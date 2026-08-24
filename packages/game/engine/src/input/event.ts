@@ -6,6 +6,8 @@ import { Touches } from "./touches";
 import { Settings } from "./types";
 
 export class InputEvents extends EventTarget {
+    static instance: InputEvents | null = null;
+
     settings: Settings;
     mouse: Mouse;
     touch: Touches;
@@ -17,6 +19,11 @@ export class InputEvents extends EventTarget {
     constructor(canvas: HTMLCanvasElement, settings?: Partial<Settings>) {
         super();
         this.settings = getSettings(settings);
+
+        if (this.settings.global)
+        {
+            InputEvents.instance = this;
+        }
 
         this.mouse = new Mouse(canvas, this.settings.mouse);
         this.touch = new Touches(canvas);
@@ -106,6 +113,7 @@ function getSettings(_settings?: Partial<Settings>): Settings {
         touch: undefined,
         keyboard: undefined,
         verbose: false,
+        global: false,
 
         ...(_settings || {}),
 

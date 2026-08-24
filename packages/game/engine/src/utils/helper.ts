@@ -43,3 +43,13 @@ export function logscreen(...strings: any[]) {
 
     logelement.appendChild(li);
 }
+
+export function LoadImage(src: string): Promise<HTMLImageElement> {
+    return new Promise(res => {
+        const img = new Image();
+        img.src = src;
+        img.onload = () => {
+            res(img);
+        }
+    });
+}

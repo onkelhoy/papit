@@ -22,6 +22,7 @@ import {
 
 export class Engine {
 
+    static instance: Engine | null = null;
     info: Array<InfoType> = [];
 
     // init with the default canvas size
@@ -48,6 +49,7 @@ export class Engine {
                 state: "paused",
                 previous: null,
                 callbacks: [],
+                global: false,
                 documentElement: document,
                 contextSetting: undefined,
             }
@@ -61,6 +63,7 @@ export class Engine {
                 _setting.query = selector.query ?? "";
                 _setting.width = selector.width;
                 _setting.height = selector.height;
+                _setting.global = selector.global ?? false;
                 _setting.callbacks = selector.callbacks ?? [];
                 _setting.documentElement = selector.documentElement ?? document;
 
@@ -78,6 +81,11 @@ export class Engine {
 
             const element = setting.documentElement.querySelector<HTMLCanvasElement>(setting.query);
             if (!element) throw new Error(`[error engine] could not find element: [${setting.query}]`);
+
+            if (setting.global)
+            {
+                Engine.instance = this;
+            }
 
             try
             {
@@ -459,15 +467,4 @@ export class Engine {
             return false;
         }
     }
-}
-
-
-export function LoadImage(src: string): Promise<HTMLImageElement> {
-    return new Promise(res => {
-        const img = new Image();
-        img.src = src;
-        img.onload = () => {
-            res(img);
-        }
-    });
 }

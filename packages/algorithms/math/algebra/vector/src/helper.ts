@@ -23,5 +23,5 @@ export function toArray(a: Value, ...rest: number[]): Float32Array | number[] {
         return order.map(key => a[key]);
     }
 
-    return Object.values(restValues);
+    return Object.values(restValues).filter(v => typeof v === "number");
 }

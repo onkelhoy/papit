@@ -1,26 +1,79 @@
-import { Vector, VectorValue, type VectorObject } from "@papit/vector";
+import { Vector, Vector2, VectorValue, type VectorObject } from "@papit/vector";
+import type { PolygonObject } from "components/polygon";
 import type { RectangleObject } from "./types";
 import { Shape } from "component";
 
 export class Rectangle extends Shape implements RectangleObject {
-    get h() {
-        return this[3];
-    };
-    set h(value: number) {
-        this[3] = value;
+
+    get topLeft() {
+        return { x: this.x, y: this.y }
     }
+    get topRight() {
+        return { x: this.x + this.w, y: this.y }
+    }
+    get bottomLeft() {
+        return { x: this.x, y: this.y + this.h }
+    }
+    get bottomRight() {
+        return { x: this.x + this.w, y: this.y + this.h }
+    }
+    get center() {
+        return { x: this.x + this.w / 2, y: this.y + this.h / 2 }
+    }
+
     override get w() {
         return this[2];
     }
     override set w(value: number) {
         this[2] = value;
     }
+    get h() {
+        return this[3];
+    };
+    set h(value: number) {
+        this[3] = value;
+    }
+    // get d() {
+    //     return this[5] ?? 0;
+    // };
+    // set d(value: number) {
+    //     this[5] = value;
+    // }
 
     get width() {
         return this.w;
     }
     get height() {
         return this.h;
+    }
+    // get depth() {
+    //     return this.d;
+    // }
+
+    set width(value: number) {
+        this.w = value;
+    }
+    set height(value: number) {
+        this.h = value;
+    }
+    // set depth(value: number) {
+    //     this.d = value;
+    // }
+
+    get polygon(): PolygonObject {
+        const verticies = [this.topLeft, this.topRight, this.bottomLeft, this.bottomRight];
+        return {
+            boundary: this,
+            boundaryindex: [0, 1, 2, 3],
+            center: this.center,
+            id: 1,
+            verticies,
+            triangles: [0, 1, 2, 2, 3, 1],
+            getTriangle(i) {
+                const index = Math.max(0, Math.min(i, 1));
+                return new Array(3).map((_, i) => verticies[index * 3 + i]);
+            }
+        }
     }
 
     get boundary() {

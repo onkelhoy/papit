@@ -162,20 +162,29 @@ export class Confetti extends CustomElement {
         return positions[placement] || positions['bottom'];
     }
 
-    start({
+    play({
         amount = 100,
         sound = true,
         placement,
+        x,
+        y,
         clear = false,
     }: Partial<{
         amount: number,
         sound: boolean | Partial<{ pop: boolean, yay: boolean, horn: boolean }>,
         placement: Placement,
+        x: number,
+        y: number,
         clear: boolean,
     }> = {}) {
         if (placement)
         {
             this.placement = placement;
+        }
+        if (x !== undefined && y !== undefined)
+        {
+            this.x = x;
+            this.y = y;
         }
 
         // Play sounds
@@ -265,12 +274,12 @@ export class Confetti extends CustomElement {
         this.x = Math.max(0, Math.min(canvas.width, x));
         this.y = Math.max(0, Math.min(canvas.height, y));
 
-        this.start();
+        this.play();
     }
 
     @bind
     private handleControlClick() {
-        this.start();
+        this.play();
     }
 
     render() {

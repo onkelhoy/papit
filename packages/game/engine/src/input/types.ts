@@ -6,7 +6,8 @@ export type Settings = {
     touch: undefined;
     keyboard: undefined;
 
-    verbose?: boolean;
+    global: boolean;
+    verbose: boolean;
 }
 
 export type ClickEvents = {

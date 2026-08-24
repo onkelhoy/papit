@@ -196,10 +196,20 @@ export class CustomElement extends HTMLElement {
 
         if (!newRoot) throw new Error("[error] core: no element returned from render");
 
+        const newTemplateId = isString ? undefined : (newRoot as any).__templateId;
+
+        // template shape changed since last mount — tear down and remount
+        if (this.templateInstance != null && this.lastTemplateId !== newTemplateId)
+        {
+            while (this.root.firstChild) this.root.removeChild(this.root.firstChild);
+            this.templateInstance = null;
+        }
+
         if (this.templateInstance == null)
         {
             this.root.appendChild(newRoot);
             this.templateInstance = new TemplateInstance(this.root, partFactory);
+            this.lastTemplateId = newTemplateId;
             this.firstRender();
             this.dispatchEvent(new Event("first-render"));
         }
@@ -266,6 +276,7 @@ export class CustomElement extends HTMLElement {
 
     // helper variables & private functions 
     private templateInstance: TemplateInstance | null = null;
+    private lastTemplateId: unknown = undefined;
 
     // decorator query 
     private queryMeta?: QueryMeta[];

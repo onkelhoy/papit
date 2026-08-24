@@ -1,4 +1,4 @@
-import { logscreen } from "utils";
+import { logscreen } from "utils/helper";
 import { KeyInfo } from "./types";
 
 export class Keyboard extends EventTarget {
@@ -25,7 +25,7 @@ export class Keyboard extends EventTarget {
     }
 
     key(name: string) {
-        return this.keys[name];
+        return this.keys[name.toLowerCase()];
     }
 
     handlekeydown = (e: KeyboardEvent) => {
@@ -33,16 +33,16 @@ export class Keyboard extends EventTarget {
 
         if (!this.keys[name])
         {
-            this.keys[name] = { clicked: false };
+            this.keys[name] = { pressed: false };
         }
 
-        if (this.keys[name].clicked === false)
+        if (this.keys[name].pressed === false)
         {
             this.keys[name].start = performance.now();
         }
 
 
-        this.keys[name].clicked = true;
+        this.keys[name].pressed = true;
         this.keys[name].stop = null;
 
         if (this.verbose)
@@ -53,15 +53,24 @@ export class Keyboard extends EventTarget {
         //   name,
         //   value: this.keys[name]
         // }}));
+        this.dispatchEvent(new CustomEvent("key-down", {
+            detail: {
+                name,
+                key: e.key || e.code,
+                value: this.keys[name]
+            }
+        }));
         this.dispatchEvent(new CustomEvent(`${name}-down`, {
             detail: {
                 name,
+                key: e.key || e.code,
                 value: this.keys[name]
             }
         }));
         this.dispatchEvent(new CustomEvent(name, {
             detail: {
                 name,
+                key: e.key || e.code,
                 value: this.keys[name]
             }
         }));
@@ -73,7 +82,7 @@ export class Keyboard extends EventTarget {
             // throw new Error("keyup event fired but no key registered: " + name);
         }
 
-        this.keys[name].clicked = false;
+        this.keys[name].pressed = false;
         this.keys[name].stop = performance.now();
 
         if (this.verbose)
@@ -81,15 +90,24 @@ export class Keyboard extends EventTarget {
             logscreen("keyup", name, this.keys[name]);
         }
 
+        this.dispatchEvent(new CustomEvent("key-up", {
+            detail: {
+                name,
+                key: e.key || e.code,
+                value: this.keys[name]
+            }
+        }));
         this.dispatchEvent(new CustomEvent(`${name}-up`, {
             detail: {
                 name,
+                key: e.key || e.code,
                 value: this.keys[name]
             }
         }));
         this.dispatchEvent(new CustomEvent(name, {
             detail: {
                 name,
+                key: e.key || e.code,
                 value: this.keys[name]
             }
         }));

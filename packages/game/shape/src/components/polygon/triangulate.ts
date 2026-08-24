@@ -32,7 +32,6 @@ export function Triangulate(polygon: SimplePolygonObject) {
             // check if convex
             if (Vector2.cross(va_to_vb, va_to_vc) > 0)
             {
-                console.log('convex');
                 continue;
             }
 

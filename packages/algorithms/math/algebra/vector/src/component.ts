@@ -62,24 +62,40 @@ export class Vector extends Float32Array {
     add(...values: number[]): this;
     add(value: Value): this;
     public add(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v + value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value + coerced[index % coerced.length]);
     }
     subtract(...values: number[]): this;
     subtract(value: Value): this;
     public subtract(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v - value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value - coerced[index % coerced.length]);
     }
     multiply(...values: number[]): this;
     multiply(value: Value): this;
     public multiply(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v * value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value * coerced[index % coerced.length]);
     }
     divide(...values: number[]): this;
     divide(value: Value): this;
     public divide(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v / value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value / coerced[index % coerced.length]);
     }
@@ -128,8 +144,11 @@ export class Vector extends Float32Array {
     static distance(a: Value, b: Value) {
         return this.subtract(a, b).magnitude;
     }
+    // static coerce(value: Value, ...rest: number[]) {
+    //     return toArray(value, ...(typeof value === "number" ? [value] : rest))
+    // }
     static coerce(value: Value, ...rest: number[]) {
-        return toArray(value, ...(typeof value === "number" ? [value] : rest))
+        return toArray(value, ...rest)
     }
     static dot(a: Value, b: Value) {
         return new this(a).dot(b);
