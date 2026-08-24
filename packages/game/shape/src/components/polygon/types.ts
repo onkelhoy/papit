@@ -2,7 +2,7 @@ import type { VectorValue } from "@papit/vector";
 import type { RectangleObject } from "components/rectangle";
 
 export interface PolygonObject {
-    verticies: VectorValue[];
+    vertices: VectorValue[];
     triangles: number[];
     boundaryindex: null | number[];
     concave?: boolean;
@@ -15,6 +15,7 @@ export interface PolygonObject {
     getTriangle(i: number): VectorValue[];
 }
 export type SimplePolygonObject = {
-    verticies: VectorValue[];
+    vertices: VectorValue[];
     triangles: number[];
+    boundaryflags?: boolean[];
 }

@@ -39,6 +39,8 @@ export class Character {
     private grounded = true;
     private isCharging = false;
     private chargeTime = 0;
+    private counter = 0;
+    private readonly MAX_FALL_SPEED = 30;
 
     // idle-variant scheduling
     private idleTimer = 0;
@@ -69,7 +71,7 @@ export class Character {
             const sat = SAT(bpolygon, polygon);
             if (!sat) continue;
 
-            const { normal, depth } = sat;
+            let { normal, depth } = sat;
             if (normal.y > 0.5)
             {
                 this.velocity.y = 0;
@@ -81,9 +83,12 @@ export class Character {
                 }
                 this.grounded = true;
                 collideGround = true;
+
+                depth -= 0.001; // to avoid flickering
             }
+
+            console.log("IKNSIDE POLYGOIN", depth)
             this.position.subtract(normal.multiply(depth));
-            // console.log(sat);
         }
 
         this.boundary.x = this.position.x - this.boundary.w / 2;
@@ -96,40 +101,64 @@ export class Character {
         }
     }
 
-    counter = 0;
+    private updateIdle(delta: number) {
+        // don't interrupt a blink/breathe that's already mid-playback
+        if (this.animator.name === "idleBlink" || this.animator.name === "idleBreathe") return;
+
+        this.idleTimer += delta;
+        if (this.idleTimer < this.nextIdleAt)
+        {
+            this.animator.play("idleStill");
+            return;
+        }
+
+        this.idleTimer = 0;
+        this.nextIdleAt = this.randomIdleDelay();
+        const variant: AnimName = Math.random() < 0.7 ? "idleBlink" : "idleBreathe";
+        this.animator.play(variant, () => this.animator.play("idleStill"));
+    }
+
     update(events: InputEvents, delta: number, worldPolygons: Polygon[]) {
         let moving = false;
-        this.counter++;
-        if (this.counter % 30 === 0)
-        {
-            this.counter = 0;
-            console.log(this.spritestate);
-        }
 
         if (!this.isCharging)
         {
             if (events.key("arrowright")?.pressed)
             {
-                this.position.x += SPEED;
+                this.velocity.x = SPEED;
                 this.flipped = false;
                 moving = true;
             }
             else if (events.key("arrowleft")?.pressed)
             {
-                this.position.x -= SPEED;
+                this.velocity.x = -SPEED;
                 this.flipped = true;
                 moving = true;
             }
+            else
+            {
+                this.velocity.x = 0;
+            }
+
+            // if (events.key("arrowup")?.pressed)
+            // {
+            //     this.velocity.y = -SPEED;
+            //     // this.flipped = false;
+            //     moving = true;
+            // }
+            // else if (events.key("arrowdown")?.pressed)
+            // {
+            //     this.velocity.y = SPEED;
+            //     moving = true;
+            // }
+            // else
+            // {
+            //     this.velocity.y = 0;
+            // }
+        } else
+        {
+            this.velocity.x = 0;
         }
-
-        // Edge detection for space - simplified
-        // const spaceKey = events.key(" ");
-        // const spaceDown = spaceKey?.pressed === true;
-        // const spacePressed = spaceDown && !this.wasSpaceDown;
-        // const spaceReleased = !spaceDown && this.wasSpaceDown;
-        // this.wasSpaceDown = spaceDown;
-
-        // console.log("Space:", { spaceDown, spacePressed, spaceReleased, isCharging: this.isCharging, grounded: this.grounded });
 
         // Charge / jump logic
         if (this.grounded)
@@ -164,42 +193,29 @@ export class Character {
         {
             // Cancel charge if we somehow leave the ground while charging
             this.isCharging = false;
-        }
-
-        // Rest of the update method remains the same...
-        // Gravity
-        if (!this.grounded)
-        {
             this.velocity.y += GRAVITY;
-            this.position.y += this.velocity.y;
         }
-
-        // // Ground collision
-        // if (this.position.y >= GROUND_Y)
-        // {
-        //     this.position.y = GROUND_Y;
-
-        //     if (!this.grounded)
-        //     {
-        //         this.spritestate = "landing";
-        //     }
-
-        //     this.velocity.y = 0;
-        //     this.grounded = true;
-        //     // this.isCharging = false;
-        // }
 
         // State resolution
         if (!this.grounded)
         {
             this.spritestate = "falling";
-        } else if (this.isCharging)
+        }
+        else if (this.isCharging)
         {
             this.spritestate = "charging";
-        } else if (this.spritestate !== "landing")
+        }
+        else if (this.spritestate !== "landing")
         {
             this.spritestate = moving ? "walking" : "idle";
         }
+
+        if (this.velocity.y > this.MAX_FALL_SPEED)
+        {
+            this.velocity.y = this.MAX_FALL_SPEED;
+        }
+
+        this.position.add(this.velocity);
 
         this.boundary.x = this.position.x - this.boundary.w / 2;
         this.boundary.y = this.position.y - this.boundary.h;
@@ -207,7 +223,7 @@ export class Character {
         this.collisionDetection(worldPolygons)
     }
 
-    draw(delta: number, boundary = false) {
+    draw(delta: number, verbose = false) {
         if (!Engine.instance) return;
 
         switch (this.spritestate)
@@ -250,26 +266,15 @@ export class Character {
         });
         Engine.instance.ctx.restore();
 
-        if (boundary)
+        if (verbose)
         {
+            this.counter++;
+            if (this.counter % 30 === 0)
+            {
+                this.counter = 0;
+                console.log(this.spritestate);
+            }
             this.boundary.draw(Engine.instance.ctx);
         }
-    }
-
-    private updateIdle(delta: number) {
-        // don't interrupt a blink/breathe that's already mid-playback
-        if (this.animator.name === "idleBlink" || this.animator.name === "idleBreathe") return;
-
-        this.idleTimer += delta;
-        if (this.idleTimer < this.nextIdleAt)
-        {
-            this.animator.play("idleStill");
-            return;
-        }
-
-        this.idleTimer = 0;
-        this.nextIdleAt = this.randomIdleDelay();
-        const variant: AnimName = Math.random() < 0.7 ? "idleBlink" : "idleBreathe";
-        this.animator.play(variant, () => this.animator.play("idleStill"));
     }
 }

@@ -6,13 +6,16 @@ import "@papit/input";
 import "@papit/confetti";
 import "@papit/button";
 import "@papit/icon";
+
+// local imports 
 import { Confetti } from "@papit/confetti";
-import { Alphabet } from "alphabet";
+// import { Alphabet } from "game/alphabet";
 // import "@papit/input";
+import "ui/music/music";
 
 // local 
 import sheet from "./style.css" with { type: "css" };
-import { Game } from "game";
+import { Game } from "game/game";
 
 export class Dejan extends CustomElement {
     static sheet = sheet;
@@ -80,6 +83,7 @@ export class Dejan extends CustomElement {
         if (this.mode === "game")
         {
             return html`
+                <dejan-music></dejan-music>
                 <canvas>no canvas support loser</canvas>
             `
         }
@@ -91,6 +95,6 @@ export class Dejan extends CustomElement {
 
 declare global {
     interface HTMLElementTagNameMap {
-        "pap-dejan": Dejan;
+        "dejan-spel": Dejan;
     }
 }

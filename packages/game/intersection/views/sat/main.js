@@ -79,7 +79,7 @@ function handlemousemove(e) {
     if (selected)
     {
         const add = e.target.position.Sub(selected.mouse);
-        selected.polygon.verticies.forEach((v, i) => {
+        selected.polygon.vertices.forEach((v, i) => {
             v.x = selected.original[i].x + add.x;
             v.y = selected.original[i].y + add.y;
         })
@@ -101,7 +101,7 @@ function handlemousedown(e) {
                 selected = {
                     polygon,
                     mouse: e.target.position.clone,
-                    original: polygon.verticies.map(v => v.clone)
+                    original: polygon.vertices.map(v => v.clone)
                 }
                 break;
             }
@@ -118,7 +118,7 @@ function handlemousedown(e) {
 function handlemouseup(e) {
     if (creating)
     {
-        if (creating.verticies.length > 1 && Vector.Distance(e.target.position, creating.verticies[0]) <= 20)
+        if (creating.vertices.length > 1 && Vector.Distance(e.target.position, creating.vertices[0]) <= 20)
         {
             // loop it 
             creating.recalculate();
@@ -127,7 +127,7 @@ function handlemouseup(e) {
         }
         else
         {
-            creating.verticies.push(e.target.position.clone);
+            creating.vertices.push(e.target.position.clone);
         }
         // polygons.push(creating);
         // creating.recalculate();

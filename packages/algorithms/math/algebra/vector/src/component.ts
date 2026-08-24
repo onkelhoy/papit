@@ -183,6 +183,19 @@ export class Vector2 extends Vector {
         this.y = Math.sin(value) * mag;
     }
 
+    /**
+     * Returns a new Vector2 perpendicular to this one.
+     * Defaults to (-y, x) — a 90° counter-clockwise rotation.
+     * Pass `true` for clockwise: (y, -x).
+     */
+    public perpendicular(clockwise: boolean = false): Vector2 {
+        if (clockwise)
+        {
+            return new Vector2(this.y, -this.x);
+        }
+        return new Vector2(-this.y, this.x);
+    }
+
     static perpendicular(a: Value, b: Value, windingorder: "clockwise" | "counter-clockwise" = "clockwise") {
         const aCoerced = Vector2.coerce(a);
         const bCoerced = Vector2.coerce(b);

@@ -4,23 +4,23 @@ import { Triangulate } from "./triangulate";
 export class Polygon {
 
     static instances = 0;
-    verticies: Vector2[];
+    vertices: Vector2[];
     triangles: number[];
     boundaryindex: null | number[];
     concave?: boolean;
     id: number;
     centeroffset?: Vector2;
 
-    constructor(...verticies: VectorValue[]) {
+    constructor(...vertices: VectorValue[]) {
         // super(0, 0, 0); 
 
-        this.verticies = [];
+        this.vertices = [];
         this.triangles = [];
         this.boundaryindex = null;
         this.id = Polygon.instances++;
-        this.verticies = verticies.map(v => new Vector2(v));
+        this.vertices = vertices.map(v => new Vector2(v));
 
-        if (this.verticies.length > 0)
+        if (this.vertices.length > 0)
         {
             this.recalculate();
         }
@@ -34,10 +34,10 @@ export class Polygon {
         }
 
         return {
-            x: this.verticies[this.boundaryindex[0]].x,
-            y: this.verticies[this.boundaryindex[1]].y,
-            w: this.verticies[this.boundaryindex[2]].x - this.verticies[this.boundaryindex[0]].x,
-            h: this.verticies[this.boundaryindex[3]].y - this.verticies[this.boundaryindex[1]].y,
+            x: this.vertices[this.boundaryindex[0]].x,
+            y: this.vertices[this.boundaryindex[1]].y,
+            w: this.vertices[this.boundaryindex[2]].x - this.vertices[this.boundaryindex[0]].x,
+            h: this.vertices[this.boundaryindex[3]].y - this.vertices[this.boundaryindex[1]].y,
         }
     }
     supportFunction(direction: VectorValue) {
@@ -50,12 +50,12 @@ export class Polygon {
     }
 
     get x() {
-        if (this.verticies.length === 0) throw new Error("could not set x of empty polygon");
-        return this.verticies[0].x;
+        if (this.vertices.length === 0) throw new Error("could not set x of empty polygon");
+        return this.vertices[0].x;
     }
     get y() {
-        if (this.verticies.length === 0) throw new Error("could not set y of empty polygon");
-        return this.verticies[0].y;
+        if (this.vertices.length === 0) throw new Error("could not set y of empty polygon");
+        return this.vertices[0].y;
     }
     set x(value) {
         this.debouncedmove(value, this.y);
@@ -70,7 +70,7 @@ export class Polygon {
             return Vector2.zero;
         }
 
-        return this.centeroffset.clone.add(this.verticies[0]);
+        return this.centeroffset.clone.add(this.vertices[0]);
     }
 
     private debouncedmove(x: VectorValue, y?: number) {
@@ -88,7 +88,7 @@ export class Polygon {
         this.concave = false;
 
         // no point for polygons less then or equal to 2 
-        if (this.verticies.length <= 2) return;
+        if (this.vertices.length <= 2) return;
 
         // boundary calculation
         let minx = Number.MAX_SAFE_INTEGER;
@@ -102,16 +102,16 @@ export class Polygon {
 
         // keep track on number of convex and concave to determine if concave + counter clockwise direction
         let convex = 0, concave = 0;
-        for (let i = 0; i < this.verticies.length; i++)
+        for (let i = 0; i < this.vertices.length; i++)
         {
-            const v = this.verticies[i];
-            const prev = (i - 1 + this.verticies.length) % this.verticies.length;
-            const next = (i + 1) % this.verticies.length;
+            const v = this.vertices[i];
+            const prev = (i - 1 + this.vertices.length) % this.vertices.length;
+            const next = (i + 1) % this.vertices.length;
 
             // vector AB : previous to current 
-            const AB = Vector2.subtract(v, this.verticies[prev]);
+            const AB = Vector2.subtract(v, this.vertices[prev]);
             // vector BC : current to next
-            const BC = Vector2.subtract(this.verticies[next], v);
+            const BC = Vector2.subtract(this.vertices[next], v);
 
             const crossproduct = Vector2.cross(AB, BC);
 
@@ -126,7 +126,7 @@ export class Polygon {
             else 
             {
                 // its collinear
-                this.verticies.splice(i, 1);
+                this.vertices.splice(i, 1);
 
                 // Adjust the index after removing the vertex
                 i--;
@@ -167,29 +167,29 @@ export class Polygon {
         if (concave > convex)
         {
             // counter clockwise
-            this.verticies = this.verticies.reverse();
+            this.vertices = this.vertices.reverse();
 
             // need to flip the boundary indexes
-            this.boundaryindex = this.boundaryindex.map(i => this.verticies.length - 1 - i);
+            this.boundaryindex = this.boundaryindex.map(i => this.vertices.length - 1 - i);
         }
         this.concave = convex > 0 && concave > 0;
 
-        // set the center to median of verticies 
+        // set the center to median of vertices 
         if (verbose)
         {
             console.log(this.centeroffset.x, this.centeroffset.y, {
-                length: this.verticies.length,
-                first: this.verticies[0],
-                new: this.centeroffset.clone.divide(this.verticies.length)
+                length: this.vertices.length,
+                first: this.vertices[0],
+                new: this.centeroffset.clone.divide(this.vertices.length)
             })
         }
-        this.centeroffset.divide(this.verticies.length);
+        this.centeroffset.divide(this.vertices.length);
         if (verbose)
         {
             console.log(this.centeroffset.x, this.centeroffset.y)
         }
 
-        this.centeroffset.subtract(this.verticies[0]);
+        this.centeroffset.subtract(this.vertices[0]);
 
         if (verbose)
         {
@@ -206,9 +206,9 @@ export class Polygon {
 
     getTriangle(i: number) {
         return [
-            this.verticies[this.triangles[i * 3]],
-            this.verticies[this.triangles[i * 3 + 1]],
-            this.verticies[this.triangles[i * 3 + 2]],
+            this.vertices[this.triangles[i * 3]],
+            this.vertices[this.triangles[i * 3 + 1]],
+            this.vertices[this.triangles[i * 3 + 2]],
         ]
     }
     getTriangles() {
@@ -220,11 +220,10 @@ export class Polygon {
 
         return triangles;
     }
-
     draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)", r = 1) {
         ctx.strokeStyle = strokecolor;
 
-        this.verticies.forEach((v, i) => {
+        this.vertices.forEach((v, i) => {
 
             ctx.beginPath();
             ctx.arc(v.x, v.y, r, 0, Math.PI * 2);
@@ -245,9 +244,9 @@ export class Polygon {
         ctx.setLineDash([10, 15]);
         for (let i = 0; i < this.triangles.length; i += 3)
         {
-            const a = this.verticies[this.triangles[i]];
-            const b = this.verticies[this.triangles[i + 1]];
-            const c = this.verticies[this.triangles[i + 2]];
+            const a = this.vertices[this.triangles[i]];
+            const b = this.vertices[this.triangles[i + 1]];
+            const c = this.vertices[this.triangles[i + 2]];
 
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
@@ -260,22 +259,22 @@ export class Polygon {
 
         ctx.setLineDash([]);
         ctx.lineWidth = r;
-        if (this.verticies.length > 1)
+        if (this.vertices.length > 1)
         {
             ctx.beginPath();
-            for (let i = 0; i < this.verticies.length; i++)
+            for (let i = 0; i < this.vertices.length; i++)
             {
                 if (i === 0)
                 {
-                    ctx.moveTo(this.verticies[i].x, this.verticies[i].y);
+                    ctx.moveTo(this.vertices[i].x, this.vertices[i].y);
                 }
                 else 
                 {
-                    ctx.lineTo(this.verticies[i].x, this.verticies[i].y);
+                    ctx.lineTo(this.vertices[i].x, this.vertices[i].y);
                 }
             }
 
-            ctx.lineTo(this.verticies[0].x, this.verticies[0].y);
+            ctx.lineTo(this.vertices[0].x, this.vertices[0].y);
 
             ctx.stroke();
             ctx.fillStyle = fillcolor;

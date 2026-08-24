@@ -61,17 +61,17 @@ export class Rectangle extends Shape implements RectangleObject {
     // }
 
     get polygon(): PolygonObject {
-        const verticies = [this.topLeft, this.topRight, this.bottomLeft, this.bottomRight];
+        const vertices = [this.topLeft, this.topRight, this.bottomLeft, this.bottomRight];
         return {
             boundary: this,
             boundaryindex: [0, 1, 2, 3],
             center: this.center,
             id: 1,
-            verticies,
+            vertices,
             triangles: [0, 1, 2, 2, 3, 1],
             getTriangle(i) {
                 const index = Math.max(0, Math.min(i, 1));
-                return new Array(3).map((_, i) => verticies[index * 3 + i]);
+                return new Array(3).map((_, i) => vertices[index * 3 + i]);
             }
         }
     }

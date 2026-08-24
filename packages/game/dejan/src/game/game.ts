@@ -3,10 +3,10 @@ import { Engine, InputEvents } from "@papit/game-engine";
 import { bind } from "@papit/web-component";
 
 // local 
-import { Alphabet } from "alphabet";
-import { Character } from "character";
-import { WorldMap } from "world"
-import { Camera } from "camera"
+import { Alphabet } from "game/alphabet";
+import { Character } from "game/character";
+import { WorldMap } from "game/world"
+import { Camera } from "game/camera"
 
 const VERBOSE = false;
 

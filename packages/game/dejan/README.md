@@ -25,9 +25,8 @@ npm install @papit/dejan
   import "@papit/dejan";
 </script>
 
-<pap-dejan></pap-dejan>
+<dejan-spel></dejan-spel>
 ```
-
 
 ## Contributing
 
