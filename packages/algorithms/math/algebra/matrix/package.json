@@ -46,7 +46,7 @@
         "url": "git+https://github.com/onkelhoy/papit.git",
         "directory": "packages/math/algebra/matrix"
     },
-    "sideEffects": true,
+    "sideEffects": false,
     "engines": {
         "node": ">=18"
     },
