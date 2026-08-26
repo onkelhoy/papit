@@ -59,6 +59,7 @@
     "@papit/game-intersection": "^0.0.1",
     "@papit/game-shape": "^0.0.1",
     "@papit/icon": "^0.1.6",
+    "@papit/sat": "^0.0.1",
     "@papit/vector": "^0.0.1",
     "@papit/web-component": "*"
   },

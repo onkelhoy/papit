@@ -8,7 +8,7 @@ import { Character } from "game/character";
 import { WorldMap } from "game/world"
 import { Camera } from "game/camera"
 
-const VERBOSE = false;
+const VERBOSE = true;
 
 export class Game {
     private engine: Engine;

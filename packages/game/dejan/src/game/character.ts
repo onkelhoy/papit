@@ -1,9 +1,10 @@
 import { Spritesheet, SpriteAnimator, SpriteAnimation } from "@papit/2d-spritesheet";
 import { Engine, InputEvents } from "@papit/game-engine";
 import { Vector2 } from "@papit/vector";
-import { Polygon, Rectangle } from "@papit/game-shape";
+import { Rectangle } from "@papit/game-shape";
+import { Polygon } from "@papit/polygon";
 import { bind, property } from "@papit/web-component";
-import { SAT } from "@papit/game-intersection";
+import { SAT } from "@papit/sat";
 
 
 // Constants
@@ -62,35 +63,85 @@ export class Character {
         return 2000 + Math.random() * 3000; // 2-5s between blinks/breaths
     }
 
-    private collisionDetection(worldPolygons: Polygon[]) {
+    // private collisionDetection(worldPolygons: Polygon[]) {
 
+    //     const bpolygon = this.boundary.polygon;
+    //     let collideGround = false;
+    //     for (const polygon of worldPolygons)
+    //     {
+    //         const sat = SAT(bpolygon, polygon);
+    //         if (!sat) continue;
+
+    //         let { axis, overlap } = sat;
+    //         console.log('collision', sat, bpolygon)
+    //         if (axis.y < -0.5)
+    //         {
+    //             this.velocity.y = 0;
+
+    //             if (!this.grounded)
+    //             {
+    //                 this.spritestate = "landing";
+    //                 this.isCharging = false
+    //             }
+    //             this.grounded = true;
+    //             collideGround = true;
+
+    //             overlap -= 0.001; // to avoid flickering
+    //         }
+
+    //         this.position.subtract(axis.multiply(overlap));
+    //     }
+
+    //     this.boundary.x = this.position.x - this.boundary.w / 2;
+    //     this.boundary.y = this.position.y - this.boundary.h;
+
+    //     if (!collideGround)
+    //     {
+    //         this.grounded = false;
+    //         this.spritestate = "falling";
+    //     }
+    // }
+
+    private collisionDetection(worldPolygons: Polygon[]) {
         const bpolygon = this.boundary.polygon;
         let collideGround = false;
+        const corrections: { axis: Vector2; overlap: number }[] = [];
+
         for (const polygon of worldPolygons)
         {
             const sat = SAT(bpolygon, polygon);
             if (!sat) continue;
 
-            let { normal, depth } = sat;
-            if (normal.y > 0.5)
+            let { axis, overlap } = sat;
+
+            // (Optional) ensure the axis is normalised and points away from the world
+            // The SAT already does this, but it's safe to re-check.
+            if (axis.magnitude === 0) continue;
+
+            // Ground check (now using downward normal)
+            if (axis.y < -0.5)
             {
                 this.velocity.y = 0;
-
                 if (!this.grounded)
                 {
                     this.spritestate = "landing";
-                    this.isCharging = false
+                    this.isCharging = false;
                 }
                 this.grounded = true;
                 collideGround = true;
-
-                depth -= 0.001; // to avoid flickering
+                overlap -= 0.001;   // slight bias to avoid jitter
             }
 
-            console.log("IKNSIDE POLYGOIN", depth)
-            this.position.subtract(normal.multiply(depth));
+            corrections.push({ axis, overlap });
         }
 
+        // Apply all corrections at once
+        for (const corr of corrections)
+        {
+            this.position.subtract(corr.axis.multiply(corr.overlap));
+        }
+
+        // Update the boundary after all movements
         this.boundary.x = this.position.x - this.boundary.w / 2;
         this.boundary.y = this.position.y - this.boundary.h;
 
@@ -140,21 +191,21 @@ export class Character {
                 this.velocity.x = 0;
             }
 
-            // if (events.key("arrowup")?.pressed)
-            // {
-            //     this.velocity.y = -SPEED;
-            //     // this.flipped = false;
-            //     moving = true;
-            // }
-            // else if (events.key("arrowdown")?.pressed)
-            // {
-            //     this.velocity.y = SPEED;
-            //     moving = true;
-            // }
-            // else
-            // {
-            //     this.velocity.y = 0;
-            // }
+            if (events.key("arrowup")?.pressed)
+            {
+                this.velocity.y = -SPEED;
+                // this.flipped = false;
+                moving = true;
+            }
+            else if (events.key("arrowdown")?.pressed)
+            {
+                this.velocity.y = SPEED;
+                moving = true;
+            }
+            else
+            {
+                this.velocity.y = 0;
+            }
         } else
         {
             this.velocity.x = 0;
@@ -193,7 +244,7 @@ export class Character {
         {
             // Cancel charge if we somehow leave the ground while charging
             this.isCharging = false;
-            this.velocity.y += GRAVITY;
+            // this.velocity.y += GRAVITY;
         }
 
         // State resolution

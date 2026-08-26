@@ -1,6 +1,6 @@
 # @papit/triangulation
 
-triangulate a polygon shape using ear-clipping + hertel mehlhorn
+Triangulate a 2D polygon using the ear-clipping algorithm, with optional Hertel–Mehlhorn convex decomposition. This package cleans up your polygon by removing collinear vertices, detects concavity, and computes a triangle mesh ready for rendering or physics.
 
 ![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
 
@@ -12,11 +12,106 @@ triangulate a polygon shape using ear-clipping + hertel mehlhorn
 
 ---
 
-## installation
+## Features
+
+- Removes collinear vertices to produce a clean polygon.
+- Detects polygon orientation and concavity.
+- Ear‑clipping triangulation for simple polygons (convex or concave).
+- Optional Hertel–Mehlhorn convex decomposition (when `Decomposition` is implemented).
+- Returns triangle indices ready for use with WebGL or other graphics APIs.
+
+## Installation
 
 ```bash
 npm install @papit/triangulation
 ```
+
+## Usage
+
+```typescript
+import { Triangulate, type Polygon } from "@papit/triangulation";
+
+// Define a polygon – vertices are [x, y] pairs
+const polygon: Polygon = {
+  vertices: [
+    [0, 0],
+    [4, 0],
+    [4, 4],
+    [0, 4],
+  ],
+  triangles: [], // placeholder, will be filled
+};
+
+const result = Triangulate(polygon);
+if (result[0] === false) {
+  // Success: polygon.triangles now holds triangle indices
+  console.log(polygon.triangles); // [0,1,2, 0,2,3]
+} else {
+  console.error(`Error (${result[0]}): ${result[1]}`);
+}
+```
+
+## API
+
+### `Polygon` type
+
+```typescript
+type Polygon = {
+  vertices: VectorValue[]; // array of [x, y] or Vector2
+  triangles?: number[]; // flat triangle indices (output)
+  convex?: number[] | number[][]; // optional convex decomposition
+  concave?: boolean; // (output) true if concave
+  centeroffset?: Vector2; // (output) offset from first vertex
+  boundaryindex?: number[]; // (output) indices of min/max vertices
+  calibrated?: boolean; // (output) true after calibration
+  changed?: boolean; // (output) true if modified
+};
+```
+
+> At least one of `triangles` or `convex` **must** be provided (even as empty array) to satisfy the type.
+
+### `Calibrate(polygon: Polygon, verbose?: boolean): void`
+
+Cleans the polygon in‑place:
+
+- Removes collinear vertices.
+- Computes bounding box indices.
+- Detects concavity and reverses winding if needed.
+- Computes a center offset relative to the first vertex.
+
+### `Triangulation(polygon: Polygon): [error: false] | [error: true, message: string]`
+
+Runs the ear‑clipping algorithm and fills `polygon.triangles` with flat triangle indices.
+
+### `Triangulate(polygon: Polygon): [error: false] | [error: "triangulation" | "decomposition", message: string]`
+
+A convenience wrapper that calls `Calibrate` and `Triangulation`, and then `Decomposition` (if available). Returns a tuple indicating success or the stage that failed.
+
+## Example
+
+Triangulating a concave L‑shape:
+
+```typescript
+const Lshape: Polygon = {
+  vertices: [
+    [0, 0],
+    [2, 0],
+    [2, 1],
+    [1, 1],
+    [1, 2],
+    [0, 2],
+  ],
+  triangles: [],
+};
+
+Triangulate(Lshape);
+console.log(Lshape.triangles); // e.g. [0,1,2, 0,2,5, 2,3,4, 2,4,5] (order may vary)
+```
+
+## Dependencies
+
+- `@papit/vector` – provides `Vector2` and `VectorValue` types.
+- `@papit/triangle-intersection` – used for point‑in‑triangle tests during ear clipping.
 
 ## Contributing
 
@@ -24,7 +119,7 @@ Contributions are welcome! Please follow the development guidelines above and en
 
 ## License
 
-Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
+Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelhoy)
 
 **Key points:**
 

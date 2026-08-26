@@ -1,6 +1,7 @@
 import { Spritesheet } from "@papit/2d-spritesheet"
 import { Engine, LoadImage, Pixel, Pixels } from "@papit/game-engine";
-import { GeneratePolygon, Polygon } from "@papit/game-shape";
+import { Polygon } from "@papit/polygon";
+import { GeneratePolygon, DrawPolygon } from "@papit/game-shape";
 
 const SPRITES = {
     top: [0, 1],
@@ -102,18 +103,18 @@ export class WorldMap {
         {
             for (const polygon of this.polygons) 
             {
-                polygon.draw(Engine.instance.ctx)
+                DrawPolygon(polygon, Engine.instance.ctx);
             }
         }
 
-        for (const tile of this.tiles)
-        {
-            this.spritesheet.draw(Engine.instance.ctx, tile.sprite, {
-                x: tile.x * SIZE, // this.spritesheet.frameWidth,
-                y: tile.y * SIZE, // this.spritesheet.frameHeight,
-                width: SIZE,
-                height: SIZE,
-            });
-        }
+        // for (const tile of this.tiles)
+        // {
+        //     this.spritesheet.draw(Engine.instance.ctx, tile.sprite, {
+        //         x: tile.x * SIZE, // this.spritesheet.frameWidth,
+        //         y: tile.y * SIZE, // this.spritesheet.frameHeight,
+        //         width: SIZE,
+        //         height: SIZE,
+        //     });
+        // }
     }
 }
