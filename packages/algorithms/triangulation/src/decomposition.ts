@@ -1,5 +1,5 @@
-import { type Polygon } from "@papit/polygon";
 import { Vector2, VectorValue } from "@papit/vector";
+import { type Polygon } from "types";
 
 /**
  * Hertel–Mehlhorn convex decomposition.
@@ -10,11 +10,13 @@ import { Vector2, VectorValue } from "@papit/vector";
  * Modifies polygon.convex to contain a flat array of vertex indices,
  * grouped by convex polygon size: [size1, i1, i2, …, size2, j1, j2, …].
  */
-export function Decomposition(polygon: Polygon): ([error: false] | [error: true, message: string]) {
+export function Decomposition(polygon: Polygon): { error: false | string, shapes: number[] } {
     const tris = polygon.triangles;
+    const shapes: number[] = [];
+
     if (!tris || tris.length < 3 || tris.length % 3 !== 0)
     {
-        return [true, "No valid triangulation found. Run Triangulation first."];
+        return { error: "No valid triangulation found. Run Triangulation first.", shapes };
     }
 
     const T = tris.length / 3;              // number of triangles
@@ -172,14 +174,16 @@ export function Decomposition(polygon: Polygon): ([error: false] | [error: true,
 
     // ---------- 6. Extract convex pieces directly into the flat output ----------
     // (remove the `const visited = new Uint8Array(H);` line that was here)
-    const flatConvex: number[] = [];
+
 
     for (let h = 0; h < H; h++)
     {
         if (visited[h]) continue;
 
-        const sizeIndex = flatConvex.length;
-        flatConvex.push(0); // placeholder, patched below
+        const sizeIndex = shapes.length;
+
+        shapes.push(0); // placeholder, patched below
+
 
         let curr = h;
         let count = 0;
@@ -187,7 +191,8 @@ export function Decomposition(polygon: Polygon): ([error: false] | [error: true,
         do
         {
             visited[curr] = 1;
-            flatConvex.push(he_from[curr]);
+            shapes.push(he_from[curr]);
+
             count++;
             curr = he_next[curr];
             if (count > H) { corrupted = true; break; } // dangling chain guard
@@ -195,16 +200,17 @@ export function Decomposition(polygon: Polygon): ([error: false] | [error: true,
 
         if (corrupted || count < 3)
         {
-            flatConvex.length = sizeIndex; // discard this entry
+            shapes.length = sizeIndex; // discard this entry
+
             continue;
         }
 
-        flatConvex[sizeIndex] = count;
+        shapes[sizeIndex] = count;
+
     }
 
-    polygon.shapesindeces = flatConvex;
+    return { error: false, shapes }
 
-    return [false];
 }
 
 /**

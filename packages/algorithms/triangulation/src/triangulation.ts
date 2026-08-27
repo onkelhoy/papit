@@ -1,23 +1,22 @@
 import { Vector2 } from "@papit/vector";
 import { isPointInTriangle } from "@papit/triangle-intersection";
-import { type Polygon } from "@papit/polygon";
+import { type Polygon } from "types";
 
 /**
  * Ear Clipping
  */
-export function Triangulation(polygon: Polygon): ([error: false] | [error: true, message: string]) {
+export function Triangulation(polygon: Polygon): { error: false | string; triangles: number[] } {
     let indexlist = polygon.vertices.map((_v, i) => i);
-    const triangles = [];
+    const triangles: number[] = [];
 
     // validate if polygon can be triangulated
     if (polygon.vertices.length < 3)
     {
-        return [true, "polygon has less then 3 vertices"];
+        return { error: "polygon has less then 3 vertices", triangles };
     }
 
     while (indexlist.length > 3)
     {
-        const startinglenght = indexlist.length;
         let bestIndex = -1;
         let bestScore = -Infinity;
 
@@ -58,12 +57,6 @@ export function Triangulation(polygon: Polygon): ([error: false] | [error: true,
 
             if (isear)
             {
-                // triangles.push(b);
-                // triangles.push(a);
-                // triangles.push(c);
-
-                // indexlist.splice(i, 1);
-                // break;
                 const score = Vector2.cross(va_to_vb, va_to_vc); // or angle-based score
                 if (score > bestScore)
                 {
@@ -75,7 +68,7 @@ export function Triangulation(polygon: Polygon): ([error: false] | [error: true,
 
         if (bestIndex === -1)
         {
-            return [true, "no further triangle could be established"];
+            return { error: "no further triangle could be established", triangles };
         }
 
         const a = indexlist[bestIndex];
@@ -83,11 +76,6 @@ export function Triangulation(polygon: Polygon): ([error: false] | [error: true,
         const c = getitem(indexlist, bestIndex + 1);
         triangles.push(b, a, c);
         indexlist.splice(bestIndex, 1);
-
-        // if (startinglenght === indexlist.length)
-        // {
-        //     return [true, "no further triangle could be established"];
-        // }
     }
 
     // add last triangle
@@ -99,11 +87,10 @@ export function Triangulation(polygon: Polygon): ([error: false] | [error: true,
     }
     else 
     {
-        return [true, "the remaining vertices is not 3"];
+        return { error: "the remaining vertices is not 3", triangles };
     }
 
-    polygon.triangles = triangles;
-    return [false];
+    return { error: false, triangles };
 }
 
 function getitem(array: number[], index: number) {
