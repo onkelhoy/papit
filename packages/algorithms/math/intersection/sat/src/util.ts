@@ -1,5 +1,5 @@
 import { Vector2, VectorValue } from "@papit/vector";
-import { Polygon } from "types";
+import { Polygon, Shape } from "types";
 
 export class Projection {
     constructor(public min: number, public max: number) { }
@@ -17,18 +17,55 @@ export class Projection {
 }
 
 const EPS = 1e-10;
-export function getAxes(vertices: VectorValue[]) {
-    const axes = new Array<Vector2>(vertices.length);
+export function getAxes(polygonVertexIndexMap: Record<string, number>, shape: Partial<Shape> & { vertices: VectorValue[] }) {
+    const axes = new Array<{ normal: Vector2, internal: boolean }>(shape.vertices.length);
+
+    let minx = Infinity;
+    let maxx = -Infinity;
+    let miny = Infinity;
+    let maxy = -Infinity;
+    const center = Vector2.zero;
+
     for (let i = 0; i < axes.length; i++)
     {
-        const a = vertices[i];
-        const b = vertices[(i + 1) === axes.length ? 0 : i + 1];
+        const a = new Vector2(shape.vertices[i]);
+        if (!shape.center)
+        {
+            center.add(a);
+        }
+        if (!shape.boundary)
+        {
+            if (minx > a.x) minx = a.x;
+            if (miny > a.y) miny = a.y;
+            if (maxx < a.x) maxx = a.x;
+            if (maxy < a.y) maxy = a.y;
+        }
+
+        const b = new Vector2(shape.vertices[(i + 1) === axes.length ? 0 : i + 1]);
         if (!a || !b) continue;
 
         const edge = Vector2.subtract(a, b);
         if (edge.magnitude < EPS) continue;
         const normal = edge.perpendicular().normalize();
-        axes[i] = normal;
+
+        const indexDistance = Math.abs((polygonVertexIndexMap[`${a.x}-${a.y}`] ?? 0) - (polygonVertexIndexMap[`${b.x}-${b.y}`] ?? 0));
+
+        axes[i] = { normal, internal: indexDistance !== 1 };
+    }
+
+    if (!shape.center)
+    {
+        center.divide(axes.length);
+        shape.center = center;
+    }
+    if (!shape.boundary)
+    {
+        shape.boundary = {
+            x: minx,
+            y: miny,
+            w: maxx - minx,
+            h: maxy - miny,
+        };
     }
 
     return axes;

@@ -1,152 +1,230 @@
 // import statements 
 
-import { Triangulate } from "@papit/triangulation";
+import { Rectangle } from "@papit/rectangle";
+import { Decomposition, Triangulation } from "@papit/triangulation";
 import { Vector2, VectorValue } from "@papit/vector";
 
-export class Polygon {
+class PolygonShape {
+    private _boundary!: Rectangle;
+    get boundary() {
+        return {
+            x: this._boundary.x + this._offset.x,
+            y: this._boundary.y + this._offset.y,
+            w: this._boundary.w,
+            h: this._boundary.h,
+        }
+    }
 
-    private _vertices: VectorValue[];
-    private _verticesOffset: VectorValue[];
-    private _dirty_verts = true;
-    private _dirty_shapes = true;
-    private _offset: VectorValue;
-    private _center: VectorValue;
+    get vertices() {
+        return this._vertices;
+    }
 
-    public concave = false;
-
+    private _center!: Vector2;
     get center() {
         return Vector2.add(this._center, this._offset);
     }
-    private _shapes: Vector2[][];
-    get shapes(): Vector2[][] {
-        if (this._dirty_shapes)
-        {
-            return this.rebuildShapes();
-        }
 
-        return this._shapes;
+    public triangles: number[] = []; // will be assigned by higher class 
+
+    constructor(
+        protected _vertices: Vector2[], // BY REFERENCE 
+        protected _offset: Vector2, // BY REFERENCE 
+    ) {
+        this.calibrate();
     }
+
+    public calibrate() {
+        let center = Vector2.zero;
+        let minx = Infinity;
+        let maxx = -Infinity;
+        let miny = Infinity;
+        let maxy = -Infinity;
+
+        for (const v of this._vertices)
+        {
+            center.add(v);
+            if (v.x < minx) minx = v.x;
+            if (v.x > maxx) maxx = v.x;
+            if (v.y < miny) miny = v.y;
+            if (v.y > maxy) maxy = v.y;
+        }
+        this._center = center;
+        this._boundary = new Rectangle(minx, miny, maxx - minx, maxy - miny);
+    }
+
+    public getTriangle(index: number): [a: Vector2, b: Vector2, c: Vector2] {
+        return [
+            this.vertices[index * 3 + 0],
+            this.vertices[index * 3 + 1],
+            this.vertices[index * 3 + 2],
+        ];
+    }
+}
+
+export class Polygon extends PolygonShape {
+    private _shapes: PolygonShape[] = [];
     private _shapesindeces: number[] = [];
-    get shapesindeces() {
-        return this._shapesindeces;
-    }
-    set shapesindeces(indices: number[]) {
-        this._shapesindeces = indices;   // assign to backing field
-        this._dirty_shapes = true; // let the next .shapes read rebuild it lazily
-    }
-    get boundary() {
-        if (!this.boundaryindex) this.recalculate();
-        if (!this.boundaryindex)
+
+    private _originalVertices: Vector2[] = [];
+    private _dirty = false;
+    public concave = false;
+
+    override get vertices(): Vector2[] {
+        if (this._dirty)
         {
-            throw new Error("polygon has no boundary-index, attempt of recalucating has been made but no success");
+            this.recomputeVertices();
         }
-
-        return {
-            x: this.getVertex(this.boundaryindex[0]).x,
-            y: this.getVertex(this.boundaryindex[1]).y,
-            w: this.getVertex(this.boundaryindex[2]).x - this.getVertex(this.boundaryindex[0]).x,
-            h: this.getVertex(this.boundaryindex[3]).y - this.getVertex(this.boundaryindex[1]).y,
-        }
+        return this._vertices;
     }
-    get vertices() {
-        if (this._dirty_verts)
+
+    set vertices(vertices: VectorValue[]) {
+        this._vertices = vertices.map(v => new Vector2(v));
+        if (this._vertices.length >= 3)
         {
-            this._dirty_verts = false;
-            this._verticesOffset = this._vertices.map(v => Vector2.add(v, this._offset));
+            this.calibrate();
+            this.triangulate();
         }
-        return this._verticesOffset; // one can mutate here 
     }
-    set vertices(value: VectorValue[]) {
-        this._vertices = value.map(v => new Vector2(v));
-        this._verticesOffset = value.map(v => new Vector2(v)); // clone it 
-        this._dirty_verts = false;
-        this.recalculate();
+
+    constructor(...vertices: VectorValue[]) {
+        super([], Vector2.zero);
+        this.vertices = vertices;
     }
-    triangles: number[];
 
-    boundaryindex: number[];
-    calibrated = false;
+    public override calibrate() {
 
-    private rebuildShapes() {
+        this._dirty = false;
+        this._originalVertices = [];
+        this.concave = false;
+
+        let convex = 0;
+        let concave = 0;
+
+        // calibrating
+        for (let i = 0; i < this._vertices.length; i++)
+        {
+            const v = this._vertices[i];
+            const prev = (i - 1 + this._vertices.length) % this._vertices.length;
+            const next = (i + 1) % this._vertices.length;
+
+            const AB = Vector2.subtract(v, this._vertices[prev]);
+            const BC = Vector2.subtract(this._vertices[next], v);
+
+            const crossproduct = Vector2.cross(AB, BC);
+
+            if (crossproduct > 0)
+            {
+                convex++;
+            }
+            else if (crossproduct < 0)
+            {
+                concave++;
+            }
+            else
+            {
+                // its collinear
+                this._vertices.splice(i, 1);
+                i--;
+                continue;
+            }
+        }
+
+        if (concave > convex)
+        {
+            this._vertices = this._vertices.reverse();
+            this._originalVertices = this._originalVertices.reverse();
+        }
+
+        this.concave = convex > 0 && concave > 0;
+        this._originalVertices = this._vertices.map(v => v.clone);
+        super.calibrate();
+    }
+    public triangulate() {
         this._shapes = [];
-        this._dirty_shapes = false;
+        this._shapesindeces = [];
+
+        // call triangulation + decomposition to get indices and generate shapes 
+        const triangulation = Triangulation(this);
+        if (triangulation.error)
+        {
+            throw triangulation.error;
+        }
+        this.triangles = triangulation.triangles;
+
+        const shapes = Decomposition(this);
+        if (shapes.error)
+        {
+            throw shapes.error;
+        }
+
+        this._shapesindeces = shapes.shapes;
+
         let i = 0;
         while (i < this._shapesindeces.length)
         {
             const count = this._shapesindeces[i];
             if (count === 0) { i++; continue; }
-            const shape: Vector2[] = [];
+            const vertices: Vector2[] = [];
             for (let j = i + 1; j <= i + count; j++)
             {
-                shape.push(this.getVertex(this._shapesindeces[j]));
+                vertices.push(this._vertices[this._shapesindeces[j]]);
             }
-            if (shape.length) this._shapes.push(shape);
+            if (vertices.length)
+            {
+                this._shapes.push(new PolygonShape(vertices, this._offset));
+            }
             i += count + 1;
         }
-
-        return this.shapes;
     }
 
-    constructor(...vertices: VectorValue[]) {
-        this._verticesOffset = [];
-        this._vertices = vertices;
-        this._shapes = [];
-        this._offset = Vector2.zero;
-        this._center = Vector2.zero;
-        this.triangles = [];
-        this.boundaryindex = [];
-
-        this.recalculate();
-    }
-
-    recalculate(verbose = false) {
-        Triangulate(this, verbose);
-        const center = Vector2.zero;
-        this._vertices.forEach(vertex => center.add(vertex));
-        center.divide(this._vertices.length);
-        this._center = center;
-        return this;
-    }
-
-    getVertex(i: number) {
-        const v = this.vertices[i];
-        if (!v) throw new Error(`no vertex at: ${i}`);
-        if (!(v instanceof Vector2))
+    public getShape(index: number) {
+        if (this._dirty)
         {
-            this.vertices[i] = new Vector2(v);
-        }
-        return v as Vector2;
-    }
-
-    getTriangle(i: number): [a: Vector2, b: Vector2, c: Vector2] {
-        if (this.triangles.length === 0)
-        {
-            this.recalculate();
+            this.recomputeVertices();
         }
 
-        const a = this.triangles[i * 3];
-        if (a === undefined) throw new Error("triangle does not exist");
-        const b = this.triangles[i * 3 + 1];
-        if (b === undefined) throw new Error("triangle does not exist");
-        const c = this.triangles[i * 3 + 2];
-        if (c === undefined) throw new Error("triangle does not exist");
-
-        return [this.getVertex(a), this.getVertex(b), this.getVertex(c)];
+        return this._shapes.at(index);
     }
 
-    getEdge(i: number): [a: Vector2, b: Vector2] {
-        return [this.getVertex(i), this.getVertex((i + 1) % this.vertices.length)]
+    // coordination
+    move(vector: VectorValue): void;
+    move(x: number, y: number): void;
+    public move(x: VectorValue, y?: number) {
+        this._dirty = true;
+        if (y !== undefined)
+        {
+            this._offset.add(x as number, y);
+        }
+        else 
+        {
+            this._offset.add(x);
+        }
     }
 
-    // transformations 
-    move(x: number, y: number) {
-        this._dirty_verts = true;
-        this._dirty_shapes = true;
-        this._offset = Vector2.add(this._offset, { x, y });
+    set(vector: VectorValue): void;
+    set(x: number, y: number): void;
+    public set(x: VectorValue, y?: number) {
+        this._dirty = true;
+        if (y !== undefined)
+        {
+            this._offset.x = x as number;
+            this._offset.y = y;
+        }
+        else 
+        {
+            const v = new Vector2(x);
+            this._offset.x = v.x
+            this._offset.y = v.y;
+        }
     }
-    set(x: number, y: number) {
-        this._dirty_verts = true;
-        this._dirty_shapes = true;
-        this._offset = new Vector2(x, y);
+
+    // private functions 
+
+    private recomputeVertices() {
+        this._vertices.forEach((v, i) => {
+            v.x = this._originalVertices[i].x + this._offset.x;
+            v.y = this._originalVertices[i].y + this._offset.y;
+        });
+        this._dirty = false;
     }
 }

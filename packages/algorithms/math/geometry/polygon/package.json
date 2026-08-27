@@ -52,6 +52,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@papit/rectangle": "^0.0.1",
     "@papit/triangulation": "^0.0.1",
     "@papit/vector": "^0.0.1"
   },
