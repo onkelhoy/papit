@@ -103,7 +103,7 @@ export class WorldMap {
         {
             for (const polygon of this.polygons) 
             {
-                DrawPolygon(polygon, Engine.instance.ctx);
+                DrawPolygon(polygon, Engine.instance.ctx, { strokecolor: "white" });
             }
         }
 

@@ -33,8 +33,7 @@ export function DrawPolygon(
 
     ctx.strokeStyle = strokecolor;
 
-    polygon.vertices.forEach((_, i) => {
-        const v = polygon.getVertex(i);
+    polygon.vertices.forEach((v, i) => {
         ctx.beginPath();
         ctx.arc(v.x, v.y, r, 0, Math.PI * 2);
         ctx.strokeStyle = strokecolor;
@@ -70,14 +69,13 @@ export function DrawPolygon(
 
     if (shapes) 
     {
-        // ctx.strokeStyle = "blue";
         ctx.setLineDash([5, 8]);
         for (const shape of polygon.shapes)
         {
             ctx.beginPath();
-            for (let i = 0; i < shape.length; i++)
+            for (let i = 0; i < shape.vertices.length; i++)
             {
-                const v = shape[i];
+                const v = shape.vertices[i];
                 if (i === 0) ctx.moveTo(v.x, v.y);
                 else ctx.lineTo(v.x, v.y);
             }

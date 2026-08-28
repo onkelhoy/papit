@@ -212,8 +212,8 @@ describe("SAT", () => {
         assert.strictEqual(ab.overlap, ba.overlap);
         // Axis direction may be opposite; compare absolute values
         assert.deepStrictEqual(
-            { x: Math.abs(ab.axis.x), y: Math.abs(ab.axis.y) },
-            { x: Math.abs(ba.axis.x), y: Math.abs(ba.axis.y) }
+            { x: Math.abs(ab.normal.x), y: Math.abs(ab.normal.y) },
+            { x: Math.abs(ba.normal.x), y: Math.abs(ba.normal.y) }
         );
     });
 });

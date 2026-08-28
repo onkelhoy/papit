@@ -5,6 +5,7 @@ import { Rectangle } from "@papit/game-shape";
 import { Polygon } from "@papit/polygon";
 import { bind, property } from "@papit/web-component";
 import { SAT } from "@papit/sat";
+import { Pill } from "./pill";
 
 
 // Constants
@@ -35,7 +36,8 @@ export class Character {
 
     public position: Vector2;
     public velocity: Vector2;
-    private boundary: Rectangle;
+    // private boundary: Rectangle;
+    private boundary: Pill;
     private flipped = false;
     private grounded = true;
     private isCharging = false;
@@ -46,12 +48,13 @@ export class Character {
     // idle-variant scheduling
     private idleTimer = 0;
     private nextIdleAt = this.randomIdleDelay();
+    private normal: Vector2 | null = null;
 
     constructor(x: number, y: number) {
         this.position = new Vector2(x, y);
         this.velocity = new Vector2(0, 0);
         this.spritesheet = new Spritesheet("/character.png", 4, 3);
-        this.boundary = new Rectangle(this.position.x, this.position.y, 80, 120);
+        this.boundary = new Pill(80, 120);
         this.animator = new SpriteAnimator<AnimName>(CHARACTER_ANIMATIONS, "idleStill");
     }
 
@@ -63,93 +66,35 @@ export class Character {
         return 2000 + Math.random() * 3000; // 2-5s between blinks/breaths
     }
 
-    // private collisionDetection(worldPolygons: Polygon[]) {
-
-    //     const bpolygon = this.boundary.polygon;
-    //     let collideGround = false;
-    //     for (const polygon of worldPolygons)
-    //     {
-    //         const sat = SAT(bpolygon, polygon);
-    //         if (!sat) continue;
-
-    //         let { axis, overlap } = sat;
-    //         console.log('collision', sat, bpolygon)
-    //         if (axis.y < -0.5)
-    //         {
-    //             this.velocity.y = 0;
-
-    //             if (!this.grounded)
-    //             {
-    //                 this.spritestate = "landing";
-    //                 this.isCharging = false
-    //             }
-    //             this.grounded = true;
-    //             collideGround = true;
-
-    //             overlap -= 0.001; // to avoid flickering
-    //         }
-
-    //         this.position.subtract(axis.multiply(overlap));
-    //     }
-
-    //     this.boundary.x = this.position.x - this.boundary.w / 2;
-    //     this.boundary.y = this.position.y - this.boundary.h;
-
-    //     if (!collideGround)
-    //     {
-    //         this.grounded = false;
-    //         this.spritestate = "falling";
-    //     }
-    // }
-
-    private collisionDetection(worldPolygons: Polygon[]) {
-        const bpolygon = this.boundary.polygon;
+    private collisionDetection(worldPolygons: Polygon[]): { collision: boolean; collideGround: boolean } {
         let collideGround = false;
-        const corrections: { axis: Vector2; overlap: number }[] = [];
+        let collision = false;
 
         for (const polygon of worldPolygons)
         {
-            const sat = SAT(bpolygon, polygon);
+            const sat = SAT(this.boundary.polygon, polygon);
             if (!sat) continue;
+            collision = true;
 
-            let { axis, overlap } = sat;
+            let { normal, overlap } = sat;
+            this.normal = normal.clone.multiply(overlap + 0.01);
+            this.position.subtract(this.normal);
+            this.boundary.update(this.position);
 
-            // (Optional) ensure the axis is normalised and points away from the world
-            // The SAT already does this, but it's safe to re-check.
-            if (axis.magnitude === 0) continue;
-
-            // Ground check (now using downward normal)
-            if (axis.y < -0.5)
+            const vDotN = this.velocity.dot(normal);
+            if (vDotN < 0)
             {
-                this.velocity.y = 0;
-                if (!this.grounded)
-                {
-                    this.spritestate = "landing";
-                    this.isCharging = false;
-                }
-                this.grounded = true;
-                collideGround = true;
-                overlap -= 0.001;   // slight bias to avoid jitter
+                this.velocity.subtract(normal.clone.multiply(vDotN));
             }
 
-            corrections.push({ axis, overlap });
+            if (normal.y > 0.5)
+            {
+                collideGround = true;
+            }
         }
 
-        // Apply all corrections at once
-        for (const corr of corrections)
-        {
-            this.position.subtract(corr.axis.multiply(corr.overlap));
-        }
-
-        // Update the boundary after all movements
-        this.boundary.x = this.position.x - this.boundary.w / 2;
-        this.boundary.y = this.position.y - this.boundary.h;
-
-        if (!collideGround)
-        {
-            this.grounded = false;
-            this.spritestate = "falling";
-        }
+        if (!collision) this.normal = null;
+        return { collision, collideGround };
     }
 
     private updateIdle(delta: number) {
@@ -191,21 +136,21 @@ export class Character {
                 this.velocity.x = 0;
             }
 
-            if (events.key("arrowup")?.pressed)
-            {
-                this.velocity.y = -SPEED;
-                // this.flipped = false;
-                moving = true;
-            }
-            else if (events.key("arrowdown")?.pressed)
-            {
-                this.velocity.y = SPEED;
-                moving = true;
-            }
-            else
-            {
-                this.velocity.y = 0;
-            }
+            // if (events.key("arrowup")?.pressed)
+            // {
+            //     this.velocity.y = -SPEED;
+            //     // this.flipped = false;
+            //     moving = true;
+            // }
+            // else if (events.key("arrowdown")?.pressed)
+            // {
+            //     this.velocity.y = SPEED;
+            //     moving = true;
+            // }
+            // else
+            // {
+            //     this.velocity.y = 0;
+            // }
         } else
         {
             this.velocity.x = 0;
@@ -244,7 +189,7 @@ export class Character {
         {
             // Cancel charge if we somehow leave the ground while charging
             this.isCharging = false;
-            // this.velocity.y += GRAVITY;
+            this.velocity.y += GRAVITY;
         }
 
         // State resolution
@@ -267,15 +212,31 @@ export class Character {
         }
 
         this.position.add(this.velocity);
+        this.boundary.update(this.position);
 
-        this.boundary.x = this.position.x - this.boundary.w / 2;
-        this.boundary.y = this.position.y - this.boundary.h;
+        const MAX_RESOLUTION_PASSES = 4;
+        let everGrounded = false;
 
-        this.collisionDetection(worldPolygons)
+        for (let pass = 0; pass < MAX_RESOLUTION_PASSES; pass++)
+        {
+            const { collision, collideGround } = this.collisionDetection(worldPolygons);
+            if (collideGround) everGrounded = true;
+            if (!collision) break;
+        }
+
+        if (everGrounded)
+        {
+            if (!this.grounded) { this.spritestate = "landing"; this.isCharging = false; }
+            this.grounded = true;
+        } else
+        {
+            this.grounded = false;
+            this.spritestate = "falling";
+        }
     }
 
     draw(delta: number, verbose = false) {
-        if (!Engine.instance) return;
+        if (!Engine.ctx) return;
 
         switch (this.spritestate)
         {
@@ -301,31 +262,65 @@ export class Character {
 
         this.animator.update(delta);
 
-        Engine.instance.ctx.save();
-        Engine.instance.ctx.translate(this.position.x, this.position.y);
-        if (this.flipped)
-        {
-            Engine.instance.ctx.scale(-1, 1);
-        }
-        this.spritesheet.draw(Engine.instance.ctx, this.animator.frame, {
-            x: 0,
-            y: 0,
-            width: 120,
-            height: 120,
-            pivotx: 50,
-            pivoty: 100,
-        });
-        Engine.instance.ctx.restore();
+        // Engine.instance.ctx.save();
+        // Engine.instance.ctx.translate(this.position.x, this.position.y);
+        // if (this.flipped)
+        // {
+        //     Engine.instance.ctx.scale(-1, 1);
+        // }
+        // this.spritesheet.draw(Engine.instance.ctx, this.animator.frame, {
+        //     x: 0,
+        //     y: 0,
+        //     width: 120,
+        //     height: 120,
+        //     pivotx: 50,
+        //     pivoty: 100,
+        // });
+        // Engine.instance.ctx.restore();
 
         if (verbose)
         {
-            this.counter++;
-            if (this.counter % 30 === 0)
+            this.boundary.draw(Engine.ctx, "white");
+
+            if (this.normal)
             {
-                this.counter = 0;
-                console.log(this.spritestate);
+                const ctx = Engine.ctx;
+                const cx = this.boundary.center.x;
+                const cy = this.boundary.center.y;
+                const angle = this.normal.angle;
+                const mag = this.normal.magnitude + 30;
+
+                const dx = Math.cos(angle);
+                const dy = Math.sin(angle);
+                const px = -dy; // perpendicular
+                const py = dx;
+
+                const tipX = cx + dx * mag;
+                const tipY = cy + dy * mag;
+
+                const headLen = Math.min(16, mag * 0.3);
+                const headWid = 8;
+                const baseX = tipX - dx * headLen;
+                const baseY = tipY - dy * headLen;
+                const wingBack = headLen * 0.5;
+
+                // 7 points: center → right base → right wing → tip → left wing → left base → center
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.lineTo(baseX + px * headWid, baseY + py * headWid);
+                ctx.lineTo(tipX - dx * wingBack + px * (headWid * 1.3), tipY - dy * wingBack + py * (headWid * 1.3));
+                ctx.lineTo(tipX, tipY);
+                ctx.lineTo(tipX - dx * wingBack - px * (headWid * 1.3), tipY - dy * wingBack - py * (headWid * 1.3));
+                ctx.lineTo(baseX - px * headWid, baseY - py * headWid);
+                ctx.lineTo(cx, cy);
+                ctx.closePath();
+
+                ctx.fillStyle = 'white';
+                ctx.fill();
+                ctx.strokeStyle = 'white'; // optional crisp edge
+                ctx.lineWidth = 1;
+                ctx.stroke();
             }
-            this.boundary.draw(Engine.instance.ctx);
         }
     }
 }

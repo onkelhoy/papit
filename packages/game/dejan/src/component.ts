@@ -82,8 +82,9 @@ export class Dejan extends CustomElement {
 
         if (this.mode === "game")
         {
+            // <dejan-music></dejan-music>
+
             return html`
-                <dejan-music></dejan-music>
                 <canvas>no canvas support loser</canvas>
             `
         }

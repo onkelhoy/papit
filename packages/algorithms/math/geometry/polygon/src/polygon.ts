@@ -77,6 +77,14 @@ export class Polygon extends PolygonShape {
         return this._vertices;
     }
 
+    get shapes(): PolygonShape[] {
+        if (this._dirty)
+        {
+            this.recomputeVertices();
+        }
+        return this._shapes;
+    }
+
     set vertices(vertices: VectorValue[]) {
         this._vertices = vertices.map(v => new Vector2(v));
         if (this._vertices.length >= 3)
@@ -184,6 +192,15 @@ export class Polygon extends PolygonShape {
         }
 
         return this._shapes.at(index);
+    }
+
+    public getVertex(index: number) {
+        if (this._dirty)
+        {
+            this.recomputeVertices();
+        }
+
+        return this._vertices.at(index);
     }
 
     // coordination

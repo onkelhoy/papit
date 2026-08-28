@@ -179,6 +179,9 @@ export class Engine {
     get ctx() {
         return this.getContext(0);
     }
+    static get ctx() {
+        return this.instance?.ctx;
+    }
     get gl() {
         return this.getContext<WebGL2RenderingContext>(0);
     }
