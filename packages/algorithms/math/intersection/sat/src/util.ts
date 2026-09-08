@@ -96,39 +96,6 @@ export function getAxes(polygon: Polygon, polygonVertexIndexMap: Record<string, 
     return axes;
 }
 
-function isOriginalEdge(n: number, idxA: number, idxB: number) {
-    const diff = Math.abs(idxA - idxB);
-    return diff === 1 || diff === n - 1;
-}
-
-// export function getMTV(
-//     axes: Axis[],
-//     shape1: Shape,
-//     shape2: Shape
-// ) {
-//     let minOverlap = Number.MAX_SAFE_INTEGER;
-//     let mtvAxis: Vector2 | null = null;
-
-//     for (const axis of axes)
-//     {
-//         const a = getProjection(axis.value, shape1.vertices);
-//         const b = getProjection(axis.value, shape2.vertices);
-
-//         if (!a.overlaps(b)) return false; // separating axis found
-
-//         if (!axis.external) continue;
-
-//         const overlap = a.getOverlap(b);
-//         if (overlap < minOverlap)
-//         {
-//             minOverlap = overlap;
-//             mtvAxis = axis.value;
-//         }
-//     }
-
-//     return mtvAxis ? { overlap: minOverlap, axis: mtvAxis } : null;
-// }
-
 export function getMTV(axes: Axis[], shape1: Shape, shape2: Shape) {
     let minOverlap = Number.MAX_SAFE_INTEGER;
     let mtvAxis: Vector2 | null = null;
@@ -155,6 +122,11 @@ export function getMTV(axes: Axis[], shape1: Shape, shape2: Shape) {
 }
 
 // helper functions 
+function isOriginalEdge(n: number, idxA: number, idxB: number) {
+    const diff = Math.abs(idxA - idxB);
+    return diff === 1 || diff === n - 1;
+}
+
 function getProjection(axis: Vector2, vertices: VectorValue[]) {
     let min = axis.dot(vertices[0]);
     let max = min;

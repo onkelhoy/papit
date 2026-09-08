@@ -4,10 +4,12 @@ import { getShapes } from "shape";
 import { Polygon, Shape } from "types";
 import { getMTV, getAxes, getMeta } from "./util";
 
-export function SAT(polygonA: Polygon, polygonB: Polygon): false | { normal: Vector2, overlap: number } {
+type Contact = { normal: Vector2, overlap: number };
+export function SAT(polygonA: Polygon, polygonB: Polygon): Contact | false {
     let overlap = Number.MAX_SAFE_INTEGER;
     let axis = Vector2.zero;
     let collided = false;
+    const raw: Contact[] = [];
 
     let centerA: Vector2 | undefined = undefined;
     let centerB: Vector2 | undefined = undefined;
@@ -59,18 +61,49 @@ export function SAT(polygonA: Polygon, polygonB: Polygon): false | { normal: Vec
             );
             if (result === false) continue; // this piece-pair is separated, not a full-polygon separation
 
-            collided = true;
-            if (result.overlap < overlap)
-            {
-                overlap = result.overlap;
-                axis = result.axis;
-                centerA = shapeMetaA.center;
-                centerB = shapeMetaB.center;
-            }
+            // collided = true;
+
+            raw.push({
+                normal: result.axis,
+                overlap: result.overlap,
+            });
+
+            // if (result.overlap < overlap)
+            // {
+            //     overlap = result.overlap;
+            //     axis = result.axis;
+            //     centerA = shapeMetaA.center;
+            //     centerB = shapeMetaB.center;
+            // }
         }
     }
 
-    if (!collided) return false;
+    if (raw.length === 0) return false;
+    // 1. Merge contacts that represent the same physical edge
+    const merged = mergeContacts(raw);
+
+    // 2. Choose the best contact
+    let bestSignificant: Contact | null = null;
+    let bestSignificantOverlap = Infinity;
+    let fallback: Contact | null = null;
+    let fallbackOverlap = Infinity;
+
+    for (const c of merged)
+    {
+        if (c.overlap > SIGNIFICANT_OVERLAP_THRESHOLD && c.overlap < bestSignificantOverlap)
+        {
+            bestSignificantOverlap = c.overlap;
+            bestSignificant = c;
+        }
+        if (c.overlap < fallbackOverlap)
+        {
+            fallbackOverlap = c.overlap;
+            fallback = c;
+        }
+    }
+
+    const chosen = bestSignificant ?? fallback;
+    return chosen ? chosen : false;
 
     // const normal = axis.clone;
 
@@ -83,7 +116,26 @@ export function SAT(polygonA: Polygon, polygonB: Polygon): false | { normal: Vec
     //     }
     // }
 
-    return { normal: axis, overlap };
+    // return raw; // { normal: axis, overlap };
+}
+
+const SIGNIFICANT_OVERLAP_THRESHOLD = 0.001; // tune to your world scale
+const MERGE_DOT = 0.995; // dot product threshold for “same” normal
+
+function mergeContacts(raw: Contact[]): Contact[] {
+    const merged: Contact[] = [];
+    for (const { normal, overlap } of raw)
+    {
+        const existing = merged.find(m => Vector2.dot(normal, m.normal) > MERGE_DOT);
+        if (existing)
+        {
+            if (overlap > existing.overlap) existing.overlap = overlap;
+        } else
+        {
+            merged.push({ normal: normal.clone, overlap });
+        }
+    }
+    return merged;
 }
 
 // Local SAT between two individual convex pieces — a decomposed polygon

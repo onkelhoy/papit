@@ -160,7 +160,10 @@ export class Engine {
             }
             const displayWidth = Math.round(width * dpr);
             const displayHeight = Math.round(height * dpr);
-            this.canvasToDisplaySizeMap.set(entry.target as HTMLCanvasElement, [displayWidth, displayHeight]);
+
+            const canvas = entry.target as HTMLCanvasElement;
+            this.canvasToDisplaySizeMap.set(canvas, [displayWidth, displayHeight]);
+            this.resizeCanvasToDisplaySize(canvas);
         }
     }
 
@@ -226,9 +229,11 @@ export class Engine {
             {
                 delta = now - setting.previous;
             }
+
+            let deltaTime = delta / 1000;
             setting.previous = now;
-            if (callback) callback(delta);
-            setting.callbacks.forEach(cb => cb(delta));
+            if (callback) callback(delta, deltaTime);
+            setting.callbacks.forEach(cb => cb(delta, deltaTime));
             setting.timer = requestAnimationFrame(loopfunction);
         }
 
@@ -243,14 +248,25 @@ export class Engine {
     }
 
     // CRED: https://webgl2fundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
-    resizeCanvasToDisplaySize(index: number = 0) {
-        const context = this.getContext(index);
-        if (!context)
+    resizeCanvasToDisplaySize(index: number): boolean;
+    resizeCanvasToDisplaySize(canvas: HTMLCanvasElement): boolean
+    resizeCanvasToDisplaySize(indexOrCanvas: number | HTMLCanvasElement = 0) {
+
+        let canvas: HTMLCanvasElement;
+        if (typeof indexOrCanvas === "number")
         {
-            console.error("could not find context");
-            return false;
+            const context = this.getContext(indexOrCanvas);
+            if (!context)
+            {
+                console.error("could not find context");
+                return false;
+            }
+            canvas = context.canvas;
         }
-        const canvas = context.canvas;
+        else 
+        {
+            canvas = indexOrCanvas;
+        }
 
         const data = this.canvasToDisplaySizeMap.get(canvas);
         if (!data)

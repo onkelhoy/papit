@@ -125,8 +125,14 @@ export class Vector extends Float32Array {
 
         return data;
     }
-    // public assign(vector: Value, ...rest: number[]) {
 
+    // public assign(vector: Value): void;
+    // public assign(...values: number[]): void;
+    // public assign(vector: Value, ...rest: number[]) {
+    //     if (typeof vector === "number")
+    //     {
+
+    //     }
     // }
 
     public override map(callbackfn: (value: number, index: number, array: this) => number): this {

@@ -1,9 +1,7 @@
 import { Spritesheet, SpriteAnimator, SpriteAnimation } from "@papit/2d-spritesheet";
 import { Engine, InputEvents } from "@papit/game-engine";
 import { Vector2 } from "@papit/vector";
-import { Rectangle } from "@papit/game-shape";
 import { Polygon } from "@papit/polygon";
-import { bind, property } from "@papit/web-component";
 import { SAT } from "@papit/sat";
 import { Pill } from "./pill";
 
@@ -11,10 +9,13 @@ import { Pill } from "./pill";
 // Constants
 const SPEED = 3.2;
 const GRAVITY = 0.6;
-const GROUND_Y = 1200;
 const MIN_JUMP_FORCE = -10;   // tap / short charge
 const JUMP_FORCE = -26;       // max charge
 const MAX_CHARGE_MS = 550;    // how long full charge takes
+
+// Collision solver tuning
+const MAX_RESOLUTION_PASSES = 2;
+const SLOPE_THRESHOLD = 0.5;  // |normal.y| above this => floor/ceiling, else wall
 
 // Add a charging animation, reusing the landing/crouch frame
 const CHARACTER_ANIMATIONS = {
@@ -36,19 +37,20 @@ export class Character {
 
     public position: Vector2;
     public velocity: Vector2;
-    // private boundary: Rectangle;
     private boundary: Pill;
     private flipped = false;
     private grounded = true;
+    private groundNormal: Vector2 | null = null;
     private isCharging = false;
     private chargeTime = 0;
-    private counter = 0;
     private readonly MAX_FALL_SPEED = 30;
 
     // idle-variant scheduling
     private idleTimer = 0;
     private nextIdleAt = this.randomIdleDelay();
-    private normal: Vector2 | null = null;
+
+    // debug-only: last push direction, for the verbose normal arrow
+    private debugPush: Vector2 | null = null;
 
     constructor(x: number, y: number) {
         this.position = new Vector2(x, y);
@@ -66,35 +68,47 @@ export class Character {
         return 2000 + Math.random() * 3000; // 2-5s between blinks/breaths
     }
 
-    private collisionDetection(worldPolygons: Polygon[]): { collision: boolean; collideGround: boolean } {
-        let collideGround = false;
-        let collision = false;
+    private resolveCollisions(worldPolygons: Polygon[]): { grounded: boolean; groundNormal: Vector2 | null } {
+        let grounded = false;
+        let groundNormal: Vector2 | null = null;
+        this.debugPush = null;
 
-        for (const polygon of worldPolygons)
+        for (let pass = 0; pass < MAX_RESOLUTION_PASSES; pass++)
         {
-            const sat = SAT(this.boundary.polygon, polygon);
-            if (!sat) continue;
-            collision = true;
+            let anyCollision = false;
+            let anyGround = false;
 
-            let { normal, overlap } = sat;
-            this.normal = normal.clone.multiply(overlap + 0.01);
-            this.position.subtract(this.normal);
-            this.boundary.update(this.position);
-
-            const vDotN = this.velocity.dot(normal);
-            if (vDotN < 0)
+            for (const polygon of worldPolygons)
             {
-                this.velocity.subtract(normal.clone.multiply(vDotN));
+                const sat = SAT(this.boundary.polygon, polygon);
+                if (!sat) continue;
+
+                const { normal, overlap } = sat;
+                anyCollision = true;
+
+                const push = normal.clone.multiply(overlap);
+                this.position.subtract(push);
+                this.boundary.update(this.position);
+
+                const vDotN = this.velocity.dot(normal);
+                if (vDotN < 0)
+                {
+                    this.velocity.subtract(normal.clone.multiply(vDotN));
+                }
+
+                if (normal.y > SLOPE_THRESHOLD)
+                {
+                    anyGround = true;
+                    groundNormal = normal.clone;
+                    this.debugPush = push;
+                }
             }
 
-            if (normal.y > 0.5)
-            {
-                collideGround = true;
-            }
+            if (!anyCollision) break;
+            if (anyGround) grounded = true;
         }
 
-        if (!collision) this.normal = null;
-        return { collision, collideGround };
+        return { grounded, groundNormal };
     }
 
     private updateIdle(delta: number) {
@@ -116,44 +130,59 @@ export class Character {
 
     update(events: InputEvents, delta: number, worldPolygons: Polygon[]) {
         let moving = false;
+        let dir = 0;
 
         if (!this.isCharging)
         {
             if (events.key("arrowright")?.pressed)
             {
-                this.velocity.x = SPEED;
+                dir = 1;
                 this.flipped = false;
                 moving = true;
             }
             else if (events.key("arrowleft")?.pressed)
             {
-                this.velocity.x = -SPEED;
+                dir = -1;
                 this.flipped = true;
                 moving = true;
             }
-            else
-            {
-                this.velocity.x = 0;
-            }
 
-            // if (events.key("arrowup")?.pressed)
-            // {
-            //     this.velocity.y = -SPEED;
-            //     // this.flipped = false;
-            //     moving = true;
-            // }
-            // else if (events.key("arrowdown")?.pressed)
-            // {
-            //     this.velocity.y = SPEED;
-            //     moving = true;
-            // }
-            // else
-            // {
-            //     this.velocity.y = 0;
-            // }
-        } else
+
+            if (events.key("arrowup")?.pressed)
+            {
+                this.velocity.y = -SPEED;
+            }
+            else if (events.key("arrowdown")?.pressed)
+            {
+                this.velocity.y = SPEED;
+            }
+            else 
+            {
+                this.velocity.y = 0;
+            }
+        }
+
+        // Horizontal movement: projected onto the ground tangent when grounded,
+        // so walking into a slope naturally becomes walking UP the slope instead
+        // of just butting into it and relying on collision push-out to sort it out.
+        if (this.isCharging)
         {
             this.velocity.x = 0;
+        }
+        else if (this.grounded && this.groundNormal)
+        {
+            const n = this.groundNormal;
+            // tangent = normal rotated 90°, kept pointing in +x so `dir` maps intuitively
+            let tx = -n.y;
+            let ty = n.x;
+            if (tx < 0) { tx = -tx; ty = -ty; }
+            this.velocity.x = tx * dir * SPEED;
+            this.velocity.y = ty * dir * SPEED;
+        }
+        else
+        {
+            // Airborne (or no cached ground normal yet): plain horizontal control.
+            this.velocity.x = dir * SPEED;
         }
 
         // Charge / jump logic
@@ -180,6 +209,7 @@ export class Character {
 
                     this.velocity.y = jumpForce;
                     this.grounded = false;
+                    this.groundNormal = null;
                     this.isCharging = false;
                     this.spritestate = "falling";
                 }
@@ -189,7 +219,7 @@ export class Character {
         {
             // Cancel charge if we somehow leave the ground while charging
             this.isCharging = false;
-            this.velocity.y += GRAVITY;
+            // this.velocity.y += GRAVITY;
         }
 
         // State resolution
@@ -214,23 +244,20 @@ export class Character {
         this.position.add(this.velocity);
         this.boundary.update(this.position);
 
-        const MAX_RESOLUTION_PASSES = 4;
-        let everGrounded = false;
+        const wasGrounded = this.grounded;
+        let { grounded, groundNormal } = this.resolveCollisions(worldPolygons);
 
-        for (let pass = 0; pass < MAX_RESOLUTION_PASSES; pass++)
+        if (grounded && !wasGrounded)
         {
-            const { collision, collideGround } = this.collisionDetection(worldPolygons);
-            if (collideGround) everGrounded = true;
-            if (!collision) break;
+            this.spritestate = "landing";
+            this.isCharging = false;
         }
 
-        if (everGrounded)
+        this.grounded = grounded;
+        this.groundNormal = groundNormal;
+
+        if (!grounded)
         {
-            if (!this.grounded) { this.spritestate = "landing"; this.isCharging = false; }
-            this.grounded = true;
-        } else
-        {
-            this.grounded = false;
             this.spritestate = "falling";
         }
     }
@@ -262,33 +289,33 @@ export class Character {
 
         this.animator.update(delta);
 
-        // Engine.instance.ctx.save();
-        // Engine.instance.ctx.translate(this.position.x, this.position.y);
-        // if (this.flipped)
-        // {
-        //     Engine.instance.ctx.scale(-1, 1);
-        // }
-        // this.spritesheet.draw(Engine.instance.ctx, this.animator.frame, {
-        //     x: 0,
-        //     y: 0,
-        //     width: 120,
-        //     height: 120,
-        //     pivotx: 50,
-        //     pivoty: 100,
-        // });
-        // Engine.instance.ctx.restore();
+        Engine.ctx.save();
+        Engine.ctx.translate(this.position.x, this.position.y);
+        if (this.flipped)
+        {
+            Engine.ctx.scale(-1, 1);
+        }
+        this.spritesheet.draw(Engine.ctx, this.animator.frame, {
+            x: 0,
+            y: 0,
+            width: 120,
+            height: 120,
+            pivotx: 40,
+            pivoty: 50,
+        });
+        Engine.ctx.restore();
 
         if (verbose)
         {
-            this.boundary.draw(Engine.ctx, "white");
+            this.boundary.draw(Engine.ctx, this.grounded ? "yellow" : "white");
 
-            if (this.normal)
+            if (this.debugPush)
             {
                 const ctx = Engine.ctx;
                 const cx = this.boundary.center.x;
                 const cy = this.boundary.center.y;
-                const angle = this.normal.angle;
-                const mag = this.normal.magnitude + 30;
+                const angle = this.debugPush.angle;
+                const mag = this.debugPush.magnitude * 10 + 30; // exaggerate for visibility
 
                 const dx = Math.cos(angle);
                 const dy = Math.sin(angle);
@@ -304,7 +331,6 @@ export class Character {
                 const baseY = tipY - dy * headLen;
                 const wingBack = headLen * 0.5;
 
-                // 7 points: center → right base → right wing → tip → left wing → left base → center
                 ctx.beginPath();
                 ctx.moveTo(cx, cy);
                 ctx.lineTo(baseX + px * headWid, baseY + py * headWid);
@@ -317,7 +343,7 @@ export class Character {
 
                 ctx.fillStyle = 'white';
                 ctx.fill();
-                ctx.strokeStyle = 'white'; // optional crisp edge
+                ctx.strokeStyle = 'white';
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }

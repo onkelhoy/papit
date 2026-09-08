@@ -51,7 +51,11 @@
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@papit/line-intersection": "^0.0.1",
+    "@papit/triangle-intersection": "^0.0.1",
+    "@papit/vector": "^0.0.1"
+  },
   "devDependencies": {
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

@@ -107,14 +107,14 @@ export class WorldMap {
             }
         }
 
-        // for (const tile of this.tiles)
-        // {
-        //     this.spritesheet.draw(Engine.instance.ctx, tile.sprite, {
-        //         x: tile.x * SIZE, // this.spritesheet.frameWidth,
-        //         y: tile.y * SIZE, // this.spritesheet.frameHeight,
-        //         width: SIZE,
-        //         height: SIZE,
-        //     });
-        // }
+        for (const tile of this.tiles)
+        {
+            this.spritesheet.draw(Engine.instance.ctx, tile.sprite, {
+                x: tile.x * SIZE, // this.spritesheet.frameWidth,
+                y: tile.y * SIZE, // this.spritesheet.frameHeight,
+                width: SIZE,
+                height: SIZE,
+            });
+        }
     }
 }

@@ -73,7 +73,7 @@ export class Game {
         this.world.draw(VERBOSE);
         this.alphabet.print(this.engine.ctx, this.name, {
             x: this.player.position.x,
-            y: this.player.position.y,
+            y: this.player.position.y - 100,
             pivotx: 50,
         });
         this.player.draw(delta, VERBOSE);

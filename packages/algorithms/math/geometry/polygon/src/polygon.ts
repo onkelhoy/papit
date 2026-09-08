@@ -42,7 +42,6 @@ class PolygonShape {
 
         for (const v of this._vertices)
         {
-            center.add(v);
             if (v.x < minx) minx = v.x;
             if (v.x > maxx) maxx = v.x;
             if (v.y < miny) miny = v.y;
@@ -52,12 +51,17 @@ class PolygonShape {
         this._boundary = new Rectangle(minx, miny, maxx - minx, maxy - miny);
     }
 
-    public getTriangle(index: number): [a: Vector2, b: Vector2, c: Vector2] {
-        return [
-            this.vertices[index * 3 + 0],
-            this.vertices[index * 3 + 1],
-            this.vertices[index * 3 + 2],
-        ];
+    public getTriangle(index: number): [a: Vector2, b: Vector2, c: Vector2] | undefined {
+        if (index < 0) return undefined;
+        if (index >= this.triangles.length / 3) return undefined;
+
+        const i = index * 3;
+        const a = this.vertices[this.triangles[i + 0]];
+        const b = this.vertices[this.triangles[i + 1]];
+        const c = this.vertices[this.triangles[i + 2]];
+        if (!a || !b || !c) return undefined;
+
+        return [a, b, c];
     }
 }
 

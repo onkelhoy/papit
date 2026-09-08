@@ -1,4 +1,4 @@
-export type SettingCallback = (delta: number) => void;
+export type SettingCallback = (deltaTimeInMilliseconds: number, deltaTimeInSeconds: number) => void;
 
 export type BaseSetting = {
     query: string;
