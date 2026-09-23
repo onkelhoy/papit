@@ -4,6 +4,7 @@ import { bind, CustomElementInternals, property } from "@papit/web-component";
 
 // local 
 import sheet from "./style.css" with { type: "css" };
+import type { ButtonColor } from "./types";
 
 export class Button extends CustomElementInternals {
     static sheet = sheet;
@@ -12,7 +13,7 @@ export class Button extends CustomElementInternals {
     @property href?: string;
     @property variant: "outline" | "clear" | "filled" = "filled";
     @property size: "small" | "medium" | "large" | "icon" = "medium";
-    @property color: "primary" | "secondary" | "tiertery" | "success" | "warning" | "error" | "information" = "primary";
+    @property color: ButtonColor = "primary";
 
     connectedCallback(): void {
         super.connectedCallback();
@@ -25,10 +26,15 @@ export class Button extends CustomElementInternals {
         this.addEventListener("focusout", this.handlefocusout);
     }
 
+    // WAI-ARIA button pattern: Enter and Space both activate; Space fires on keyup
+    // and its keydown is prevented so the page does not scroll
     @bind
     private handlekeydown(e: KeyboardEvent) {
         if (this.hasAttribute("disabled") || this.hasAttribute("readonly")) return;
-        if (["enter", "numpadenter"].includes((e.key || e.code).toLowerCase()))
+
+        const key = keyname(e);
+        if (key === "space") e.preventDefault();
+        if (key === "space" || key === "enter" || key === "numpadenter")
         {
             this._internals.states.add("active");
         }
@@ -37,12 +43,16 @@ export class Button extends CustomElementInternals {
     @bind
     private handlekeyup(e: KeyboardEvent) {
         if (this.hasAttribute("disabled") || this.hasAttribute("readonly")) return;
-        if (["enter", "numpadenter"].includes((e.key || e.code).toLowerCase()))
+
+        const key = keyname(e);
+        if (key === "space" || key === "enter" || key === "numpadenter")
         {
+            if (!this._internals.states.has("active")) return;
             this._internals.states.delete("active");
             this.click();
         }
     }
+
     @bind
     private handleclick(e: Event) {
         if (this.hasAttribute("disabled") || this.hasAttribute("readonly"))
@@ -75,6 +85,11 @@ export class Button extends CustomElementInternals {
     render() {
         return "<slot></slot>"
     }
+}
+
+function keyname(e: KeyboardEvent) {
+    if (e.key === " " || e.code === "Space") return "space";
+    return (e.key || e.code).toLowerCase();
 }
 
 declare global {

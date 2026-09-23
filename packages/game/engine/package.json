@@ -56,9 +56,9 @@
         "@papit/vector": "^0.0.1"
     },
     "devDependencies": {
-        "@papit/codeblock": "*",
-        "@papit/theme": "*",
-        "@papit/translator": "*",
+        "@papit/codeblock": "0.1.10",
+        "@papit/theme": "0.0.2",
+        "@papit/translator": "0.1.0",
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
         "typescript": "5.9.3"
@@ -80,5 +80,5 @@
             }
         }
     },
-    "remoteVersion": ""
+    "remoteVersion": "0.1.0"
 }

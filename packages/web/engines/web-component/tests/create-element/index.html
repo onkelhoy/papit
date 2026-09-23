@@ -1,0 +1,21 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Client-side creation test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- parsed-HTML upgrade path -->
+    <create-fixture data-testid="parsed"></create-fixture>
+    <create-fixture data-testid="parsed-attribute" variant="outline" pressed="true"></create-fixture>
+
+    <!-- mount points for createElement cases -->
+    <div data-testid="mount"></div>
+    <div data-testid="provider" hello="from-provider"></div>
+</body>
+
+</html>

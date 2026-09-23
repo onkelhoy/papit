@@ -54,8 +54,7 @@ tests/
     main.js                 imports the package, wires fixture-only behaviour (e.g. form.onsubmit)
     public/                 icons/, images/, translations/en.json for the page
     unit.test.ts            behaviour tests
-    snapshot.test.ts        visual regression (currently describe.skip across the repo)
-  snapshots/<browser>/...   committed baselines
+    snapshot.test.ts        scaffold leftover, skipped repo-wide; don't add to it
 ```
 Multi-component packages get one folder per component (e.g. menu: `menu/`, `menubar/`, `menuitem/`).
 
@@ -80,6 +79,10 @@ What a web component's suite must cover (as it applies):
 - **Form participation** (submit value, reset to default)
 - **Client-side creation**: `document.createElement(tag)` returns an upgraded instance with no attributes before connect. This catches constructor-time `setAttribute`, the blocker from CONSID-FINDINGS.
 - **Cleanup**: listeners and observers released on disconnect (see issue #83)
+
+**No CSS or visual tests.** Don't assert computed colours, CSS variables, contrast ratios or stylesheet contents, and don't write snapshot tests. They were too unreliable between macOS and the Linux CI and have been dropped. Assume CSS variables are in place. Styling is verified by eye in `views/`.
+
+Read custom states through `el._internals.states.has("x")`, never `el.matches(":state(x)")`. WebKit gets flaky with the latter.
 
 `npm run test:chrome` runs chromium only while iterating. The full three-browser run must pass before merge.
 

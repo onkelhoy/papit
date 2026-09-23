@@ -54,17 +54,17 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/icon": "0.1.6",
-        "@papit/router": "0.1.3",
+        "@papit/icon": "0.1.7",
+        "@papit/router": "0.1.4",
         "@papit/server": "^1.0.6",
-        "@papit/sidebar": "0.0.4",
-        "@papit/theme-picker": "0.0.8",
-        "@papit/web-component": "0.0.7"
+        "@papit/sidebar": "0.0.5",
+        "@papit/theme-picker": "0.0.9",
+        "@papit/web-component": "0.0.8"
     },
     "devDependencies": {
-        "@papit/codeblock": "0.1.9",
-        "@papit/router": "0.1.3",
-        "@papit/tabs": "0.1.3",
+        "@papit/codeblock": "0.1.10",
+        "@papit/router": "0.1.4",
+        "@papit/tabs": "0.1.4",
         "@papit/theme": "0.0.2",
         "@papit/translator": "0.1.0",
         "@playwright/test": "1.58.0",

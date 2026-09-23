@@ -44,7 +44,7 @@ Use tokens, never raw values:
 - spacing: `--base-unit`, `--space-1 … --space-20`
 - radius: `--radius-small|medium|large|full`
 
-Per-component overrides follow `--<component>-<thing>` falling back to the token, e.g. `var(--button-primary, var(--primary))`. Light/dark follows `color-scheme`, with `data-theme="light|dark|opposite"` to force it. Check both modes.
+Per-component overrides follow `--<component>-<thing>` falling back to the token, e.g. `var(--button-primary, var(--primary))`. Light/dark follows `color-scheme`, with `data-theme="light|dark|opposite"` to force it. Check both modes by eye in `views/` (no CSS tests, see `papit-testing`).
 - Name tokens exactly (`tertiary`, not `tiertery`, which is CONSID-FINDINGS #2).
 - Modern CSS needs a fallback for Chromium < latest, Firefox and Safari: declare a plain value before `contrast-color()`, and always give `color-mix()` an interpolation space (`color-mix(in srgb, …)`). See CONSID-FINDINGS #4–5.
 - Undefined elements stay hidden (`*:not(:defined) { visibility: hidden }` in theme). An element that never upgrades is invisible, not an error, so test the upgrade explicitly.
