@@ -1,101 +1,120 @@
-# Git Workflow Guide
+# Contributing
 
-This document outlines the recommended workflow for handling tasks within our projects, emphasizing the use of git for version control. To ensure clarity, maintainability, and a clean project history, we adhere to specific practices for branching, committing, and merging changes.
+How work flows through papit: issue → branch → commits → one squashed commit → PR → merge. Humans and Claude agents follow the same rules.
 
-## Branch Management
+## 1. Issue first
 
-For every task, whether it involves fixing bugs, adding features, or making minor updates, a new branch should be created. This approach keeps our project organized and ensures that each change is easily traceable to a specific task or issue.
+Every piece of work starts from a GitHub issue. Its number is the `TICKET-ID` below and is what closes it on merge.
 
-### Branch Creation Process
+## 2. Branch
 
-Follow these steps to start working on a new task:
-
-1. Open a new issue in the project's GitHub repository to document the task or bug.
-2. Create a branch for the task. Utilizing the GitHub GUI for both steps is recommended for convenience and consistency.
-
-## Commit Guidelines
-
-Commit messages should clearly describe the changes made, following a structured prefix syntax to facilitate quick understanding and categorization of the commit's purpose.
-
-### Standard Commit Syntax
-
-For general changes:
-
-```bash
-git commit -m "prefix: description"
+```
+{TYPE}/{TICKET-ID}-short-name
 ```
 
-For changes specific to a component:
+| TYPE       | Use for                              |
+| ---------- | ------------------------------------ |
+| `feature`  | new package or capability            |
+| `bugfix`   | fixing a reported bug                |
+| `hotfix`   | urgent fix straight to a release     |
+| `refactor` | restructuring without new behaviour  |
+| `setup`    | tooling, CI, workflow, repo config   |
 
-```bash
-git commit -m "prefix: [component-name] description"
+Examples: `feature/9-input`, `bugfix/99-list-part-keys`, `setup/111-claude`.
+
+Never commit to `main` directly. Stay on one branch until the issue is done.
+
+## 3. Commits
+
+```
+{CTYPE}: message
+{CTYPE}: [package] message        # when the branch touches several packages
 ```
 
-For example:
+| CTYPE     | Use for                                                 |
+| --------- | ------------------------------------------------------- |
+| `add`     | wholly new file, feature or package                     |
+| `feat`    | enhancement to existing functionality                   |
+| `fix`     | bug fix                                                 |
+| `ref`     | refactor, no behaviour change                           |
+| `clean`   | tidy-up: formatting, dead code, naming                  |
+| `test`    | tests only (new, backfilled or fixed)                   |
+| `docs`    | README, JSDoc, docs/ only                               |
+| `version` | version bumps / `npm run version:sync`                  |
+| `dep`     | dependency changes (add, upgrade, audit)                |
+| `wip`     | work in progress, not expected to be final              |
 
-```bash
-git commit -m "fix: [button] trigger click on enter press"
-```
+**Granularity — TDD:**
 
-### Commit Prefixes
+1. The failing test is its own commit (`test: [switch] space toggles`).
+2. The implementation that makes it pass is a separate commit (`add` / `feat` / `fix`).
+3. Follow-up fixes are their own commits too.
+4. Unrelated concerns (docs, version, deps) never ride along in a test or implementation commit.
 
-While the following prefixes are recommended, they are not exhaustive. Feel free to introduce new prefixes as needed, but aim for consistency and clarity across the project.
+Commits get squashed at merge time, and the `changelog:` in the squash message is what keeps this history. Keep messages honest.
 
-- **fix**: For fixes that correct bugs or issues.
-- **bug**: Specifically for bug fixes.
-- **chore**: For maintenance tasks that do not alter functionality.
-- **add**: When adding new features or elements.
-- **clean**: For clean-up tasks that improve the code without changing functionality.
-- **style**: For changes related to styling and appearance.
-- **react**: For changes specific to React components or functionality.
-- **release**: For version releases and related tasks.
-- **gen**: For auto-generated content or files.
-- **resolve**: To indicate that an issue has been resolved, useful for final commits related to fixing a problem.
+## 4. Definition of done
 
-## Merging Changes
+A package is done when it has all five:
 
-Once your branch's task is completed, ensure it is integrated seamlessly with the main branch. This process involves updating your branch with the latest changes from the main branch and consolidating your work into a well-documented commit.
+- **code**: `src/`, zero runtime dependencies outside `@papit/*` (build it from scratch)
+- **tests**: real tests in `tests/`, not the scaffold stubs (`should work`, `available in DOM`)
+- **asset**: `asset/` (translations, icons, images the package ships)
+- **README**: following the package README skeleton, not the scaffold template
+- **package.json description**: one or two clear, correctly spelled sentences
 
-### Finalizing Your Branch for Merge
+Public API also carries JSDoc: short, and only what the signature can't already tell you.
 
-1. Update the main branch with the latest changes:
+## 5. Merge
+
+The branch is squashed into **one commit**, rebased onto `main`, pushed, and merged through a GitHub PR with a merge commit.
+
+1. Update and rebase:
 
    ```bash
-   git checkout main
-   git pull
+   git fetch origin
+   git rebase origin/main
    ```
 
-2. Switch back to your task branch:
+2. Squash into one commit. Either `git rebase -i origin/main` and squash everything, or equivalently:
 
    ```bash
-   git checkout your-branch-name
+   git log --reverse --format='- %s' origin/main..HEAD   # the changelog source
+   git reset --soft $(git merge-base origin/main HEAD)
+   git commit                                             # message format below
    ```
 
-3. Start the rebase process interactively:
+3. Push and open the PR (title = branch name, body = the same message):
 
    ```bash
-   git rebase -i main
+   git push --force-with-lease -u origin <branch>
+   gh pr create --base main --title "<branch>" --body-file <message-file>
    ```
 
-   During the rebase, squash your commits into a single commit that captures the essence of your branch's work.
+4. Merge with a merge commit, then clean up:
 
-4. Craft a comprehensive commit message that includes a changelog listing all significant changes. Ensure the branch's purpose is clear, and link the issue ticket using GitHub's syntax to automatically close the related issue upon merging.
+   ```bash
+   gh pr merge <pr> --merge --delete-branch
+   git checkout main && git pull --ff-only
+   ```
 
-#### Commit Message Example
+### Squash message
 
 ```
-resolve: [button] Ensure click is triggered on enter press
-closes: #888
+feature/9-input
+
+closes: #9
+
+note: attribute part updated in web component affecting many packages
+
 changelog:
-- fix: Corrected event handling
-- clean: Optimized button click logic
+- add: @papit/input package
+- fix: make sure raw is returned as value
+- test: form value and default value
 ```
 
-### Tips for Effective Rebasing
+- **`closes: #N`**: GitHub closes the issue when this lands on `main`. `issue: #N` does **not** close anything.
+- **`note:`**: optional, one line each. Use it for side effects on other packages or follow-ups.
+- **`changelog:`**: one line per meaningful commit, verbatim, oldest first. Leave out noise (`wip: dump`, `fix: typo`) and keep everything that tells the story.
 
-Utilize Vim commands to streamline the rebase process:
-
-- To squash all commits: `%s/pick /s /g`
-- To format commit messages as a list during the rebase: `:%s/\([^:]\+\): /- \1: /g`
-
-Adhering to these guidelines will help maintain a clean, understandable, and navigable project history, facilitating collaboration and review processes.
+Rebase-squash tips in vim: `:2,$s/^pick /s /` squashes everything into the first commit, and `:%s/\([^:]\+\): /- \1: /g` to turn messages into changelog lines.
