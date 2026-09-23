@@ -45,13 +45,13 @@ Use tokens, never raw values:
 - radius: `--radius-small|medium|large|full`
 
 Per-component overrides follow `--<component>-<thing>` falling back to the token, e.g. `var(--button-primary, var(--primary))`. Light/dark follows `color-scheme`, with `data-theme="light|dark|opposite"` to force it. Check both modes by eye in `views/` (no CSS tests, see `papit-testing`).
-- Name tokens exactly (`tertiary`, not `tiertery`, which is CONSID-FINDINGS #2).
-- Modern CSS needs a fallback for Chromium < latest, Firefox and Safari: declare a plain value before `contrast-color()`, and always give `color-mix()` an interpolation space (`color-mix(in srgb, …)`). See CONSID-FINDINGS #4–5.
+- Name tokens exactly (`tertiary`, not `tiertery`).
+- Modern CSS needs a fallback for Chromium < latest, Firefox and Safari: declare a plain value before `contrast-color()`, and always give `color-mix()` an interpolation space (`color-mix(in srgb, …)`).
 - Undefined elements stay hidden (`*:not(:defined) { visibility: hidden }` in theme). An element that never upgrades is invisible, not an error, so test the upgrade explicitly.
 
 ## Behaviour rules
 - Reflect state to ARIA (`aria-checked`, `aria-expanded`, …) *and* to `:state()` for styling.
-- Space **and** Enter where the pattern says so. Space activates on keyup with `preventDefault` on keydown. See switch; button is missing this (CONSID-FINDINGS #3).
+- Space **and** Enter where the pattern says so. Space activates on keyup with `preventDefault` on keydown. See switch.
 - `disabled` blocks pointer and keyboard. `readonly` blocks change but keeps focus.
 - Native events where a native equivalent exists (`change`, `input`), `CustomEvent` with `detail` otherwise. Document every event.
 - Clean up in `disconnectedCallback` everything `connectedCallback` added.

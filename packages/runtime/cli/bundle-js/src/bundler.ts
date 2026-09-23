@@ -24,11 +24,20 @@ function timestamp(args: { has: (key: string) => boolean }, message?: string) {
     console.log((performance.now() - timestamp_value).toFixed(3).toString() + "ms passed", "#" + timestamp_ticker, message ? "- " + message : "");
 }
 
+/** Passed to `jsBundle`'s `onBuild` once per built entry, or once with `skipped`. */
 export type OnBuildEvent =
     | { type: "build"; result: esbuild.BuildResult<esbuild.BuildOptions>; entry: { input: string, output: string | undefined } }
     | { type: "skipped" };
 
 type OnBuild = (event: OnBuildEvent) => void;
+/**
+ * Bundles every import entry point of the package at `location` with esbuild.
+ * `options` lets a caller pass values it already has instead of re-reading them from disk.
+ *
+ * @param args - flags: `force`/`f` rebuilds regardless of changes, `dev`, `prod`, `debug`
+ * @returns `"skipped"` when no source changed, otherwise the entries that failed (empty on success)
+ * @throws when `location` has no package.json or no entry point
+ */
 export async function jsBundle(
     args: { has: (key: string) => boolean },
     location: string,

@@ -5,6 +5,17 @@ import { Popover } from "@papit/popover";
 // local 
 import sheet from "./style.css" with { type: "css" };
 
+/**
+ * Hint bubble shown on hover or focus of any element whose `popovertarget`
+ * matches its `id`, after `delay` ms. Only one tooltip is open at a time.
+ *
+ * @element pap-tooltip
+ * @slot - the tooltip content
+ * @csspart container - the bubble around the content
+ * @cssprop [--max-tooltip-width=30rem] - maximum bubble width
+ * @cssprop --bg - bubble and marker colour
+ * @see https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
+ */
 export class Tooltip extends Popover {
     static sheets = [Popover.sheet, sheet];
 
@@ -12,11 +23,15 @@ export class Tooltip extends Popover {
     private static CURRENT: Tooltip | null = null;
 
     @property variant: "primary" | "secondary" = "primary";
+    /** Milliseconds before the tooltip shows. */
     @property({ type: Number, attribute: "delay" }) delay = 1000;
+    /** Show without the delay. */
     @property({ type: Boolean }) instant = false;
+    /** Show an arrow pointing at the trigger. */
     @property({ type: Boolean, removeAttribute: false }) marker = false;
 
     // @property({ reflect: false, rerender: true }) private state: "hidden" | "closing" | "open" = "hidden";
+    /** Never show; setting it hides an open tooltip. */
     @property({
         type: Boolean,
         after(this: Tooltip, value: boolean) {

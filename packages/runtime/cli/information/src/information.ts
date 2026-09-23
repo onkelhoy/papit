@@ -6,6 +6,7 @@ import { PackageGraph } from "./graph";
 import { PackageNode } from "./node";
 import type { LocalPackage, RootPackage } from "./types";
 
+/** Shortcuts for the package the process runs in, resolved from `PWD` (or `process.cwd()`). */
 export class Information {
     private static _package: PackageNode<LocalPackage | RootPackage> | undefined;
     private static _local: string | undefined;
@@ -41,6 +42,10 @@ export class Information {
     static get sourceFolder() { return this.package.sourceFolder }
     static get outFolder() { return this.package.outFolder }
 
+    /**
+     * Build batches for the current package, chosen by the `--all`, `--ancestors`,
+     * `--descendants`, `--bloodline`, `--individual` and `--type-filter` flags.
+     */
     static getBatches(args = Arguments.instance, filterCallback?: (node: PackageNode) => boolean) {
         // Determine which edge types to include
         const typeFilter = args.get("type-filter") ?? ["dependencies", "peerDependencies", "devDependencies"];
@@ -76,6 +81,7 @@ export class Information {
         return [[Information.package]];
     }
 
+    /** `getBatches` with every `papit.priority` package pulled into a first, priority-ordered batch (possibly empty). */
     static getPriorityBatches(args = Arguments.instance, filterCallback?: (node: PackageNode) => boolean) {
         const batches = this.getBatches(args, filterCallback);
         const prioQueue = new PriorityQueue<PackageNode>();

@@ -13,6 +13,9 @@ import { Treeitem } from "components/treeitem";
  * single and multi-select modes, and typeahead search.
  *
  * @element pap-treeview
+ * @fires active - focus moved into the tree
+ * @fires inactive - focus left the tree
+ * @fires enter - on the item, when Enter is pressed on it
  *
  * @slot - Accepts elements with `role="treeitem"`. Nest expandable branches
  * by placing a `<ul role="group">` inside a treeitem. Set `aria-expanded="true"`

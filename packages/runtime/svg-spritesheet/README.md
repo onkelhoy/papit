@@ -1,80 +1,77 @@
 # @papit/svg-spritesheet
 
-Merge multiple SVG files into a single SVG spritesheet using <symbol> elements.
+Command-line tool that merges a folder of SVG files into one SVG spritesheet, with one symbol per file named after its title or filename.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-runtime-orange)
+![Type](https://img.shields.io/badge/Type-cli-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/svg-spritesheet.svg?logo=npm)](https://www.npmjs.com/package/@papit/svg-spritesheet)
 
-Here’s a **tight, minimal README**—npm-friendly and consistent with your other @papit packages:
-
 ---
 
-# @papit/svg-spritesheet
-
-Merge multiple SVG files into a single SVG spritesheet using `<symbol>` elements.
-
----
-
-![Type](https://img.shields.io/badge/Type-runtime-orange)
-[![NPM version](https://img.shields.io/npm/v/@papit/svg-spritesheet.svg?logo=npm)](https://www.npmjs.com/package/@papit/svg-spritesheet)
-
----
-
-## Install
+# Installation
 
 ```bash
-npm install @papit/svg-spritesheet
+npm install -D @papit/svg-spritesheet
 ```
 
----
-
-## Usage
+# Usage
 
 ```bash
-svg-spritesheet --input ./icons --output ./spritesheet.svg
+npx @papit/svg-spritesheet --input ./icons --output ./asset/icons/spritesheet.svg --name-query title
 ```
 
-Defaults:
+Given `icons/check.svg` and `icons/arrow-left.svg`:
 
-- **input**: current directory
-- **output**: `<input>/spritesheet.svg`
-- **symbol name**: `<title>` in SVG → fallback to filename
-
----
-
-## Options
-
-```text
---input <dir>        SVG directory
---output <file>     Output file
---name-query <sel>  Name selector (default: title)
---info              Show progress
+```html
+<!-- icons/check.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><title>check</title><path d="…"/></svg>
+<!-- icons/arrow-left.svg -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="…"/></svg>
 ```
 
----
-
-## Output
+the spritesheet holds one symbol per file:
 
 ```html
 <svg xmlns="http://www.w3.org/2000/svg">
-  <symbol id="icon-name">…</symbol>
+    <symbol id="arrow-left" viewBox="0 0 16 16"><path d="…"></path></symbol>
+    <symbol id="check" viewBox="0 0 24 24"><title>check</title><path d="…"></path></symbol>
 </svg>
 ```
 
-## Contributing
+Reference an icon by its id:
 
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
+```html
+<svg><use href="/icons/spritesheet.svg#check"></use></svg>
+```
 
-## License
+# CLI flags
 
-Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
+| Flag | Default | Description |
+| --- | --- | --- |
+| `--input` | current folder | folder with the `.svg` files (not recursive) |
+| `--output` | `<input>/spritesheet.svg` | file to write, folders are created |
+| `--name-query` | `title` | selector whose text becomes the symbol id |
+| `--info` | - | print progress per file |
 
-**Key points:**
+Right now `--output` and `--name-query` must be given; leaving either out throws instead of using the default.
+
+# How files are merged
+
+- Each root `<svg>` becomes a symbol. Its attributes (like `viewBox`) are copied over, except `xmlns`.
+- The id is the text of the first `--name-query` match, falling back to the filename without `.svg`.
+- A file that can't be parsed is skipped with a warning.
+- An existing output file is replaced.
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -83,6 +80,7 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
-## Support
+# Related
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/html](https://github.com/onkelhoy/papit/tree/main/packages/runtime/html) - the parser that reads and writes the SVG files
+- [@papit/server](https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/server) - builds its explorer icons with this

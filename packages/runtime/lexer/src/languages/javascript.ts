@@ -239,6 +239,7 @@ export const jsRules: StateRules<CTX, JSToken> = {
     ],
 };
 
+/** Highlighting-grade JavaScript tokenizer (no regex literals). */
 export function js(value: string) {
     return new Lexer<CTX, JSToken>(jsRules, "data", { current: undefined }).run(value);
 }

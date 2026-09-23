@@ -1,11 +1,16 @@
 {
     "name": "@papit/arguments",
-    "description": "a simple package to deal with arguments, default behaviour will look on process.argv but it will also expose a function to extract based on string ",
+    "description": "Parses command-line flags and positional values from process.argv or any argument list, and holds the shared log level every papit CLI reads.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "arguments"
+        "cli",
+        "arguments",
+        "argv",
+        "flags",
+        "parser",
+        "log-level"
     ],
     "version": "0.0.1",
     "scripts": {

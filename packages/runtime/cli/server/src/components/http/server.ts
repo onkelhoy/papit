@@ -24,8 +24,13 @@ import { getPACKAGE, getURL } from "./url";
 import { build } from "@papit/build";
 
 let PORT = Arguments.number("port") || 3000;
+/** The running http server, `null` until `start` is called. */
 export let server: null | http.Server = null;
 
+/**
+ * Starts the http server on `--port` (default 3000, or the next free port) and resolves once it listens.
+ * With `--live` it also watches the workspace and rebuilds changed packages.
+ */
 export function start(
     serverPackageLocation: string,
     translations: Translations,
@@ -213,6 +218,7 @@ export function start(
     });
 }
 
+/** Stops the http server. */
 export function close() {
     server?.close();
     if (!Arguments.silent) Terminal.write("server:", Terminal.blue(String(PORT)), Terminal.yellow("- shutdown"));

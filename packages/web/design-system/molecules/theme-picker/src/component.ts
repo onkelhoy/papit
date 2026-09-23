@@ -15,6 +15,14 @@ import { Tooltip } from "@papit/tooltip";
 // local 
 import sheet from "./style.css" with { type: "css" };
 
+/**
+ * Icon button and menu for choosing light, dark or system. Applies the choice
+ * as `data-theme` on `target` and keeps `value` in sync if the target changes.
+ *
+ * @element pap-theme-picker
+ * @fires change - whenever the theme is applied
+ * @csspart trigger - the icon button
+ */
 export class ThemePicker extends CustomElement {
     static sheet = sheet;
 
@@ -26,6 +34,7 @@ export class ThemePicker extends CustomElement {
     @query("pap-button") private buttonElement!: Button;
 
     // properties 
+    /** CSS selector of the element that gets the theme. */
     @property({
         after(this: ThemePicker) {
             const element = document.querySelector<HTMLElement>(this.target);
@@ -70,6 +79,7 @@ export class ThemePicker extends CustomElement {
         }
     }) target = "html";
 
+    /** Persist the choice under the `pap-theme` key and restore it on connect. */
     @property({
         after(this: ThemePicker, _value, old, initial) {
             if (initial) return;
@@ -88,6 +98,7 @@ export class ThemePicker extends CustomElement {
         }
     }) storage?: "local" | "session";
 
+    /** Current choice; `system` removes `data-theme` from the target. */
     @property({
         after(this: ThemePicker) {
             this.setValue();

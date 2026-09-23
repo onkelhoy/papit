@@ -26,11 +26,21 @@ process.on("unhandledRejection", (reason) => {
 
 const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
+/**
+ * Static toolbox for CLI output: semantic logging, colours (from `Colors`), spinners,
+ * prompts and shell commands. Importing it wraps `process.stdout.write` to count lines
+ * and installs an `unhandledRejection` handler that exits with code 1.
+ */
 export class Terminal extends Colors {
 
+    /** Newlines written to stdout so far; drives `clear` and sessions. */
     static lines: number = 0;
     static session: number | null = null;
 
+    /**
+     * Spinner on the current line, redrawn every `duration` ms.
+     * Without a TTY nothing is printed and `close`/`update` are no-ops.
+     */
     static loading(text = "Loading", duration = 80, callback?: (frame: number) => void) {
 
         if (!process.stdout.isTTY)
@@ -86,6 +96,7 @@ export class Terminal extends Colors {
         this.printLine(this.getString(" ", values));
     }
 
+    /** Prints `● success` and the values to stderr. `info`, `warn` and `error` work the same way. */
     static success(...values: any[]) {
         this.semantic(this.green("● success "), values);
     }
@@ -115,6 +126,7 @@ export class Terminal extends Colors {
 
         this.printLine(`${leading}${prefix}${value}`, "error");
     }
+    /** Writes `value` as is to stdout, or to stderr when `type` is `"error"`. */
     static print(value: string, type: "info" | "error" = "info") {
         if (type === "error")
         {
@@ -136,6 +148,7 @@ export class Terminal extends Colors {
         this.print(value + "\n", type);
     }
 
+    /** Erases stdout lines from `end` (default: `lines`) back up to `start`. */
     static clear(start: number = 0, end?: number) {
         const e = end ?? this.lines;
         this.lines = start;
@@ -150,6 +163,7 @@ export class Terminal extends Colors {
         process.stdout.write('\r');
     }
 
+    /** Runs `callback` with stdout swallowed and returns its result. */
     static async surpress<T = any>(callback: () => Promise<T>): Promise<T> {
         const originalWrite = process.stdout.write;
         process.stdout.write = () => true; // swallow all stdout
@@ -166,6 +180,7 @@ export class Terminal extends Colors {
         }
     }
 
+    /** Runs `callback`, then erases everything it printed to stdout. */
     static async sessionBlock<T = any>(callback: (session: number) => Promise<T>): Promise<T> {
         const previousSession = this.session;
         const session = this.createSession();
@@ -196,14 +211,24 @@ export class Terminal extends Colors {
         this.createSession();
     }
 
+    /**
+     * Free text input with Tab path completion relative to `cwd`.
+     * Resolves to `{ input, path }`, where `path` is `input` resolved against `process.cwd()`.
+     * Ctrl+C / Ctrl+D exits the process.
+     */
     static prompt(promptText: string, inline?: boolean, cwd?: string) {
         return prompt(Terminal, promptText, inline, cwd);
     }
 
+    /**
+     * Single choice from a list (↑/↓ or Tab to move, Enter or Space to pick).
+     * A `string[][]` is rendered as groups; `index` counts across the flattened list.
+     */
     static async option(options: string[] | string[][], promptText = "↑↓ select • Enter confirm", currentMarker = "●", defaultMarker = "◯") {
         return this.sessionBlock(async () => await option(Terminal, options, promptText, currentMarker, defaultMarker));
     }
 
+    /** Yes/no choice; `defaultValue` decides which answer is listed first. */
     static async confirm(question: string, defaultValue = false) {
         const options = defaultValue ? ["yes", "no"] : ["no", "yes"];
 
@@ -212,6 +237,10 @@ export class Terminal extends Colors {
         return defaultValue ? answer.index === 0 : answer.index === 1;
     }
 
+    /**
+     * Runs a shell command; resolves on exit code 0, rejects with stderr (or stdout) otherwise.
+     * @throws {Error} on a non-zero exit
+     */
     static execute(command: string, cwd: string): Promise<void>;
     static execute(command: string, cwd: string, args: string[]): Promise<void>;
     static execute(command: string, options: Partial<SpawnOptions>): Promise<void>;
@@ -247,6 +276,10 @@ export class Terminal extends Colors {
         });
     }
 
+    /**
+     * Spawns `command` plus `args` (joined unquoted) in a shell and collects stdout/stderr.
+     * With `CI` set, stdio is inherited, so nothing is collected and `onData` never fires.
+     */
     static spawn(command: string, options: Partial<SpawnOptions>) {
         let stdout = "";
         let stderr = "";

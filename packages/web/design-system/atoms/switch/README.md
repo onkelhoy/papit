@@ -1,6 +1,6 @@
 # @papit/switch
 
-A binary on/off toggle control implemented as a Web Component. Use a switch instead of a checkbox when the meaning is stateful rather than selection — for example _“Notifications on”_ reads more naturally than “Notifications checked”.
+A binary on/off toggle web component that participates in forms like a checkbox. Use it instead of a checkbox when the setting reads as on or off, such as notifications on.
 
 The component follows the **WAI-ARIA Switch Pattern**, supports **keyboard interaction**, and **participates in HTML forms** like a native input.
 
@@ -160,20 +160,6 @@ pap-switch:state(checked) {
 
 ---
 
-# Contributing
-
-Contributions are welcome.
-
-Please ensure:
-
-- tests pass
-- linting passes
-- behavior follows the ARIA switch pattern
-
-Submit pull requests through the GitHub repository.
-
----
-
 # License
 
 Licensed under the **@Papit License 1.0**
@@ -192,11 +178,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 # Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core)
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component)
   Core utilities, decorators, and base component class.
-
----
-
-# Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

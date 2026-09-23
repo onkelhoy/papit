@@ -1,11 +1,15 @@
 {
     "name": "@papit/svg-spritesheet",
-    "description": "a simple tool that will merge multiple svg files into one ",
+    "description": "Command-line tool that merges a folder of SVG files into one SVG spritesheet, with one symbol per file named after its title or filename.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "svg-spritesheet"
+        "svg-spritesheet",
+        "svg",
+        "sprite",
+        "icons",
+        "cli"
     ],
     "version": "0.0.1",
     "scripts": {

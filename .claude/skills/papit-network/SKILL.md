@@ -18,9 +18,9 @@ webrtc depends on meta-json for message framing. signal-server and webrtc share 
 
 ## Principles
 - **Protocol first.** The signalling message shapes live in `types.ts` on both sides. Keep them in sync and document them in both READMEs (a message table: type, direction, payload).
-- **Clean up everything.** Every socket, `RTCPeerConnection`, data channel, listener and `setTimeout`/`setInterval` has an owner that releases it on `close()`. Issue #83 lists concrete leaks: the socket `close()` misses the `"close"` listener, and reconnect timeouts aren't tracked. Fix them TDD when touching those files.
+- **Clean up everything.** Every socket, `RTCPeerConnection`, data channel, listener and `setTimeout`/`setInterval` has an owner that releases it on `close()`.
 - **Failure is normal.** Reconnect with backoff, time out handshakes, surface errors as events, and never throw from a network callback.
-- **Untrusted input.** Validate every message from the wire (shape and size) before use. Issue #82 lists critical security/data-corruption findings. Split them per package via the planner before fixing.
+- **Untrusted input.** Validate every message from the wire (shape and size) before use.
 - **Zero deps.** `ws` in signal-server is the one approved exception. Don't add more.
 
 ## Testing

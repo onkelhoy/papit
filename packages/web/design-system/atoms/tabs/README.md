@@ -1,8 +1,8 @@
 # @papit/tabs
 
-Accessible, WAI-ARIA compliant tabs component built with @papit/web-component.
+An accessible tabs web component following the WAI-ARIA Tabs pattern, built from tab and tab panel elements.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -204,10 +204,6 @@ tabs.value = "billing";
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -225,9 +221,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — Core utilities, decorators, and base component class
-- [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/atoms/group) — Roving tabindex group used as the internal tablist
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — Core utilities, decorators, and base component class
+- [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/group) — Roving tabindex group used as the internal tablist

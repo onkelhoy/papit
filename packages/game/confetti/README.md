@@ -1,8 +1,8 @@
 # @papit/confetti
 
-a simple to use confetti
+Canvas confetti burst web component (pap-confetti) with optional sound effects. Trigger it from code, by clicking the element, or from a linked button to celebrate a user action.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -12,106 +12,113 @@ a simple to use confetti
 
 ---
 
-`<pap-confetti>` is a canvas-based confetti burst web component, built on `@papit/game-engine` for the canvas/render loop and an internal particle system for the burst physics (rects, triangles, and circles with gravity, spread, and a soft "toward center" bias). It ships three built-in sound effects and can be triggered programmatically, by clicking the element itself, or by wiring it to an external control button.
-
-## installation
+# Installation
 
 ```bash
 npm install @papit/confetti
 ```
 
-### to use in **html**
+---
+
+# Usage
 
 ```html
-<script type="module" defer>
-  import "@papit/confetti";
+<script type="module">
+    import "@papit/confetti";
 </script>
 
-<pap-confetti></pap-confetti>
+<pap-confetti style="width: 400px; height: 300px;"></pap-confetti>
+
+<script type="module">
+    document.querySelector("pap-confetti").start();
+</script>
 ```
 
-## Usage
+The element is `100px` by `100px` by default. Size the host like any block element and the canvas fills it.
 
-### Trigger it from code
+## With options
 
-```typescript
+```js
 const confetti = document.querySelector("pap-confetti");
 
-confetti.start();
-
-// with options
-confetti.start({
-  amount: 200,
-  sound: false,
-  placement: "top-right",
-});
+confetti.start({ amount: 200, sound: false, placement: "top-right" });
 ```
 
-`start(options?)` accepts a `Partial` of:
-
-| Option      | Type        | Default                      | Description                                                     |
-| ----------- | ----------- | ---------------------------- | --------------------------------------------------------------- |
-| `amount`    | `number`    | `100`                        | number of particles to spawn for this burst                     |
-| `sound`     | `boolean`   | `true`                       | whether to play the pop/yay/horn sound effects                  |
-| `placement` | `Placement` | current `placement` property | overrides `placement` for this call (also updates the property) |
-
-Calling `start()` while a burst is already animating clears the previous particles and restarts the render loop rather than stacking two loops.
-
-### Trigger it by clicking the element
+## Burst where the user clicks
 
 ```html
 <pap-confetti click></pap-confetti>
 ```
 
-With the `click` attribute set, clicking the canvas fires a burst originating from the exact click position (converted from screen to canvas coordinates, accounting for canvas scaling), instead of a `placement`-based position.
-
-### Trigger it from another button
+## Trigger from another element
 
 ```html
-<button id="celebrate">🎉</button>
+<button id="celebrate">Celebrate</button>
 <pap-confetti aria-controls="celebrate"></pap-confetti>
 ```
 
-Setting `aria-controls` to the id of an element in the same root (shadow root or document) wires a click listener on that element to call `start()`. Re-setting `aria-controls` cleans up the previous listener first.
+The element with that id is looked up in the same root (document or shadow root) when `aria-controls` is set, so it has to exist by then.
+
+---
+
+# API
 
 ## Attributes / Properties
 
-| Attribute       | Property    | Type        | Default    | Description                                                            |
-| --------------- | ----------- | ----------- | ---------- | ---------------------------------------------------------------------- |
-| `placement`     | `placement` | `Placement` | `"bottom"` | where the burst originates from, see below                             |
-| `click`         | `withClick` | `boolean`   | `false`    | if present, clicking the canvas triggers a burst at the click position |
-| `aria-controls` | `controls`  | `string`    | —          | id of an external element that should trigger `start()` on click       |
-| `x`             | `x`         | `number`    | —          | explicit burst origin X (overrides `placement`)                        |
-| `y`             | `y`         | `number`    | —          | explicit burst origin Y (overrides `placement`)                        |
+| Attribute       | Property    | Type        | Default    | Description |
+| --------------- | ----------- | ----------- | ---------- | ----------- |
+| `placement`     | `placement` | `Placement` | `"bottom"` | Where the burst starts, see below. |
+| `click`         | `withClick` | `boolean`   | `false`    | Clicking the canvas starts a burst at the click position. |
+| `aria-controls` | `controls`  | `string`    | none       | Id of an element whose click calls `start()`. Setting it again removes the old listener. |
+| `x`             | `x`         | `number`    | none       | Burst origin X in canvas pixels. Overrides `placement` when `y` is also set. |
+| `y`             | `y`         | `number`    | none       | Burst origin Y in canvas pixels. Overrides `placement` when `x` is also set. |
 
-`Placement` is one of:
+`Placement` is one of `"top-left"`, `"top"`, `"top-right"`, `"left"`, `"center"`, `"right"`, `"bottom-left"`, `"bottom"`, `"bottom-right"` or `"random"` (a new one of the nine for each burst). Edge placements sit 20px in from the edge.
 
+A click with `click` set writes the click position into `x` and `y`, so later bursts reuse that position until you change them.
+
+## Methods
+
+```ts
+start(options?: Partial<{ amount: number; sound: boolean; placement: Placement }>): void
 ```
-"top-left" | "top" | "top-right"
-"left" | "center" | "right"
-"bottom-left" | "bottom" | "bottom-right"
-"random"
-```
 
-`"random"` picks a new placement from the full set on every call to `getPosition()`. If both `x` and `y` are set, they take priority over `placement` for positioning (this is also how the `click` attribute positions bursts).
+Starts a burst. Particles still flying from an earlier burst are cleared first.
 
-## Sound effects
+| Option      | Type        | Default     | Description |
+| ----------- | ----------- | ----------- | ----------- |
+| `amount`    | `number`    | `100`       | Particles in this burst. |
+| `sound`     | `boolean`   | `true`      | Play the pop, yay and horn sounds. |
+| `placement` | `Placement` | current     | Sets the `placement` property, then bursts from it. |
 
-Three effects — `/pop.mp3`, `/yay.mp3`, `/horn.mp3` — are loaded once per page (shared statically across all `<pap-confetti>` instances) and play on every `start()` call unless `sound: false` is passed. They're expected to be served from your app's root; host your own copies at those paths, or override by placing files at `/pop.mp3`, `/yay.mp3`, and `/horn.mp3`.
+`start()` needs the element to have rendered, so call it after the element is connected.
 
-## Styling
+## Events
 
-The component renders a single `<canvas>` in its shadow root and sizes it via `resizeCanvasToDisplaySize()` (from `@papit/game-engine`) whenever a burst starts, so it always matches the element's current on-screen size. Style the host element (width/height/position) as you would any block element; the canvas fills it.
+None.
 
-## Contributing
+---
 
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
+# Sound effects
 
-## License
+With `sound` on, every burst plays `/pop.mp3`, `/yay.mp3` and `/horn.mp3`. The paths are absolute to your site root. The package ships the files in `asset/audio/`, so copy or serve them at those paths. The audio elements are created once and shared by every `<pap-confetti>` on the page.
 
-Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
+---
 
-**Key points:**
+# Design notes
+
+- The render loop only runs while particles are alive and stops by itself after the burst.
+- Motion is per frame, not `delta`-based, so bursts run faster on high refresh rate screens.
+- `prefers-reduced-motion` isn't respected yet. Check it yourself before calling `start()` if that matters.
+
+---
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -120,11 +127,11 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
-## Related Components
+---
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-- [@papit/game-engine](https://github.com/onkelhoy/papit/tree/main/packages/game/engine): Canvas engine used internally for context setup and the render loop
+# Related
 
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/game-engine](https://github.com/onkelhoy/papit/tree/main/packages/game/engine)
+  Canvas engine used for the canvas setup and render loop.
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component)
+  Base class and decorators the element is built on.

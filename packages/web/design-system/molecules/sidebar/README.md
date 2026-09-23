@@ -1,12 +1,12 @@
 # @papit/sidebar
 
-A collapsible sidebar navigation panel that expands on click or hover and collapses on click or `Escape`.
+A collapsible sidebar navigation panel that expands on click or hover and collapses on click or Escape.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-organism-orange)
+![Type](https://img.shields.io/badge/Type-molecules-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/sidebar.svg?logo=npm)](https://www.npmjs.com/package/@papit/sidebar)
 
@@ -67,10 +67,6 @@ npm install @papit/sidebar
 - `Escape` closes the sidebar and returns focus to the hamburger button.
 - A tooltip on the hamburger button announces "Open sidebar" / "Close sidebar" depending on state.
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -86,10 +82,6 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
 - [@papit/button](https://github.com/onkelhoy/papit): Toggle button used for the hamburger
 - [@papit/tooltip](https://github.com/onkelhoy/papit): Tooltip on the hamburger button
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

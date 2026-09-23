@@ -10,6 +10,7 @@ import { getPACKAGE } from "./url";
 
 const connectedClients = new Map<Duplex, PackageNode>();
 
+/** WebSocket handshake for the live reload client; bound as the server's `upgrade` handler. */
 export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Duplex, head: Buffer) {
     // handshake
     const acceptKey = req.headers['sec-websocket-key'];
@@ -87,6 +88,7 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
 }
 
 // exposed functions 
+/** Tells every page registered for `node`, or for a package depending on it, to reload. */
 export function update(node: PackageNode) {
     // notify all clients 
     try

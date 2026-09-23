@@ -1,11 +1,15 @@
 {
     "name": "@papit/web-component",
-    "description": "the root component for @papit web components, this package deals with all the heavy lifting such as reactive rendering, properties etc",
+    "description": "Base classes, decorators and an html template tag for building web components from scratch. Every papit component is built on it: reactive properties, attribute reflection, fine-grained DOM updates and form association, with no dependencies.",
     "keywords": [
         "papit",
         "web-component",
-        "typescript",
-        "web-component"
+        "custom-elements",
+        "shadow-dom",
+        "decorators",
+        "template",
+        "reactive",
+        "form-associated"
     ],
     "version": "0.0.8",
     "scripts": {

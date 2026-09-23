@@ -1,6 +1,6 @@
 ---
 name: papit-web-component
-description: Internals of @papit/web-component (packages/web/engines/web-component), the from-scratch engine every papit web component extends. Covers CustomElement / CustomElementInternals lifecycle, the @property decorator and friends, the html`` template + part system, the constraints a change here must respect, and the known open bugs. Load for any engine work, and whenever a design-system bug might really be an engine bug.
+description: Internals of @papit/web-component (packages/web/engines/web-component), the from-scratch engine every papit web component extends. Covers CustomElement / CustomElementInternals lifecycle, the @property decorator and friends, the html`` template + part system and the constraints a change here must respect. Load for any engine work, and whenever a design-system bug might really be an engine bug.
 ---
 
 # @papit/web-component
@@ -24,7 +24,7 @@ Everything is re-exported from `src/index.ts`. A new public thing is only public
 - `connectedCallback()` → `update()`. The first update calls `firstRender()`. Subclasses override `firstRender` and **must call `super.firstRender()`**, which adopts `static sheet` / `static sheets`.
 - `render()` returns `html\`...\``, a string or a Node. Parts diff instead of replacing the DOM.
 - `attributeChangedCallback` routes to the `@property` handlers (`propertyMeta`).
-- `disconnectedCallback()` is empty by default. Subclasses that add listeners/observers in `connectedCallback` **must** remove them here (issue #83).
+- `disconnectedCallback()` is empty by default. Subclasses that add listeners/observers in `connectedCallback` **must** remove them here.
 
 `CustomElementInternals` adds `static formAssociated = true`, `this._internals` (ElementInternals), a reflected `disabled` property (`aria-disabled`), and the form callbacks (`formResetCallback`, `formDisabledCallback`, ...). Custom states go through `this._internals.states` and are styled with `:state(name)`.
 
@@ -44,10 +44,5 @@ Use `@bind` for event handler methods, `@query(selector)` for shadow refs resolv
 - **Parsed HTML and `createElement` must both work.** Test both paths. Static fixture pages only exercise the parsed path.
 - **No global side effects** at import except `customElements.define`, and that happens in each component's `index.ts`, never in the engine.
 
-## Known open bugs (fix via their own issues, TDD)
-- **Constructor-time `setAttribute`**: `decorators/property/decorator.ts` setter (~L112–160), also the `aria` reflection and `decorators/context/dectorator.ts:104`. CONSID-FINDINGS #1, a **blocker**.
-- **Keyed list reordering**: `html/part/parts/list-part.ts` mis-reuses DOM nodes with `key` (issue #99).
-- **Retained references** after disconnect (MutationObservers, external nodes) (issue #83).
-
 ## Testing
-Playwright suites live in `tests/decorators/` and `tests/html/`, each with its own `component.ts` test fixture element. Gaps to fill: `functions/` (pure, easy to cover), element lifecycle (first render, sheet adoption, requestUpdate debounce, disconnect cleanup), `createElement` path, `lightDOM` mode. See `papit-testing`.
+Playwright suites live in `tests/decorators/` and `tests/html/`, each with its own `component.ts` test fixture element. Every suite should also cover `functions/` (pure, easy to cover), element lifecycle (first render, sheet adoption, requestUpdate debounce, disconnect cleanup), `createElement` path, `lightDOM` mode. See `papit-testing`.

@@ -1,11 +1,15 @@
 {
     "name": "@papit/field",
-    "description": "a extendable class for form elements to deal with basics like error and warnings ",
+    "description": "An extensible base class for form field web components. It handles constraint validation errors, optional warnings and a translation fallback chain, so every field gives consistent, accessible feedback.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "field"
+        "field",
+        "form",
+        "form-associated",
+        "validation",
+        "base-class"
     ],
     "version": "0.2.2",
     "scripts": {

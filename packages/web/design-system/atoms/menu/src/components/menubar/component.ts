@@ -9,6 +9,15 @@ import { Group } from "@papit/group";
 import { MenuItem } from "components/menuitem";
 import { Menu } from "component";
 
+/**
+ * Horizontal menubar of `pap-menuitem`s, each usually holding a `pap-menu`.
+ * ArrowLeft/Right move between items, ArrowDown/Up open the item's submenu.
+ *
+ * @element pap-menubar
+ * @slot - top-level `pap-menuitem` elements
+ * @csspart group - the `pap-group` around the items
+ * @see https://www.w3.org/WAI/ARIA/apg/patterns/menubar/
+ */
 export class MenuBar extends CustomElement {
     static sheet = sheet;
 

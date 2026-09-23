@@ -1,10 +1,10 @@
 # @papit/carousel
 
-A fully accessible, swipeable carousel component compliant with the WAI-ARIA Carousel Pattern.
+An accessible, swipeable carousel web component following the WAI-ARIA Carousel pattern.
 
 [WAI-ARIA Carousel Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/).
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -158,10 +158,6 @@ carousel.play = false; // pause
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -179,11 +175,7 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-- [@papit/translator](https://github.com/onkelhoy/papit/tree/main/packages/tools/translator): i18n singleton used for accessible labels
-- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/atoms/button): Button used for navigation controls
-- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/atoms/icon): Icon used inside navigation buttons
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
+- [@papit/translator](https://github.com/onkelhoy/papit/tree/main/packages/web/tools/translator): i18n singleton used for accessible labels
+- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/button): Button used for navigation controls
+- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon used inside navigation buttons

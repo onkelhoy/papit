@@ -1,11 +1,16 @@
 {
     "name": "@papit/input",
-    "description": "Form-associated input with optional format masking, password visibility toggle, and clear button",
+    "description": "A form-associated text input with optional format masking, a password visibility toggle and a clear button.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "input"
+        "input",
+        "text-field",
+        "mask",
+        "password",
+        "form",
+        "form-associated"
     ],
     "version": "0.0.3",
     "scripts": {

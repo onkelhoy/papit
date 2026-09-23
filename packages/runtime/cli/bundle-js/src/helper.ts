@@ -2,6 +2,7 @@ import path from "node:path";
 import fs from "node:fs";
 import ts from "typescript";
 
+/** The package.json fields the bundlers read. */
 export type PackageJson = {
     dependencies: Record<string, string>;
     devDependencies: Record<string, string>;
@@ -18,6 +19,7 @@ export type PackageJson = {
     exports?: string | Partial<Record<"." | (string & {}), string | Partial<Record<"import" | "types" | "require" | (string & {}), string>>>>;
 }
 
+/** `process.argv` flags as a `Set`, with the leading `--` removed. */
 export function getArguments() {
     const args = new Set<string>();
     for (let arg of process.argv.slice(2))
@@ -28,6 +30,7 @@ export function getArguments() {
     return args;
 }
 
+/** Every dependency, devDependency and peerDependency name, to keep out of the bundle. */
 export function getExternals(packageJSON: PackageJson) {
 
     return [
@@ -39,6 +42,7 @@ export function getExternals(packageJSON: PackageJson) {
         .flatMap(dep => Object.keys(dep));
 }
 
+/** Path to tsconfig.json, or tsconfig.prod.json when `prod` is set and the file exists. */
 export function getTSlocation(
     args: { has: (key: string) => boolean },
     location: string,
@@ -60,6 +64,7 @@ export function getTSlocation(
     return tsconfigLocation;
 }
 
+/** @throws when the tsconfig can't be read */
 export function getTSconfig(
     args: { has: (key: string) => boolean },
     location: string,
@@ -79,6 +84,7 @@ export function getTSconfig(
     );
 }
 
+/** The tsconfig out folder, relative to `location`. */
 export function outFolder(
     location: string,
     tsconfig: ts.ParsedCommandLine,
@@ -86,6 +92,7 @@ export function outFolder(
     return path.relative(location, tsconfig.options.outDir ?? path.dirname(tsconfig.options.outFile ?? "") ?? path.join(location, "lib"))
 }
 
+/** The source folder relative to `location`: tsconfig `baseUrl`, else `src`. */
 export function sourceFolder(
     location: string,
     tsconfig: ts.ParsedCommandLine,

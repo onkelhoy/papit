@@ -1,9 +1,14 @@
 import type { BufferSource, MessageType } from "./types";
 
+/**
+ * Static encoder/decoder for the meta-json binary layout:
+ * `[uint32 BE meta length][meta JSON, UTF-8][payload bytes]`.
+ */
 export class Codec {
     private static encoder = new TextEncoder();
     private static decoder = new TextDecoder();
 
+    /** Decodes UTF-8 bytes and `JSON.parse`s them. */
     static Parse<Payload>(payload: BufferSource) {
         const bytes =
             payload instanceof Uint8Array
@@ -17,6 +22,10 @@ export class Codec {
         return JSON.parse(Codec.decoder.decode(bytes)) as Payload;
     }
 
+    /**
+     * Packs a message into one buffer. A `Uint8Array` payload is copied as-is;
+     * anything else goes through `String()`, so stringify objects first.
+     */
     static Encode<Meta extends Object = object, Payload = string>(message: MessageType<Meta, Payload>): Uint8Array {
         // Encoding
         const meta = JSON.stringify(message.meta);
@@ -35,7 +44,12 @@ export class Codec {
         return buf;
     }
 
-    // Decode Uint8Array -> MessageObject<MetaType>
+    /**
+     * Unpacks a buffer made by `Encode`. The payload is a zero-copy `Uint8Array` view
+     * unless `parsePayload` is true, then it is `JSON.parse`d.
+     * @throws RangeError when the buffer is shorter than the 4-byte header
+     * @throws SyntaxError when the meta (or a parsed payload) is not valid JSON
+     */
     static Decode<Meta extends Object = object, Payload = any>(data: Uint8Array, parsePayload?: boolean): MessageType<Meta, Payload | BufferSource> {
         const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
         const metaLen = view.getUint32(0, false);

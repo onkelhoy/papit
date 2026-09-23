@@ -1,11 +1,15 @@
 {
     "name": "@papit/file-input",
-    "description": "An elegant solution to file input — fully featured with drag-and-drop, file indicator, upload progress, and form association",
+    "description": "A form-associated file input with drag-and-drop, a file indicator and upload progress.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "file-input"
+        "file-input",
+        "upload",
+        "drag-and-drop",
+        "form",
+        "form-associated"
     ],
     "version": "0.0.3",
     "scripts": {

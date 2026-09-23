@@ -15,7 +15,7 @@ Sections in this order. Leave out a section that has nothing real to say. Never 
 ```markdown
 # @papit/<name>
 
-<1–2 sentences: what it is and when to reach for it. Same wording as package.json description.>
+<1–2 sentences: what it is and when to reach for it. Same wording as package.json description. Plain text only.>
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -70,6 +70,7 @@ JSDoc goes on the **public API**: exported classes, functions, public methods an
 
 ## package.json description
 - 1–2 sentences, spelled correctly, matching the README intro.
+- **The first sentence under the README title is plain text, always.** No `*`, backticks, links or `<tags>`. npm listings render it raw, so markdown shows up as stray symbols.
 - Say what it is and when to reach for it. No "a simple…" filler, no marketing.
 - Update `keywords` alongside it (`papit` + domain terms).
 - Known bad ones to fix when touched: `deep-merge` ("witg"), "complient"/"comlient" in several web packages, `runtime/cli/create` (missing).

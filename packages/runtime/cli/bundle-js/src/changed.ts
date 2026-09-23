@@ -1,6 +1,10 @@
 import fs from "node:fs";
 import path from "node:path";
 
+/**
+ * Whether any of `filenames` (plus package.json and tsconfig.json) changed since the last call,
+ * by modification time. Saves the new times to `.temp/mstime.<tempSuffix>.json` every call.
+ */
 export function hasChanged(location: string, filenames: string[], options: Partial<{ tempSuffix: string, filter: RegExp | ((fileName: string) => boolean) }> = {}) {
 
     if (!options.filter) options.filter = /\.(css|((j|t)s(\w|on)?))$/i;

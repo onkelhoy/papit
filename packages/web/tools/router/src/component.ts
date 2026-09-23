@@ -11,6 +11,15 @@ import { hash } from "helper/utils";
 import { proxy } from "helper/proxy";
 import { ParamRegex } from "helper/param";
 
+/**
+ * Routes a page by fetching the HTML document for the current url and rendering its body,
+ * styles and scripts inside the element. Routes come from slotted children with a `path`
+ * attribute, or from `addRoute`.
+ *
+ * @element pap-router
+ * @fires window-clear - before `window-load`, when a new page has been inserted
+ * @fires window-load - after a new page has been inserted; `load` listeners in routed scripts run here
+ */
 export class Router extends CustomElement {
 
     // static variables
@@ -24,9 +33,12 @@ export class Router extends CustomElement {
     // public variables
     public UUID!: string;
     public safeUUID!: string;
+    /** Every registered route, in match order. */
     public routes: Route[] = [];
+    /** Base path the routes resolve against, worked out from the first page load. */
     public browser_url: string | undefined = undefined;
     public base_url: string | undefined = undefined;
+    /** The route currently rendered, or `null` when none matched. */
     public route: MappedRoute | null = null;
     public abortcontrollers: Set<AbortController> = new Set();
 
@@ -51,21 +63,28 @@ export class Router extends CustomElement {
     }) body!: HTMLDivElement;
 
     // properties
+    /** Copy the routed page's `<title>` into the document. */
     @property({ type: Boolean, rerender: false, attribute: "update-title" }) updatetitle: boolean = true;
+    /** Push each routed url to the browser history. */
     @property({ type: Boolean, rerender: false, attribute: "update-url" }) updateurl: boolean = true;
+    /** End browser urls with `/`. */
     @property({
         type: Boolean,
         rerender: false,
         attribute: "trailing-slash",
     }) trailingslash: boolean = true;
+    /** Selectors removed from every fetched page before it's inserted. */
     @property({ type: Array, rerender: false, attribute: false }) omitters: string[] = ["[data-server-omitter]"];
+    /** Cache fetched pages in storage and skip the network on repeat visits. */
     @property({ rerender: false }) cache: "session" | "local" | undefined = undefined;
+    /** The route to show. Setting it navigates. */
     @property({
         rerender: false,
         after: function (this: Router) {
             this.doupdateurl();
         }
     }) url?: string;
+    /** Keep the route after `#` in the browser url instead of in the path. */
     @property({
         type: Boolean,
         rerender: false,
@@ -76,6 +95,7 @@ export class Router extends CustomElement {
     }) hashbased?: boolean;
 
     // getters 
+    /** Resolved path variables of the current route. */
     get params() {
         if (!this.route) return {};
         return this.route.params;
@@ -137,6 +157,7 @@ export class Router extends CustomElement {
     }
 
     // public functions 
+    /** Register a route from code, same as a child element with a `path` attribute. */
     public addRoute(route: AddRoute) {
         const mappedroute: Route = {
             params: {},

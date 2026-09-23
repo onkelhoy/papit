@@ -1,8 +1,8 @@
 # @papit/dialog
 
-A simple, accessible wrapper around the native <dialog> element with slot composition, a built-in close button, and support for modal, non-modal, and popover display modes.
+An accessible wrapper around the native dialog element with slot composition and a built-in close button. It supports modal, non-modal and popover display modes.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -174,10 +174,6 @@ The component also responds to `popovertarget` to open via the Popover API.
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -193,9 +189,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/atoms/icon): Icon component used for the close button
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
+- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon component used for the close button

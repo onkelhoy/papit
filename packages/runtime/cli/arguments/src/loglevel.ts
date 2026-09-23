@@ -1,11 +1,16 @@
 import { type Args } from "./args";
 
 export type Level = "verbose" | "debug" | "info" | "error" | "warning" | "silent";
+/**
+ * Log level shared by the papit CLIs, read from `--error`, `--warning`, `--info`, `--verbose`,
+ * `--debug` and `--silent`. Each getter is `true` when that level or a noisier one is active.
+ */
 export class Loglevel {
     level: Level = "silent";
 
     private static hasInit = false;
 
+    /** Sets `level` from the flags in `args`, and prints it on the first non-silent init. */
     init(args: Args) {
         if (args.has("error")) this.level = "error";
         if (args.has("warning")) this.level = "warning";

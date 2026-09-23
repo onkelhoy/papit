@@ -1,6 +1,6 @@
 # @papit/codeblock
 
-A web component for previewing and syntax-highlighting HTML, CSS, and JavaScript — with no external dependencies. Built on `@papit/lexer` for zero-overhead tokenization.
+A web component that syntax-highlights and live-previews HTML, CSS and JavaScript. Tokenizing is done by @papit/lexer, with no external dependencies.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -111,12 +111,6 @@ All tokens use `light-dark()` and respond to the component's `color-scheme`.
 
 ---
 
-## Contributing
-
-Contributions are welcome. Follow the development guidelines and ensure all tests pass before submitting a pull request.
-
----
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -134,11 +128,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 ## Related
 
 - [`@papit/lexer`](https://github.com/onkelhoy/papit/tree/main/packages/runtime/lexer) — tokenizer powering the syntax highlighting
-- [`@papit/web-component`](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — base component class, decorators, and utilities
-- [`@papit/splitter`](https://github.com/onkelhoy/papit/tree/main/packages/molecules/splitter) — draggable splitter used in the preview panel
-
----
-
-## Support
-
-For issues, questions, or contributions, visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [`@papit/web-component`](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — base component class, decorators, and utilities
+- [`@papit/splitter`](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/splitter) — draggable splitter used in the preview panel

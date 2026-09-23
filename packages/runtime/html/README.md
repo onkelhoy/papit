@@ -1,6 +1,6 @@
 # @papit/html
 
-A lightweight, deterministic HTML and DOM-like implementation for Node.js.
+Parses HTML into a DOM-like tree in Node.js, for reading, changing, querying and serialising HTML without a browser.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 

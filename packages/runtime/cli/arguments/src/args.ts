@@ -2,8 +2,15 @@ import { Loglevel, type Level } from "./loglevel";
 
 type Primitive = string | number | boolean;
 type Input = Primitive | Primitive[];
+
+/**
+ * Parses an argument list into `flags` and positional `values`, then sets the log level.
+ * `islands` names flags that never take the following argument as their value.
+ */
 export class Args extends Loglevel {
+    /** Every value given per flag name, without dashes. */
     flags: Record<string, string[]> = {};
+    /** Arguments that are neither a flag nor a flag's value, in order. */
     values: string[] = [];
 
     private convert(value: Input): string[] {
@@ -22,11 +29,14 @@ export class Args extends Loglevel {
         this.flags[key] = [...(this.flags[key] ?? []), ...this.convert(value)];
     }
     has(key: string) { return !!this.get(key) }
+    /** `true` when the flag was given, otherwise `undefined` (not `false`). */
     true(key: string) { return this.has(key) ? true : undefined }
+    /** The flag's first value. */
     string(key: string) {
         const value = this.get(key);
         return value?.at(0);
     }
+    /** The flag's first value as a number, `undefined` if missing or not numeric. */
     number(key: string) {
         const value = this.string(key);
         if (value === undefined) return undefined;
@@ -76,8 +86,13 @@ export class Args extends Loglevel {
     }
 }
 
+/**
+ * Static facade over one shared `Args`, parsed from `process.argv` when the module loads.
+ * Mirrors every `Args` method and log level accessor.
+ */
 export class Arguments {
     static instance: Args;
+    /** Creates the shared instance; a no-op once it exists (the import-time parse wins). */
     static init(input: Input, islands: string[] = []) {
         if (!this.instance) this.instance = new Args(input, islands);
     }
@@ -108,6 +123,7 @@ export class Arguments {
     static set warning(value: boolean) { this.instance.warning = value }
     static set error(value: boolean) { this.instance.error = value }
 
+    /** `true` when the process was started through `npx`. */
     static get isCLI() { return process.env.npm_lifecycle_event === "npx" }
 }
 

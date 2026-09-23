@@ -1,11 +1,14 @@
 {
     "name": "@papit/accordion",
-    "description": "a wcag complient accordion component ",
+    "description": "An accessible accordion web component following the WAI-ARIA Accordion pattern, built from composable header and panel elements with full keyboard navigation.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "accordion"
+        "accordion",
+        "disclosure",
+        "wai-aria",
+        "a11y"
     ],
     "version": "0.1.6",
     "scripts": {

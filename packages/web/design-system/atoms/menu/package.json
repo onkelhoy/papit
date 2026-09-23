@@ -1,11 +1,16 @@
 {
     "name": "@papit/menu",
-    "description": "A WCAG complient menu component, the aim for simplicity is key",
+    "description": "Accessible dropdown menus, submenus and menubars built on the native Popover API, following the WAI-ARIA menu pattern. Use it for action menus and application menubars.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "menu"
+        "menu",
+        "menubar",
+        "menuitem",
+        "dropdown",
+        "popover",
+        "accessibility"
     ],
     "version": "0.0.9",
     "scripts": {
@@ -56,6 +61,7 @@
     "dependencies": {
         "@papit/button": "0.1.4",
         "@papit/group": "0.0.8",
+        "@papit/placement": "0.0.8",
         "@papit/popover": "0.1.1",
         "@papit/web-component": "0.0.8"
     },

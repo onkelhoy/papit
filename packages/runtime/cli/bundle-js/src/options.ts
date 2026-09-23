@@ -7,6 +7,7 @@ import ts from "typescript";
 import { getArguments, getExternals, getTSlocation, type PackageJson } from "./helper";
 import { type getEntryPoints } from "./entrypoints";
 
+/** Values `jsBundle` would otherwise read or compute itself. */
 export type Options = {
     tsconfig: ts.ParsedCommandLine,
     packageJSON: PackageJson,
@@ -85,6 +86,10 @@ const cssModulePlugin = {
     }
 };
 
+/**
+ * esbuild options shared by every entry: bundled with dependencies external, minified unless `dev`,
+ * platform from `papit.type`, and `.css` imports turned into a constructed `CSSStyleSheet`.
+ */
 export function getESOptions(
     args: { has: (key: string) => boolean },
     location: string,
@@ -128,6 +133,7 @@ export function getESOptions(
     };
 }
 
+/** The shared options narrowed to one entry, picking its platform from a `papit.type` record. */
 export function modifyOptions(
     entryPoint: { input: string, output: string | undefined, name?: string },
     options: ReturnType<typeof getESOptions>,

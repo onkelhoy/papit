@@ -1,11 +1,14 @@
 {
     "name": "@papit/icon",
-    "description": "Renders SVG icons either by referencing a <symbol> in an existing spritesheet or by fetching an SVG from a URL. If the spritesheet is not yet present in the DOM, it fetches the SVG and injects it into the document body for reuse via symbol references.",
+    "description": "Renders SVG icons inline from a URL, a spritesheet symbol or a registered string, and country flags from a two-letter code. Fetched icons are shared between instances and can be cached in localStorage.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "icon"
+        "icon",
+        "svg",
+        "spritesheet",
+        "flag"
     ],
     "version": "0.1.7",
     "scripts": {

@@ -1,6 +1,6 @@
 ---
 name: papit-game
-description: Conventions for packages/game (@papit/game-engine, @papit/confetti, and the game math returning via issue #110). Covers the engine's canvas/loop/input model, performance rules for per-frame code, and how to test canvas and input code with Playwright. Load for any game work.
+description: Conventions for packages/game (@papit/game-engine, @papit/confetti). Covers the engine's canvas/loop/input model, performance rules for per-frame code, and how to test canvas and input code with Playwright. Load for any game work.
 ---
 
 # Game
@@ -12,10 +12,10 @@ Load `papit-global` first.
 packages/game/engine     @papit/game-engine   canvas engine: multi-canvas, 2d/webgl contexts, render loop, input (mouse, touch, keyboard)
 packages/game/confetti   @papit/confetti      <pap-confetti> web component with a particle system (depends on @papit/web-component)
 ```
-Math lives in `packages/algorithms` (`@papit/vector`, `@papit/matrix`). The engine consumes `@papit/vector`. Shapes, intersection (SAT, box, circle, line, polygon, triangle) and geometry are being rebuilt on branch `feature/110-game-math` (issue #110). Coordinate with the `algorithms` agent before adding math here: generic math belongs there, game-specific glue belongs here.
+Math lives in `packages/algorithms` (`@papit/vector`, `@papit/matrix`). The engine consumes `@papit/vector`. Shapes, intersection (SAT, box, circle, line, polygon, triangle) and geometry belong in `packages/algorithms` too. Coordinate with the `algorithms` agent before adding math here: generic math belongs there, game-specific glue belongs here.
 
 ## Engine model
-- `new Engine(...)` targets one or more canvases (default selector `canvas`, 2d context). Accessors default to index `0`. Issue #108 describes the intended multi-canvas proxy API (`en.canvas1.ctx`) and event API (`en.events.on("e-down")`). Check what's implemented vs planned before documenting it.
+- `new Engine(...)` targets one or more canvases (default selector `canvas`, 2d context). Accessors default to index `0`. Check what's implemented vs planned before documenting it.
 - `engine.loop(fn(delta))` is the render loop. `InputEvents` wraps pointer/touch/keyboard with engine-relative positions (`Vector`).
 
 ## Performance rules (per-frame code)

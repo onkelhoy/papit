@@ -32,6 +32,10 @@ import { Popover } from "@papit/popover";
  *
  * @attr {boolean} data-loop - Whether keyboard navigation wraps around at the ends (default: false)
  *
+ * @fires open - the menu opened
+ * @fires close - the menu closed
+ * @csspart group - the `pap-group` around the items
+ *
  * @example Standalone menu triggered by a native button:
  * ```html
  * <button popovertarget="my-menu">Options</button>
@@ -92,6 +96,7 @@ export class Menu extends Popover {
         this.removeEventListener("toggle", this.handletoggle);
     }
 
+    /** Wire `element` as this menu's trigger: popovertarget, aria-expanded, anchor and aria-labelledby. */
     public registerTrigger(element: HTMLElement) {
 
         this.triggerElement = element;
@@ -105,6 +110,7 @@ export class Menu extends Popover {
         this.setAttribute("aria-labelledby", element.id);
     }
 
+    /** Focus the last item. */
     public focusLast() {
         this.groupElement.last();
     }

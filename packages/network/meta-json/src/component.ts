@@ -1,6 +1,10 @@
 import { Codec } from "./codec";
 import type { BufferSource, MessageType } from "./types";
 
+/**
+ * A message with JSON metadata and a lazily parsed payload.
+ * Decode with `FromBinary` to read `meta` without touching the payload; call `parse()` only when needed.
+ */
 export class MetaJson<Meta extends Object = object, Payload = any> implements MessageType<Meta, Payload | BufferSource> {
   private parsed = false;
   private binary: Uint8Array<ArrayBufferLike> | undefined = undefined;
@@ -9,6 +13,7 @@ export class MetaJson<Meta extends Object = object, Payload = any> implements Me
     public payload: Payload | BufferSource,
   ) { }
 
+  /** Encodes via `Codec.Encode`. The result is cached; pass `force` to re-encode after changing `meta` or `payload`. */
   public toBinary(force?: boolean) {
     if (force) this.binary = undefined;
     if (!this.binary) this.binary = Codec.Encode<Meta, Payload | BufferSource>(this);
@@ -16,6 +21,7 @@ export class MetaJson<Meta extends Object = object, Payload = any> implements Me
     return this.binary;
   }
 
+  /** `JSON.parse`s a binary payload once and caches it. Non-binary payloads are returned as they are. */
   public parse<T extends Payload = Payload>(): T {
     if (this.parsed) return this.payload as T;
     this.parsed = true;
@@ -35,6 +41,7 @@ export class MetaJson<Meta extends Object = object, Payload = any> implements Me
     return this.payload as T;
   }
 
+  /** Creates a message whose meta starts with `sender: ""`, `receiver: ""` and `timestamp: Date.now()`, overridden by `meta`. */
   static Create<
     This extends new (meta: any, payload: any) => MetaJson<any, any>,
     Meta extends Object = object,
@@ -51,6 +58,7 @@ export class MetaJson<Meta extends Object = object, Payload = any> implements Me
     ) as InstanceType<This>;
   }
 
+  /** Decodes a buffer from `toBinary` / `Codec.Encode`. Returns the subclass it is called on. */
   static FromBinary<
     This extends new (meta: any, payload: any) => MetaJson<any, any>,
     Meta extends Object = object,

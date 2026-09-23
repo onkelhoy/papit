@@ -1,11 +1,14 @@
 {
     "name": "@papit/signals",
-    "description": "a simple package doing the overly hyped signals pattern ",
+    "description": "Minimal reactive state for the browser: signals hold values, effects re-run when the signals they read change, and computed values derive from other signals.",
     "keywords": [
         "papit",
-        "web-component",
-        "typescript",
-        "signals"
+        "signals",
+        "reactive",
+        "reactivity",
+        "state",
+        "effect",
+        "computed"
     ],
     "version": "0.0.1",
     "scripts": {

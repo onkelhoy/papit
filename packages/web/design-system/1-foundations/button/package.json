@@ -1,11 +1,13 @@
 {
     "name": "@papit/button",
-    "description": "basic button with minimal style",
+    "description": "A form-associated button web component with minimal default styling. It submits or resets its form like a native button.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "button"
+        "button",
+        "form",
+        "form-associated"
     ],
     "version": "0.1.4",
     "scripts": {

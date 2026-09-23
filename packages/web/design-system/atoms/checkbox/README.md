@@ -1,8 +1,8 @@
 # @papit/checkbox
 
-a WCAG compliant checkbox component with indeterminate state
+An accessible, form-associated checkbox web component with an indeterminate state.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -114,10 +114,6 @@ Controlled elements are resolved by ID from the same root as the group checkbox 
 
 > **Note:** the marker currently uses the browser's native checkbox appearance — there's no custom fill/sizing for the `checked`/`indeterminate` states yet, and the marker-to-label gap is present in the stylesheet but currently commented out (no gap renders between them today).
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -133,9 +129,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-- [@papit/radio](https://github.com/onkelhoy/papit/tree/main/packages/atoms/radio): Mutually-exclusive selection within a named group
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
+- [@papit/radio](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/radio): Mutually-exclusive selection within a named group

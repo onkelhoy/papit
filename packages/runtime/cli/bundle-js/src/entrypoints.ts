@@ -4,9 +4,15 @@ import fs from "node:fs";
 import ts from "typescript";
 import { outFolder, type PackageJson, sourceFolder } from "./helper";
 
+/** Source/output pair per condition of one package.json entry. */
 export type EntryPoint<T = { output: string, input: string, name: string }> = { import: T | undefined, require: T | undefined, types: T | undefined };
 type Entries = Record<string, EntryPoint>;
 
+/**
+ * Maps package.json `main`, `types`, `entryPoints`, `bin` and `exports` to their source files.
+ * Outputs are mapped from the out folder to the source folder with `.ts`, falling back to `src/index.ts`.
+ * `main` and the `"."` export are named `bundle`.
+ */
 export function getEntryPoints(
     location: string,
     packageJSON: PackageJson,

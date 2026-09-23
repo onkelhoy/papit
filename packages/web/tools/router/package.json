@@ -1,11 +1,15 @@
 {
     "name": "@papit/router",
-    "description": "Elegant answer for routing SPA and MPA, any element can help to define paths with variables and fallback values",
+    "description": "Client-side router element for single-page and multi-page sites. Any child element can declare a route with path variables and fallbacks, and the router fetches the matching HTML page and renders it in place.",
     "keywords": [
         "papit",
         "web-component",
-        "typescript",
-        "router"
+        "router",
+        "routing",
+        "spa",
+        "mpa",
+        "history",
+        "hash-routing"
     ],
     "version": "0.1.4",
     "scripts": {

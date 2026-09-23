@@ -3,6 +3,10 @@ import { PackageGraph } from "./graph";
 import { Information } from "./information";
 import type { RemotePackage, RemotePackages } from "./types";
 
+/**
+ * Latest published versions from the npm registry, cached in `map`.
+ * With `--allow-global` the first lookup fetches the whole scope in one search.
+ */
 export class Remote {
     static map = new Map<string, string>();
     private static abortsignal: AbortController | undefined;
