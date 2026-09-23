@@ -5,11 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>button test</title>
 
-    <script defer src="main.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script type="module" src="main.js"></script>
 </head>
 
 <body>
     <pap-button data-testid="base-target">fallback</pap-button>
+    <pap-button data-testid="disabled" disabled>disabled</pap-button>
+    <pap-button data-testid="readonly" readonly>readonly</pap-button>
 
     <div data-snapshot>
         <pap-button color="primary">fallback</pap-button>

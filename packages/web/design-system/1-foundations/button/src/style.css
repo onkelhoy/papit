@@ -1,5 +1,13 @@
 :host {
-    --btn-background: transparent;
+    /* the color token; every color rule below only sets this */
+    --btn-accent: var(--button-primary, var(--primary));
+    /* text on a filled button where contrast-color() is unsupported */
+    --btn-text: var(--button-text, var(--text-inverse));
+
+    --btn-background: var(--btn-accent);
+    --btn-border: var(--btn-accent);
+    --btn-hover: color-mix(in oklch, var(--btn-background), var(--shade-0) 5%);
+    --btn-active: color-mix(in oklch, var(--btn-background), var(--shade-0) 10%);
 
     -webkit-user-select: none;
     /* Safari */
@@ -18,21 +26,17 @@
     border-radius: var(--space-1, 4px);
 
     background-color: var(--btn-background);
+    color: var(--btn-text);
     color: contrast-color(var(--btn-background));
-
-    --btn-hover: color-mix(var(--btn-background), 5% var(--shade-0));
-    --btn-active: color-mix(var(--btn-background), 10% var(--shade-0));
 }
 
 :host(:hover) {
     background-color: var(--btn-hover);
-    color: contrast-color(var(--btn-hover));
 }
 
 :host(:state(active)),
 :host(:active) {
     background-color: var(--btn-active);
-    color: contrast-color(var(--btn-active));
 }
 
 :host(:focus-visible) {
@@ -41,38 +45,32 @@
 
 /* color */
 :host([color="primary"]) {
-    --btn-background: var(--button-primary, var(--primary));
-    --btn-border: var(--button-primary, var(--primary));
+    --btn-accent: var(--button-primary, var(--primary));
 }
 
 :host([color="secondary"]) {
-    --btn-background: var(--button-secondary, var(--secondary));
-    --btn-border: var(--button-secondary, var(--secondary));
+    --btn-accent: var(--button-secondary, var(--secondary));
 }
 
-:host([color="tiertery"]) {
-    --btn-background: var(--button-tiertery, var(--tiertery));
-    --btn-border: var(--button-tiertery, var(--tiertery));
+:host([color="tertiary"]),
+:host([color="tiertery"]) /* deprecated alias */ {
+    --btn-accent: var(--button-tertiary, var(--tertiary));
 }
 
 :host([color="success"]) {
-    --btn-background: var(--button-success, var(--success));
-    --btn-border: var(--button-success, var(--success));
+    --btn-accent: var(--button-success, var(--success));
 }
 
 :host([color="information"]) {
-    --btn-background: var(--button-information, var(--info));
-    --btn-border: var(--button-information, var(--info));
+    --btn-accent: var(--button-information, var(--info));
 }
 
 :host([color="error"]) {
-    --btn-background: var(--button-error, var(--error));
-    --btn-border: var(--button-error, var(--error));
+    --btn-accent: var(--button-error, var(--error));
 }
 
 :host([color="warning"]) {
-    --btn-background: var(--button-warning, var(--warning));
-    --btn-border: var(--button-warning, var(--warning));
+    --btn-accent: var(--button-warning, var(--warning));
 }
 
 /* variant */
@@ -80,19 +78,34 @@
     --btn-border: transparent;
 }
 
-:host([variant="outline"]) {
+:host([variant="filled"]:hover) {
+    color: var(--btn-text);
+    color: contrast-color(var(--btn-hover));
+}
+
+:host([variant="filled"]:state(active)),
+:host([variant="filled"]:active) {
+    color: var(--btn-text);
+    color: contrast-color(var(--btn-active));
+}
+
+/* outline + clear sit on the page background, so the accent is the text color */
+:host([variant="outline"]),
+:host([variant="clear"]) {
     --btn-background: transparent;
+    --btn-hover: color-mix(in oklch, var(--btn-accent) 12%, transparent);
+    --btn-active: color-mix(in oklch, var(--btn-accent) 24%, transparent);
+    color: var(--btn-accent);
 }
 
 :host([variant="clear"]) {
-    --btn-background: transparent;
     --btn-border: transparent;
 }
 
 /* color + variant */
 :host([variant="filled"][color="primary"]) {
-    --btn-hover: color-mix(var(--btn-background), 15% var(--shade-1));
-    --btn-active: color-mix(var(--btn-background), 30% var(--shade-1));
+    --btn-hover: color-mix(in oklch, var(--btn-background), var(--shade-1) 15%);
+    --btn-active: color-mix(in oklch, var(--btn-background), var(--shade-1) 30%);
 }
 
 /* size */

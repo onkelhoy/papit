@@ -2,7 +2,7 @@
 
 Basic button with minimal style.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -42,6 +42,7 @@ import "@papit/button";
 <!-- Colors -->
 <pap-button color="primary">Primary</pap-button>
 <pap-button color="secondary">Secondary</pap-button>
+<pap-button color="tertiary">Tertiary</pap-button>
 <pap-button color="success">Success</pap-button>
 <pap-button color="error">Error</pap-button>
 <pap-button color="warning">Warning</pap-button>
@@ -81,7 +82,7 @@ import "@papit/button";
 
 | Attribute  | Type                                                                             | Default   | Description                                            |
 | ---------- | -------------------------------------------------------------------------------- | --------- | ------------------------------------------------------ |
-| `color`    | `primary \| secondary \| tiertery \| success \| warning \| error \| information` | `primary` | Button color                                           |
+| `color`    | `primary \| secondary \| tertiary \| success \| warning \| error \| information` | `primary` | Button color (`tiertery` still works, deprecated)      |
 | `variant`  | `filled \| outline \| clear`                                                     | `filled`  | Button style variant                                   |
 | `size`     | `small \| medium \| large \| icon`                                               | `medium`  | Button size                                            |
 | `type`     | `submit \| reset`                                                                | —         | Form button type                                       |
@@ -89,30 +90,38 @@ import "@papit/button";
 | `disabled` | `boolean`                                                                        | —         | Disables all interaction                               |
 | `readonly` | `boolean`                                                                        | —         | Disables all interaction without visual disabled state |
 
+### Variants and text color
+
+- `filled` — accent background; text picks the contrasting color with `contrast-color()`, falling back to `--button-text` in browsers without it.
+- `outline` / `clear` — transparent background; the accent is the text color, and hover/active tint the background.
+
 ### CSS Custom Properties
 
-| Property                     | Description                     |
-| ---------------------------- | ------------------------------- |
-| `--button-primary`           | Primary color override          |
-| `--button-primary-color`     | Primary text color override     |
-| `--button-secondary`         | Secondary color override        |
-| `--button-secondary-color`   | Secondary text color override   |
-| `--button-tiertery`          | Tiertery color override         |
-| `--button-tiertery-color`    | Tiertery text color override    |
-| `--button-success`           | Success color override          |
-| `--button-success-color`     | Success text color override     |
-| `--button-warning`           | Warning color override          |
-| `--button-warning-color`     | Warning text color override     |
-| `--button-error`             | Error color override            |
-| `--button-error-color`       | Error text color override       |
-| `--button-information`       | Information color override      |
-| `--button-information-color` | Information text color override |
+| Property               | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| `--button-primary`     | Primary accent override                                |
+| `--button-secondary`   | Secondary accent override                              |
+| `--button-tertiary`    | Tertiary accent override                               |
+| `--button-success`     | Success accent override                                |
+| `--button-warning`     | Warning accent override                                |
+| `--button-error`       | Error accent override                                  |
+| `--button-information` | Information accent override                            |
+| `--button-text`        | Filled text fallback (default `--text-inverse`)        |
+
+### Keyboard interaction
+
+| Key               | Behavior                                                       |
+| ----------------- | -------------------------------------------------------------- |
+| `Space`           | Activates on key up (key down only sets the active state and prevents page scroll) |
+| `Enter`           | Activates the button                                           |
+
+`disabled` and `readonly` buttons ignore both keys. Follows the [WAI-ARIA button pattern](https://www.w3.org/WAI/ARIA/apg/patterns/button/).
 
 ---
 
 ## Related
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — core utilities, decorators, and base component class
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — core utilities, decorators, and base component class
 
 ---
 

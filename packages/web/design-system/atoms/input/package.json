@@ -7,7 +7,7 @@
         "typescript",
         "input"
     ],
-    "version": "0.0.2",
+    "version": "0.0.3",
     "scripts": {
         "build": "npx @papit/build --error",
         "watch": "tsc -w",
@@ -54,14 +54,14 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/field": "0.2.1",
-        "@papit/icon": "0.1.6",
-        "@papit/web-component": "0.0.7"
+        "@papit/field": "0.2.2",
+        "@papit/icon": "0.1.7",
+        "@papit/web-component": "0.0.8"
     },
     "devDependencies": {
-        "@papit/codeblock": "0.1.9",
-        "@papit/router": "0.1.3",
-        "@papit/tabs": "0.1.3",
+        "@papit/codeblock": "0.1.10",
+        "@papit/router": "0.1.4",
+        "@papit/tabs": "0.1.4",
         "@papit/theme": "0.0.2",
         "@papit/translator": "0.1.0",
         "@playwright/test": "1.58.0",

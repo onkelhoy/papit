@@ -42,6 +42,7 @@ import { debounceFn } from "functions/debounce";
 import { nextParent } from "functions/next-parent";
 import type { PropertyMeta, QueryMeta, Setting } from "./types";
 import { throttleFn } from "functions/throttle";
+import { flushReflections } from "decorators/property/reflection";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
     mode: "open",
@@ -106,9 +107,10 @@ export class CustomElement extends HTMLElement {
 
     /**
      * Lifecycle: called when element is added to the DOM.
-     * Triggers the first update/render.
+     * Reflects queued `@property` defaults to attributes, then triggers the first update/render.
      */
     connectedCallback() {
+        flushReflections(this);
         this.update();
     }
 
@@ -190,6 +192,9 @@ export class CustomElement extends HTMLElement {
      * @throws {Error} If `render()` returns `null`, `undefined`, or any falsy value.
      */
     update() {
+        // subclasses that skip super.connectedCallback() still get their defaults reflected
+        if (this.isConnected) flushReflections(this);
+
         let newRoot = this.render();
         let isString = typeof newRoot === "string";
         if (typeof newRoot === "string") newRoot = html(newRoot);

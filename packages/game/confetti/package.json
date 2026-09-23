@@ -54,15 +54,15 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/web-component": "*"
+        "@papit/web-component": "0.0.8"
     },
     "devDependencies": {
         "@playwright/test": "1.58.0",
         "playwright": "1.58.0",
         "typescript": "5.9.3",
-        "@papit/theme": "*",
-        "@papit/translator": "*",
-        "@papit/codeblock": "*"
+        "@papit/theme": "0.0.2",
+        "@papit/translator": "0.1.0",
+        "@papit/codeblock": "0.1.10"
     },
     "browserslist": [
         "defaults",
@@ -81,5 +81,5 @@
             }
         }
     },
-    "remoteVersion": ""
+    "remoteVersion": "0.0.1"
 }

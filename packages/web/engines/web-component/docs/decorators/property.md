@@ -19,9 +19,9 @@ This decorator:
 ## Quick start
 
 ```ts
-import { property } from "@papit/web-component";
+import { CustomElement, property } from "@papit/web-component";
 
-class MyEl extends HTMLElement {
+class MyEl extends CustomElement {
   @property({ type: Number, attribute: "counter", rerender: true })
   count = 0;
 }
@@ -51,7 +51,7 @@ count: number;
 | Option                        |                                               Type | Default         | Description                                                                                       |
 | ----------------------------- | -------------------------------------------------: | --------------- | ------------------------------------------------------------------------------------------------- |
 | `type`                        |                                         `Function` | `String`        | Native constructor used for attribute parsing/serialization (String, Number, Boolean, or custom)  |
-| `attribute`                   |                                `boolean \| string` | `false`         | If truthy, syncs property ↔ attribute. If string, that string is the attribute name.              |
+| `attribute`                   |                                `boolean \| string` | `true`          | If truthy, syncs property ↔ attribute. If string, that string is the attribute name.              |
 | `readonly`                    |                                          `boolean` | `false`         | When true, property may be set only once; reassignment throws.                                    |
 | `rerender`                    |                                          `boolean` | `false`         | When true, on non-initial changes the property will call `this.requestUpdate()` (if present).     |
 | `removeAttribute`             |                                          `boolean` | `true`          | When clearing a property (null/undefined/false) remove the attribute instead of setting a string. |
@@ -74,6 +74,15 @@ The decorator stores the actual value on a private backing field named: `__<prop
 - If `attribute` is enabled, the decorator will add the attribute name to the class's `observedAttributes` (so `attributeChangedCallback` is invoked).
 - When the attribute changes (via `attributeChangedCallback`), the decorator parses the attribute value using `type` and assigns the property. An internal flag prevents the attribute write from re-triggering this setter (avoids loops).
 - When the property is set, if `attribute` is enabled the decorator will reflect the value back to the attribute (or remove it when falsey, per `removeAttribute`).
+
+### Reflection timing: defaults reflect on connect
+
+The custom elements spec forbids adding attributes while an element is constructed, so nothing is reflected before the element's first `connectedCallback`. Values set before then (class-field defaults, or props a framework sets on a detached element) are queued and written when `CustomElement` connects, using the value current at that moment.
+
+- `document.createElement(tag)` / `new Ctor()` returns an element with **no attributes** until it is appended.
+- An attribute already present before connect (markup, or `setAttribute` before `append`) wins over the default and is not overwritten. A property set *after* that attribute wins again (last write wins).
+- After the first connect, reflection is synchronous as before.
+- Reflection is flushed by `CustomElement`, so use the decorator on `CustomElement` subclasses.
 
 ### Type conversion
 

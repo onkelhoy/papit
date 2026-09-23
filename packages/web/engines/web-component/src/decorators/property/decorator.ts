@@ -17,6 +17,7 @@ import { parseValue, sameValue, stringifyValue } from "functions/value";
 import type { PropertyMeta } from "element/types";
 import { resolve } from "functions/resolve";
 import type { Setting } from "./types";
+import { cancelReflection, hasConnected, queueReflection } from "./reflection";
 
 const defaultSettings: Partial<Setting> = {
     readonly: false,
@@ -95,6 +96,9 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
                 return;
             }
 
+            // the attribute now holds the truth, a queued default must not overwrite it
+            cancelReflection(this, propertyKey);
+
             const nvalue = parseValue(newValue, settings.type);
             if (settings.hasChanged && !settings.hasChanged(nvalue, this[propertyKey])) return;
             if (sameValue(nvalue, this[propertyKey], settings.maxReqursiveSteps)) return;
@@ -103,6 +107,25 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             this[propertyKey] = nvalue; // assign directly
             this[updateKey] = false;
         });
+    }
+
+    function reflect(this: any) {
+        if (!attributeName) return;
+
+        const value = this[privateKey];
+        const valuestring = stringifyValue(value, settings.type);
+        if (settings.aria) this.setAttribute(settings.aria, valuestring);
+
+        this[updateKey] = true;
+        if (settings.removeAttribute && (value === null || value === undefined || value === false))
+        {
+            this.removeAttribute(attributeName);
+        }
+        else
+        {
+            this.setAttribute(attributeName, valuestring);
+        }
+        this[updateKey] = false;
     }
 
     Object.defineProperty(target, propertyKey, {
@@ -145,18 +168,10 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
 
             if (!initialAttribute && attributeName && settings.reflect !== false && !this[updateKey])
             {
-                const valuestring = stringifyValue(value, settings.type);
-                if (settings.aria) this.setAttribute(settings.aria, valuestring);
-
-                this[updateKey] = true;
-                if (settings.removeAttribute && (value === null || value === undefined || value === false))
-                {
-                    this.removeAttribute(attributeName);
-                }
-                else
-                {
-                    this.setAttribute(attributeName, valuestring);
-                }
+                // never touch attributes before the first connect (constructor-time sets would
+                // make document.createElement throw); flushed by CustomElement on connect
+                if (hasConnected(this)) reflect.call(this);
+                else queueReflection(this, propertyKey, reflect);
             }
             this[updateKey] = false;
 

@@ -32,7 +32,7 @@ Playwright (`tests/game/`, fixture page with a canvas). What's testable and shou
 - input: dispatch pointer/keyboard events on the canvas, assert positions, key state and event names
 - confetti: element API, particle count/lifecycle state, cleanup on disconnect
 
-Pixel output is covered by `snapshot.test.ts` (currently skipped repo-wide). Don't assert raw pixels in unit tests; test the state that drives them. If something is only verifiable visually, flag it to the architect.
+No snapshot or pixel tests (see `papit-testing`). Test the state that drives rendering. If something is only verifiable visually, flag it to the architect.
 
 Current state: `game/engine` has only the scaffold stub test, despite about 1200 lines of code. That's the top testing priority here.
 

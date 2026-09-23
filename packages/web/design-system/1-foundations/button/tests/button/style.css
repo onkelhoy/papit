@@ -1,0 +1,13 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background);
+    color: var(--text);
+}
+
+section[data-theme] {
+    background-color: var(--background);
+    color: var(--text);
+    padding: var(--space-4);
+}
+
