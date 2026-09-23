@@ -1,11 +1,15 @@
 {
     "name": "@papit/splitter",
-    "description": "A simple splitter following the window splitter pattern, can be used for both horzontal and vertical modes. ",
+    "description": "A resizable split-pane web component following the WAI-ARIA Window Splitter pattern. Users resize two panels by dragging the separator or with the keyboard, in horizontal or vertical orientation.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "splitter"
+        "splitter",
+        "split-pane",
+        "resizable",
+        "wai-aria",
+        "a11y"
     ],
     "version": "0.0.8",
     "scripts": {

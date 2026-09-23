@@ -1,11 +1,18 @@
 {
     "name": "@papit/terminal",
-    "description": "heart component for cli, dealing with logging to a terminal, with fancy methods like prompt and option ",
+    "description": "Terminal output for node CLIs: semantic logging, ANSI colours, spinners, interactive prompts and shell command helpers. Every papit CLI prints and spawns through it.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "terminal"
+        "cli",
+        "terminal",
+        "logging",
+        "ansi",
+        "colors",
+        "spinner",
+        "prompt",
+        "spawn"
     ],
     "version": "0.0.2",
     "scripts": {

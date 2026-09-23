@@ -1,11 +1,16 @@
 {
     "name": "@papit/version",
-    "description": "monorepo version flood helper, making sure descendants get patched",
+    "description": "Version flood for npm workspaces: when a package is versioned, every package that depends on it gets the new version and a patch bump. It also resets or syncs versions against the npm registry.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "version"
+        "cli",
+        "version",
+        "monorepo",
+        "workspace",
+        "semver",
+        "npm"
     ],
     "version": "0.0.6",
     "scripts": {

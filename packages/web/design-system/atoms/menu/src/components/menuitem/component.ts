@@ -19,7 +19,7 @@ import { Menu } from "component";
  * Keyboard interaction follows the WAI-ARIA menu pattern:
  * - `ArrowRight` — opens the submenu if present
  * - `ArrowLeft` — closes the submenu and returns focus to this item
- * - `Enter` / `Space` — opens submenu, or activates and dispatches `click` on leaf items
+ * - `Enter` / `Space` — opens submenu, or dispatches a (non-bubbling) `click` on leaf items
  *
  * @element pap-menuitem
  *
@@ -71,6 +71,7 @@ export class MenuItem extends CustomElement {
             }
         }
     }) placement?: Placement['placement'];
+    /** The slotted `pap-menu`, set when one is found. */
     public submenu?: HTMLElement;
 
 

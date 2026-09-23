@@ -1,8 +1,8 @@
 # @papit/file-input
 
-An elegant solution to file input — fully featured with drag-and-drop, file indicator, upload progress, and form association.
+A form-associated file input with drag-and-drop, a file indicator and upload progress.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -211,10 +211,6 @@ The `name` attribute controls the FormData field name. Multiple files are append
 
 ---
 
-## Contributing
-
-Contributions are welcome. Please follow the development guidelines and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -228,10 +224,6 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core base class, decorators, and utilities
-- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/atoms/button): Button component used internally
-- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/atoms/icon): Icon component used internally
-
-## Support
-
-For issues, questions, or contributions visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core base class, decorators, and utilities
+- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/button): Button component used internally
+- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon component used internally

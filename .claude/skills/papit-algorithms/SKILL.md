@@ -1,6 +1,6 @@
 ---
 name: papit-algorithms
-description: Conventions for packages/algorithms (@papit/data-structure, @papit/deep-merge, @papit/vector, @papit/matrix, and the geometry/intersection math returning via issue #110). Covers pure, allocation-aware, fully tested library code with node:test, correctness-first testing (edge cases, invariants, numeric tolerance), and complexity documentation. Load for any algorithms work.
+description: Conventions for packages/algorithms (@papit/data-structure, @papit/deep-merge, @papit/vector, @papit/matrix, and the geometry/intersection math). Covers pure, allocation-aware, fully tested library code with node:test, correctness-first testing (edge cases, invariants, numeric tolerance), and complexity documentation. Load for any algorithms work.
 ---
 
 # Algorithms
@@ -14,7 +14,7 @@ packages/algorithms/deep-merge            deep object merge (last wins)
 packages/algorithms/math/algebra/vector   Vector (N-dim, Float32Array), Vector2, Vector3
 packages/algorithms/math/algebra/matrix   column-major Matrix, Matrix3, Matrix4 (transforms, projection, inversion)
 ```
-Geometry and intersection (`math/geometry/*`, `math/intersection/*`) are in progress on `feature/110-game-math` (issue #110). Each gets its own `@papit/*` package under `math/`, mirroring `algebra/`.
+Geometry and intersection (`math/geometry/*`, `math/intersection/*`) each get their own `@papit/*` package under `math/`, mirroring `algebra/`.
 
 ## Principles
 - **Pure and deterministic.** No DOM, no I/O, no globals. Works in node and browser (`papit.type: "node"`).

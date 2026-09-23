@@ -1,8 +1,8 @@
 # @papit/input
 
-A form-associated text input with optional format masking, password visibility toggle, and a clear button.
+A form-associated text input with optional format masking, a password visibility toggle and a clear button.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -83,10 +83,6 @@ Set `clear` to show a button that resets the value once it's non-empty.
 | `accept`                  | `string`                   | —        | Accepted file types (`type="file"`) |
 | `autocomplete`            | `string`                   | `"on"`   | Native autocomplete                 |
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -102,9 +98,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-- [@papit/field](https://github.com/onkelhoy/papit/tree/main/packages/system/field): Base class providing labels, error states, and form field layout
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
+- [@papit/field](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/field): Base class providing labels, error states, and form field layout

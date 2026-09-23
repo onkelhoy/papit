@@ -8,6 +8,7 @@ export type LexerAction<Ctx, Token> = (
     buffer: string,
 ) => void;
 
+/** One transition: when `condition` matches the character, run `action`, then move to `next`. */
 export interface StateRule<Ctx, Token> {
     condition: string | RegExp | ((char?: string, index?: number) => boolean);
     next?: string;
@@ -18,6 +19,10 @@ export interface StateRules<Ctx = any, Token = any> {
     [state: string]: StateRule<Ctx, Token>[];
 }
 
+/**
+ * Character-level state machine. In each state the first matching rule wins; unmatched
+ * characters are appended to the buffer. State and tokens persist, so use one lexer per input.
+ */
 export class Lexer<Ctx = any, Token = any> {
     private state: string;
     private buffer: string = "";
@@ -50,6 +55,7 @@ export class Lexer<Ctx = any, Token = any> {
         };
     }
 
+    /** Lexes `input`, then runs the first `EOF` rule if the buffer isn't empty. */
     run(input: string): Token[] {
         for (let i = 0; i < input.length; i++)
         {

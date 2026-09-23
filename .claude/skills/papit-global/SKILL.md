@@ -20,9 +20,9 @@ packages/web/          engines/web-component, design-system/{1-foundations,atoms
                        themes/theme, tools/{router,signals,translator}
 bin/                   root scripts (test.mjs runs every package's `npm test`)
 .github/workflows/     pull-request.yml: build + test on every PR to main
-docs/                  OUTDATED (issue #3), don't trust it over code
+docs/                  OUTDATED, don't trust it over code
 ```
-Folders with only `lib/`/`.temp/` and no `package.json` (e.g. `game/shape`, `algorithms/math/intersection`, `algorithms/triangulation`) are build output left behind by other branches. They aren't packages on this branch. The code for them is in progress on `feature/110-game-math` (issue #110). Don't recreate them from `lib/`.
+Folders with only `lib/`/`.temp/` and no `package.json` are build output left behind by other branches. They aren't packages on the current branch. Don't recreate them from `lib/`.
 
 ## Anatomy of a package
 ```

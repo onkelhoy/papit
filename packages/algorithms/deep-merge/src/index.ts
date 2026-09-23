@@ -1,3 +1,10 @@
+/**
+ * Merges objects left to right into a new object; later values win.
+ * Nested plain objects merge recursively, everything else (arrays, null, primitives) replaces.
+ * Inputs are not mutated, but values taken over unchanged are shared by reference, not cloned.
+ *
+ * @example deepMerge(defaults, userConfig, overrides)
+ */
 export function deepMerge<T = any>(...objects: Partial<T>[]): T {
     let output:any = {};
 
@@ -9,6 +16,10 @@ export function deepMerge<T = any>(...objects: Partial<T>[]): T {
     return output as T;
 }
 
+/**
+ * Merges `b` into a shallow copy of `a`; see {@link deepMerge} for the rules.
+ * @param omit top-level keys of `b` to skip (not applied to nested levels)
+ */
 export function deepMergeTwo<T = any>(a: Partial<T>, b: Partial<T>, omit: string[] = []): T {
   const result: any = { ...a };
 

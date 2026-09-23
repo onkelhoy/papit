@@ -18,10 +18,6 @@ VARIABLE_DESCRIPTION
 npm install VARIABLE_FULL_NAME
 ```
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -34,7 +30,3 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 - ❌ Cannot resell the component itself as a standalone product
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

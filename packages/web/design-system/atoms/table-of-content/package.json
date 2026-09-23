@@ -1,11 +1,14 @@
 {
     "name": "@papit/table-of-content",
-    "description": "a page indicator showing where you are by looking at headings and data-page, it also inserts hashses which are then referenced ",
+    "description": "A page-aware table of contents that builds a tree from the page's headings and highlights the ones currently in view. Clicking an item jumps to its section via the URL hash.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "table-of-content"
+        "table-of-content",
+        "toc",
+        "navigation",
+        "headings"
     ],
     "version": "0.0.1",
     "scripts": {

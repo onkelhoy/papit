@@ -1,11 +1,14 @@
 {
     "name": "@papit/theme-picker",
-    "description": "A simple yet elegant answer to a theme picker, light dark and system with powerful yet simple control",
+    "description": "Button and menu for switching a page between light, dark and system colour schemes. Sets data-theme on a target element and can remember the choice in local or session storage.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "theme-picker"
+        "theme-picker",
+        "theme",
+        "dark-mode",
+        "color-scheme"
     ],
     "version": "0.0.9",
     "scripts": {
@@ -54,6 +57,7 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/button": "0.1.4",
         "@papit/icon": "0.1.7",
         "@papit/menu": "0.0.9",
         "@papit/tooltip": "0.0.9",

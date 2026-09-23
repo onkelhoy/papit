@@ -1,6 +1,6 @@
 ---
 name: papit-testing
-description: How papit packages are tested, TDD-first. Node packages use node:test; web components, browser and game packages use Playwright across chromium/firefox/webkit against a test page served by @papit/server. Covers folder layout, what counts as a scaffold stub, the TDD commit order, and the current stub backlog. Load for any code change or test backfill.
+description: How papit packages are tested, TDD-first. Node packages use node:test; web components, browser and game packages use Playwright across chromium/firefox/webkit against a test page served by @papit/server. Covers folder layout, what counts as a scaffold stub and the TDD commit order. Load for any code change or test backfill.
 ---
 
 # Testing
@@ -77,8 +77,8 @@ What a web component's suite must cover (as it applies):
 - **Events** (dispatched, with the right detail, not fired when disabled)
 - **disabled / readonly**
 - **Form participation** (submit value, reset to default)
-- **Client-side creation**: `document.createElement(tag)` returns an upgraded instance with no attributes before connect. This catches constructor-time `setAttribute`, the blocker from CONSID-FINDINGS.
-- **Cleanup**: listeners and observers released on disconnect (see issue #83)
+- **Client-side creation**: `document.createElement(tag)` returns an upgraded instance with no attributes before connect. This catches constructor-time `setAttribute`.
+- **Cleanup**: listeners and observers released on disconnect
 
 **No CSS or visual tests.** Don't assert computed colours, CSS variables, contrast ratios or stylesheet contents, and don't write snapshot tests. They were too unreliable between macOS and the Linux CI and have been dropped. Assume CSS variables are in place. Styling is verified by eye in `views/`.
 
@@ -91,18 +91,3 @@ Scaffold leftovers that do **not** count as tests. Replace them, don't pad aroun
 - node: `describe('A thing') … it('should work', () => assert.strictEqual(1, 1))`
 - Playwright: `test('available in DOM', …)` only checking the element exists, and the `describe.skip("helpers")` block from the template
 
-### Stub backlog (as of 2026-09-23)
-Stub-only, no real tests:
-- `algorithms/deep-merge`
-- `game/engine`
-- `runtime/cli/*` (all 8)
-- `runtime/svg-spritesheet`
-- `web/design-system/1-foundations/{button,icon,placement,popover}`
-- `web/design-system/atoms/tooltip`
-- `web/design-system/molecules/theme-picker`
-- `web/design-system/pages/showcase`
-- `web/themes/theme`
-
-Real tests plus a leftover stub to delete: most other web packages, `game/confetti`, `web/tools/router`.
-
-Zero test coverage for a whole area inside a tested package: web-component has `decorators/` and `html/` suites but none for `functions/` or `element/` lifecycle.

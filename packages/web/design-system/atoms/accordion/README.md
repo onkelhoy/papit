@@ -1,8 +1,8 @@
 # @papit/accordion
 
-A wcag complient accordion component
+An accessible accordion web component following the WAI-ARIA Accordion pattern, built from composable header and panel elements with full keyboard navigation.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -104,10 +104,6 @@ The collapsible content panel. Receives `open` via context from the accordion an
 
 See the [WAI-ARIA Accordion Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/accordion/) for full specification details.
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -123,11 +119,7 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
 - [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/group): Roving tabindex keyboard navigation
 - [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/button): Roving tabindex keyboard navigation
 - [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Roving tabindex keyboard navigation
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

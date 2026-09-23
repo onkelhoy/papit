@@ -1,8 +1,8 @@
 # @papit/showcase
 
-a showcase component helping with individual helper components and also generative
+Page shell for browsing the papit design system: a sidebar, a theme picker and a router that loads each package's demo views. Put your own navigation, routes and footer in its slots.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -12,32 +12,88 @@ a showcase component helping with individual helper components and also generati
 
 ---
 
-## installation
+# Installation
 
 ```bash
 npm install @papit/showcase
 ```
 
-### to use in **html**
+---
 
-```html
-<script type="module" defer>
-  import "@papit/showcase";
-</script>
+# Usage
 
-<pap-showcase></pap-showcase>
+```javascript
+import "@papit/showcase";
+import { translator } from "@papit/translator";
+
+translator.add({ id: "en", url: "/node_modules/@papit/showcase/asset/translations/en.json" });
+translator.change("en");
 ```
 
+```html
+<pap-showcase>
+    <nav slot="sidebar">
+        <a href="#atoms/switch/raw">Switch</a>
+    </nav>
+    <small slot="footer">Built with papit</small>
+</pap-showcase>
+```
 
-## Contributing
+The built-in route is meant to map `<level>/<package>/<view>` to `/packages/web/design-system/<level>/<package>/views/<view>/`, trying the `raw` view before `experiment`, so serve the page from the repo root.
 
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
+## Custom routes
 
-## License
+Replace the default route through the `path` slot. The router reads the same route attributes as `@papit/router`:
 
-Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
+```html
+<pap-showcase>
+    <div slot="path"
+         path=":package/:view"
+         realpath="/demos/:package/:view/"
+         package="button"
+         view="showcase"></div>
+</pap-showcase>
+```
 
-**Key points:**
+---
+
+# Attributes / Properties
+
+| Attribute | Property | Type | Default | Description |
+| --------- | -------- | ---- | ------- | ----------- |
+| `hashbased` | `hashbased` | `boolean` | `true` | Route after `#` in the url. Set `hashbased="false"` for path-based routing |
+
+---
+
+# Slots
+
+| Slot | Description |
+| ---- | ----------- |
+| `sidebar` | Content of the sidebar, below its header |
+| `path` | Route elements for the router. Replaces the default route |
+| `footer` | Page footer |
+
+---
+
+# Translations
+
+The sidebar title reads the `sidebar.title` key through `@papit/translator`. `asset/translations/en.json` ships an English file.
+
+---
+
+# Known issues
+
+- Routes don't register yet. The router reads its slot without flattening, so it sees the `path` slot element rather than the routes inside it. This affects the built-in route and custom ones.
+- The built-in route's `path` starts with `/`, which the router's matcher doesn't strip.
+
+---
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -46,10 +102,15 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
-## Related Components
+---
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
+# Related Components
 
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/router](https://github.com/onkelhoy/papit/tree/main/packages/web/tools/router)
+  Loads the demo pages and defines the route attributes.
+- [@papit/sidebar](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/molecules/sidebar)
+  The sidebar.
+- [@papit/theme-picker](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/molecules/theme-picker)
+  The light, dark and system switch in the header.
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component)
+  The engine it's built on.

@@ -7,6 +7,7 @@ import { PackageNode } from "./node";
 import { Cache } from "./cache";
 import { Arguments } from "@papit/arguments";
 
+/** Workspace package graph; use the `PackageGraph` singleton rather than constructing one. */
 export class Graph {
     root!: PackageNode<RootPackage>;
     private graph: BaseGraph<PackageNode, string, string>;
@@ -189,8 +190,13 @@ export class Graph {
 }
 
 // PackageGraph remains the same
+/**
+ * Static singleton over the workspace graph, built from `process.cwd()` when the module loads.
+ * Nodes are every `package.json` under `<root>/packages/`; edges are same-scope dependencies.
+ */
 export class PackageGraph {
     private static instance = new Graph();
+    /** Rebuilds the graph from the current directory. */
     static initialize() { this.instance = new Graph() }
     static get(name: string) { return this.instance.get(name) }
     static add(location: string) { return this.instance.add(location) }
@@ -198,7 +204,12 @@ export class PackageGraph {
     static get ERROR() { return this.instance.ERROR }
     static get nodes() { return this.instance.nodes }
     static get size() { return this.instance.nodes.length }
+    /** First node whose location ends with (`"end"`) or is a prefix of (`"start"`) `location`. */
     static search(location: string, compare: "start" | "end" = "end") { return this.instance.search(location, compare) }
+    /**
+     * Topologically sorted batches; packages in one batch don't depend on each other.
+     * Packages not reached through `typeFilter` edges are appended as a final batch.
+     */
     static getOrder(packages: PackageNode<LocalPackage>[], typeFilter?: string[], filterCallback?: (node: PackageNode) => boolean) {
         return this.instance.getOrder({
             packages,
@@ -206,9 +217,11 @@ export class PackageGraph {
             filterCallback
         });
     }
+    /** Packages that depend on `name`, transitively. */
     static getDescendants(name: string, typeFilter?: string[]) {
         return this.instance.getDescendants(name, typeFilter)
     }
+    /** Packages `name` depends on, transitively. */
     static getAncestors(name: string, typeFilter?: string[]) {
         return this.instance.getAncestors(name, typeFilter)
     }

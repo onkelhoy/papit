@@ -1,8 +1,8 @@
 # @papit/radio
 
-A WAI-ARIA compliant radio button web component, built on @papit/web-component.
+An accessible, form-associated radio button web component following the WAI-ARIA Radio Group pattern.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -172,11 +172,6 @@ with `aria-label` or `aria-labelledby`).
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines and ensure
-all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright © 2024 Henry Pap (@onkelhoy)
@@ -192,10 +187,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — Core utilities, decorators, and base class
-- [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/atoms/group) — Layout and orientation wrapper for radio groups
-
-## Support
-
-For issues, questions, or contributions, please visit the
-[GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — Core utilities, decorators, and base class
+- [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/group) — Layout and orientation wrapper for radio groups

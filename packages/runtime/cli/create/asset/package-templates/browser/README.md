@@ -18,10 +18,6 @@ VARIABLE_DESCRIPTION
 npm install VARIABLE_FULL_NAME
 ```
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -37,8 +33,4 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class

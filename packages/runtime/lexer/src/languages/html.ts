@@ -243,6 +243,7 @@ const htmlRules: StateRules<CTX, HtmlToken> = {
 };
 
 // Run the lexer
+/** Tokenizes HTML into text, doctype, comment, startTag and endTag tokens. */
 export function html(value: string) {
     const lexer = new Lexer<CTX, HtmlToken>(
         htmlRules,

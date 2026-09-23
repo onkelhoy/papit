@@ -1,6 +1,6 @@
 {
     "name": "@papit/html",
-    "description": "a minimal html parser intended for node that exposes the core set of functionalities regular document DOM exposes",
+    "description": "Parses HTML into a DOM-like tree in Node.js, for reading, changing, querying and serialising HTML without a browser.",
     "keywords": [
         "papit",
         "node",

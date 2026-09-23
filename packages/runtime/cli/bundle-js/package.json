@@ -1,11 +1,14 @@
 {
     "name": "@papit/bundle-js",
-    "description": "a minimal build to be able to help build package and pre-build scripts",
+    "description": "Bundles the JavaScript entry points a package.json declares with esbuild, and skips the build when no source file has changed since the last run.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "bundle-js"
+        "bundle-js",
+        "bundler",
+        "esbuild",
+        "build"
     ],
     "version": "0.0.2",
     "scripts": {

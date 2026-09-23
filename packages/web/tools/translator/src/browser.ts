@@ -6,6 +6,11 @@ export type { LanguageJson, TransalatorFn } from "types";
 
 const { t, add, change, locale, subscribe, current, list } = getCore(signal, effect, computed);
 
+/**
+ * The shared translation store. `add` registers a language, `change` makes one current
+ * (fetching its `url` on first use), and `subscribe` runs a callback on every later change.
+ * `list`, `locale` and `current` are signal readers.
+ */
 export const translator = {
     list,
     add,
@@ -15,6 +20,10 @@ export const translator = {
     current,
 }
 
+/**
+ * Translate function bound to the current language. With `scope`, keys are prefixed with
+ * `scope.`. Missing keys return the key; `{name}` placeholders are filled from `variables`.
+ */
 export function useTranslator(scope?: string) {
     const translate: TransalatorFn = (key: string, variables?: Record<string, unknown>) => t(scope ? `${scope}.${key}` : key, variables);
     return translate;
@@ -26,50 +35,22 @@ interface TranslateSetting {
     update?: UpdateFn;
 }
 
+const DISPOSE = Symbol("translate_dispose");
+
 /**
- * `@translate` field decorator for automatically subscribing a class instance
- * to translator updates and triggering re-renders when the active language changes.
- *
- * @details
- * **Key Features:**
- * - Subscribes to the global `translator` on `connectedCallback` and unsubscribes on `disconnectedCallback`.
- * - Calls `requestUpdate()` on language change — no manual wiring required.
- * - Works with scoped translators: the closure created by `useTranslator(scope?)` is preserved as-is.
- * - Does not re-assign the field on language change; the function returned by `useTranslator`
- *   already delegates to the current global `t`, so the closure stays valid across language switches.
- * - Optionally accepts a settings object for additional hooks (e.g. `update`).
+ * Field decorator that re-renders a component when the language changes. Subscribes on
+ * `connectedCallback`, unsubscribes on `disconnectedCallback`, and calls `requestUpdate()`
+ * plus the optional `update` hook on each change (and `update` on connect when a language is set).
  *
  * @example
- * ```ts
- * // Basic usage — reactive re-renders only
  * class MyComponent extends CustomElement {
- *   @translate t = useTranslator();
+ *     @translate t = useTranslator();
+ *     // or: @translate({ update(this: MyComponent) { this.updateLabels(); } })
  * }
- * ```
- *
- * @example
- * ```ts
- * // With update callback — called on connect (if lang already active) and on every language change
- * class MyComponent extends CustomElement {
- *   @translate({ update(this: MyComponent) { this.updateLabels(); } })
- *   t = useTranslator();
- * }
- * ```
- *
- * @remarks
- * This decorator is useful when:
- * - You need reactive translations inside a web component without managing subscriptions manually.
- * - You want scoped translation keys without repeating the scope prefix at every call site.
- * - You need a side-effect hook (e.g. updating ARIA labels) whenever the language changes.
- *
- * The type of the decorated field is inferred from the `useTranslator()` initializer,
- * so no explicit type annotation is needed.
  *
  * @author Henry Pap (GitHub: @onkelhoy)
  * @created 2025-08-11
  */
-const DISPOSE = Symbol("translate_dispose");
-
 export function translate(target: Object, propertyKey: PropertyKey): void;
 export function translate(settings: TranslateSetting): PropertyDecorator;
 export function translate(

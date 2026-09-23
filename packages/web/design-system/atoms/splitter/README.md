@@ -1,6 +1,6 @@
 # @papit/splitter
 
-A resizable split-pane component implemented as a Web Component. Use a splitter when you want to let users control the relative size of two panels by dragging a separator or using the keyboard.
+A resizable split-pane web component following the WAI-ARIA Window Splitter pattern. Users resize two panels by dragging the separator or with the keyboard, in horizontal or vertical orientation.
 
 The component follows the **WAI-ARIA Window Splitter Pattern**, supports **keyboard interaction**, and works in both **vertical** (side by side) and **horizontal** (stacked) orientations.
 
@@ -148,20 +148,6 @@ Available parts:
 
 ---
 
-# Contributing
-
-Contributions are welcome.
-
-Please ensure:
-
-- tests pass
-- linting passes
-- behavior follows the ARIA Window Splitter pattern
-
-Submit pull requests through the GitHub repository.
-
----
-
 # License
 
 Licensed under the **@Papit License 1.0**
@@ -180,11 +166,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 # Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core)
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component)
   Core utilities, decorators, and base component class.
-
----
-
-# Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).

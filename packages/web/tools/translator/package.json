@@ -1,11 +1,14 @@
 {
     "name": "@papit/translator",
-    "description": "Simple translation utility with lazy fetch, variable interpolation, and auto language detection",
+    "description": "Translation store for papit components and apps. Register languages inline or by URL, fetch them lazily on first use, and translate keys with variable interpolation. Components re-render when the language changes.",
     "keywords": [
         "papit",
-        "browser",
-        "typescript",
-        "translator"
+        "translator",
+        "i18n",
+        "translation",
+        "localization",
+        "interpolation",
+        "decorator"
     ],
     "version": "0.1.0",
     "scripts": {

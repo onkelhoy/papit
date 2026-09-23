@@ -1,11 +1,14 @@
 {
     "name": "@papit/tooltip",
-    "description": "Elegant and easy to use tooltip covering the required WCAG specs",
+    "description": "Hint bubble that appears next to a trigger on hover or focus, after a configurable delay. Connect it to any element with the popovertarget attribute.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "tooltip"
+        "tooltip",
+        "popover",
+        "hint",
+        "anchor-positioning"
     ],
     "version": "0.0.9",
     "scripts": {
@@ -54,7 +57,6 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/placement": "0.0.8",
         "@papit/popover": "0.1.1",
         "@papit/web-component": "0.0.8"
     },

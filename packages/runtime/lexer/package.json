@@ -1,11 +1,16 @@
 {
     "name": "@papit/lexer",
-    "description": "the lexer used for a couple of packages including the @papit/html ",
+    "description": "Character-level state machine lexer: describe states and rules, get a token list back. Ships ready-made HTML, CSS and JavaScript tokenizers, and powers @papit/html.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "lexer"
+        "lexer",
+        "tokenizer",
+        "state-machine",
+        "html",
+        "css",
+        "javascript"
     ],
     "version": "0.0.1",
     "scripts": {

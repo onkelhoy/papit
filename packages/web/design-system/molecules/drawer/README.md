@@ -1,12 +1,12 @@
 # @papit/drawer
 
-A slide-in drawer panel that can be anchored to any edge of the viewport: `left`, `right`, `top`, or `bottom`. Built on the native `<dialog>` element via `showModal()` for automatic focus-trapping, top-layer rendering, and Escape-key handling out of the box.
+A slide-in drawer panel that anchors to the left, right, top or bottom edge of the viewport. It is built on the native modal dialog for focus trapping, top-layer rendering and Escape to close.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-atoms-orange)
+![Type](https://img.shields.io/badge/Type-molecules-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/drawer.svg?logo=npm)](https://www.npmjs.com/package/@papit/drawer)
 
@@ -100,10 +100,6 @@ drawer.toggle();
 - `aria-label` on the panel describes the drawer to screen readers — always set a meaningful `label`
 - Follows the [WAI-ARIA Dialog (Modal) Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -119,9 +115,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — Core utilities, decorators, and base component class
-- [@papit/dialog](https://github.com/onkelhoy/papit/tree/main/packages/atoms/dialog) — Full-screen modal dialog using the same command pattern
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — Core utilities, decorators, and base component class
+- [@papit/dialog](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/dialog) — Full-screen modal dialog using the same command pattern

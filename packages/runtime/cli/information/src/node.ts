@@ -9,6 +9,7 @@ import type { LocalPackage, RootPackage } from "./types";
 import { Cache } from "./cache";
 import { GraphNode } from "@papit/data-structure";
 
+/** One workspace package: its package.json, location, tsconfig-derived folders and npm version. */
 export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> extends GraphNode {
     constructor(
         private _packageJSON: T,
@@ -22,6 +23,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> ex
     get type() { return this._type }
     get location() { return path.normalize(this._location) }
 
+    /** Writes `packageJSON` back to disk (4-space indent). */
     savePackageJSON() {
         fs.writeFileSync(path.join(this.location, "package.json"), JSON.stringify(this.packageJSON, null, 4), { encoding: "utf-8" });
     }
@@ -38,6 +40,7 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> ex
         return this._externals;
     }
     private _remote: string | null | undefined;
+    /** Latest version published on npm, `null` if unpublished or unreachable. */
     async remote() {
         if (!this._remote) this._remote = await Remote.get(this.name);
         return this._remote;
@@ -46,6 +49,10 @@ export class PackageNode<T extends LocalPackage | RootPackage = LocalPackage> ex
     set modifiedtime(value: number) {
         Cache.set(this.name, { mtime: value });
     }
+    /**
+     * Newest mtime of the source folder, package.json and tsconfig.json, plus the value recorded
+     * last time. Reading it records `current` in `<root>/.temp/cache.json`.
+     */
     get modifiedtime(): { current: number, previous: number | undefined } {
         let mtime = 0;
         const joined = path.join(this.location, this.sourceFolder);

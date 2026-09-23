@@ -33,6 +33,7 @@ const ANSII_STYLES = {
 
 
 // TO COME 
+/** ANSI colour and style wrappers. Each returns plain text when stdout isn't a TTY. */
 export class Colors {
   
   protected static getString(joiner: string, value: any[]) {

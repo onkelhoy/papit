@@ -1,11 +1,15 @@
 {
     "name": "@papit/group",
-    "description": "A structural, non-visual component that manages keyboard navigation within a set of child elements using roving tabindex",
+    "description": "Non-visual container that moves keyboard focus between its children with a roving tabindex. Wrap toolbars, button rows and lists in it to get arrow key, Home and End navigation.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "group"
+        "group",
+        "roving-tabindex",
+        "keyboard-navigation",
+        "toolbar",
+        "accessibility"
     ],
     "version": "0.0.8",
     "scripts": {

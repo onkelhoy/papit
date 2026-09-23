@@ -1,11 +1,14 @@
 {
     "name": "@papit/tabs",
-    "description": "tabs - a wcag comlient component",
+    "description": "An accessible tabs web component following the WAI-ARIA Tabs pattern, built from tab and tab panel elements.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "tabs"
+        "tabs",
+        "tabpanel",
+        "wai-aria",
+        "a11y"
     ],
     "version": "0.1.4",
     "scripts": {

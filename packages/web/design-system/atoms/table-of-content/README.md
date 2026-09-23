@@ -1,8 +1,8 @@
 # @papit/table-of-content
 
-A page-aware table of contents component. It queries headings (or any `role="heading"` element) from the surrounding document, assigns stable `id` attributes derived from their text content, and renders a hierarchical `pap-treeview` that highlights whichever headings are currently visible in the viewport. Clicking an item navigates to the corresponding section via the URL hash.
+A page-aware table of contents that builds a tree from the page's headings and highlights the ones currently in view. Clicking an item jumps to its section via the URL hash.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -118,10 +118,6 @@ toc.addEventListener("change", () => {
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 — Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -139,9 +135,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related packages
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core) — Core utilities, decorators, and base component class
-- [@papit/treeview](https://github.com/onkelhoy/papit/tree/main/packages/atoms/treeview) — Tree view and tree item components used for rendering
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component) — Core utilities, decorators, and base component class
+- [@papit/treeview](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/treeview) — Tree view and tree item components used for rendering

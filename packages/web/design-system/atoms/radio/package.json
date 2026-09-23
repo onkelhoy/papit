@@ -1,11 +1,15 @@
 {
     "name": "@papit/radio",
-    "description": "a simple radio that is complient with wcag",
+    "description": "An accessible, form-associated radio button web component following the WAI-ARIA Radio Group pattern.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "radio"
+        "radio",
+        "radio-group",
+        "form",
+        "wai-aria",
+        "a11y"
     ],
     "version": "0.0.5",
     "scripts": {

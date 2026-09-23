@@ -1,11 +1,16 @@
 {
     "name": "@papit/codeblock",
-    "description": "A block to highlight and preview code, used for display purposes - uses highlight.js",
+    "description": "A web component that syntax-highlights and live-previews HTML, CSS and JavaScript. Tokenizing is done by @papit/lexer, with no external dependencies.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "codeblock"
+        "codeblock",
+        "syntax-highlighting",
+        "code-preview",
+        "html",
+        "css",
+        "javascript"
     ],
     "version": "0.1.10",
     "scripts": {

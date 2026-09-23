@@ -1,11 +1,14 @@
 {
     "name": "@papit/sidebar",
-    "description": "a propper sidebar component which is a nice touch on all preexising components ",
+    "description": "A collapsible sidebar navigation panel that expands on click or hover and collapses on click or Escape.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "sidebar"
+        "sidebar",
+        "navigation",
+        "nav",
+        "collapsible"
     ],
     "version": "0.0.5",
     "scripts": {

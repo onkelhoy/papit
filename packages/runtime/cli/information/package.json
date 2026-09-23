@@ -1,11 +1,16 @@
 {
     "name": "@papit/information",
-    "description": "Quite an abstract package to collect package information about other packages ",
+    "description": "Discovers the packages in an npm workspace and the dependency graph between them, with build order, source and output folders, and published npm versions. The papit CLIs use it to decide which packages to act on.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "information"
+        "cli",
+        "monorepo",
+        "workspace",
+        "dependency-graph",
+        "topological-sort",
+        "npm"
     ],
     "version": "0.0.7",
     "scripts": {

@@ -1,11 +1,15 @@
 {
     "name": "@papit/switch",
-    "description": "A binary on/off toggle control that participates in forms just like a checkbox. Prefer it over a checkbox when the semantics of \"on / off\" better describe the intent of the interface — e.g. \"Notifications on\" reads more naturally than \"Notifications checked\".",
+    "description": "A binary on/off toggle web component that participates in forms like a checkbox. Use it instead of a checkbox when the setting reads as on or off, such as notifications on.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "switch"
+        "switch",
+        "toggle",
+        "form",
+        "wai-aria",
+        "a11y"
     ],
     "version": "0.1.7",
     "scripts": {

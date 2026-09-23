@@ -1,11 +1,14 @@
 {
     "name": "@papit/popover",
-    "description": "a helper class to deal with breaking the shadow boundary",
+    "description": "A positioned overlay built on the native Popover API and CSS Anchor Positioning. Open it from any trigger with the standard popovertarget attribute, no JavaScript needed.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "popover"
+        "popover",
+        "overlay",
+        "popover-api",
+        "anchor-positioning"
     ],
     "version": "0.1.1",
     "scripts": {

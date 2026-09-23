@@ -6,8 +6,9 @@ import { CustomElement, html, property } from "@papit/web-component";
 import { FOCUSABLE } from "types";
 
 /**
- * A structural, non-visual component that manages keyboard navigation
- * within a set of child elements using roving tabindex.
+ * Non-visual container that moves keyboard focus between its children with a
+ * roving tabindex. Sets `role="toolbar"` unless a role is given; disabled and
+ * hidden children are skipped.
  *
  * @element pap-group
  *
@@ -31,7 +32,7 @@ import { FOCUSABLE } from "types";
  * </pap-group>
  * ```
  *
- * @see {@link https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/ WCAG Toolbar Pattern}
+ * @see {@link https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/ WAI-ARIA Toolbar Pattern}
  */
 
 export class Group extends CustomElement {
@@ -193,16 +194,28 @@ export class Group extends CustomElement {
         return false;
     }
 
+    /**
+     * Focus the first enabled element.
+     * @throws when every element is disabled or hidden
+     */
     first() {
         const index = this.nextUntil(0);
         if (index === false) throw new Error("all elements are disabled");
         this.deligateFocus(index);
     }
+    /**
+     * Focus the last enabled element.
+     * @throws when every element is disabled or hidden
+     */
     last() {
         const index = this.prevUntil(this.elements.length - 1);
         if (index === false) throw new Error("all elements are disabled");
         this.deligateFocus(index);
     }
+    /**
+     * Focus the previous enabled element, wrapping when `loop` is set.
+     * @throws when every element is disabled or hidden
+     */
     prev() {
         let value = this.active - 1;
         if (value < 0)
@@ -214,6 +227,10 @@ export class Group extends CustomElement {
         if (index === false) throw new Error("all elements are disabled");
         this.deligateFocus(index);
     }
+    /**
+     * Focus the next enabled element, wrapping when `loop` is set.
+     * @throws when every element is disabled or hidden
+     */
     next() {
         let value = this.active + 1;
         if (value > this.elements.length - 1)

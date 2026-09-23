@@ -1,11 +1,15 @@
 {
     "name": "@papit/deep-merge",
-    "description": "a simple package dealing witg merging objects, it would take the last object ",
+    "description": "Recursively merges objects left to right, with later values winning. Use it to layer options, config or overrides onto defaults.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "deep-merge"
+        "deep-merge",
+        "merge",
+        "object",
+        "config",
+        "defaults"
     ],
     "version": "0.0.1",
     "scripts": {

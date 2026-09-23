@@ -22,6 +22,13 @@ function timestamp(args: { has: (key: string) => boolean }, message?: string) {
     console.log((performance.now() - timestamp_value).toFixed(3).toString() + "ms passed", "#" + timestamp_ticker, message ? "- " + message : "");
 }
 
+/**
+ * Emits declarations for `src/` and rolls each package.json `types` entry up into one .d.ts file.
+ *
+ * @param args - flags: `force`/`f` rebuilds regardless of changes, `dev` adds declaration maps, `prod`
+ * @returns `"skipped"` when nothing changed, the entries that logged warnings, or `undefined` on success
+ * (also on a TypeScript emit error, after printing the diagnostics)
+ */
 export async function tsBundle(
     args: { has(key: string): boolean },
     location: string,

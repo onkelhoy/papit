@@ -1,12 +1,12 @@
 # @papit/popover
 
-a positioned overlay built on the native Popover API and CSS Anchor Positioning
+A positioned overlay built on the native Popover API and CSS Anchor Positioning. Open it from any trigger with the standard popovertarget attribute, no JavaScript needed.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-1-foundations-orange)
+![Type](https://img.shields.io/badge/Type-foundations-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/popover.svg?logo=npm)](https://www.npmjs.com/package/@papit/popover)
 
@@ -103,10 +103,6 @@ popover.toggle(triggerElement); // toggle, anchored to element
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -122,12 +118,4 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ## Related Components
 
-- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/system/core): Core utilities, decorators, and base component class
-
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
-
-```
-
-```
+- [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class

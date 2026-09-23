@@ -1,11 +1,14 @@
 {
     "name": "@papit/drawer",
-    "description": "a simple drawing that can be shown from either side: left,right,bottom,top ",
+    "description": "A slide-in drawer panel that anchors to the left, right, top or bottom edge of the viewport. It is built on the native modal dialog for focus trapping, top-layer rendering and Escape to close.",
     "keywords": [
         "papit",
         "web-component",
         "typescript",
-        "drawer"
+        "drawer",
+        "dialog",
+        "panel",
+        "modal"
     ],
     "version": "0.0.3",
     "scripts": {

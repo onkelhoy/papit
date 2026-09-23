@@ -4,6 +4,10 @@ export const displaynames = 'DisplayNames' in Intl
 
 export type Language = string & { __brand: "language" };
 
+/**
+ * A language entry. Give either `translations` inline or a `url` to a JSON file fetched on
+ * first `change`. `meta.language` becomes `translator.locale`.
+ */
 export type LanguageJson = {
     meta?: {
         language: Language;
@@ -20,4 +24,5 @@ export function isLanguage(value: string): value is Language {
     const result = displaynames.of(value);
     return !!result && result !== value;
 }
+/** Signature of the function `useTranslator` returns. */
 export type TransalatorFn = (key: string, variables?: Record<string, unknown>) => string;

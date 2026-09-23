@@ -179,6 +179,7 @@ export const cssRules: StateRules<CTX, CSSToken> = {
 };
 
 // Run the lexer
+/** Tokenizes flat CSS; rules nested inside an at-rule block aren't recognised as selectors. */
 export function css(value: string) {
     const lexer = new Lexer<CTX, CSSToken>(
         cssRules,

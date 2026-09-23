@@ -1,10 +1,14 @@
 {
     "name": "@papit/theme",
-    "description": "core theme for the papit design-system",
+    "description": "CSS design tokens for the papit design system: colours, spacing and radii that follow light and dark mode. Force a colour scheme on any element with the data-theme attribute.",
     "keywords": [
         "papit",
-        "typescript",
-        "theme"
+        "theme",
+        "css",
+        "design-tokens",
+        "custom-properties",
+        "dark-mode",
+        "color-scheme"
     ],
     "version": "0.0.2",
     "scripts": {

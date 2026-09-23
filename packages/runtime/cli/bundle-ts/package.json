@@ -1,11 +1,14 @@
 {
     "name": "@papit/bundle-ts",
-    "description": "typescript bundler replacing the aweful microsoft-api-extractor that comes with 80 deps",
+    "description": "Rolls a package's TypeScript declarations up into one .d.ts file per entry point, and skips the work when no source file has changed since the last run.",
     "keywords": [
         "papit",
         "node",
         "typescript",
-        "bundle-ts"
+        "bundle-ts",
+        "declarations",
+        "d.ts",
+        "build"
     ],
     "version": "0.0.1",
     "scripts": {

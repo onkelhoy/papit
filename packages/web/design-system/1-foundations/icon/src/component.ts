@@ -2,18 +2,32 @@ import { CustomElement, html, property, unsafeHTML } from "@papit/web-component"
 import sheet from "./style.css" with { type: "css" };
 import { CountryEmojiSet } from "types";
 
+/**
+ * Renders an SVG icon inline from a URL, a spritesheet symbol (`url#id`) or a
+ * name registered in `Icon.icons`, or a country flag emoji from `flag`.
+ *
+ * @element pap-icon
+ * @slot - fallback content, rendered alongside the icon
+ * @csspart svg - a fetched SVG
+ * @csspart flag - the flag emoji wrapper
+ * @csspart fallback - the default slot
+ */
 export class Icon extends CustomElement {
     static sheet = sheet;
     private controller = new AbortController();
     private viewBox = "0 0 24 24";
     private assignedName?: string;
 
+    /** SVG markup by name, shared by every instance. Fetched icons are added here; set your own to skip the fetch. */
     static icons = new Map<string, string>(); //{ content: string, viewBox: string | null }>();
     static parser = new DOMParser();
 
+    /** Keep fetched SVG text in localStorage under `storage` + URL. */
     @property({ type: Boolean }) cache = false;
+    /** localStorage key prefix used when `cache` is on. */
     @property storage = "papit-icon";
 
+    /** Registered name, bare name (fetched as `/<name>.svg`), URL, or `url#symbol-id`. */
     @property({
         rerender: true,
         async after(this: Icon, value: string) {
@@ -105,6 +119,7 @@ export class Icon extends CustomElement {
             }
         }
     }) name?: string;
+    /** Two-letter country code rendered as a flag emoji; wins over `name`. */
     @property({
         rerender: true,
         set(value: string) {

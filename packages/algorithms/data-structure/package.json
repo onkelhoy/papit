@@ -1,6 +1,6 @@
 {
     "name": "@papit/data-structure",
-    "description": "A collection of data models not existing in JavaScript",
+    "description": "Classic data structures that don't ship with JavaScript, written in TypeScript with a small, consistent API surface.",
     "keywords": [
         "papit",
         "node",

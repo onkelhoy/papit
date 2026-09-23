@@ -3,6 +3,15 @@ export type EffectFn = () => void
 export let currentEffect: { run: EffectFn, deps: Set<Set<EffectFn>> } | null = null
 export const setCurrentEffect = (fn: typeof currentEffect) => { currentEffect = fn }
 
+/**
+ * Reactive value. Reading it inside an `effect` subscribes that effect; every write re-runs
+ * its subscribers, even when the value is unchanged.
+ *
+ * @returns `[read, write]`. `write` takes a value or an updater `(prev) => next`.
+ * @example
+ * const [count, setCount] = signal(0);
+ * setCount(n => n + 1);
+ */
 export function signal<T>(initial: T) {
     let value = initial
     const subs = new Set<EffectFn>()
