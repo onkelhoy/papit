@@ -48,5 +48,5 @@
 :host([disabled]) {
     cursor: not-allowed;
 
-    background-color: color-mix(var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0))), 40% var(--foreground-light, light-dark(oklch(52% 0 0), oklch(62% 0 0))));
+    background-color: color-mix(in oklab, var(--background-dark, light-dark(oklch(90% 0 0), oklch(12% 0 0))), 40% var(--foreground-light, light-dark(oklch(52% 0 0), oklch(62% 0 0))));
 }

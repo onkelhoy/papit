@@ -12,7 +12,7 @@
     --ch-punctuation: light-dark(oklch(55% 0.04 264), oklch(58% 0.04 264));
     --ch-comment: light-dark(oklch(58% 0.04 264), oklch(46% 0.04 264));
 
-    --hover: color-mix(var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0))), 90% var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0))));
+    --hover: color-mix(in oklab, var(--foreground-light, light-dark(oklch(96% 0 0), oklch(17% 0 0))), 90% var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0))));
 
     div[part="display"] {
         border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
@@ -217,7 +217,11 @@
                 padding: var(--space-4, 1rem) var(--space-5, 1.25rem);
             }
 
-            color: contrast-color(var(--background));
+            color: var(--text);
+
+            @supports (color: contrast-color(red)) {
+                color: contrast-color(var(--background));
+            }
         }
 
         pap-splitter::part(secondary) {
