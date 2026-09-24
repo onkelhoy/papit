@@ -27,7 +27,12 @@
 
     background-color: var(--btn-background);
     color: var(--btn-text);
-    color: contrast-color(var(--btn-background));
+}
+
+@supports (color: contrast-color(red)) {
+    :host {
+        color: contrast-color(var(--btn-background));
+    }
 }
 
 :host(:hover) {
@@ -80,13 +85,24 @@
 
 :host([variant="filled"]:hover) {
     color: var(--btn-text);
-    color: contrast-color(var(--btn-hover));
+}
+
+@supports (color: contrast-color(red)) {
+    :host([variant="filled"]:hover) {
+        color: contrast-color(var(--btn-hover));
+    }
 }
 
 :host([variant="filled"]:state(active)),
 :host([variant="filled"]:active) {
     color: var(--btn-text);
-    color: contrast-color(var(--btn-active));
+}
+
+@supports (color: contrast-color(red)) {
+    :host([variant="filled"]:state(active)),
+    :host([variant="filled"]:active) {
+        color: contrast-color(var(--btn-active));
+    }
 }
 
 /* outline + clear sit on the page background, so the accent is the text color */

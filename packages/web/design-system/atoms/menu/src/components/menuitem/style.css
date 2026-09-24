@@ -6,13 +6,18 @@
     --background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
 
     background-color: var(--background-color);
-    color: contrast-color(var(--background-color));
+    color: var(--text);
+}
+
+@supports (color: contrast-color(red)) {
+    :host {
+        color: contrast-color(var(--background-color));
+    }
 }
 
 
 :host(:hover) {
-    --background-color: blue;
-    /*var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));*/
+    --background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
 }
 
 

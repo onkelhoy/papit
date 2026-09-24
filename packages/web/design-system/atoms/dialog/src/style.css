@@ -14,7 +14,7 @@
         }
 
         &::backdrop {
-            background-color: color-mix(var(--background-inverse, light-dark(oklch(17% 0 0), oklch(96% 0 0))), 95% transparent);
+            background-color: color-mix(in oklab, var(--background-inverse, light-dark(oklch(17% 0 0), oklch(96% 0 0))), 95% transparent);
         }
     }
 

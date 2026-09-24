@@ -62,7 +62,7 @@
         padding: var(--space-1, 0.25rem);
         border-radius: 1000px;
 
-        background-color: color-mix(Canvas, 70% transparent);
+        background-color: color-mix(in oklab, Canvas, 70% transparent);
 
         button {
             border: none;
