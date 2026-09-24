@@ -80,7 +80,7 @@ For each key of the later object (`for...in`, so inherited enumerable keys count
 - **Shared references.** Values taken over unchanged (arrays, and objects with no counterpart) aren't cloned. Mutating the result can mutate an input.
 - **Class instances.** Taken over as is when there's nothing to merge into. When they are merged into an existing object, the result is a plain object: the prototype, getters and methods are lost. A `Date`, `Map` or `Set` merged into an existing object is dropped, because it has no enumerable keys.
 - **Object over array.** The array's indices become keys: `{ a: [1, 2] }` + `{ a: { x: 1 } }` gives `{ a: { 0: 1, 1: 2, x: 1 } }`.
-- **`__proto__` keys** (e.g. from `JSON.parse`) replace the result's prototype. `Object.prototype` itself isn't polluted. Don't merge untrusted input without sanitising it first.
+- **Prototype keys.** `__proto__`, `constructor` and `prototype` are skipped at every level, so input like `JSON.parse('{"__proto__": {...}}')` can't change the result's prototype.
 
 # Complexity
 

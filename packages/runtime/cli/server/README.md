@@ -74,7 +74,7 @@ A GET request is answered by the first of these that matches. Other methods get 
 1. **Translations**: JSON files in a folder whose name starts with `transl`, `locale` or `i18`, merged per language across the workspace.
 2. **Assets**: files in asset folders of the served package, its workspace dependencies and the server itself, reachable by any trailing part of their path, so `/icons/x.svg` finds `asset/icons/x.svg`. A package's asset wins over the server's default of the same name.
 3. **Themes**: a URL containing the name of a `theme` package serves that theme's built file.
-4. **Files**: an absolute path that exists on disk, else the path resolved against the current folder, the package, then the workspace root.
+4. **Files**: an absolute path inside the workspace that exists on disk, else the path resolved against the current folder, the package, then the workspace root. A path that resolves outside the workspace root (e.g. through `../`) gets `403`, before anything is read.
 5. **Folders**: `index.html` if present, otherwise a file explorer page.
 6. **HTML**: merged into the server's page template, which adds the import map and the live reload client. A request with an `x-router` header gets the raw file instead.
 7. **TypeScript**: a `.ts` file requested as a script is bundled in memory with `@papit/bundle-js`.

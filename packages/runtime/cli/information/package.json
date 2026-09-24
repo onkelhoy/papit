@@ -1,88 +1,88 @@
 {
-    "name": "@papit/information",
-    "description": "Discovers the packages in an npm workspace and the dependency graph between them, with build order, source and output folders, and published npm versions. The papit CLIs use it to decide which packages to act on.",
-    "keywords": [
-        "papit",
-        "node",
-        "typescript",
-        "cli",
-        "monorepo",
-        "workspace",
-        "dependency-graph",
-        "topological-sort",
-        "npm"
-    ],
-    "version": "0.0.7",
-    "scripts": {
-        "prebuild": "node bin/prebuild.mjs",
-        "build": "npx @papit/build -- --error --ancestors",
-        "watch": "tsc -w",
-        "start": "node ./lib/bundle.js",
-        "test": "node --test tests/**/*.test.js",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit -- --component"
-    },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        }
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/information",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/runtime/cli/information"
-    },
-    "sideEffects": true,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@papit/arguments": "0.0.1",
-        "@papit/data-structure": "0.0.2",
-        "@papit/terminal": "0.0.2",
-        "@papit/bundle-js": "0.0.2",
-        "@papit/bundle-ts": "0.0.1"
-    },
-    "devDependencies": {
-        "typescript": "5.9.3",
-        "@types/node": "22.10.2"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "node",
-        "main": "information",
-        "priority": 3,
-        "components": {
-            "information": {
-                "className": "Information",
-                "htmlprefix": "pap"
-            }
-        }
-    },
-    "remoteVersion": "0.0.7"
+  "name": "@papit/information",
+  "description": "Discovers the packages in an npm workspace and the dependency graph between them, with build order, source and output folders, and published npm versions. The papit CLIs use it to decide which packages to act on.",
+  "keywords": [
+    "papit",
+    "node",
+    "typescript",
+    "cli",
+    "monorepo",
+    "workspace",
+    "dependency-graph",
+    "topological-sort",
+    "npm"
+  ],
+  "version": "0.0.8",
+  "scripts": {
+    "prebuild": "node bin/prebuild.mjs",
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "node ./lib/bundle.js",
+    "test": "node --test tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/information",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/runtime/cli/information"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/arguments": "0.0.1",
+    "@papit/data-structure": "0.0.2",
+    "@papit/terminal": "0.0.2",
+    "@papit/bundle-js": "0.0.3",
+    "@papit/bundle-ts": "0.0.2"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/node": "22.10.2"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "information",
+    "priority": 3,
+    "components": {
+      "information": {
+        "className": "Information",
+        "htmlprefix": "pap"
+      }
+    }
+  },
+  "remoteVersion": "0.0.7"
 }

@@ -57,8 +57,6 @@ Reference an icon by its id:
 | `--name-query` | `title` | selector whose text becomes the symbol id |
 | `--info` | - | print progress per file |
 
-Right now `--output` and `--name-query` must be given; leaving either out throws instead of using the default.
-
 # How files are merged
 
 - Each root `<svg>` becomes a symbol. Its attributes (like `viewBox`) are copied over, except `xmlns`.

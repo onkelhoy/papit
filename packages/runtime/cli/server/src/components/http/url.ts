@@ -6,8 +6,19 @@ import { IncomingMessage } from "node:http";
 import { Information, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 
-import { InternalServerError } from "components/errors";
+import { ForbiddenError, InternalServerError } from "components/errors";
 
+/** True when `location` is the workspace root or inside it; the server never serves beyond it. */
+export function isInsideRoot(location: string) {
+    const relative = path.relative(Information.root.location, path.resolve(location));
+    return relative === "" || (relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative));
+}
+
+/**
+ * Resolves a request to a file or folder: an absolute path inside the workspace, else the path
+ * under the current folder, the package, then the workspace root.
+ * @throws ForbiddenError (403) when the path resolves outside the workspace root
+ */
 export function getURL(
     request: IncomingMessage,
 ) {
@@ -19,7 +30,7 @@ export function getURL(
 
     const get = () => {
 
-        if (request.url && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) 
+        if (request.url && isInsideRoot(request.url) && fs.existsSync(request.url) && fs.statSync(request.url).isFile()) 
         {
             return { absolute: request.url, relative: path.relative(request.url, Information.package.location) }; // this might bite later
         }
@@ -30,13 +41,17 @@ export function getURL(
         for (const potential of potentials)
         {
             const absolute = path.join(potential, ...rest);
+            if (!isInsideRoot(absolute)) continue;
             if (fs.existsSync(absolute))
             {
                 return { absolute, relative: path.relative(potential, absolute) || path.relative(Information.package.location, Information.local) || path.sep };
             }
         }
 
-        return { absolute: path.join(Information.package.location, request.url ?? path.sep), relative: request.url ?? path.sep };
+        const absolute = path.join(Information.package.location, request.url ?? path.sep);
+        if (!isInsideRoot(absolute)) throw new ForbiddenError(`"${request.url}" is outside the served root`);
+
+        return { absolute, relative: request.url ?? path.sep };
     }
 
     const data = get();

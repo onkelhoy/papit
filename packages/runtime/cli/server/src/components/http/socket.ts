@@ -6,7 +6,7 @@ import path from "node:path";
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
 import { Information, PackageGraph, PackageNode } from "@papit/information";
-import { getPACKAGE } from "./url";
+import { getPACKAGE, isInsideRoot } from "./url";
 
 const connectedClients = new Map<Duplex, PackageNode>();
 
@@ -53,7 +53,10 @@ export function upgrade(this: http.Server, req: http.IncomingMessage, socket: Du
                         switch (data.type)
                         {
                             case "register": {
-                                let packageNode = getPACKAGE({ relative: data.location, absolute: path.join(Information.root.location, data.location) });
+                                const absolute = path.join(Information.root.location, data.location);
+                                if (!isInsideRoot(absolute)) break;
+
+                                let packageNode = getPACKAGE({ relative: data.location, absolute });
                                 if (packageNode.name === Information.root.name)
                                 {
                                     packageNode = Information.package;

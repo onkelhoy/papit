@@ -149,3 +149,4 @@ export async function setup() {
     );
 };
 
+export { getURL } from "components/http/url";
