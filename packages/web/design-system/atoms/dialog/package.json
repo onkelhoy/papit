@@ -10,7 +10,7 @@
         "popover",
         "a11y"
     ],
-    "version": "0.0.10",
+    "version": "0.0.11",
     "scripts": {
         "build": "npx @papit/build --error",
         "watch": "tsc -w",

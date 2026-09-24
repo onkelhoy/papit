@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>drawer test</title>
 
+    <script>
+        // capture phase sees the host's non-bubbling open/close events, including any from the initial render
+        window.EVENTS = [];
+        ["open", "close"].forEach(type => document.addEventListener(type, e => {
+            if (e.target instanceof Element && e.target.tagName === "PAP-DRAWER") window.EVENTS.push(`${type}:${e.target.id}`);
+        }, true));
+    </script>
     <script type="module" defer src="main.js"></script>
 </head>
 
@@ -12,8 +19,8 @@
     <!-- Non-modal drawer (pushes content) -->
     <pap-drawer id="base-target" data-testid="base-target">fallback</pap-drawer>
 
-    <!-- Modal drawer (overlay with backdrop) -->
-    <pap-drawer id="modal-target" data-testid="modal-target" modal>modal drawer</pap-drawer>
+    <!-- Static drawer (modal overlay with backdrop) -->
+    <pap-drawer id="modal-target" data-testid="modal-target" static>modal drawer</pap-drawer>
 
     <button id="trigger-right" commandfor="base-target" command="toggle">Toggle right</button>
     <button id="close-right" commandfor="base-target" command="close">Close right</button>

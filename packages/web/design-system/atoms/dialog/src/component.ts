@@ -29,9 +29,12 @@ import { FOCUSABLE } from "types";
  * @slot footer - Action buttons (hidden when empty)
  *
  * @attr {string} header - Dialog title
- * @attr {boolean} open - Open state
+ * @attr {boolean} open - Open state; opens modally when `modal` is set, non-modally otherwise
  * @attr {boolean} close-outside-click - Close on backdrop click
- * @attr {boolean} modal - Use showModal() in toggle() (default: true)
+ * @attr {boolean} modal - Use showModal() for `open` and toggle() (default: true)
+ *
+ * @fires open - on the host whenever the dialog opens (not on the initial render)
+ * @fires close - on the host whenever the dialog closes, including Escape and backdrop click
  *
  * @method show() - Open non-modal
  * @method showModal() - Open modal with backdrop
@@ -52,12 +55,14 @@ export class Dialog extends CustomElement {
         selector: "dialog",
         load(this: Dialog, element: HTMLDialogElement) {
             element.setAttribute("aria-modal", String(this.ismodal));
+            this.syncdialog(element);
         }
     }) private dialogElement!: HTMLDialogElement;
     @property({ rerender: true }) header?: string;
     @property({
         type: Boolean,
-        after(this: Dialog) {
+        after(this: Dialog, _value, _old, isinitial) {
+            if (!isinitial) this.dispatchEvent(new Event(this.open ? "open" : "close"));
             if (this.open) 
             {
                 // safaribug but first element of this dialog should get focus 
@@ -75,7 +80,7 @@ export class Dialog extends CustomElement {
                 this._internalopen = false;
                 return;
             }
-            if (this.dialogElement) this.dialogElement.open = this.open;
+            this.syncdialog(this.dialogElement);
         }
     }) open: boolean = false;
     @property({ type: Boolean, attribute: "close-outside-click" }) protected closeoutsideclick = false;
@@ -155,6 +160,19 @@ export class Dialog extends CustomElement {
         this.open ? this.close() : (this.ismodal ? this.showModal() : this.show());
     }
 
+    // mirrors `open` onto the inner dialog, modal per `ismodal`, so Escape/backdrop/focus trap apply
+    private syncdialog(dialog?: HTMLDialogElement) {
+        if (!dialog?.isConnected) return;
+        if (this.open)
+        {
+            if (!dialog.open) this.ismodal ? dialog.showModal() : dialog.show();
+        }
+        else if (dialog.open)
+        {
+            dialog.close();
+        }
+    }
+
     @bind
     protected handleCommandRefClick(e: Event) {
         const { currentTarget } = e;
@@ -224,6 +242,8 @@ export class Dialog extends CustomElement {
     }
     @bind
     protected handledialogclose() {
+        // already closed through close(), a stale _internalopen would swallow the next open
+        if (!this.open) return;
         this._internalopen = true;
         this.open = false;
     }
@@ -233,11 +253,12 @@ export class Dialog extends CustomElement {
             <dialog 
                 id="dialog" 
                 part="dialog"
+                aria-labelledby="title"
                 @click="${this.handledialogclick}"
                 @close="${this.handledialogclose}"
             >
                 <header part="header">
-                    <div>
+                    <div id="title">
                         <slot @slotchange="${this.handleheaderslot}" name="header"></slot>
                         ${!this.hasslotheader && this.header && html`<h1>${this.header}</h1>`}
                     </div>

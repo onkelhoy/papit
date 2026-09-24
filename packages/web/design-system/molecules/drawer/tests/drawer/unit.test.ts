@@ -1,5 +1,11 @@
 import { test, expect } from '@playwright/test';
 
+declare global {
+    interface Window {
+        EVENTS: string[];
+    }
+}
+
 test.beforeEach(async ({ page }) => {
     await page.goto('tests/drawer/');
 });
@@ -87,6 +93,86 @@ test.describe("@papit/drawer unit tests", () => {
         await page.waitForTimeout(100);
         const drawer = page.getByTestId('drawer-left');
         await expect(drawer).toHaveAttribute('open');
+    });
+
+    test.describe('modality and events', () => {
+        const inner = (el: any) => {
+            const dialog = el.shadowRoot.querySelector('dialog');
+            return { open: dialog.open, modal: dialog.matches(':modal') };
+        };
+
+        test('static drawer opened with toggle is modal, Escape closes it and fires close', async ({ page }) => {
+            const drawer = page.getByTestId('modal-target');
+            await page.click('#trigger-modal');
+            expect(await drawer.evaluate(inner)).toEqual({ open: true, modal: true });
+
+            await page.keyboard.press('Escape');
+            await page.waitForFunction(() => (document.getElementById('modal-target') as any).open === false);
+            await page.waitForTimeout(100);
+            expect(await drawer.evaluate(inner)).toEqual({ open: false, modal: false });
+            expect(await page.evaluate(() => window.EVENTS)).toEqual(['open:modal-target', 'close:modal-target']);
+        });
+
+        test('static drawer opened with show() is modal', async ({ page }) => {
+            const drawer = page.getByTestId('modal-target');
+            await drawer.evaluate((el: any) => el.show());
+            expect(await drawer.evaluate(inner)).toEqual({ open: true, modal: true });
+        });
+
+        test('static drawer opened with open = true is modal', async ({ page }) => {
+            const drawer = page.getByTestId('modal-target');
+            await drawer.evaluate((el: any) => el.open = true);
+            expect(await drawer.evaluate(inner)).toEqual({ open: true, modal: true });
+        });
+
+        test('parsed static open drawer is modal on first render', async ({ page }) => {
+            await page.evaluate(() => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = '<pap-drawer id="parsed-open" data-testid="parsed-open" static open>parsed</pap-drawer>';
+                document.body.appendChild(wrapper);
+            });
+            await page.waitForFunction(() => document.getElementById('parsed-open')?.shadowRoot?.querySelector('dialog'));
+            expect(await page.getByTestId('parsed-open').evaluate(inner)).toEqual({ open: true, modal: true });
+            expect(await page.evaluate(() => window.EVENTS)).toEqual([]);
+        });
+
+        test('default drawer opens non-modally', async ({ page }) => {
+            const drawer = page.getByTestId('base-target');
+            await page.click('#trigger-right');
+            expect(await drawer.evaluate(inner)).toEqual({ open: true, modal: false });
+        });
+
+        test('open and close fire once on the host', async ({ page }) => {
+            const drawer = page.getByTestId('base-target');
+            await drawer.evaluate((el: any) => el.show());
+            await drawer.evaluate((el: any) => el.close());
+            await page.waitForTimeout(100);
+            expect(await page.evaluate(() => window.EVENTS)).toEqual(['open:base-target', 'close:base-target']);
+        });
+    });
+
+    test.describe('accessible name', () => {
+        test('panel aria-label defaults to "drawer" with no aria-labelledby', async ({ page }) => {
+            const panel = page.getByTestId('base-target').locator('dialog');
+            await expect(panel).toHaveAttribute('aria-label', 'drawer');
+            await expect(panel).not.toHaveAttribute('aria-labelledby');
+        });
+
+        test('panel aria-label comes from label and updates when it changes', async ({ page }) => {
+            const drawer = page.getByTestId('base-target');
+            await drawer.evaluate((el: any) => el.label = 'Settings');
+            await expect(drawer.locator('dialog')).toHaveAttribute('aria-label', 'Settings');
+            await drawer.evaluate((el: any) => el.setAttribute('label', 'Filters'));
+            await expect(drawer.locator('dialog')).toHaveAttribute('aria-label', 'Filters');
+        });
+
+        test('open drawer is found by its label', async ({ page }) => {
+            await page.getByTestId('modal-target').evaluate((el: any) => {
+                el.label = 'Settings';
+                el.show();
+            });
+            await expect(page.getByRole('dialog', { name: 'Settings' })).toBeVisible();
+        });
     });
 
     // Modal-specific tests using the modal-target drawer

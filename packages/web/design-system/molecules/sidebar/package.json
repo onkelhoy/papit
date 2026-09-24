@@ -10,7 +10,7 @@
         "nav",
         "collapsible"
     ],
-    "version": "0.0.5",
+    "version": "0.0.6",
     "scripts": {
         "build": "npx @papit/build --error",
         "watch": "tsc -w",
@@ -58,7 +58,7 @@
     },
     "dependencies": {
         "@papit/button": "0.1.4",
-        "@papit/drawer": "0.0.3",
+        "@papit/drawer": "0.0.4",
         "@papit/icon": "0.1.7",
         "@papit/tooltip": "0.0.9",
         "@papit/treeview": "0.0.8",
