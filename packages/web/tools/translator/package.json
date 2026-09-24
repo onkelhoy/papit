@@ -10,7 +10,7 @@
     "interpolation",
     "decorator"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -72,7 +72,7 @@
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3",
-    "@papit/codeblock": "0.1.11"
+    "@papit/codeblock": "0.1.12"
   },
   "browserslist": [
     "defaults",
