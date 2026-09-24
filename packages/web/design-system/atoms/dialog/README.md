@@ -114,9 +114,18 @@ The footer area is hidden (zero padding) when no content is slotted into it, so 
 | Name                  | Type      | Default | Description                                                                  |
 | --------------------- | --------- | ------- | ---------------------------------------------------------------------------- |
 | `header`              | `string`  | —       | Text rendered as `<h1>` in the header. Overridden by the `header` slot.      |
-| `open`                | `boolean` | `false` | Reflects the open state of the underlying `<dialog>`.                        |
+| `open`                | `boolean` | `false` | Open state. Setting it opens modally when `modal` is set, otherwise non-modally. |
 | `close-outside-click` | `boolean` | `false` | When set to `true`, clicking outside the dialog (on the backdrop) closes it. |
-| `modal`               | `boolean` | `true`  | Determines if `toggle()` uses `showModal()` (`true`) or `show()` (`false`).  |
+| `modal`               | `boolean` | `true`  | Whether `open` and `toggle()` use `showModal()` (`true`) or `show()` (`false`). |
+
+### Events
+
+Fired on the host for every open state change after the initial render: methods, the `open` property/attribute, `Escape` and backdrop clicks.
+
+| Event   | Type    | Description             |
+| ------- | ------- | ----------------------- |
+| `open`  | `Event` | The dialog was opened.  |
+| `close` | `Event` | The dialog was closed.  |
 
 ### Methods
 
@@ -165,7 +174,9 @@ The component also responds to `popovertarget` to open via the Popover API.
 `pap-dialog` follows the [WAI-ARIA Dialog (Modal) Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/):
 
 - The native `<dialog>` element provides implicit `role="dialog"` for proper semantics.
+- The dialog is named by its header (the `header` attribute or `header` slot) through `aria-labelledby`. A dialog without a header is unnamed, so always give it one.
 - The `aria-modal` attribute is automatically set to `true` when using `showModal()`.
+- `<pap-dialog open>` (and setting `open`) opens modally by default, so it gets the native `Escape`, backdrop and focus trap. Set `modal="false"` for a non-modal dialog, where `Escape` does nothing by design.
 - When opened as a modal (`showModal()`), focus is automatically managed:
   - Focus moves to the built-in close button for immediate keyboard access
   - This predictable behavior helps users understand how to close the dialog

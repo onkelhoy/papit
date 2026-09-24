@@ -1,6 +1,6 @@
 # @papit/drawer
 
-A slide-in drawer panel that anchors to the left, right, top or bottom edge of the viewport. It is built on the native modal dialog for focus trapping, top-layer rendering and Escape to close.
+A slide-in drawer panel that anchors to the left, right, top or bottom edge of the viewport. A static drawer is a modal overlay with backdrop, focus trap and Escape to close, and the default drawer is an in-flow, non-modal panel that pushes content.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -37,9 +37,9 @@ Any element with `commandfor="<drawer-id>"` and a `command` attribute acts as a 
 </pap-drawer>
 ```
 
-### Static (fixed positioning)
+### Static (modal overlay)
 
-Use `static` attribute for fixed sidebars that overlay content instead of pushing it:
+Use the `static` attribute for a drawer that overlays content instead of pushing it. It opens modally (backdrop, focus trap, Escape to close), also when opened through `open`, `show()` or `toggle`:
 
 ```html
 <pap-drawer id="sidebar" placement="left" static open>
@@ -64,18 +64,27 @@ drawer.toggle();
 | Attribute             | Type                                     | Default    | Description                                         |
 | --------------------- | ---------------------------------------- | ---------- | --------------------------------------------------- |
 | `placement`           | `"left" \| "right" \| "top" \| "bottom"` | `"right"`  | Which edge the drawer slides in from                |
-| `open`                | `boolean`                                | `false`    | Reflects the open state                             |
+| `open`                | `boolean`                                | `false`    | Open state; opens modally when `static` is set      |
 | `label`               | `string`                                 | `"drawer"` | `aria-label` on the panel — use a descriptive value |
 | `close-outside-click` | `boolean`                                | `true`     | Whether clicking the backdrop closes the drawer     |
-| `static`              | `boolean`                                | `false`    | When true, uses fixed positioning (modal overlay)   |
+| `static`              | `boolean`                                | `false`    | Modal overlay when true, in-flow non-modal panel when false |
 
 ### Methods
 
-| Method     | Description                                        |
-| ---------- | -------------------------------------------------- |
-| `show()`   | Opens the drawer and traps focus inside            |
-| `close()`  | Closes the drawer and returns focus to the trigger |
-| `toggle()` | Toggles between open and closed                    |
+| Method     | Description                                                          |
+| ---------- | -------------------------------------------------------------------- |
+| `show()`   | Opens the drawer, modally when `static` is set, non-modally otherwise |
+| `close()`  | Closes the drawer                                                    |
+| `toggle()` | Toggles between open and closed                                      |
+
+### Events
+
+Fired on the host for every open state change after the initial render, including Escape and backdrop clicks.
+
+| Event   | Type    | Description            |
+| ------- | ------- | ---------------------- |
+| `open`  | `Event` | The drawer was opened. |
+| `close` | `Event` | The drawer was closed. |
 
 ### CSS Parts
 
@@ -94,11 +103,10 @@ drawer.toggle();
 
 ## Accessibility
 
-- Uses `<dialog>` with `showModal()` — focus is trapped inside the open drawer automatically by the browser
-- Escape key closes the drawer natively
-- Focus returns to the triggering element on close
+- A `static` drawer opens with `showModal()`: the browser traps focus, makes the page inert and closes it on Escape. Focus returns to the triggering element on close
+- The default (non-static) drawer is an in-flow panel opened with `show()`. It is not a modal dialog, so there is no focus trap and Escape does nothing
 - `aria-label` on the panel describes the drawer to screen readers — always set a meaningful `label`
-- Follows the [WAI-ARIA Dialog (Modal) Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
+- The `static` drawer follows the [WAI-ARIA Dialog (Modal) Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/)
 
 ## License
 

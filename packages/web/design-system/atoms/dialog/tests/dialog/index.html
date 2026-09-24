@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>dialog test</title>
 
+    <script>
+        // capture phase sees the host's non-bubbling open/close events, including any from the initial render
+        window.EVENTS = [];
+        ["open", "close"].forEach(type => document.addEventListener(type, e => {
+            if (e.target instanceof Element && e.target.tagName === "PAP-DIALOG") window.EVENTS.push(`${type}:${e.target.dataset.testid}`);
+        }, true));
+    </script>
     <script type="module" defer src="main.js"></script>
 </head>
 

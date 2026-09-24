@@ -7,6 +7,7 @@ test.beforeEach(async ({ page }) => {
 declare global {
     interface Window {
         EVENT_EMITTED: any;
+        EVENTS: string[];
     }
 }
 
@@ -238,6 +239,154 @@ test.describe("@papit/dialog unit tests", () => {
     });
 
     // -------------------------------------------------------------------------
+    // Events (open / close on the host)
+    // -------------------------------------------------------------------------
+
+    test.describe("events", () => {
+        // the native close event is async, so give any double a chance to show up before asserting
+        async function events(page: any, expected: string[]) {
+            await page.waitForFunction((n: number) => window.EVENTS.filter(e => e.endsWith(":base-target")).length >= n, expected.length);
+            await page.waitForTimeout(100);
+            const recorded = await page.evaluate(() => window.EVENTS.filter(e => e.endsWith(":base-target")));
+            expect(recorded).toEqual(expected);
+        }
+
+        test('nothing fires on the initial render', async ({ page }) => {
+            await page.waitForFunction(() => customElements.get('pap-dialog') !== undefined);
+            await page.waitForTimeout(100);
+            expect(await page.evaluate(() => window.EVENTS)).toEqual([]);
+        });
+
+        test('nothing fires on the initial render of a parsed open dialog', async ({ page }) => {
+            await page.evaluate(() => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = '<pap-dialog data-testid="initial-open" open>initially open</pap-dialog>';
+                document.body.appendChild(wrapper);
+            });
+            await page.waitForTimeout(100);
+            expect(await page.getByTestId('initial-open').evaluate((el: any) => el.open)).toBe(true);
+            expect(await page.evaluate(() => window.EVENTS)).toEqual([]);
+        });
+
+        test('showModal() fires open once', async ({ page }) => {
+            await page.getByTestId('base-target').evaluate((el: any) => el.showModal());
+            await events(page, ['open:base-target']);
+        });
+
+        test('show() fires open once', async ({ page }) => {
+            await page.getByTestId('base-target').evaluate((el: any) => el.show());
+            await events(page, ['open:base-target']);
+        });
+
+        test('close() fires close once', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.showModal());
+            await target.evaluate((el: any) => el.close());
+            await events(page, ['open:base-target', 'close:base-target']);
+        });
+
+        test('setting the open property fires open and close once each', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.open = true);
+            await events(page, ['open:base-target']);
+            await target.evaluate((el: any) => el.open = false);
+            await events(page, ['open:base-target', 'close:base-target']);
+        });
+
+        test('native Escape on a modal fires close once', async ({ page }) => {
+            await page.getByTestId('base-target').evaluate((el: any) => el.showModal());
+            await events(page, ['open:base-target']);
+            await page.keyboard.press('Escape');
+            await events(page, ['open:base-target', 'close:base-target']);
+        });
+
+        test('backdrop click with close-outside-click fires close once', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => {
+                el.setAttribute('close-outside-click', '');
+                el.showModal();
+            });
+            await events(page, ['open:base-target']);
+            await page.mouse.click(2, 2);
+            await events(page, ['open:base-target', 'close:base-target']);
+            expect(await target.evaluate((el: any) => el.open)).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------------------
+    // open property / attribute
+    // -------------------------------------------------------------------------
+
+    test.describe("open property", () => {
+        const inner = (el: any) => {
+            const dialog = el.shadowRoot.querySelector('dialog');
+            return { open: dialog.open, modal: dialog.matches(':modal') };
+        };
+
+        test('open = true on a modal dialog opens it modally', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.open = true);
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+        });
+
+        test('open attribute on a modal dialog opens it modally', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.setAttribute('open', ''));
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+        });
+
+        test('Escape closes a dialog opened through the open property', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.open = true);
+            await page.keyboard.press('Escape');
+            await page.waitForFunction(() => (document.querySelector('[data-testid="base-target"]') as any).open === false);
+            expect(await target.evaluate(inner)).toEqual({ open: false, modal: false });
+        });
+
+        test('open = false closes a modally opened dialog', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.open = true);
+            await target.evaluate((el: any) => el.open = false);
+            expect(await target.evaluate(inner)).toEqual({ open: false, modal: false });
+        });
+
+        test('open = true on a non-modal dialog opens it with show()', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => {
+                el.ismodal = false;
+                el.open = true;
+            });
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: false });
+        });
+
+        test('parsed open attribute opens modally on first render and Escape closes it', async ({ page }) => {
+            await page.evaluate(() => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = '<pap-dialog data-testid="parsed-open" open>initially open</pap-dialog>';
+                document.body.appendChild(wrapper);
+            });
+            const target = page.getByTestId('parsed-open');
+            await page.waitForFunction(() => (document.querySelector('[data-testid="parsed-open"]') as any)?.shadowRoot?.querySelector('dialog'));
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+            expect(await page.evaluate(() => window.EVENTS)).toEqual([]);
+
+            await page.keyboard.press('Escape');
+            await page.waitForFunction(() => (document.querySelector('[data-testid="parsed-open"]') as any).open === false);
+            expect(await target.evaluate(inner)).toEqual({ open: false, modal: false });
+        });
+
+        test('open = true after close() opens the dialog again', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.showModal());
+            await target.evaluate((el: any) => el.close());
+            // let the native close event settle
+            await page.waitForTimeout(100);
+            await target.evaluate((el: any) => el.open = true);
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+        });
+    });
+
+    // -------------------------------------------------------------------------
     // Slots
     // -------------------------------------------------------------------------
 
@@ -327,6 +476,25 @@ test.describe("@papit/dialog unit tests", () => {
     // -------------------------------------------------------------------------
     // Accessibility
     // -------------------------------------------------------------------------
+
+    test('dialog is named by the header attribute', async ({ page }) => {
+        await page.getByTestId('base-target').evaluate((el: any) => {
+            el.header = 'Confirm';
+            el.showModal();
+        });
+        await expect(page.getByRole('dialog', { name: 'Confirm' })).toBeVisible();
+    });
+
+    test('dialog is named by a slotted header', async ({ page }) => {
+        await page.getByTestId('base-target').evaluate((el: any) => {
+            const title = document.createElement('h2');
+            title.slot = 'header';
+            title.textContent = 'Confirm';
+            el.appendChild(title);
+            el.showModal();
+        });
+        await expect(page.getByRole('dialog', { name: 'Confirm' })).toBeVisible();
+    });
 
     test('close button has aria-label="close"', async ({ page }) => {
         const label = await page.evaluate(() => {
