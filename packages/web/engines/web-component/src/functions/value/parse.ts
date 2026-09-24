@@ -12,7 +12,7 @@ export function parse(value: string | null | undefined, type: Function = String)
         case "Number":
             return Number(value);
         case "Boolean": {
-            if (/(false|f|0)/i.test(value)) return false;
+            if (/^(false|f|0)$/i.test(value)) return false;
             return true;
         }
         default: {

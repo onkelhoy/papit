@@ -17,6 +17,54 @@ test.describe("@papit/popover unit tests", () => {
     const component = await page.$('pap-popover');
     expect(component).not.toBeNull();
   });
+
+  test("Escape hides the open popover", async ({ page }) => {
+    const popover = page.getByTestId("escape-popover");
+    await page.getByTestId("escape-trigger").click();
+    await expect(popover).toBeVisible();
+
+    await page.getByTestId("escape-inner").focus();
+    await page.keyboard.press("Escape");
+
+    await expect(popover).toBeHidden();
+    expect(await popover.evaluate((el: any) => el.open)).toBe(false);
+  });
+
+  test("removes mouseleave listeners from trigger and popover on disconnect", async ({ page }) => {
+    const leaked = await page.evaluate(() => {
+      const trigger = document.createElement("button");
+      trigger.setAttribute("popovertarget", "cleanup-popover");
+      trigger.setAttribute("popovertargetaction", "hover");
+      const popover = document.createElement("pap-popover");
+      popover.id = "cleanup-popover";
+
+      const active = new Map<EventTarget, Set<EventListenerOrEventListenerObject>>([
+        [trigger, new Set()],
+        [popover, new Set()],
+      ]);
+      const add = EventTarget.prototype.addEventListener;
+      const remove = EventTarget.prototype.removeEventListener;
+      EventTarget.prototype.addEventListener = function (type: string, listener: any, options?: any) {
+        if (type === "mouseleave") active.get(this)?.add(listener);
+        return add.call(this, type, listener, options);
+      };
+      EventTarget.prototype.removeEventListener = function (type: string, listener: any, options?: any) {
+        if (type === "mouseleave") active.get(this)?.delete(listener);
+        return remove.call(this, type, listener, options);
+      };
+
+      document.body.append(trigger, popover);
+      popover.remove();
+
+      EventTarget.prototype.addEventListener = add;
+      EventTarget.prototype.removeEventListener = remove;
+      trigger.remove();
+
+      return { trigger: active.get(trigger)!.size, popover: active.get(popover)!.size };
+    });
+
+    expect(leaked).toEqual({ trigger: 0, popover: 0 });
+  });
 });
 
 test.describe.skip("helpers", () => {

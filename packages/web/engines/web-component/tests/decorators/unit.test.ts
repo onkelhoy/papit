@@ -45,6 +45,19 @@ test.describe("decorators - property", () => {
         expect(component).not.toHaveAttribute("booleanWithRemove");
     });
 
+    test("boolean attribute parse matches whole value only", async ({ page }) => {
+        const component = page.getByTestId("a");
+        const expected: [string, boolean][] = [
+            ["false", false], ["FALSE", false], ["f", false], ["0", false],
+            ["true", true], ["", true], ["off", true], ["10", true], ["foo", true], ["default", true],
+        ];
+        const result = await component.evaluate((el: any, values: string[]) => values.map(value => {
+            el.setAttribute("boolean", value);
+            return [value, el.boolean];
+        }), expected.map(([value]) => value));
+        expect(result).toEqual(expected);
+    });
+
     test("readonly should throw", async ({ page }) => {
         const component = page.getByTestId("a");
         expect(component).toHaveJSProperty("readonly", 3);

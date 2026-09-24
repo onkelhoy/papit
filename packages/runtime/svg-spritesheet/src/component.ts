@@ -8,8 +8,8 @@ import { Document } from "@papit/html";
 
 (async function () {
     const input = Arguments.get("input").at(0) ?? Information.local;
-    const output = Arguments.get("output").at(0) ?? path.join(input, "spritesheet.svg");
-    const namequery = Arguments.get("name-query").at(0) ?? "title";
+    const output = Arguments.string("output") ?? path.join(input, "spritesheet.svg");
+    const namequery = Arguments.string("name-query") ?? "title";
 
     if (!input || !fs.existsSync(input))
     {

@@ -94,11 +94,12 @@ export class Popover extends CustomElement {
         this.refs.forEach(ref => {
             ref.removeEventListener("click", this.handlerefclick);
             ref.removeEventListener("mouseover", this.handlerefmouseover);
-            ref.removeEventListener("mouseleave", this.handlerefmouseover);
+            ref.removeEventListener("mouseleave", this.handlerefmouseleave);
         });
 
         this.removeEventListener("keydown", this.handlekeydown);
         this.removeEventListener("mouseover", this.handlemouseover);
+        this.removeEventListener("mouseleave", this.handlemouseleave);
     }
 
     private populaterefs(root: HTMLElement | ShadowRoot | Document) {
@@ -124,7 +125,7 @@ export class Popover extends CustomElement {
 
     @bind
     private handlekeydown(e: KeyboardEvent) {
-        if (e.key === "esc") 
+        if (/^esc/i.test(e.key))
         {
             e.preventDefault();
             this.hide();

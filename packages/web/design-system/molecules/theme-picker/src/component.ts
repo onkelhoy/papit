@@ -178,8 +178,16 @@ export class ThemePicker extends CustomElement {
         }
         // this.value = 'light';
     }
+    // the button's popovertarget belongs to the menu, so the tooltip is driven here
+    private handletargetenter = () => {
+        if (this.tooltipElement) this.tooltipElement.show(this.buttonElement);
+    }
+    private handletargetleave = () => {
+        if (this.tooltipElement) this.tooltipElement.hide();
+    }
     private handletargetblur = () => {
         if (this.tooltipElement && this.tooltipElement.disabled) this.tooltipElement.disabled = false;
+        this.handletargetleave();
     }
     private handlemenuclose = () => {
         setTimeout(() => {
@@ -198,7 +206,7 @@ export class ThemePicker extends CustomElement {
 
         return html`
             <pap-tooltip placement="top">
-                <span>${t("theme picker")}</span>
+                <span id="label">${t("theme picker")}</span>
             </pap-tooltip>
             
             <pap-button 
@@ -208,9 +216,13 @@ export class ThemePicker extends CustomElement {
                 color="secondary" 
                 slot="target" 
                 popovertarget="menu"
+                aria-labelledby="label"
+                @focus="${this.handletargetenter}"
+                @mouseover="${this.handletargetenter}"
+                @mouseleave="${this.handletargetleave}"
                 @blur="${this.handletargetblur}" 
             >
-                <pap-icon name="${"/icons/" + iconName + ".svg"}"></pap-icon>
+                <pap-icon aria-hidden="true" name="${"/icons/" + iconName + ".svg"}"></pap-icon>
             </pap-button>
 
             <pap-menu 

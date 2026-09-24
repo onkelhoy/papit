@@ -17,6 +17,22 @@ test.describe("@papit/theme-picker unit tests", () => {
     const component = await page.$('pap-theme-picker');
     expect(component).not.toBeNull();
   });
+
+  test('icon button has an accessible name', async ({ page }) => {
+    const button = page.getByTestId("base-target").getByRole("button", { name: /theme picker/i });
+    await expect(button).toHaveCount(1);
+  });
+
+  test('tooltip opens when the button is focused and closes on blur', async ({ page }) => {
+    const button = page.getByTestId("base-target").getByRole("button", { name: /theme picker/i });
+    const tooltip = page.getByTestId("base-target").locator("pap-tooltip");
+
+    await button.focus();
+    await expect.poll(() => tooltip.evaluate((el: any) => el.open), { timeout: 3000 }).toBe(true);
+
+    await button.blur();
+    await expect.poll(() => tooltip.evaluate((el: any) => el.open)).toBe(false);
+  });
 });
 
 test.describe.skip("helpers", () => {

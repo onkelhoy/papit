@@ -16,6 +16,9 @@ export function deepMerge<T = any>(...objects: Partial<T>[]): T {
     return output as T;
 }
 
+// skipped at every level so untrusted input (e.g. JSON.parse) can't swap or pollute prototypes
+const PROTOTYPE_KEYS = ["__proto__", "constructor", "prototype"];
+
 /**
  * Merges `b` into a shallow copy of `a`; see {@link deepMerge} for the rules.
  * @param omit top-level keys of `b` to skip (not applied to nested levels)
@@ -24,7 +27,7 @@ export function deepMergeTwo<T = any>(a: Partial<T>, b: Partial<T>, omit: string
   const result: any = { ...a };
 
   for (const key in b) {
-    if (omit.includes(key)) continue;
+    if (omit.includes(key) || PROTOTYPE_KEYS.includes(key)) continue;
     const value = (b as any)[key];
 
     if (

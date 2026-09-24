@@ -34,3 +34,12 @@ export class MethodNotAllowedError extends HttpError {
   }
 }
 
+
+export class ForbiddenError extends HttpError {
+  constructor(message?: string, options?: ErrorOptions) {
+    super(message ?? "forbidden", options);
+
+    this.name = "Forbidden";
+    this.status = 403;
+  }
+}
