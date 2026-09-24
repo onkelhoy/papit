@@ -11,7 +11,7 @@
     "form",
     "form-associated"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -60,14 +60,14 @@
   "dependencies": {
     "@papit/button": "0.1.5",
     "@papit/icon": "0.1.8",
+    "@papit/translator": "0.1.1",
     "@papit/web-component": "0.0.9"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.11",
+    "@papit/codeblock": "0.1.12",
     "@papit/router": "0.1.5",
     "@papit/tabs": "0.1.5",
     "@papit/theme": "0.0.2",
-    "@papit/translator": "0.1.0",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -89,5 +89,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }

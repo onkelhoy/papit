@@ -62,8 +62,8 @@
     "playwright": "1.58.0",
     "@papit/arguments": "0.0.1",
     "@papit/information": "0.0.8",
-    "@papit/translator": "0.1.0",
-    "@papit/codeblock": "0.1.11",
+    "@papit/translator": "0.1.1",
+    "@papit/codeblock": "0.1.12",
     "typescript": "5.9.3"
   },
   "browserslist": [
@@ -83,5 +83,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.8"
+  "remoteVersion": "0.0.9"
 }

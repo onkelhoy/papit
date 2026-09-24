@@ -57,16 +57,16 @@
     "@papit/icon": "0.1.8",
     "@papit/router": "0.1.5",
     "@papit/server": "1.0.7",
-    "@papit/sidebar": "0.0.7",
+    "@papit/sidebar": "0.0.8",
     "@papit/theme-picker": "0.0.10",
+    "@papit/translator": "0.1.1",
     "@papit/web-component": "0.0.9"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.11",
+    "@papit/codeblock": "0.1.12",
     "@papit/router": "0.1.5",
     "@papit/tabs": "0.1.5",
     "@papit/theme": "0.0.2",
-    "@papit/translator": "0.1.0",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"

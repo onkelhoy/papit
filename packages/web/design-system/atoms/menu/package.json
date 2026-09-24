@@ -66,11 +66,11 @@
     "@papit/web-component": "0.0.9"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.11",
+    "@papit/codeblock": "0.1.12",
     "@papit/router": "0.1.5",
     "@papit/tabs": "0.1.5",
     "@papit/theme": "0.0.2",
-    "@papit/translator": "0.1.0",
+    "@papit/translator": "0.1.1",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -104,5 +104,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.9"
+  "remoteVersion": "0.0.10"
 }
