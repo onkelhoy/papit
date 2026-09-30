@@ -51,6 +51,9 @@ export class CustomElementInternals extends CustomElement {
     /** Reference to the element's internal form state manager. */
     protected _internals: ElementInternals;
 
+    /** Held so WebKit does not garbage-collect the `CustomStateSet` and drop its states. */
+    protected _states: CustomStateSet;
+
     /**
      * Reactive disabled property.
      * - `rerender: false` → does not trigger a re-render when changed
@@ -64,6 +67,7 @@ export class CustomElementInternals extends CustomElement {
     constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<Setting>) {
         super(shadowRootInit);
         this._internals = this.attachInternals();
+        this._states = this._internals.states;
     }
 
     /** Called when the element’s `disabled` state changes via a form. */

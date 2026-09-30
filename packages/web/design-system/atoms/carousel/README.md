@@ -1,8 +1,6 @@
 # @papit/carousel
 
-An accessible, swipeable carousel web component following the WAI-ARIA Carousel pattern.
-
-[WAI-ARIA Carousel Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/).
+An accessible, swipeable carousel built from parts: a scrolling gallery plus prev, next and dot controls you can place anywhere. Follows the WAI-ARIA Carousel pattern, with looping, autoplay and several slides per view.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -20,141 +18,216 @@ An accessible, swipeable carousel web component following the WAI-ARIA Carousel 
 npm install @papit/carousel
 ```
 
-### HTML
+```ts
+import "@papit/carousel"; // registers all five elements
+```
+
+---
+
+## Usage
+
+The carousel holds the state, the gallery shows the slides, and the controls go wherever your layout wants them. Nothing is rendered for you, so every part is yours to place and style.
 
 ```html
-<script type="module" defer>
-  import "@papit/carousel";
-</script>
-
 <pap-carousel aria-label="Featured articles">
-  <article>Slide 1</article>
-  <article>Slide 2</article>
-  <article>Slide 3</article>
+    <pap-carousel-gallery>
+        <article>Slide 1</article>
+        <article>Slide 2</article>
+        <article>Slide 3</article>
+    </pap-carousel-gallery>
+
+    <div class="toolbar">
+        <pap-carousel-prev></pap-carousel-prev>
+        <pap-carousel-dots></pap-carousel-dots>
+        <pap-carousel-next></pap-carousel-next>
+    </div>
 </pap-carousel>
 ```
 
-### JavaScript / TypeScript
+### Controls somewhere else
 
-```ts
-import "@papit/carousel";
+A control drives the carousel it sits in. Outside it, name the carousel with `aria-controls` (an id, not a selector).
+
+```html
+<pap-carousel id="news" aria-label="News">
+    <pap-carousel-gallery>…</pap-carousel-gallery>
+</pap-carousel>
+
+<pap-carousel-prev aria-controls="news"></pap-carousel-prev>
+<pap-carousel-next aria-controls="news"></pap-carousel-next>
 ```
 
----
+### Your own controls
 
-## Attributes & Properties
+Anything can drive it through the API, and follow it through `change`.
 
-| Property   | Attribute  | Type      | Default | Description                                             |
-| ---------- | ---------- | --------- | ------- | ------------------------------------------------------- |
-| `index`    | `index`    | `number`  | `0`     | The currently visible slide (0-based).                  |
-| `loop`     | `loop`     | `boolean` | `true`  | Whether the carousel wraps around at either end.        |
-| `autoplay` | `autoplay` | `boolean` | `false` | Enables automatic slide advancement.                    |
-| `play`     | —          | `boolean` | `true`  | Pauses/resumes autoplay. Reflected via the play button. |
-| `duration` | `duration` | `number`  | `5000`  | Time in milliseconds between automatic slide advances.  |
-| `inline`   | `inline`   | `boolean` | `false` | Renders controls inline (below) rather than overlaid.   |
+```html
+<button aria-controls="news" onclick="news.prev()">Previous</button>
+<button aria-controls="news" onclick="news.slide = 0">First</button>
+<button aria-controls="news" onclick="news.next()">Next</button>
+```
 
----
+```ts
+news.addEventListener("change", () => console.log(`${news.slide + 1} / ${news.slidecount}`));
+```
 
-## CSS Parts
+### Autoplay
 
-| Part       | Description                                 |
-| ---------- | ------------------------------------------- |
-| `carousel` | The inner scroll container.                 |
-| `controls` | The wrapper around all navigation controls. |
-| `prev`     | The previous-slide button.                  |
-| `next`     | The next-slide button.                      |
-| `dots`     | The `pap-group` containing dot buttons.     |
-| `dot`      | Individual dot/indicator buttons.           |
-| `play`     | The play/pause toggle button.               |
+```html
+<pap-carousel autoplay duration="4000" aria-label="Highlights">
+    <pap-carousel-gallery>…</pap-carousel-gallery>
+    <pap-carousel-dots></pap-carousel-dots> <!-- includes the required pause button -->
+</pap-carousel>
+```
 
-### Example: custom dot styling
+Rotation pauses while the pointer is over the carousel or focus is inside it.
+
+### Several slides per view ("bleed")
+
+Size the slides with `--size` and align them to the start. Slides then snap to, and navigate to, the scroll-padding edge, so a gutter on the scroll container lines the first slide up with your page content while the track runs to the edge.
+
+```html
+<pap-carousel loop="false" aria-label="Articles">
+    <pap-carousel-gallery align="start">…</pap-carousel-gallery>
+</pap-carousel>
+```
 
 ```css
-pap-carousel::part(dot) {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #ccc;
+pap-carousel-gallery {
+    --size: 30%;
 }
 
-pap-carousel::part(dot)[aria-disabled="true"] {
-  background: #000;
+pap-carousel-gallery::part(carousel) {
+    padding-inline: var(--page-inset);
+    scroll-padding-inline: var(--page-inset);
 }
 ```
 
-and yes, you see that correctly, the selected dot has "aria-disabled". Dont look at me look at the folks at w3. But it makes a bit sense, its disabled in terms of not being clicked because its selected.
+Without loop, the last slides can't scroll to the snap point, so they share one position: the end of the track. `stopcount` counts the positions (8 slides at about 3 per view give 6), `slide` is clamped to the last one, and the dots show one per position. Every dot and every `next()` moves the view, and `next()` stops at the end. With loop, every slide is a position.
 
 ---
 
-## Slots
+## API
 
-| Slot        | Description                                                                                                                   |
-| ----------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| _(default)_ | Slide elements. Each child is automatically assigned `role="group"`, `aria-roledescription="slide"`, and an accessible label. |
+### `<pap-carousel>`
 
----
+The wrapper: holds the state and the navigation. It renders only its children.
 
-## CSS Custom Properties
+| Attribute | Property | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `slide` | `slide` | `number` | `0` | Active slide (0-based). Any number may be set; the gallery wraps it (loop) or clamps it |
+| `loop` | `loop` | `boolean` | `true` | Wrap around at either end |
+| `autoplay` | `autoplay` | `boolean` | `false` | Rotate slides automatically |
+| `play` | `play` | `boolean` | `true` | Pause (`false`) or resume autoplay |
+| `duration` | `duration` | `number` | `5000` | Milliseconds per slide while autoplaying |
+| — | `slidecount` | `number` | `0` | Number of slides, set by the gallery |
+| — | `stopcount` | `number` | `0` | Positions the gallery can scroll to, set by the gallery. Equal to `slidecount`, except without loop and with several slides per view |
+| — | `progress` | `number` | `0` | 0–1 through the current slide while autoplaying |
 
-| Property     | Description                                                                                                     |
-| ------------ | --------------------------------------------------------------------------------------------------------------- |
-| `--duration` | Set automatically from the `duration` property (in `ms`). Use this to drive the play-button progress animation. |
-| `--progress` | Set on the play button (0–1). Drive a circular progress indicator via CSS.                                      |
+| Method | Description |
+| --- | --- |
+| `next()` | Next slide (wraps or stops at the end) |
+| `prev()` | Previous slide (wraps or stops at the start) |
 
----
+| Event | Description |
+| --- | --- |
+| `change` | The active slide changed (not fired for the initial value) |
 
-## Public API
+| CSS custom property | Description |
+| --- | --- |
+| `--duration` | Set from `duration`, e.g. `5000ms` |
 
-```ts
-// Navigate programmatically
-carousel.next();
-carousel.prev();
+### `<pap-carousel-gallery>`
 
-// Jump to a specific slide
-carousel.index = 2;
+The slides: scrolling, snapping and the loop. Inside a carousel it takes `slide`, `loop` and `autoplay` from it; on its own, set them on the gallery.
 
-// Toggle autoplay at runtime
-carousel.autoplay = true;
-carousel.play = false; // pause
+| Attribute | Property | Type | Default | Description |
+| --- | --- | --- | --- | --- |
+| `align` | `align` | `"center" \| "start"` | `"center"` | Which slide edge snaps and marks the active slide. Use `start` for several per view |
+| `loop` | `loop` | `boolean` | `true` | Copies slides onto each end so it can wrap |
+| `slide` | `slide` | `number` | `0` | Active slide; wrapped or clamped into range |
+| `clonecount` | `clonecount` | `number` | `3` | Copies per end while looping (at most one per slide) |
+| `aria-controls` | — | `string` | — | Id of its carousel, when the gallery is not inside it |
+| — | `slides` | `HTMLElement[]` | `[]` | The slide elements |
+| — | `stopcount` | `number` | `0` | Positions it can scroll to (see below) |
+
+| Slot | Description |
+| --- | --- |
+| _(default)_ | The slides. Each child becomes a slide; slides can be added or removed at any time |
+
+| CSS part / property | Description |
+| --- | --- |
+| `::part(carousel)` | The scroll container (set the gutter here) |
+| `--size` | Width of one slide, default `100%` |
+
+| Event | Description |
+| --- | --- |
+| `change` | The active slide changed (not fired for the initial value) |
+
+### `<pap-carousel-prev>` / `<pap-carousel-next>`
+
+Outline icon buttons (`pap-button`) that call `prev()` / `next()`.
+
+| Attribute | Description |
+| --- | --- |
+| `aria-controls` | Id of the carousel, when the button is not inside it |
+
+| Slot | Description |
+| --- | --- |
+| `icon` | Replaces the default chevron |
+
+### `<pap-carousel-dots>`
+
+One dot per position the gallery can scroll to (one per slide, unless several fit in view without loop), plus the autoplay pause/play button. Renders nothing until the carousel has slides.
+
+| Attribute | Description |
+| --- | --- |
+| `aria-controls` | Id of the carousel, when the dots are not inside it |
+
+| CSS part / property | Description |
+| --- | --- |
+| `::part(dot)` | A dot `<button>`; the active one has `aria-disabled="true"` |
+| `::part(play)` | The pause/play `pap-button`, shown when the carousel autoplays |
+| `--progress` | Set on the play button, 0–1, to draw the progress ring |
+
+The container look (border, background, radius, padding, `gap`) is on the host, so it can be restyled from outside:
+
+```css
+pap-carousel-dots {
+    gap: 0.5rem;
+    border: none;
+    background: transparent;
+}
 ```
-
----
-
-## Events
-
-| Event          | Detail              | Description                              |
-| -------------- | ------------------- | ---------------------------------------- |
-| `slide-change` | `{ index: number }` | Fired whenever the active slide changes. |
 
 ---
 
 ## Accessibility
 
-`pap-carousel` follows the [WAI-ARIA Carousel Pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/):
+Follows the [WAI-ARIA Carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns/carousel/).
 
-- The host element carries `role="region"` and `aria-roledescription="carousel"`. **Always provide an `aria-label`** so screen readers can identify the carousel.
-- The scroll region uses `aria-live="polite"` (switches to `"off"` during autoplay) and `aria-atomic="false"` so only the newly visible slide is announced.
-- Each slide is annotated with `role="group"`, `aria-roledescription="slide"`, and a translated `aria-label` (e.g. "Slide 1 of 3").
-- Clone slides (used for infinite loop) are hidden from assistive technology via `aria-hidden="true"` and `role="presentation"`.
-- All controls are keyboard-operable buttons with translated `aria-label` values.
-- Active dot carries `aria-disabled="true"` to prevent re-clicking the current slide.
+- The carousel is a `role="region"` with `aria-roledescription="carousel"`. **Give it an `aria-label`.** A gallery on its own takes that role instead.
+- Each slide gets `role="group"`, `aria-roledescription="slide"`, `tabindex="0"` and a translated label ("2 of 5") unless it already has `aria-label` / `aria-labelledby`.
+- The slides are a polite live region, switched off while autoplaying so rotation isn't announced.
+- Autoplay pauses on hover and while focus is inside the carousel; the dots' button pauses and resumes it (WCAG 2.2.2).
+- The loop copies are `aria-hidden`, `inert` and carry no `id`, so they are never announced or focused.
+- Keep the controls inside the carousel where you can: the region then groups the slides with their controls. Controls elsewhere still work through `aria-controls`.
+- All controls are real buttons, so Enter and Space activate them.
 
 ---
 
 ## i18n
 
-`pap-carousel` uses `@papit/translator`. Override the following keys in your translation files:
+Labels come from `@papit/translator`. Override these keys in your translation files:
 
-| Key               | Default (en)                | Tokens          |
-| ----------------- | --------------------------- | --------------- |
-| `aria.prev`       | `"Previous slide"`          | —               |
-| `aria.next`       | `"Next slide"`              | —               |
-| `aria.play`       | `"Start autoplay"`          | —               |
-| `aria.pause`      | `"Stop autoplay"`           | —               |
-| `aria.dots`       | `"Slide navigation"`        | —               |
-| `aria.slide`      | `"Slide {index} of {size}"` | `index`, `size` |
-| `aria.firstclone` | `"Clone of first slide"`    | —               |
-| `aria.lastclone`  | `"Clone of last slide"`     | —               |
+| Key | Default (en) | Tokens |
+| --- | --- | --- |
+| `aria.prev` | `previous slide` | — |
+| `aria.next` | `next slide` | — |
+| `aria.slide` | `{index} of {size}` | `index`, `size` |
+| `aria.dots` | `Choose slide to display` | — |
+| `aria.play` | `Start slide rotation` | — |
+| `aria.pause` | `Stop slide rotation` | — |
 
 ---
 
@@ -177,5 +250,6 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 - [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
 - [@papit/translator](https://github.com/onkelhoy/papit/tree/main/packages/web/tools/translator): i18n singleton used for accessible labels
-- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/button): Button used for navigation controls
-- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon used inside navigation buttons
+- [@papit/button](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/button): Button behind the prev / next and play controls
+- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icons inside the controls
+- [@papit/group](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/group): Groups the dots

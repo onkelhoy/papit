@@ -82,7 +82,7 @@ export class Button extends CustomElementInternals {
         this._internals.states.delete("active");
     }
 
-    render() {
+    render(): string | Node {
         return "<slot></slot>"
     }
 }

@@ -63,6 +63,28 @@ customElements.define("my-provider", MyProvider);
 
 Every time `hello` changes on the provider, it dispatches a `context-hello` event. The consumer listens for that and updates itself.
 
+### Provider outside the tree: `query`
+
+When the provider is not an ancestor, name it with `query` (a selector, or a function called with the consumer as `this`). An empty result falls back to walking up.
+
+```ts
+class Dots extends CustomElement {
+    @context({
+        query(this: Dots) {
+            const id = this.getAttribute("aria-controls"); // an id, not a selector
+            return id ? `#${CSS.escape(id)}` : "";
+        },
+    }) slide = 0;
+}
+```
+
+```html
+<my-carousel id="news"></my-carousel>
+<my-dots aria-controls="news"></my-dots>
+```
+
+The lookup is [`findTarget`](../functions/findTarget.md): a single match in the consumer's root is used directly, otherwise the walk up checks each element for the property or attribute.
+
 ---
 
 ## How it works (brief)

@@ -5,49 +5,93 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>carousel test</title>
 
+    <style>
+        .slide {
+            height: 120px;
+        }
+
+        #bleed pap-carousel-gallery {
+            --size: 30%;
+        }
+
+        #bleed pap-carousel-gallery::part(carousel) {
+            padding-inline: 40px;
+            scroll-padding-inline: 40px;
+        }
+    </style>
+
     <script type="module" defer src="main.js"></script>
 </head>
 
 <body>
-    <!-- Basic 3-slide carousel (loop on by default) -->
-    <pap-carousel id="basic" aria-label="Basic carousel">
-        <div id="basic-slide-0" data-slide="0" style="background:#f0f;">Slide 1</div>
-        <div data-slide="1" style="background:#0ff;">Slide 2</div>
-        <div data-slide="2" style="background:#ff0;">Slide 3</div>
+    <!-- carousel with its controls inside, looping -->
+    <pap-carousel id="basic" aria-label="Basic" data-testid="basic">
+        <pap-carousel-gallery>
+            <div class="slide">One</div>
+            <div class="slide">Two</div>
+            <div class="slide">Three</div>
+        </pap-carousel-gallery>
+        <div>
+            <pap-carousel-prev data-testid="basic-prev"></pap-carousel-prev>
+            <pap-carousel-dots data-testid="basic-dots"></pap-carousel-dots>
+            <pap-carousel-next data-testid="basic-next"></pap-carousel-next>
+        </div>
     </pap-carousel>
 
-    <!-- No-loop carousel -->
-    <pap-carousel id="no-loop" loop="false" aria-label="No-loop carousel">
-        <div data-slide="0" style="background:#faa;">Slide A</div>
-        <div data-slide="1" style="background:#afa;">Slide B</div>
-        <div data-slide="2" style="background:#aaf;">Slide C</div>
+    <!-- no loop -->
+    <pap-carousel id="noloop" loop="false" aria-label="No loop" data-testid="noloop">
+        <pap-carousel-gallery>
+            <div class="slide">A</div>
+            <div class="slide">B</div>
+            <div class="slide">C</div>
+        </pap-carousel-gallery>
     </pap-carousel>
 
-    <!-- Single-slide carousel (clones should NOT be created) -->
-    <pap-carousel id="single" aria-label="Single slide carousel">
-        <div data-slide="0" style="background:#ccc;">Only slide</div>
+    <!-- autoplay with a short duration -->
+    <pap-carousel id="auto" autoplay duration="400" aria-label="Autoplay" data-testid="auto">
+        <pap-carousel-gallery>
+            <div class="slide">1</div>
+            <div class="slide">2</div>
+            <div class="slide">3</div>
+        </pap-carousel-gallery>
     </pap-carousel>
 
-    <!-- Autoplay carousel with short duration for testing -->
-    <pap-carousel id="autoplay" autoplay duration="800" aria-label="Autoplay carousel">
-        <div data-slide="0" style="background:#fca;">Slide 1</div>
-        <div data-slide="1" style="background:#acf;">Slide 2</div>
-        <div data-slide="2" style="background:#cfa;">Slide 3</div>
+    <!-- controls outside the carousel, named by aria-controls -->
+    <pap-carousel id="outside" aria-label="Outside" data-testid="outside">
+        <pap-carousel-gallery>
+            <div class="slide">X</div>
+            <div class="slide">Y</div>
+            <div class="slide">Z</div>
+        </pap-carousel-gallery>
+    </pap-carousel>
+    <pap-carousel-prev aria-controls="outside" data-testid="outside-prev"></pap-carousel-prev>
+    <pap-carousel-next aria-controls="outside" data-testid="outside-next"></pap-carousel-next>
+
+    <!-- your own controls, through the API -->
+    <pap-carousel id="custom" aria-label="Custom" data-testid="custom">
+        <pap-carousel-gallery>
+            <div class="slide">P</div>
+            <div class="slide">Q</div>
+            <div class="slide">R</div>
+        </pap-carousel-gallery>
+        <button data-testid="custom-next" aria-controls="custom" onclick="custom.next()">next</button>
+        <button data-testid="custom-first" aria-controls="custom" onclick="custom.slide = 0">first</button>
     </pap-carousel>
 
-    <!-- Two carousels side by side — tests debounce isolation -->
-    <pap-carousel id="multi-a" aria-label="Multi test A">
-        <div data-slide="0" style="background:#ebb;">M-A Slide 1</div>
-        <div data-slide="1" style="background:#beb;">M-A Slide 2</div>
-        <div data-slide="2" style="background:#bbe;">M-A Slide 3</div>
+    <!-- "bleed": several per view, start-aligned to a padded gutter -->
+    <pap-carousel id="bleed" loop="false" aria-label="Bleed" data-testid="bleed">
+        <pap-carousel-gallery align="start">
+            <div class="slide">B1</div>
+            <div class="slide">B2</div>
+            <div class="slide">B3</div>
+            <div class="slide">B4</div>
+            <div class="slide">B5</div>
+            <div class="slide">B6</div>
+            <div class="slide">B7</div>
+            <div class="slide">B8</div>
+        </pap-carousel-gallery>
+        <pap-carousel-dots data-testid="bleed-dots"></pap-carousel-dots>
     </pap-carousel>
-
-    <pap-carousel id="multi-b" aria-label="Multi test B">
-        <div data-slide="0" style="background:#fdd;">M-B Slide 1</div>
-        <div data-slide="1" style="background:#dfd;">M-B Slide 2</div>
-        <div data-slide="2" style="background:#ddf;">M-B Slide 3</div>
-    </pap-carousel>
-
 </body>
 
 </html>

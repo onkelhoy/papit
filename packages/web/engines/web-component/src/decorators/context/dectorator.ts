@@ -1,5 +1,5 @@
-import { nextParent } from "functions/next-parent";
 import type { Setting } from "./types";
+import { findTarget } from "functions/find-target";
 
 const defaultSettings: Partial<Setting> = {
     rerender: true,
@@ -48,47 +48,35 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
         queueMicrotask(() => {
             if (!this.isConnected) return;
 
-            let parent = nextParent(this) as any;
-
-            while (parent)
-            {
-                const hasProperty = String(settings.name) in parent && !(subcontextKey in parent);
+            const contextowener = findTarget(this, settings.query, target => {
+                const hasProperty = String(settings.name) in target && !(subcontextKey in target);
                 const hasAttribute =
                     settings.attribute &&
-                    parent.hasAttribute(String(settings.attribute)) &&
-                    !(subcontextKey in parent);
+                    target.hasAttribute(String(settings.attribute)) &&
+                    !(subcontextKey in target);
 
-                if (hasProperty || hasAttribute) break;
+                if (hasProperty || hasAttribute) return target;
+                return null;
+            }) as any;
 
-                if (parent === document.documentElement)
-                {
-                    parent = null;
-                    break;
-                }
-
-                parent = nextParent(parent);
-            }
-
-            if (!parent)
+            if (!contextowener) 
             {
-                if (settings.verbose)
-                {
-                    console.warn(`[context] provider for '${String(settings.name)}' not found`);
-                }
+                if (settings.verbose) console.warn(`[context] provider for '${String(settings.name)}' not found`);
                 return;
             }
 
-            if (settings.verbose) console.log(`[context] found provider`, parent);
+            if (settings.verbose) console.log(`[context] found provider`, contextowener);
 
             const update = () => {
                 let next: any;
 
-                if (String(settings.name) in parent)
+                if (String(settings.name) in contextowener)
                 {
-                    next = parent[String(settings.name)];
-                } else if (settings.attribute && parent.hasAttribute(String(settings.attribute)))
+                    next = contextowener[String(settings.name)];
+                }
+                else if (settings.attribute && contextowener.hasAttribute(String(settings.attribute)))
                 {
-                    next = parent.getAttribute(String(settings.attribute));
+                    next = contextowener.getAttribute(String(settings.attribute));
                 }
 
                 if (typeof settings.update === "function")
@@ -109,23 +97,23 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
 
             update();
 
-            parent.addEventListener(`context-${String(settings.name)}`, update);
-            parent.addEventListener("context-manual-change", update);
+            contextowener.addEventListener(`context-${String(settings.name)}`, update);
+            contextowener.addEventListener("context-manual-change", update);
 
             let observer: MutationObserver | null = null;
 
-            if (settings.attribute && !(String(settings.name) in parent))
+            if (settings.attribute && !(String(settings.name) in contextowener))
             {
                 observer = new MutationObserver(update);
-                observer.observe(parent, {
+                observer.observe(contextowener, {
                     attributes: true,
                     attributeFilter: [String(settings.attribute)],
                 });
             }
 
             this[cleanupKey] = () => {
-                parent.removeEventListener(`context-${String(settings.name)}`, update);
-                parent.removeEventListener("context-manual-change", update);
+                contextowener.removeEventListener(`context-${String(settings.name)}`, update);
+                contextowener.removeEventListener("context-manual-change", update);
                 observer?.disconnect();
             };
         });

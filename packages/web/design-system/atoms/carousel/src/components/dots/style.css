@@ -1,0 +1,110 @@
+:host {
+    /* the look lives on the host, so it is easy to restyle from outside */
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1, 0.25rem);
+    padding: var(--space-1, 0.25rem);
+    box-sizing: border-box;
+    /* same border as the prev / next buttons (outline, secondary) */
+    border: 2px solid var(--button-secondary, var(--secondary));
+    border-radius: 1000px;
+    background-color: color-mix(in oklab, Canvas, 70% transparent);
+    color: var(--foreground);
+
+    pap-group {
+        display: flex;
+        align-items: center;
+        gap: inherit;
+
+        button {
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            width: var(--space-6, 24px);
+            height: var(--space-6, 24px);
+            background: none;
+            color: inherit;
+            display: inline-flex;
+            border-radius: 50%;
+
+            &::after {
+                margin: auto;
+                content: "";
+                width: var(--space-2, 0.5rem);
+                height: var(--space-2, 0.5rem);
+
+                border-radius: 50%;
+                /* an inset shadow anti-aliases much cleaner than a 1px border on a circle this small */
+                box-shadow: inset 0 0 0 1px currentColor;
+            }
+
+            &[aria-disabled="true"] {
+                &::after {
+                    background-color: currentColor;
+                }
+            }
+        }
+    }
+
+
+    pap-button[part="play"] {
+        display: none;
+    }
+}
+
+:host([autoplay="true"]) {
+    pap-button[part="play"] {
+        display: flex;
+        border-radius: 50%;
+        pointer-events: all;
+        position: relative;
+
+        pap-icon {
+            display: none;
+            width: var(--space-8);
+            height: var(--space-8);
+        }
+    }
+
+    pap-button[part="play"]::before {
+        content: "";
+        position: absolute;
+        inset: -2px;
+        border-radius: inherit;
+
+        background:
+            conic-gradient(from 0deg,
+                currentColor calc(var(--progress) * 360deg),
+                transparent 0deg);
+
+        mask:
+            radial-gradient(farthest-side,
+                transparent calc(100% - 2px),
+                white calc(100% - 1.25px));
+
+        pointer-events: none;
+    }
+
+}
+
+:host([autoplay="true"][play="true"]) {
+    pap-button[part="play"] {
+        pap-icon[name="pause"] {
+            display: block;
+        }
+    }
+}
+
+:host([autoplay="true"][play="false"]) {
+    pap-button[part="play"] {
+        pap-icon[name="play"] {
+            display: block;
+        }
+    }
+}
+
+/* nothing to show yet (or no carousel found): no empty bordered container */
+:host(:not([stopcount])),
+:host([stopcount="0"]) {
+    display: none;
+}

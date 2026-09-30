@@ -1,0 +1,52 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>carousel-dots test</title>
+
+    <style>
+        .slide {
+            height: 80px;
+        }
+    </style>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- dots inside the carousel -->
+    <pap-carousel id="inside" aria-label="Inside">
+        <pap-carousel-gallery>
+            <div class="slide">1</div>
+            <div class="slide">2</div>
+            <div class="slide">3</div>
+            <div class="slide">4</div>
+        </pap-carousel-gallery>
+        <pap-carousel-dots data-testid="inside"></pap-carousel-dots>
+    </pap-carousel>
+
+    <!-- autoplay, with a duration long enough not to advance during a test -->
+    <pap-carousel id="auto" autoplay duration="60000" aria-label="Autoplay">
+        <pap-carousel-gallery>
+            <div class="slide">1</div>
+            <div class="slide">2</div>
+        </pap-carousel-gallery>
+        <pap-carousel-dots data-testid="auto"></pap-carousel-dots>
+    </pap-carousel>
+
+    <!-- dots outside, named by aria-controls -->
+    <pap-carousel id="remote" aria-label="Remote">
+        <pap-carousel-gallery>
+            <div class="slide">1</div>
+            <div class="slide">2</div>
+            <div class="slide">3</div>
+        </pap-carousel-gallery>
+    </pap-carousel>
+    <pap-carousel-dots aria-controls="remote" data-testid="remote"></pap-carousel-dots>
+
+    <!-- no carousel at all -->
+    <pap-carousel-dots data-testid="alone"></pap-carousel-dots>
+</body>
+
+</html>

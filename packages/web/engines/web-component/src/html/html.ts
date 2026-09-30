@@ -84,6 +84,8 @@ export function html(templateOrStrings: string | TemplateStringsArray, ...values
 
   // mark this clone as an actual template root and attach its values
   (root as any).__isTemplateRoot = true;
+  // which template it came from, so an update can tell a different template apart
+  (root as any).__template = templateOrStrings;
 
   // Store the dynamic values associated with this root element
   metadataMap.set(root, values);

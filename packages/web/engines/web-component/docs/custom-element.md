@@ -69,11 +69,13 @@ The `CustomElement` rendering cycle works like this:
 
      * **String** → converted to a DOM fragment via [`html()`](./html/README.md).
      * **Element** → used directly.
+     * **`null` / `undefined` / `""`** → nothing: what was rendered is removed and the update stops.
+   * If the output comes from a different template than the mounted one (another `html` call site, or a different string), the mounted nodes are removed first and `@query` references into them reset.
    * If no `TemplateInstance` exists:
 
      * Appends the rendered DOM to `root`.
      * Creates a new `TemplateInstance` bound to the rendered DOM.
-     * Calls `firstRender()` and dispatches `first-render` event.
+     * On the first render with content only: calls `firstRender()` and dispatches `first-render` event.
    * Calls `TemplateInstance.update(values)` to patch DOM parts.
    * Calls `findQueries()` to resolve `@query` decorators.
 

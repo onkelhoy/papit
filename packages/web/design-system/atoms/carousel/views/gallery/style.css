@@ -1,0 +1,63 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: contrast-color(var(--background));
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4, 16px);
+
+    padding-block: 5rem;
+
+    h1 {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+    }
+
+    section {
+        max-width: 1200px;
+        margin-inline: auto;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 1rem 2rem;
+        border-radius: 1rem;
+        border: 1px solid light-dark(oklch(88% 0.01 264), oklch(28% 0.015 264));
+        background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
+    }
+
+    div.img-container {
+        height: 25rem;
+        display: flex;
+
+        img {
+            width: 100%;
+            object-fit: cover;
+        }
+    }
+}
+
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4, 1rem);
+    margin-top: var(--space-4, 1rem);
+}
+
+.card {
+    height: 10rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.5rem;
+    background-color: color-mix(in oklab, currentColor, 90% transparent);
+}
+
+pap-carousel-gallery.bleed {
+    --size: 30%;
+
+    &::part(carousel) {
+        padding-inline: 2rem;
+        scroll-padding-inline: 2rem;
+    }
+}

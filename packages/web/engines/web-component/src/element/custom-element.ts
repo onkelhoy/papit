@@ -40,9 +40,10 @@ import { html, getValues } from "html";
 import { TemplateInstance, partFactory } from 'html/part';
 import { debounceFn } from "functions/debounce";
 import { nextParent } from "functions/next-parent";
-import type { PropertyMeta, QueryMeta, Setting } from "./types";
+import type { QueryMeta, PropertyMeta, Setting } from "./types";
 import { throttleFn } from "functions/throttle";
 import { flushReflections } from "decorators/property/reflection";
+import { findTarget } from "functions/find-target";
 
 const defaultSetting: ShadowRootInit & Partial<Setting> = {
     mode: "open",
@@ -171,8 +172,6 @@ export class CustomElement extends HTMLElement {
         // {
         //     this.root.ado
         // }
-
-
     }
 
     /**
@@ -183,30 +182,41 @@ export class CustomElement extends HTMLElement {
      * - On first render:
      *   - Appends the rendered element to `this.root`.
      *   - Wraps it in a `TemplateInstance` for marker-based updates (if it came from a tagged template).
-     *   - Calls `firstRender()` and dispatches the `"first-render"` event.
+     *   - Calls `firstRender()` and dispatches the `"first-render"` event (on the very first update,
+     *     even when it renders nothing, so `static sheet` is adopted for components styled only on `:host`).
      * - On subsequent renders:
      *   - If the render output was from a tagged template, retrieves its dynamic values with {@link getValues} and calls `TemplateInstance.update()` to patch the DOM.
      *   - If the render output was a string-based template, no diffing occurs (it’s treated as static DOM).
+     * - `null`, `undefined` or `""` renders nothing (removing what was rendered); returning content again mounts it fresh.
+     * - A different template than the mounted one (another `html` call site, or another string) replaces it.
      * - Always resolves any `@query`-decorated properties after rendering.
-     *
-     * @throws {Error} If `render()` returns `null`, `undefined`, or any falsy value.
      */
     update() {
         // subclasses that skip super.connectedCallback() still get their defaults reflected
         if (this.isConnected) flushReflections(this);
 
-        let newRoot = this.render();
-        let isString = typeof newRoot === "string";
-        if (typeof newRoot === "string") newRoot = html(newRoot);
+        const output = this.render();
+        if (output === null || output === undefined || output === "")
+        {
+            this.unmount();
+            this.firstUpdate();
+            return;
+        }
 
-        if (!newRoot) throw new Error("[error] core: no element returned from render");
+        let isString = typeof output === "string";
+        const newRoot = typeof output === "string" ? html(output) : output;
+        // the template it came from: the html`` strings, the string itself, or the node
+        const key = isString ? output : ((newRoot as any).__template ?? newRoot);
+
+        if (this.templateInstance && key !== this.templateKey) this.unmount();
 
         if (this.templateInstance == null)
         {
+            this.mounted = newRoot instanceof DocumentFragment ? Array.from(newRoot.childNodes) : [newRoot as ChildNode];
             this.root.appendChild(newRoot);
             this.templateInstance = new TemplateInstance(this.root, partFactory);
-            this.firstRender();
-            this.dispatchEvent(new Event("first-render"));
+            this.templateKey = key;
+            this.firstUpdate();
         }
 
         if (!isString) 
@@ -236,8 +246,12 @@ export class CustomElement extends HTMLElement {
         let parent = nextParent(this);
         while (parent)
         {
-            const found = parent.closest(selector);
-            if (found) return found;
+            const matches = parent.matches(selector);
+            if (matches) return parent;
+
+            const closest = parent.closest(selector);
+            if (closest) return closest;
+
             if (parent === document.documentElement) break;
             parent = nextParent(parent);
         }
@@ -265,12 +279,50 @@ export class CustomElement extends HTMLElement {
      * - An Element (template root)
      * @returns string|Element
      */
-    render(): string | Node {
+    render(): string | Node | null | undefined {
         return "Birds can fly due to their wings"
     }
 
     // helper variables & private functions 
     private templateInstance: TemplateInstance | null = null;
+    private templateKey: unknown = undefined;
+    private mounted: ChildNode[] = []; // the top-level nodes of the mounted render
+    private hasRendered = false;
+
+    // once, on the first update: adopts the stylesheets even when nothing is rendered,
+    // a component may draw itself entirely with :host styles (e.g. pap-switch)
+    private firstUpdate() {
+        if (this.hasRendered) return;
+        this.hasRendered = true;
+        this.firstRender();
+        this.dispatchEvent(new Event("first-render"));
+    }
+
+    /** Removes the mounted render, so the next one starts fresh. */
+    private unmount() {
+        if (this.templateInstance == null) return;
+
+        // everything from the first to the last top-level node, including what parts inserted in between
+        const first = this.mounted[0];
+        const last = this.mounted[this.mounted.length - 1];
+        if (first?.parentNode && last?.parentNode)
+        {
+            const range = document.createRange();
+            range.setStartBefore(first);
+            range.setEndAfter(last);
+            range.deleteContents();
+        }
+
+        this.mounted = [];
+        this.templateInstance = null;
+        this.templateKey = undefined;
+
+        // queried references pointed into what was just removed
+        for (const meta of this.queryMeta ?? [])
+        {
+            if (!meta.outside) (this as any)[meta.propertyKey] = null;
+        }
+    }
 
     // decorator query 
     private queryMeta?: QueryMeta[];
@@ -284,9 +336,22 @@ export class CustomElement extends HTMLElement {
         for (let meta of this.queryMeta)
         {
             if ((this as any)[meta.propertyKey]) continue;
-            const elm = this.root.querySelector(meta.selector);
-            if (meta.load) meta.load.call(this, elm);
-            (this as any)[meta.propertyKey] = elm;
+            const query = (typeof meta.selector === "function" ? meta.selector.call(this) : meta.selector) ?? String(meta.propertyKey);
+
+            let element: Element | null = null;
+            if (meta.outside)
+            {
+                element = findTarget(this, query);
+            }
+            if (!element)
+            {
+                element = this.root.querySelector(query);
+            }
+
+            if (meta.load && element) meta.load.call(this, element);
+            else if (meta.error && !element) meta.error.call(this);
+
+            (this as any)[meta.propertyKey] = element;
         }
     }
 

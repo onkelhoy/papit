@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CarouselDots | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>CarouselDots | experiment</h1>
+    <section>
+        <h2>Example</h2>
+        <pap-codeblock selected="hello">
+            <pap-carousel-dots></pap-carousel-dots>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>Example With Carousel</h2>
+        <pap-codeblock>
+            <pap-carousel id="carousel2" autoplay>
+                <pap-carousel-gallery loop="false">
+                <div>
+                    [[FIRST]] Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis sequi blanditiis,
+                    consequatur debitis
+                    esse rerum deleniti impedit odio nihil autem excepturi cupiditate itaque similique? Repellendus cum
+                    error nostrum id perspiciatis.
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate vero enim delectus, repellendus
+                    tempora pariatur soluta veritatis voluptas quas laborum, quasi iusto fuga. Laboriosam illum eveniet
+                    accusamus. Consectetur, consequatur repellendus!
+                </div>
+                <div>
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Earum reprehenderit quas reiciendis vel
+                    natus ducimus sint recusandae aliquid harum esse, cumque quaerat deleniti quis dignissimos, veniam
+                    ab repudiandae debitis quasi?
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Et consequatur atque dolorum ut totam dicta
+                    earum tempore ducimus explicabo perspiciatis libero corporis voluptatibus quas aut ea, molestias
+                    mollitia numquam similique!
+                </div>
+                <div>
+                    Lorem, ipsum dolor sit amet consectetur adipisicing elit. Modi labore sint doloremque eaque eius
+                    vero corrupti laboriosam expedita in, est voluptas vel quod aspernatur facilis nobis eveniet
+                    voluptatum, nesciunt dolores.
+                    Lorem, ipsum dolor sit amet consectetur adipisicing elit. Unde eius doloribus, minus veniam dolorem
+                    vero voluptas asperiores voluptatibus accusamus quisquam fugiat ea, laborum optio. Quod deleniti
+                    doloribus mollitia perferendis commodi.
+                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero deserunt provident dicta, molestiae
+                    sapiente reiciendis nobis eveniet facilis, adipisci commodi vitae. Maxime tempora voluptas rem
+                    delectus, numquam sint mollitia ipsam.
+                </div>
+                <div>
+                    [[LAST]] Lorem, ipsum dolor sit amet consectetur adipisicing elit. Odio sint nisi quo, perferendis
+                    libero ab
+                    praesentium, repudiandae at vel officia fugit ratione distinctio corporis cumque id nostrum
+                    doloribus? Deserunt, veritatis.
+                    Lorem ipsum dolor sit amet consectetur, adipisicing elit. Similique inventore quae magnam
+                    praesentium exercitationem alias accusantium magni neque culpa. Expedita vel quos optio, ex sit
+                    porro vitae repudiandae hic facere!
+                </div>
+                </pap-carousel-gallery>
+
+                <pap-carousel-prev></pap-carousel-prev>
+                <pap-carousel-next></pap-carousel-next>
+            </pap-carousel>
+            <!-- a control outside the carousel, pointing at it by id -->
+            <pap-carousel-dots aria-controls="carousel2"></pap-carousel-dots>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

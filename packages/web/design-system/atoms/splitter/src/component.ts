@@ -46,7 +46,7 @@ export class Splitter extends CustomElement {
 
     @property label: string = "";
     @property split: "horizontal" | "vertical" = "vertical";
-    @property({ attribute: "data-drag" }) dragging = false;
+    @property({ type: Boolean, attribute: "data-drag" }) dragging = false;
     @property min: number = 0;
     @property max: number = 100;
     @property step: number = 5; // keyboard step size

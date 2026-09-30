@@ -86,8 +86,8 @@ Base class. Attaches an open shadow root, renders `render()` into it on connect,
 
 | Member | Description |
 | ------ | ----------- |
-| `render()` | Override. Return an `html` template, a string or a Node |
-| `firstRender()` | Runs after the first render. Overrides **must** call `super.firstRender()`, which adopts `static sheet` / `static sheets` |
+| `render()` | Override. Return an `html` template, a string or a Node, or `null` / `undefined` / `""` to render nothing |
+| `firstRender()` | Runs after the first render with content. Overrides **must** call `super.firstRender()`, which adopts `static sheet` / `static sheets` |
 | `update()` | Render now |
 | `requestUpdate()` | Debounced `update()` |
 | `throttleUpdate()` | Throttled `update()` |
@@ -95,7 +95,19 @@ Base class. Attaches an open shadow root, renders `render()` into it on connect,
 | `root` | The shadow root, or the element itself in light DOM mode |
 | `static sheet`, `static sheets` | `CSSStyleSheet`s adopted into the shadow root |
 
-Fires `first-render` after the first render. `disconnectedCallback` is empty: if you add listeners or observers in `connectedCallback`, remove them there.
+Fires `first-render` after the first render with content. `disconnectedCallback` is empty: if you add listeners or observers in `connectedCallback`, remove them there.
+
+`render()` may change what it returns between updates:
+
+```ts
+render() {
+    if (this.items.length === 0) return null;                  // nothing rendered (yet)
+    if (this.compact) return html`<span>${this.items.length}</span>`;
+    return html`<ul>${this.items.map(i => html`<li key=${i}>${i}</li>`)}</ul>`;
+}
+```
+
+The same template is patched in place. A different one (another `html` call site, or a different string) replaces what is rendered, and so does nothing: the rendered nodes are removed, `@query` references into them are reset, and the next content mounts fresh. In light DOM mode only the rendered nodes are removed, never the element's own children.
 
 ## CustomElementInternals
 
@@ -131,11 +143,11 @@ Listeners are attached as passed, so bind methods with `@bind`. `getValues(node)
 | Decorator | Purpose |
 | --------- | ------- |
 | `@property` / `@property(settings)` | Reactive property synced with an attribute |
-| `@query` / `@query(selector)` / `@query({ selector, load })` | Shadow DOM reference, resolved after each render until found. Selector defaults to the property name |
+| `@query` / `@query(selector)` / `@query(settings)` | Reference to an element in the shadow root (or, with `outside`, around the element), resolved after each render until found. Selector defaults to the property name |
 | `@bind` | Binds a method to the instance on first access |
 | `@debounce` / `@debounce(delay \| name \| { delay, name })` | Debounces a method. Default delay `300` ms. With `name`, adds the debounced version under that name and keeps the original |
 | `@throttle` / `@throttle(delay \| name \| { delay, name })` | Same, throttled |
-| `@context` / `@context(settings)` | Reads a value from the nearest ancestor that has the property or attribute, and follows its changes |
+| `@context` / `@context(settings)` | Reads a value from the nearest ancestor that has the property or attribute (or the element its `query` names), and follows its changes |
 
 ### @property settings
 
@@ -157,10 +169,31 @@ Listeners are attached as passed, so bind methods with `@bind`. `getValues(node)
 
 Attribute reflection and `after` hooks are deferred until the element is connected, so `document.createElement` works.
 
+### @query settings
+
+| Setting | Type | Default | Description |
+| ------- | ---- | ------- | ----------- |
+| `selector` | `string \| (this) => string` | property name | CSS selector; a function is called with the element as `this` |
+| `outside` | `boolean` | `false` | Look outside the shadow root with [`findTarget`](#functions): a single match in the element's root, else the nearest matching ancestor. Falls back to the shadow root |
+| `load(element)` | `function` | — | Runs once the element is found |
+| `error()` | `function` | — | Runs after each render that still finds nothing |
+
+```ts
+// the carousel named by aria-controls, else the pap-carousel this button sits in
+@query<Carousel>({
+    outside: true,
+    selector(this: Next) {
+        const id = this.getAttribute("aria-controls");
+        return id ? `#${CSS.escape(id)}` : "pap-carousel";
+    },
+}) carousel: Carousel | null = null;
+```
+
 ### @context settings
 
 | Setting | Type | Default | Description |
 | ------- | ---- | ------- | ----------- |
+| `query` | `string \| (this) => string` | — | Selector for the provider when it is not an ancestor (e.g. `#id` from `aria-controls`). An empty result walks up as usual |
 | `name` | `string` | property name | Property to read on the provider |
 | `attribute` | `string` | property name | Attribute to read when the provider has no such property |
 | `applyattribute` | `boolean` | `false` | Also set the value as an attribute on the consumer |
@@ -179,6 +212,7 @@ Attribute reflection and `after` hooks are deferred until the element is connect
 | `generateUUID()` | Random v4 UUID |
 | `CumulativeOffset(element)` | `{ top, left }` relative to the document |
 | `nextParent(element)` | Parent element, or the shadow host at a shadow root |
+| `findTarget(element, query?, finder?)` | Finds a related element. A `query` with exactly one match in the element's root returns it; otherwise it walks up from the parent (through shadow hosts), returning the first element `finder` accepts, or that matches the query. `null` if nothing does |
 | `resolve(value)` | Awaits a value, a promise or a function returning either |
 
 `STANDARD_DELAY` (`300`) is exported too.

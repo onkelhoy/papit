@@ -1,0 +1,46 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>carousel-gallery test</title>
+
+    <style>
+        .slide {
+            height: 120px;
+        }
+    </style>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- a gallery on its own, looping -->
+    <pap-carousel-gallery id="loop" data-testid="loop">
+        <div class="slide" id="first-slide" aria-label="Mine">One</div>
+        <div class="slide"><a href="#">a link</a></div>
+        <div class="slide">Three</div>
+    </pap-carousel-gallery>
+
+    <!-- no loop -->
+    <pap-carousel-gallery id="noloop" loop="false" data-testid="noloop">
+        <div class="slide">A</div>
+        <div class="slide">B</div>
+        <div class="slide">C</div>
+    </pap-carousel-gallery>
+
+    <!-- a single slide has nothing to loop -->
+    <pap-carousel-gallery id="single" data-testid="single">
+        <div class="slide">Only</div>
+    </pap-carousel-gallery>
+
+    <!-- one copy per end -->
+    <pap-carousel-gallery id="onecopy" clonecount="1" data-testid="onecopy">
+        <div class="slide">1</div>
+        <div class="slide">2</div>
+        <div class="slide">3</div>
+        <div class="slide">4</div>
+    </pap-carousel-gallery>
+</body>
+
+</html>
