@@ -108,6 +108,55 @@ test.describe("client-side creation", () => {
         await expect(el).toHaveAttribute("size", "3");
     });
 
+    test("after hooks don't run before connect, so they can't add attributes", async ({ page }) => {
+        const result = await page.evaluate(() => {
+            const el = document.createElement("create-fixture") as any;
+            return {
+                attributes: Array.from(el.attributes as NamedNodeMap).map(a => a.name),
+                calls: el.afterCalls.length,
+            };
+        });
+
+        expect(result.attributes).toEqual([]);
+        expect(result.calls).toBe(0);
+    });
+
+    test("queued after hook runs once on connect with the latest value", async ({ page }) => {
+        const calls = await page.evaluate(() => {
+            const el = document.createElement("create-fixture") as any;
+            el.duration = 4000;
+            el.duration = 3000;
+            document.querySelector('[data-testid="mount"]')!.append(el);
+            return el.afterCalls;
+        });
+
+        expect(calls).toEqual([{ value: 3000, old: undefined, initial: true }]);
+    });
+
+    test("after hooks run immediately once connected", async ({ page }) => {
+        const result = await page.evaluate(() => {
+            const el = document.createElement("create-fixture") as any;
+            el.setAttribute("data-testid", "created");
+            document.querySelector('[data-testid="mount"]')!.append(el);
+            el.duration = 2000;
+            return el.afterCalls;
+        });
+
+        expect(result).toEqual([
+            { value: 5000, old: undefined, initial: true },
+            { value: 2000, old: 5000, initial: false },
+        ]);
+        const el = page.getByTestId("created");
+        await expect(el).toHaveClass("styled");
+        await expect(el).toHaveCSS("--duration", "2000ms");
+    });
+
+    test("parsed markup runs after hooks on connect", async ({ page }) => {
+        const el = page.getByTestId("parsed");
+        await expect(el).toHaveClass("styled");
+        await expect(el).toHaveCSS("--duration", "5000ms");
+    });
+
     test("context resolves and applies its attribute only after connect", async ({ page }) => {
         const before = await page.evaluate(() => {
             const el = document.createElement("create-fixture");

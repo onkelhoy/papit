@@ -12,7 +12,7 @@
     "css",
     "javascript"
   ],
-  "version": "0.1.12",
+  "version": "0.1.13",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -59,20 +59,20 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/button": "0.1.5",
+    "@papit/button": "0.1.6",
     "@papit/data-structure": "0.0.2",
-    "@papit/icon": "0.1.8",
+    "@papit/icon": "0.1.9",
     "@papit/lexer": "0.0.1",
-    "@papit/splitter": "0.0.9",
-    "@papit/switch": "0.1.8",
-    "@papit/tooltip": "0.0.10",
+    "@papit/splitter": "0.0.10",
+    "@papit/switch": "0.1.9",
+    "@papit/tooltip": "0.0.11",
     "@papit/translator": "0.1.1",
-    "@papit/web-component": "0.0.9"
+    "@papit/web-component": "0.0.10"
   },
   "devDependencies": {
     "@papit/theme": "0.0.2",
-    "@papit/router": "0.1.5",
-    "@papit/tabs": "0.1.5",
+    "@papit/router": "0.1.6",
+    "@papit/tabs": "0.1.6",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -94,5 +94,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.11"
+  "remoteVersion": "0.1.12"
 }

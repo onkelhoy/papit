@@ -17,7 +17,7 @@ import { parseValue, sameValue, stringifyValue } from "functions/value";
 import type { PropertyMeta } from "element/types";
 import { resolve } from "functions/resolve";
 import type { Setting } from "./types";
-import { cancelReflection, hasConnected, queueReflection } from "./reflection";
+import { cancelReflection, hasConnected, queueAfter, queueReflection } from "./reflection";
 
 const defaultSettings: Partial<Setting> = {
     readonly: false,
@@ -175,7 +175,15 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             }
             this[updateKey] = false;
 
-            if (settings.after) settings.after.call(this, value, oldVal, isInitial, false);
+            if (settings.after)
+            {
+                // same rule as reflection: hooks may write attributes (style, classList, ...),
+                // so before the first connect they're queued and run with the value current then
+                if (hasConnected(this)) settings.after.call(this, value, oldVal, isInitial, false);
+                else queueAfter(this, propertyKey, function (this: any) {
+                    settings.after!.call(this, this[privateKey], oldVal, isInitial, false);
+                });
+            }
             if (settings.rerender) this.requestUpdate?.();
             if (settings.context) this.dispatchEvent(new Event(`context-${String(propertyKey)}`));
         },

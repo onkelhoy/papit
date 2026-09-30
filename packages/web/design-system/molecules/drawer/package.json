@@ -10,7 +10,7 @@
     "panel",
     "modal"
   ],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -57,13 +57,13 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/dialog": "0.0.12",
-    "@papit/web-component": "0.0.9"
+    "@papit/dialog": "0.0.13",
+    "@papit/web-component": "0.0.10"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.12",
-    "@papit/router": "0.1.5",
-    "@papit/tabs": "0.1.5",
+    "@papit/codeblock": "0.1.13",
+    "@papit/router": "0.1.6",
+    "@papit/tabs": "0.1.6",
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.1",
     "@playwright/test": "1.58.0",

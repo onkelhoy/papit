@@ -56,12 +56,12 @@ export class Carousel extends CustomElement {
 
     @property({
         type: Number,
-        after(this: Carousel, value: number) {
+        after(this: Carousel, value: number, _old, initial) {
             this.dotindex = value;
 
             this.resetProgress();
 
-            this.dispatchEvent(new Event("change"));
+            if (!initial) this.dispatchEvent(new Event("change"));
 
             if (this._fromScroll)
             {
