@@ -11,7 +11,7 @@
     "validation",
     "base-class"
   ],
-  "version": "0.2.4",
+  "version": "0.2.5",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -59,12 +59,12 @@
   },
   "dependencies": {
     "@papit/translator": "0.1.1",
-    "@papit/web-component": "0.0.9"
+    "@papit/web-component": "0.0.10"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.12",
-    "@papit/router": "0.1.5",
-    "@papit/tabs": "0.1.5",
+    "@papit/codeblock": "0.1.13",
+    "@papit/router": "0.1.6",
+    "@papit/tabs": "0.1.6",
     "@papit/theme": "0.0.2",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
@@ -87,5 +87,5 @@
       }
     }
   },
-  "remoteVersion": "0.2.3"
+  "remoteVersion": "0.2.4"
 }

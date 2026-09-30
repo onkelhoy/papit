@@ -82,6 +82,33 @@ test.describe("1. DOM / registration", () => {
         );
         expect(count).toBe(6);
     });
+
+    test("document.createElement works and sets --duration once connected", async ({ page }) => {
+        const result = await page.evaluate(() => {
+            const el = document.createElement("pap-carousel");
+            const attributes = Array.from(el.attributes).map(a => a.name);
+            el.innerHTML = "<div>1</div><div>2</div>";
+            document.body.append(el);
+            return { attributes, duration: el.style.getPropertyValue("--duration") };
+        });
+
+        expect(result.attributes).toEqual([]);
+        expect(result.duration).toBe("5000ms");
+    });
+
+    test("no change event fires on mount", async ({ page }) => {
+        const changes = await page.evaluate(async () => {
+            let changes = 0;
+            const el = document.createElement("pap-carousel");
+            el.addEventListener("change", () => changes++);
+            el.innerHTML = "<div>1</div><div>2</div>";
+            document.body.append(el);
+            await new Promise(r => setTimeout(r, 200));
+            return changes;
+        });
+
+        expect(changes).toBe(0);
+    });
 });
 
 // ===========================================================================

@@ -72,7 +72,7 @@
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3",
-    "@papit/codeblock": "0.1.12"
+    "@papit/codeblock": "0.1.13"
   },
   "browserslist": [
     "defaults",
@@ -94,5 +94,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.0"
+  "remoteVersion": "0.1.1"
 }

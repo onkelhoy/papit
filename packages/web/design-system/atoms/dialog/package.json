@@ -10,7 +10,7 @@
     "popover",
     "a11y"
   ],
-  "version": "0.0.12",
+  "version": "0.0.13",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -57,17 +57,17 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/icon": "0.1.8",
-    "@papit/web-component": "0.0.9"
+    "@papit/icon": "0.1.9",
+    "@papit/web-component": "0.0.10"
   },
   "devDependencies": {
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.12",
+    "@papit/codeblock": "0.1.13",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
-    "@papit/router": "0.1.5",
-    "@papit/tabs": "0.1.5",
+    "@papit/router": "0.1.6",
+    "@papit/tabs": "0.1.6",
     "typescript": "5.9.3"
   },
   "browserslist": [

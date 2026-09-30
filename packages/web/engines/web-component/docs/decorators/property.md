@@ -56,7 +56,7 @@ count: number;
 | `rerender`                    |                                          `boolean` | `false`         | When true, on non-initial changes the property will call `this.requestUpdate()` (if present).     |
 | `removeAttribute`             |                                          `boolean` | `true`          | When clearing a property (null/undefined/false) remove the attribute instead of setting a string. |
 | `before`                      | `(newVal, oldVal, isInitial, isAttribute) => void` | —               | Hook called synchronously before the value is stored.                                             |
-| `after`                       | `(newVal, oldVal, isInitial, isAttribute) => void` | —               | Hook called synchronously after the value is stored.                                              |
+| `after`                       | `(newVal, oldVal, isInitial, isAttribute) => void` | —               | Hook called synchronously after the value is stored (queued until connect before the first one).  |
 | `get` / `set`                 |                                          functions | —               | You may provide getter/setter wrappers in options to customize access.                            |
 | `configurable` / `enumerable` |                                          `boolean` | `true` / `true` | Controls generated property descriptor flags.                                                     |
 | `maxReqursiveSteps`           |                                           `number` | `20`            | Controls how deeply the decorator's equality check will recurse for complex values.               |
@@ -82,6 +82,7 @@ The custom elements spec forbids adding attributes while an element is construct
 - `document.createElement(tag)` / `new Ctor()` returns an element with **no attributes** until it is appended.
 - An attribute already present before connect (markup, or `setAttribute` before `append`) wins over the default and is not overwritten. A property set *after* that attribute wins again (last write wins).
 - After the first connect, reflection is synchronous as before.
+- `after` hooks follow the same rule, since they may write attributes (`style.setProperty`, `classList`, `toggleAttribute`, ...). Before the first connect each property's hook is queued once and runs on connect, right after the reflections, with the value current then and the `oldVal` / `isInitial` of the first queued set. Guard events with `isInitial` if they shouldn't fire on mount.
 - Reflection is flushed by `CustomElement`, so use the decorator on `CustomElement` subclasses.
 
 ### Type conversion

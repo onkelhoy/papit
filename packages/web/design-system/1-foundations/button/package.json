@@ -9,7 +9,7 @@
     "form",
     "form-associated"
   ],
-  "version": "0.1.5",
+  "version": "0.1.6",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -56,17 +56,17 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/web-component": "0.0.9"
+    "@papit/web-component": "0.0.10"
   },
   "devDependencies": {
     "@playwright/test": "1.58.0",
-    "@papit/router": "0.1.5",
-    "@papit/tabs": "0.1.5",
+    "@papit/router": "0.1.6",
+    "@papit/tabs": "0.1.6",
     "playwright": "1.58.0",
     "typescript": "5.9.3",
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.12"
+    "@papit/codeblock": "0.1.13"
   },
   "browserslist": [
     "defaults",

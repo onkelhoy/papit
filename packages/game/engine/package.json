@@ -56,7 +56,7 @@
     "@papit/vector": "^0.0.1"
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.12",
+    "@papit/codeblock": "0.1.13",
     "@papit/theme": "0.0.2",
     "@papit/translator": "0.1.1",
     "@playwright/test": "1.58.0",
