@@ -36,3 +36,75 @@ body {
         }
     }
 }
+.toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4, 1rem);
+    margin-top: var(--space-4, 1rem);
+}
+
+.card {
+    height: 10rem;
+    display: grid;
+    place-items: center;
+    border-radius: 0.5rem;
+    background-color: color-mix(in oklab, currentColor, 90% transparent);
+}
+
+pap-carousel.bleed {
+    --size: 30%;
+
+    /* the scroll container is the gallery's part */
+    pap-carousel-gallery::part(carousel) {
+        padding-inline: 2rem;
+        scroll-padding-inline: 2rem;
+    }
+
+    article {
+        height: 10rem;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        background-color: color-mix(in oklab, currentColor, 90% transparent);
+    }
+}
+
+/* ── bleed ─────────────────────────────────────────────────── */
+/* 100vw includes the scrollbar on some systems, don't let it scroll the page sideways */
+body {
+    overflow-x: clip;
+}
+
+/* the carousel sits in the page column; as a container, 100cqw is that column's width
+   everywhere inside it, also in the gallery's shadow part (where % would mean the gallery) */
+.bleed-out {
+    container-type: inline-size;
+}
+
+.bleed-out pap-carousel-gallery {
+    --size: 30%;
+    /* stretch from the page column to the viewport edges */
+    margin-inline: calc(50cqw - 50vw);
+}
+
+.bleed-out pap-carousel-gallery::part(carousel) {
+    /* the gutter puts card 1 back in line with the page content */
+    --gutter: calc(50vw - 50cqw);
+    padding-inline: var(--gutter);
+    scroll-padding-inline: var(--gutter);
+}
+
+@media (max-width: 700px) {
+    .bleed-out pap-carousel-gallery {
+        --size: 80%;
+    }
+}
+
+.bleed-card {
+    height: 12rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    border-radius: 0.5rem;
+    background-color: color-mix(in oklab, currentColor, 90% transparent);
+}
+

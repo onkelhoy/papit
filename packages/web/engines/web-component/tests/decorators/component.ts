@@ -20,6 +20,49 @@ class ContextProvider extends CustomElement {
 }
 customElements.define("context-provider", ContextProvider);
 
+// --- Consumer that names its provider: context `query` ---
+class ContextQueryConsumer extends CustomElement {
+    @context({
+        query(this: ContextQueryConsumer) {
+            const id = this.getAttribute("source");
+            return id ? `#${id}` : "";
+        },
+    }) hello = "";
+
+    render() {
+        return html`<span data-key="hello">${this.hello}</span>`;
+    }
+}
+customElements.define("context-query-consumer", ContextQueryConsumer);
+
+// --- @query({ outside }): finds an element outside its own shadow root ---
+class QueryOutside extends CustomElement {
+    loaded = 0;
+    errors = 0;
+
+    @query<HTMLElement>({
+        outside: true,
+        selector(this: QueryOutside) {
+            const id = this.getAttribute("target");
+            return id ? `#${id}` : "section.query-zone";
+        },
+        load(this: QueryOutside) {
+            this.loaded++;
+        },
+        error(this: QueryOutside) {
+            this.errors++;
+        },
+    }) zone: HTMLElement | null = null;
+
+    // inside its own shadow root, outside is not involved
+    @query("b") bold!: HTMLElement;
+
+    render() {
+        return html`<b>own</b>`;
+    }
+}
+customElements.define("query-outside", QueryOutside);
+
 class Component extends CustomElement {
 
     // properties

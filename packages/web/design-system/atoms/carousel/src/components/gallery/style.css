@@ -1,0 +1,35 @@
+:host {
+    --size: 100%;
+    position: relative;
+    display: block;
+
+    div[part="carousel"] {
+        display: grid;
+        gap: var(--space-4, 1rem);
+        grid-auto-flow: column;
+        grid-auto-columns: var(--size);
+        scroll-snap-type: x mandatory;
+        overflow-x: auto;
+        overflow-y: hidden;
+        /* Firefox */
+        scrollbar-width: none;
+    }
+
+    div[part="carousel"]::-webkit-scrollbar {
+        display: none;
+        /* Chrome, Safari, Edge */
+    }
+}
+
+
+::slotted([slot="clone-prev"]),
+::slotted([slot="slide"]),
+::slotted([slot="clone-next"]) {
+    scroll-snap-align: center;
+}
+
+:host([align="start"]) ::slotted([slot="clone-prev"]),
+:host([align="start"]) ::slotted([slot="slide"]),
+:host([align="start"]) ::slotted([slot="clone-next"]) {
+    scroll-snap-align: start;
+}

@@ -1,0 +1,33 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Core findTarget test</title>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <!-- two matches for .zone: the walk up must pick the element's own -->
+    <section class="zone" data-testid="zone-a">
+        <div>
+            <span data-testid="start-a"></span>
+        </div>
+    </section>
+    <section class="zone" data-testid="zone-b">
+        <span data-testid="start-b"></span>
+    </section>
+
+    <!-- a single match, not an ancestor of anything -->
+    <aside id="unique" data-testid="unique"></aside>
+
+    <div>
+        <span data-testid="start-far"></span>
+    </div>
+
+    <!-- main.js gives it a shadow root with an inner span -->
+    <div id="shadow-host" data-testid="shadow-host"></div>
+</body>
+
+</html>

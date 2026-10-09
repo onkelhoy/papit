@@ -18,45 +18,97 @@
 <body>
     <h1>Carousel | experiment</h1>
     <section>
-        <h2>Example</h2>
+        <h2>Basic Example</h2>
         <pap-codeblock>
-            <pap-carousel loop="false">
-                <div>
-                    [[FIRST]] Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis sequi blanditiis,
-                    consequatur debitis
-                    esse rerum deleniti impedit odio nihil autem excepturi cupiditate itaque similique? Repellendus cum
-                    error nostrum id perspiciatis.
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate vero enim delectus, repellendus
-                    tempora pariatur soluta veritatis voluptas quas laborum, quasi iusto fuga. Laboriosam illum eveniet
-                    accusamus. Consectetur, consequatur repellendus!
+            <pap-carousel aria-label="Geese">
+                <pap-carousel-gallery>
+                    <div class="img-container">
+                        <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
+                    </div>
+                    <div class="img-container">
+                        <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
+                    </div>
+                    <div class="img-container">
+                        <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
+                    </div>
+                </pap-carousel-gallery>
+
+                <div class="toolbar">
+                    <pap-carousel-prev></pap-carousel-prev>
+                    <pap-carousel-dots></pap-carousel-dots>
+                    <pap-carousel-next></pap-carousel-next>
                 </div>
-                <div>
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Earum reprehenderit quas reiciendis vel
-                    natus ducimus sint recusandae aliquid harum esse, cumque quaerat deleniti quis dignissimos, veniam
-                    ab repudiandae debitis quasi?
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Et consequatur atque dolorum ut totam dicta
-                    earum tempore ducimus explicabo perspiciatis libero corporis voluptatibus quas aut ea, molestias
-                    mollitia numquam similique!
-                </div>
-                <div>
-                    Lorem, ipsum dolor sit amet consectetur adipisicing elit. Modi labore sint doloremque eaque eius
-                    vero corrupti laboriosam expedita in, est voluptas vel quod aspernatur facilis nobis eveniet
-                    voluptatum, nesciunt dolores.
-                    Lorem, ipsum dolor sit amet consectetur adipisicing elit. Unde eius doloribus, minus veniam dolorem
-                    vero voluptas asperiores voluptatibus accusamus quisquam fugiat ea, laborum optio. Quod deleniti
-                    doloribus mollitia perferendis commodi.
-                    Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero deserunt provident dicta, molestiae
-                    sapiente reiciendis nobis eveniet facilis, adipisci commodi vitae. Maxime tempora voluptas rem
-                    delectus, numquam sint mollitia ipsam.
-                </div>
-                <div>
-                    [[LAST]] Lorem, ipsum dolor sit amet consectetur adipisicing elit. Odio sint nisi quo, perferendis
-                    libero ab
-                    praesentium, repudiandae at vel officia fugit ratione distinctio corporis cumque id nostrum
-                    doloribus? Deserunt, veritatis.
-                    Lorem ipsum dolor sit amet consectetur, adipisicing elit. Similique inventore quae magnam
-                    praesentium exercitationem alias accusantium magni neque culpa. Expedita vel quos optio, ex sit
-                    porro vitae repudiandae hic facere!
+            </pap-carousel>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Example (no loop)</h2>
+        <pap-codeblock>
+            <pap-carousel loop="false" aria-label="Lorem">
+                <pap-carousel-gallery>
+                    <div>
+                        [[FIRST]] Lorem ipsum dolor sit amet consectetur adipisicing elit. Quis sequi blanditiis,
+                        consequatur debitis
+                        esse rerum deleniti impedit odio nihil autem excepturi cupiditate itaque similique? Repellendus
+                        cum
+                        error nostrum id perspiciatis.
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptate vero enim delectus,
+                        repellendus
+                        tempora pariatur soluta veritatis voluptas quas laborum, quasi iusto fuga. Laboriosam illum
+                        eveniet
+                        accusamus. Consectetur, consequatur repellendus!
+                    </div>
+                    <div>
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Earum reprehenderit quas reiciendis vel
+                        natus ducimus sint recusandae aliquid harum esse, cumque quaerat deleniti quis dignissimos,
+                        veniam
+                        ab repudiandae debitis quasi?
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Et consequatur atque dolorum ut totam
+                        dicta
+                        earum tempore ducimus explicabo perspiciatis libero corporis voluptatibus quas aut ea, molestias
+                        mollitia numquam similique!
+                    </div>
+                    <div>
+                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Modi labore sint doloremque eaque eius
+                        vero corrupti laboriosam expedita in, est voluptas vel quod aspernatur facilis nobis eveniet
+                        voluptatum, nesciunt dolores.
+                        Lorem, ipsum dolor sit amet consectetur adipisicing elit. Unde eius doloribus, minus veniam
+                        dolorem
+                        vero voluptas asperiores voluptatibus accusamus quisquam fugiat ea, laborum optio. Quod deleniti
+                        doloribus mollitia perferendis commodi.
+                        Lorem ipsum dolor sit amet consectetur adipisicing elit. Vero deserunt provident dicta,
+                        molestiae
+                        sapiente reiciendis nobis eveniet facilis, adipisci commodi vitae. Maxime tempora voluptas rem
+                        delectus, numquam sint mollitia ipsam.
+                    </div>
+                    <div>
+                        [[LAST]] Lorem, ipsum dolor sit amet consectetur adipisicing elit. Odio sint nisi quo,
+                        perferendis
+                        libero ab
+                        praesentium, repudiandae at vel officia fugit ratione distinctio corporis cumque id nostrum
+                        doloribus? Deserunt, veritatis.
+                        Lorem ipsum dolor sit amet consectetur, adipisicing elit. Similique inventore quae magnam
+                        praesentium exercitationem alias accusantium magni neque culpa. Expedita vel quos optio, ex sit
+                        porro vitae repudiandae hic facere!
+                    </div>
+                </pap-carousel-gallery>
+
+                <div class="toolbar">
+                    <pap-carousel-prev></pap-carousel-prev>
+                    <pap-carousel-dots></pap-carousel-dots>
+                    <pap-carousel-next></pap-carousel-next>
                 </div>
             </pap-carousel>
         </pap-codeblock>
@@ -65,233 +117,104 @@
     <section>
         <h2>Autoplay Example</h2>
         <pap-codeblock>
-            <pap-carousel autoplay>
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
+            <pap-carousel autoplay duration="3000" aria-label="Geese">
+                <pap-carousel-gallery>
+                    <div class="img-container">
+                        <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
+                    </div>
+                    <div class="img-container">
+                        <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
+                    </div>
+                    <div class="img-container">
+                        <img
+                            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
+                    </div>
+                    <div class="img-container">
+                        <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
+                    </div>
+                </pap-carousel-gallery>
+
+                <div class="toolbar">
+                    <pap-carousel-prev></pap-carousel-prev>
+                    <pap-carousel-dots></pap-carousel-dots>
+                    <pap-carousel-next></pap-carousel-next>
                 </div>
             </pap-carousel>
         </pap-codeblock>
     </section>
-
     <section>
-        <h2>Variant Outside</h2>
+        <h2>Controls outside the carousel (aria-controls)</h2>
         <pap-codeblock>
-            <pap-carousel variant="outside">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
+            <pap-carousel id="outside" aria-label="Outside controls">
+                <pap-carousel-gallery>
+                    <div class="card">One</div>
+                    <div class="card">Two</div>
+                    <div class="card">Three</div>
+                    <div class="card">Four</div>
+                </pap-carousel-gallery>
             </pap-carousel>
+
+            <div class="toolbar">
+                <pap-carousel-prev aria-controls="outside"></pap-carousel-prev>
+                <pap-carousel-dots aria-controls="outside"></pap-carousel-dots>
+                <pap-carousel-next aria-controls="outside"></pap-carousel-next>
+            </div>
         </pap-codeblock>
     </section>
 
     <section>
-        <h2>Variant Inside</h2>
+        <h2>Your own controls (the API)</h2>
         <pap-codeblock>
-            <pap-carousel variant="inside">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
+            <pap-carousel id="custom" aria-label="Custom controls">
+                <pap-carousel-gallery>
+                    <div class="card">One</div>
+                    <div class="card">Two</div>
+                    <div class="card">Three</div>
+                    <div class="card">Four</div>
+                </pap-carousel-gallery>
+
+                <div class="toolbar">
+                    <button aria-controls="custom" onclick="custom.prev()">← prev</button>
+                    <button aria-controls="custom" onclick="custom.slide = 0">first</button>
+                    <button aria-controls="custom" onclick="custom.next()">next →</button>
+                    <output id="custom-status">1 / 4</output>
                 </div>
             </pap-carousel>
         </pap-codeblock>
     </section>
+    <section class="bleed-section">
+        <h2>Bleed (cards run to the viewport edge)</h2>
+        <p>
+            Card 1 should line up with this text, and the cards should run out to the edge of the window.
+            Resize the window: the alignment should hold at every width.
+        </p>
 
-    <section>
-        <h2>Variant Mix</h2>
-        <pap-codeblock>
-            <pap-carousel variant="mix">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
-            </pap-carousel>
-        </pap-codeblock>
-    </section>
+        <pap-carousel class="bleed-out" loop="false" aria-label="Bleed example">
+            <pap-carousel-gallery align="start">
+                <article class="bleed-card">Card 1</article>
+                <article class="bleed-card">Card 2</article>
+                <article class="bleed-card">Card 3</article>
+                <article class="bleed-card">Card 4</article>
+                <article class="bleed-card">Card 5</article>
+                <article class="bleed-card">Card 6</article>
+                <article class="bleed-card">Card 7</article>
+                <article class="bleed-card">Card 8</article>
+            </pap-carousel-gallery>
 
-    <section>
-        <h2>Variant Top</h2>
-        <pap-codeblock>
-            <pap-carousel variant="top">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
-            </pap-carousel>
-        </pap-codeblock>
-    </section>
-
-    <section>
-        <h2>Variant Bottom</h2>
-        <pap-codeblock>
-            <pap-carousel variant="bottom">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
-            </pap-carousel>
-        </pap-codeblock>
-    </section>
-
-    <section>
-        <h2>Custom placements over/center</h2>
-        <pap-codeblock>
-            <pap-carousel dot-placement="over" arrow-placement="inside">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
-            </pap-carousel>
-        </pap-codeblock>
-    </section>
-
-    <section>
-        <h2>Custom placements under/outside</h2>
-        <pap-codeblock>
-            <pap-carousel dot-placement="under" arrow-placement="outside">
-                <div class="img-container">
-                    <img src="https://images.pexels.com/photos/66863/goose-water-bird-nature-bird-66863.jpeg" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/featured/goose-zwk5zry3xu16tw21.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://thumbs.dreamstime.com/b/three-white-geese-walking-gravel-path-blurred-green-background-406331638.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://t3.ftcdn.net/jpg/04/80/35/14/360_F_480351411_L3G320Xc1pmD8pKMcMcZv2kqkJUlpPQr.jpg" />
-                </div>
-                <div class="img-container">
-                    <img
-                        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRwZg0s3DJ8hRhtXVCk8x5Oju_DrSVlvI6OLg&s" />
-                </div>
-                <div class="img-container">
-                    <img src="https://wallpapers.com/images/hd/sweet-flock-of-geese-e8z8mtmdzyu1r8vh.jpg" />
-                </div>
-            </pap-carousel>
-        </pap-codeblock>
+            <div class="toolbar">
+                <pap-carousel-prev></pap-carousel-prev>
+                <pap-carousel-dots></pap-carousel-dots>
+                <pap-carousel-next></pap-carousel-next>
+            </div>
+        </pap-carousel>
     </section>
 </body>
 

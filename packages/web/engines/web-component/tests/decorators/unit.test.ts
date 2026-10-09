@@ -96,6 +96,35 @@ test.describe("decorators - query", () => {
         const queryCase = await component.evaluate((el: any) => el.queryCase);
         expect(queryCase).toBeTruthy();
     });
+
+    test.describe("decorators - query outside", () => {
+        test("walks up to its own match when the selector matches several", async ({ page }) => {
+            const a = await page.getByTestId("outside-a").evaluate((el: any) => el.zone?.dataset.testid);
+            const b = await page.getByTestId("outside-b").evaluate((el: any) => el.zone?.dataset.testid);
+            expect(a).toBe("zone-a");
+            expect(b).toBe("zone-b");
+        });
+
+        test("a selector function can name any element in the root", async ({ page }) => {
+            const found = await page.getByTestId("outside-by-id").evaluate((el: any) => el.zone?.dataset.testid);
+            expect(found).toBe("query-target");
+        });
+
+        test("load runs when found, error when not", async ({ page }) => {
+            const found = await page.getByTestId("outside-a").evaluate((el: any) => ({ loaded: el.loaded, errors: el.errors }));
+            expect(found.loaded).toBe(1);
+            expect(found.errors).toBe(0);
+
+            const missing = await page.getByTestId("outside-missing").evaluate((el: any) => ({ zone: el.zone, errors: el.errors }));
+            expect(missing.zone).toBeNull();
+            expect(missing.errors).toBeGreaterThan(0);
+        });
+
+        test("plain queries still search the element's own shadow root", async ({ page }) => {
+            const text = await page.getByTestId("outside-a").evaluate((el: any) => el.bold?.textContent);
+            expect(text).toBe("own");
+        });
+    });
 });
 
 test.describe("decorators - bind", () => {
@@ -460,4 +489,30 @@ test.describe("decorators - context", () => {
             expect(value).toBe("reconnected-value");
         });
     });
+
+    test.describe("decorators - context query", () => {
+        test("a consumer reads a provider it names, outside its ancestors", async ({ page }) => {
+            const consumer = page.getByTestId("query-consumer");
+            await expect.poll(() => consumer.evaluate((el: any) => el.hello)).toBe("from-provider");
+        });
+
+        test("changes on the named provider reach the consumer", async ({ page }) => {
+            const consumer = page.getByTestId("query-consumer");
+            await expect.poll(() => consumer.evaluate((el: any) => el.hello)).toBe("from-provider");
+
+            await page.getByTestId("named-provider").evaluate((el: any) => { el.hello = "changed"; });
+
+            await expect.poll(() => consumer.evaluate((el: any) => el.hello)).toBe("changed");
+            await expect(consumer.locator('[data-key="hello"]')).toHaveText("changed");
+        });
+
+        test("an empty query falls back to walking up", async ({ page }) => {
+            const consumer = page.getByTestId("query-consumer-parent");
+            await expect.poll(() => consumer.evaluate((el: any) => el.hello)).toBe("from-parent");
+        });
+    });
+
 })
+
+
+

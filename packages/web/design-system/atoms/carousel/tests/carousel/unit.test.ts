@@ -4,55 +4,39 @@ import { test, expect, Page } from "@playwright/test";
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Read a property from the component via JS (pierces shadow DOM by default). */
-async function prop<T>(page: Page, selector: string, key: string): Promise<T> {
-    return page.evaluate(
-        ([sel, k]) => (document.querySelector(sel) as any)?.[k],
-        [selector, key] as const
-    );
+function carousel(page: Page, id: string) {
+    return page.locator(`pap-carousel#${id}`);
 }
 
-/** Set a property on the component via JS. */
-async function setProp(page: Page, selector: string, key: string, value: unknown) {
-    await page.evaluate(
-        ([sel, k, v]) => { (document.querySelector(sel) as any)[k] = v; },
-        [selector, key, value] as const
-    );
+async function slide(page: Page, id: string): Promise<number> {
+    return carousel(page, id).evaluate((el: any) => el.slide);
 }
 
-async function waitForSlide(page: Page, selector: string, expected: number, timeout = 3000) {
-    await page.waitForFunction(
-        ([sel, val]) => (document.querySelector(sel) as any)?.slide === val,
-        [selector, expected] as const,
-        { timeout }
-    );
+/** Resolves once the carousel's gallery has stopped scrolling. */
+async function waitForScrollIdle(page: Page, id: string) {
+    await page.evaluate((id) => new Promise<void>(resolve => {
+        const track = (document.querySelector(`#${id} pap-carousel-gallery`) as any).carousel as HTMLElement;
+        let last = track.scrollLeft;
+        let stable = 0;
+        const check = () => {
+            if (track.scrollLeft === last) stable++;
+            else { stable = 0; last = track.scrollLeft; }
+            if (stable >= 10) resolve();
+            else requestAnimationFrame(check);
+        };
+        requestAnimationFrame(check);
+    }), id);
+    // let the gallery's own scrollend handling run
+    await page.waitForTimeout(150);
 }
 
-/** Get an attribute from inside a shadow root. */
-async function shadowAttr(
-    page: Page,
-    hostSelector: string,
-    shadowSelector: string,
-    attr: string
-): Promise<string | null> {
-    return page.evaluate(
-        ([host, shadow, a]) =>
-            (document.querySelector(host) as HTMLElement)
-                ?.shadowRoot?.querySelector(shadow)
-                ?.getAttribute(a) ?? null,
-        [hostSelector, shadowSelector, attr] as const
-    );
-}
-
-/** Click a shadow DOM element. */
-async function shadowClick(page: Page, hostSelector: string, shadowSelector: string) {
-    await page.evaluate(
-        ([host, shadow]) =>
-            ((document.querySelector(host) as HTMLElement)
-                ?.shadowRoot?.querySelector(shadow) as HTMLElement)
-                ?.click(),
-        [hostSelector, shadowSelector] as const
-    );
+/** Distance from the scroll container's edge to the start of a real slide. */
+async function slideOffset(page: Page, id: string, index: number): Promise<number> {
+    return page.evaluate(([id, index]) => {
+        const gallery = document.querySelector(`#${id} pap-carousel-gallery`) as any;
+        const slide = gallery.querySelectorAll(':scope > [slot="slide"]')[index] as HTMLElement;
+        return slide.getBoundingClientRect().left - gallery.carousel.getBoundingClientRect().left;
+    }, [id, index] as const);
 }
 
 // ---------------------------------------------------------------------------
@@ -61,404 +45,299 @@ async function shadowClick(page: Page, hostSelector: string, shadowSelector: str
 
 test.beforeEach(async ({ page }) => {
     await page.goto("tests/carousel/");
-    // Wait for custom elements to upgrade
-    await page.waitForFunction(() =>
-        customElements.get("pap-carousel") !== undefined
-    );
+    // the gallery reports its slides to the carousel once both are up
+    await page.waitForFunction(() => (document.querySelector("#basic") as any)?.slidecount === 3);
 });
 
 // ===========================================================================
-// 1. DOM / registration
+test.describe("ARIA", () => {
+    test("the carousel is a region with the carousel roledescription", async ({ page }) => {
+        const basic = carousel(page, "basic");
+        await expect(basic).toHaveAttribute("role", "region");
+        await expect(basic).toHaveAttribute("aria-roledescription", "carousel");
+    });
+
+    test("a gallery inside a carousel leaves the region role to the carousel", async ({ page }) => {
+        const gallery = page.locator("#basic pap-carousel-gallery");
+        await expect(gallery).not.toHaveAttribute("role", "region");
+    });
+
+    test("the gallery's live region is polite, and off while autoplaying", async ({ page }) => {
+        const live = (id: string) => page.evaluate((id) =>
+            (document.querySelector(`#${id} pap-carousel-gallery`) as any).carousel.getAttribute("aria-live"), id);
+
+        await expect.poll(() => live("basic")).toBe("polite");
+        await expect.poll(() => live("auto")).toBe("off");
+    });
+});
+
 // ===========================================================================
-test.describe("1. DOM / registration", () => {
-    test("component is registered and present", async ({ page }) => {
-        const el = await page.$("pap-carousel#basic");
-        expect(el).not.toBeNull();
+test.describe("navigation", () => {
+    test("slidecount comes from the gallery", async ({ page }) => {
+        expect(await carousel(page, "basic").evaluate((el: any) => el.slidecount)).toBe(3);
     });
 
-    test("all carousel instances are independent elements", async ({ page }) => {
-        const count = await page.evaluate(
-            () => document.querySelectorAll("pap-carousel").length
-        );
-        expect(count).toBe(6);
+    test("next() and prev() step the slide, and the gallery follows", async ({ page }) => {
+        await carousel(page, "basic").evaluate((el: any) => el.next());
+        await expect.poll(() => slide(page, "basic")).toBe(1);
+        await expect.poll(() => page.locator("#basic pap-carousel-gallery").evaluate((el: any) => el.slide)).toBe(1);
+
+        await carousel(page, "basic").evaluate((el: any) => el.prev());
+        await expect.poll(() => slide(page, "basic")).toBe(0);
     });
 
-    test("document.createElement works and sets --duration once connected", async ({ page }) => {
-        const result = await page.evaluate(() => {
-            const el = document.createElement("pap-carousel");
-            const attributes = Array.from(el.attributes).map(a => a.name);
-            el.innerHTML = "<div>1</div><div>2</div>";
-            document.body.append(el);
-            return { attributes, duration: el.style.getPropertyValue("--duration") };
-        });
-
-        expect(result.attributes).toEqual([]);
-        expect(result.duration).toBe("5000ms");
+    test("setting slide scrolls the gallery to it", async ({ page }) => {
+        await carousel(page, "basic").evaluate((el: any) => { el.slide = 2; });
+        await waitForScrollIdle(page, "basic");
+        expect(Math.abs(await slideOffset(page, "basic", 2))).toBeLessThan(2);
     });
 
-    test("no change event fires on mount", async ({ page }) => {
-        const changes = await page.evaluate(async () => {
+    test("with loop, next() from the last slide wraps to the first", async ({ page }) => {
+        await carousel(page, "basic").evaluate((el: any) => { el.slide = 2; });
+        await waitForScrollIdle(page, "basic");
+
+        await carousel(page, "basic").evaluate((el: any) => el.next());
+        await waitForScrollIdle(page, "basic");
+
+        expect(await slide(page, "basic")).toBe(0);
+        // landed on the real first slide, not its copy
+        expect(Math.abs(await slideOffset(page, "basic", 0))).toBeLessThan(2);
+    });
+
+    test("with loop, prev() from the first slide wraps to the last", async ({ page }) => {
+        await carousel(page, "basic").evaluate((el: any) => el.prev());
+        await waitForScrollIdle(page, "basic");
+
+        expect(await slide(page, "basic")).toBe(2);
+        expect(Math.abs(await slideOffset(page, "basic", 2))).toBeLessThan(2);
+    });
+
+    test("without loop, it stops at both ends", async ({ page }) => {
+        await carousel(page, "noloop").evaluate((el: any) => el.prev());
+        await expect.poll(() => slide(page, "noloop")).toBe(0);
+
+        await carousel(page, "noloop").evaluate((el: any) => { el.slide = 2; });
+        // wait until it has actually arrived, a smooth scroll can start late under load
+        await expect.poll(async () => Math.abs(await slideOffset(page, "noloop", 2))).toBeLessThan(2);
+        await waitForScrollIdle(page, "noloop");
+        expect(await slide(page, "noloop")).toBe(2);
+
+        await carousel(page, "noloop").evaluate((el: any) => el.next());
+        await expect.poll(() => slide(page, "noloop")).toBe(2);
+    });
+
+    test("loop on the carousel reaches the gallery", async ({ page }) => {
+        const clones = await page.evaluate(() =>
+            document.querySelectorAll("#noloop pap-carousel-gallery > .clone").length);
+        expect(clones).toBe(0);
+    });
+
+    test("change fires when the slide changes, not on mount", async ({ page }) => {
+        const changes = await carousel(page, "basic").evaluate(async (el: any) => {
             let changes = 0;
-            const el = document.createElement("pap-carousel");
             el.addEventListener("change", () => changes++);
-            el.innerHTML = "<div>1</div><div>2</div>";
-            document.body.append(el);
-            await new Promise(r => setTimeout(r, 200));
-            return changes;
+            await new Promise(r => setTimeout(r, 100));
+            const before = changes;
+            el.next();
+            await new Promise(r => setTimeout(r, 100));
+            return { before, after: changes };
         });
 
-        expect(changes).toBe(0);
-    });
-});
-
-// ===========================================================================
-// 2. ARIA / accessibility
-// ===========================================================================
-test.describe("2. ARIA / accessibility", () => {
-    test("host has aria-roledescription=carousel", async ({ page }) => {
-        const val = await page.evaluate(
-            () => document.querySelector("pap-carousel#basic")?.getAttribute("aria-roledescription")
-        );
-        expect(val).toBe("carousel");
+        expect(changes.before).toBe(0);
+        expect(changes.after).toBe(1);
     });
 
-    test("host has role (group or region)", async ({ page }) => {
-        const val = await page.evaluate(
-            () => document.querySelector("pap-carousel#basic")?.getAttribute("role")
-        );
-        expect(["group", "region"]).toContain(val);
-    });
-
-    test("inner scroll region has aria-live=polite", async ({ page }) => {
-        const val = await shadowAttr(page, "#basic", "div[part='carousel']", "aria-live");
-        expect(val).toBe("polite");
-    });
-
-    test("inner scroll region has aria-atomic=false", async ({ page }) => {
-        const val = await shadowAttr(page, "#basic", "div[part='carousel']", "aria-atomic");
-        expect(val).toBe("false");
-    });
-
-    test("slides receive role=group and aria-roledescription=slide", async ({ page }) => {
-        const [role, roledesc] = await page.evaluate(() => {
-            const slide = document.querySelector("#basic-slide-0");
-            return [slide?.getAttribute("role"), slide?.getAttribute("aria-roledescription")];
-        });
-        expect(role).toBe("group");
-        expect(roledesc).toBe("slide");
-    });
-
-    test("slides have tabindex=0", async ({ page }) => {
-        const tabindex = await page.evaluate(() =>
-            document.querySelector("#basic-slide-0")?.getAttribute("tabindex")
-        );
-        expect(tabindex).toBe("0");
-    });
-
-    test("autoplay off → aria-live=polite; autoplay on → aria-live=off", async ({ page }) => {
-        const before = await shadowAttr(page, "#autoplay", "div[part='carousel']", "aria-live");
-        expect(before).toBe("off");
-
-        await setProp(page, "#autoplay", "autoplay", false);
-        await page.waitForFunction(() =>
-            (document.querySelector("#autoplay") as HTMLElement)
-                ?.shadowRoot?.querySelector("div[part='carousel']")
-                ?.getAttribute("aria-live") === "polite"
-        );
-
-        const after = await shadowAttr(page, "#autoplay", "div[part='carousel']", "aria-live");
-        expect(after).toBe("polite");
-    });
-
-    test("dots: active dot has aria-disabled=true", async ({ page }) => {
-        await page.waitForTimeout(1000);
-        const val = await shadowAttr(page, "#basic", "button[part='dot'][data-slide='0']", "aria-disabled");
-        expect(val).toBe("true");
-    });
-
-    test("dots: inactive dot has aria-disabled=false", async ({ page }) => {
-        await page.waitForTimeout(1000);
-        const val = await shadowAttr(page, "#basic", "button[part='dot'][data-slide='1']", "aria-disabled");
-        expect(val).toBe("false");
-    });
-
-    test("clone slides are aria-hidden", async ({ page }) => {
-        // clones live in the light DOM (slotted) — check the ones with class "clone"
-        const hidden = await page.evaluate(() => {
-            const carousel = document.querySelector("pap-carousel#basic");
-            const clones = carousel?.querySelectorAll(".clone");
-            return Array.from(clones ?? []).every(
-                (c) => c.getAttribute("aria-hidden") === "true"
-            );
-        });
-        expect(hidden).toBe(true);
-    });
-
-    test("clone slides have role=presentation", async ({ page }) => {
-        const ok = await page.evaluate(() => {
-            const carousel = document.querySelector("pap-carousel#basic");
-            const clones = carousel?.querySelectorAll(".clone");
-            return Array.from(clones ?? []).every(
-                (c) => c.getAttribute("role") === "presentation"
-            );
-        });
-        expect(ok).toBe(true);
-    });
-});
-
-// ===========================================================================
-// 3. Clones / loop setup
-// ===========================================================================
-test.describe("3. Clones / loop setup", () => {
-    test("loop=true creates exactly 2 clone slides", async ({ page }) => {
-        const count = await page.evaluate(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length
-        );
-        expect(count).toBe(2);
-    });
-
-    test("loop=false creates no clones", async ({ page }) => {
-        const count = await page.evaluate(() =>
-            document.querySelector("pap-carousel#no-loop")?.querySelectorAll(".clone").length
-        );
-        expect(count).toBe(0);
-    });
-
-    test("single slide creates no clones", async ({ page }) => {
-        const count = await page.evaluate(() =>
-            document.querySelector("pap-carousel#single")?.querySelectorAll(".clone").length
-        );
-        expect(count).toBe(0);
-    });
-
-    test("disabling loop removes existing clones", async ({ page }) => {
-        await setProp(page, "#basic", "loop", false);
-        await page.waitForFunction(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length === 0
-        );
-        const count = await page.evaluate(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length
-        );
-        expect(count).toBe(0);
-    });
-
-    test("re-enabling loop recreates clones", async ({ page }) => {
-        await setProp(page, "#basic", "loop", false);
-        await page.waitForFunction(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length === 0
-        );
-        await setProp(page, "#basic", "loop", true);
-        await page.waitForFunction(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length === 2
-        );
-        const count = await page.evaluate(() =>
-            document.querySelector("pap-carousel#basic")?.querySelectorAll(".clone").length
-        );
-        expect(count).toBe(2);
-    });
-});
-
-// ===========================================================================
-// 4. Navigation — next / prev / dot
-// ===========================================================================
-test.describe("4. Navigation", () => {
-    test("next() increments slide", async ({ page }) => {
-        const before = await prop<number>(page, "#basic", "slide");
-        await page.evaluate(() => (document.querySelector("pap-carousel#basic") as any).next());
-        const after = await prop<number>(page, "#basic", "slide");
-        expect(after).toBe(before + 1);
-    });
-
-    test("prev() decrements slide", async ({ page }) => {
-        await setProp(page, "#basic", "slide", 2);
-        await waitForSlide(page, "#basic", 2);
-        await page.evaluate(() => (document.querySelector("pap-carousel#basic") as any).prev());
-        await waitForSlide(page, "#basic", 1);
-        const after = await prop<number>(page, "#basic", "slide");
-        expect(after).toBe(1);
-    });
-
-    test("next button click advances slide", async ({ page }) => {
-        await shadowClick(page, "#basic", "pap-button[part='next']");
-        await waitForSlide(page, "#basic", 1);
-        const idx = await prop<number>(page, "#basic", "slide");
-        expect(idx).toBe(1);
-    });
-
-    test("prev button click decrements slide", async ({ page }) => {
-        await setProp(page, "#basic", "slide", 2);
-        await waitForSlide(page, "#basic", 2);
-        await shadowClick(page, "#basic", "pap-button[part='prev']");
-        await waitForSlide(page, "#basic", 1);
-        const idx = await prop<number>(page, "#basic", "slide");
-        expect(idx).toBe(1);
-    });
-
-    test("dot click on active slide does nothing", async ({ page }) => {
-        const before = await prop<number>(page, "#basic", "slide");
-        await shadowClick(page, "#basic", `button[part='dot'][data-slide='${before}']`);
-        // no waitForSlide — asserting absence of change; small delay is fine
-        await page.waitForTimeout(100);
-        const after = await prop<number>(page, "#basic", "slide");
-        expect(after).toBe(before);
-    });
-
-    test("setting index directly updates dotindex", async ({ page }) => {
-        await setProp(page, "#basic", "slide", 2);
-        await waitForSlide(page, "#basic", 2);
-        const dotindex = await prop<number>(page, "#basic", "dotindex");
-        expect(dotindex).toBe(2);
-    });
-});
-
-// ===========================================================================
-// 5. Loop wrapping
-// ===========================================================================
-test.describe("5. Loop wrapping", () => {
-    test.skip("next() from last slide wraps to first (loop=true)", async ({ page }) => { // playwright scoll is funky AF 
-        await setProp(page, "#basic", "slide", 2);
-        await page.evaluate(() => (document.querySelector("pap-carousel#basic") as any).next());
-        // After a loop the _pendingloop mechanism resolves — wait for scrollend (debounced 90ms)
-        await page.waitForTimeout(1000);
-        const idx = await prop<number>(page, "#basic", "slide");
-        expect(idx).toBe(0);
-    });
-
-    test.skip("prev() from first slide wraps to last (loop=true)", async ({ page }) => { // playwright scoll is funky AF 
-        await page.evaluate(() => (document.querySelector("pap-carousel#basic") as any).prev());
-        await page.waitForTimeout(1000);
-        const idx = await prop<number>(page, "#basic", "slide");
-        expect(idx).toBe(2);
-    });
-
-    test("next() from last slide does nothing (loop=false)", async ({ page }) => {
-        await setProp(page, "#no-loop", "slide", 2);
-        await page.evaluate(() => (document.querySelector("pap-carousel#no-loop") as any).next());
-        const idx = await prop<number>(page, "#no-loop", "slide");
-        expect(idx).toBe(2);
-    });
-
-    test("prev() from first slide does nothing (loop=false)", async ({ page }) => {
-        await page.evaluate(() => (document.querySelector("pap-carousel#no-loop") as any).prev());
-        const idx = await prop<number>(page, "#no-loop", "slide");
-        expect(idx).toBe(0);
-    });
-});
-
-// ===========================================================================
-// 6. Autoplay
-// ===========================================================================
-test.describe("6. Autoplay", () => {
-    test("autoplay=false → no timer running", async ({ page }) => {
-        const timer = await prop<number | null>(page, "#basic", "timer");
-        expect(timer).toBeNull();
-    });
-
-    test("autoplay=true → timer is running (non-null)", async ({ page }) => {
-        // #autoplay fixture already has autoplay set
-        const timer = await prop<number | null>(page, "#autoplay", "timer");
-        expect(timer).not.toBeNull();
-    });
-
-    test("autoplay advances to next slide after duration", async ({ page }) => {
-        const before = await prop<number>(page, "#autoplay", "slide");
-        await page.waitForTimeout(900); // duration=800ms
-        const after = await prop<number>(page, "#autoplay", "slide");
-        expect(after).not.toBe(before);
-    });
-
-    test("play=false pauses autoplay", async ({ page }) => {
-        await setProp(page, "#autoplay", "play", false);
-        const timer = await prop<number | null>(page, "#autoplay", "timer");
-        expect(timer).toBeNull();
-    });
-
-    test("play=true resumes autoplay", async ({ page }) => {
-        await setProp(page, "#autoplay", "play", false);
-        await setProp(page, "#autoplay", "play", true);
-        const timer = await prop<number | null>(page, "#autoplay", "timer");
-        expect(timer).not.toBeNull();
-    });
-
-    test("play button toggles play state", async ({ page }) => {
-        const before = await prop<boolean>(page, "#autoplay", "play");
-        await shadowClick(page, "#autoplay", "pap-button[part='play']");
-        await page.waitForFunction(
-            ([sel, expected]) => (document.querySelector(sel) as any)?.play === expected,
-            ["#autoplay", !before] as const
-        );
-        const after = await prop<boolean>(page, "#autoplay", "play");
-        expect(after).toBe(!before);
-    });
-
-    test("progress resets to 0 on slide change", async ({ page }) => {
-        await page.waitForTimeout(400);
-        const before = await prop<number>(page, "#autoplay", "slide");
-        await page.evaluate(() => (document.querySelector("pap-carousel#autoplay") as any).next());
-        await waitForSlide(page, "#autoplay", before + 1);  // wait for slide to actually change
-        const progress = await prop<number>(page, "#autoplay", "progress");
-        expect(progress).toBeLessThan(0.1);                 // just restarted, not mid-way through
-    });
-});
-
-// ===========================================================================
-// 7. Debounce isolation — multiple carousels
-// ===========================================================================
-test.describe("7. Debounce isolation", () => {
-    test("scrollend on carousel A does not interfere with carousel B", async ({ page }) => {
-        await page.evaluate(() => (document.querySelector("pap-carousel#multi-b") as any).next());
-        await waitForSlide(page, "#multi-b", 1);
-        const idxA = await prop<number>(page, "#multi-a", "slide");
-        const idxB = await prop<number>(page, "#multi-b", "slide");
-        expect(idxA).toBe(0);
-        expect(idxB).toBe(1);
-    });
-
-    test("both carousels can navigate simultaneously without slide bleed", async ({ page }) => {
+    test("user scrolling updates the carousel's slide", async ({ page }) => {
         await page.evaluate(() => {
-            (document.querySelector("pap-carousel#multi-a") as any).next();
-            (document.querySelector("pap-carousel#multi-b") as any).next();
+            const gallery = document.querySelector("#noloop pap-carousel-gallery") as any;
+            const target = gallery.querySelectorAll(':scope > [slot="slide"]')[1] as HTMLElement;
+            gallery.carousel.scrollLeft += target.getBoundingClientRect().left - gallery.carousel.getBoundingClientRect().left;
         });
-        await Promise.all([
-            waitForSlide(page, "#multi-a", 1),
-            waitForSlide(page, "#multi-b", 1),
-        ]);
-        const idxA = await prop<number>(page, "#multi-a", "slide");
-        const idxB = await prop<number>(page, "#multi-b", "slide");
-        expect(idxA).toBe(1);
-        expect(idxB).toBe(1);
+        await waitForScrollIdle(page, "noloop");
+
+        expect(await slide(page, "noloop")).toBe(1);
     });
 });
 
 // ===========================================================================
-// 8. Properties / attributes
+test.describe("controls", () => {
+    test("the prev / next buttons inside the carousel drive it", async ({ page }) => {
+        await page.getByTestId("basic-next").click();
+        await expect.poll(() => slide(page, "basic")).toBe(1);
+
+        await page.getByTestId("basic-prev").click();
+        await expect.poll(() => slide(page, "basic")).toBe(0);
+    });
+
+    test("controls outside the carousel find it through aria-controls", async ({ page }) => {
+        await page.getByTestId("outside-next").click();
+        await expect.poll(() => slide(page, "outside")).toBe(1);
+
+        await page.getByTestId("outside-prev").click();
+        await expect.poll(() => slide(page, "outside")).toBe(0);
+    });
+
+    test("any element can drive it through the API", async ({ page }) => {
+        await page.getByTestId("custom-next").click();
+        await expect.poll(() => slide(page, "custom")).toBe(1);
+
+        await page.getByTestId("custom-first").click();
+        await expect.poll(() => slide(page, "custom")).toBe(0);
+    });
+
+    test("the buttons are labelled in the current language", async ({ page }) => {
+        await page.evaluate(() => (window as any).translator.change({
+            id: "en",
+            translations: { aria: { prev: "previous slide", next: "next slide" } },
+        }));
+
+        await expect(page.getByTestId("basic-prev")).toHaveAttribute("aria-label", "previous slide");
+        await expect(page.getByTestId("basic-next")).toHaveAttribute("aria-label", "next slide");
+    });
+});
+
 // ===========================================================================
-test.describe("8. Properties / attributes", () => {
-    test("slide defaults to 0", async ({ page }) => {
-        const idx = await prop<number>(page, "#basic", "slide");
-        expect(idx).toBe(0);
+test.describe("autoplay", () => {
+    test("advances after the duration", async ({ page }) => {
+        await expect.poll(() => slide(page, "auto"), { timeout: 3000 }).toBeGreaterThan(0);
     });
 
-    test("loop defaults to true", async ({ page }) => {
-        const loop = await prop<boolean>(page, "#basic", "loop");
-        expect(loop).toBe(true);
+    test("play = false stops it", async ({ page }) => {
+        await carousel(page, "auto").evaluate((el: any) => { el.play = false; });
+        const before = await slide(page, "auto");
+
+        await page.waitForTimeout(1000);
+        expect(await slide(page, "auto")).toBe(before);
     });
 
-    test("loop=false is reflected from attribute", async ({ page }) => {
-        const loop = await prop<boolean>(page, "#no-loop", "loop");
-        expect(loop).toBe(false);
+    test("pauses while the pointer is over the carousel", async ({ page }) => {
+        await carousel(page, "auto").hover();
+        const before = await slide(page, "auto");
+
+        await page.waitForTimeout(1000);
+        expect(await slide(page, "auto")).toBe(before);
+
+        await page.mouse.move(0, 0);
+        await expect.poll(() => slide(page, "auto"), { timeout: 3000 }).not.toBe(before);
+    });
+});
+
+// ===========================================================================
+test.describe("client-side creation", () => {
+    test("document.createElement works and starts with no attributes", async ({ page }) => {
+        const attributes = await page.evaluate(() =>
+            Array.from(document.createElement("pap-carousel").attributes).map(a => a.name));
+        expect(attributes).toEqual([]);
     });
 
-    test("duration is reflected from attribute", async ({ page }) => {
-        const duration = await prop<number>(page, "#autoplay", "duration");
-        expect(duration).toBe(800);
+    test("a carousel built in script connects to its gallery", async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const el = document.createElement("pap-carousel") as any;
+            const gallery = document.createElement("pap-carousel-gallery");
+            gallery.innerHTML = '<div class="slide">1</div><div class="slide">2</div>';
+            el.append(gallery);
+            document.body.append(el);
+            await new Promise(r => setTimeout(r, 150));
+            el.next();
+            await new Promise(r => setTimeout(r, 100));
+            return { count: el.slidecount, slide: (gallery as any).slide };
+        });
+
+        expect(result).toEqual({ count: 2, slide: 1 });
+    });
+});
+
+// ===========================================================================
+test.describe("several per view (align start)", () => {
+    // 8 slides at 30% of the column: the last three share the end of the track,
+    // so there are 6 positions to scroll to
+    async function atEnd(page: Page) {
+        return page.evaluate(() => {
+            const track = (document.querySelector("#bleed pap-carousel-gallery") as any).carousel as HTMLElement;
+            return Math.ceil(track.scrollLeft) >= track.scrollWidth - track.clientWidth - 1;
+        });
+    }
+
+    test("stopcount counts the positions the track can scroll to", async ({ page }) => {
+        await expect.poll(() => carousel(page, "bleed").evaluate((el: any) => el.stopcount)).toBe(6);
+        expect(await carousel(page, "bleed").evaluate((el: any) => el.slidecount)).toBe(8);
+        // with loop every slide is a position
+        expect(await carousel(page, "basic").evaluate((el: any) => el.stopcount)).toBe(3);
     });
 
-    test("--duration CSS custom property is set from duration", async ({ page }) => {
-        const val = await page.evaluate(() =>
-            (document.querySelector("pap-carousel#autoplay") as HTMLElement)
-                ?.style.getPropertyValue("--duration")
-        );
-        expect(val).toBe("800ms");
+    test("the dots show one per position", async ({ page }) => {
+        await expect(page.getByTestId("bleed-dots").locator('[part="dot"]')).toHaveCount(6);
+    });
+
+    test("next() walks every position, the last being the end of the track", async ({ page }) => {
+        for (let i = 1; i <= 5; i++)
+        {
+            await carousel(page, "bleed").evaluate((el: any) => el.next());
+            await expect.poll(() => slide(page, "bleed")).toBe(i);
+            await waitForScrollIdle(page, "bleed");
+        }
+
+        expect(await atEnd(page)).toBe(true);
+        expect(await slide(page, "bleed")).toBe(5);
+    });
+
+    test("a slide past the last position is clamped to it", async ({ page }) => {
+        await carousel(page, "bleed").evaluate((el: any) => { el.slide = 7; });
+        await expect.poll(() => slide(page, "bleed")).toBe(5);
+        await waitForScrollIdle(page, "bleed");
+        expect(await atEnd(page)).toBe(true);
+    });
+
+    test("the last dot goes to the end and stays active", async ({ page }) => {
+        const last = page.getByTestId("bleed-dots").locator('[part="dot"]').last();
+        await last.click();
+        await waitForScrollIdle(page, "bleed");
+
+        expect(await atEnd(page)).toBe(true);
+        expect(await slide(page, "bleed")).toBe(5);
+        await expect(last).toHaveAttribute("aria-disabled", "true");
+    });
+
+    test("scrolling to the end by hand makes the last position active", async ({ page }) => {
+        await page.evaluate(() => {
+            const gallery = document.querySelector("#bleed pap-carousel-gallery") as any;
+            gallery.carousel.scrollLeft = gallery.carousel.scrollWidth;
+        });
+        await waitForScrollIdle(page, "bleed");
+
+        expect(await slide(page, "bleed")).toBe(5);
+    });
+
+    test("next() puts the next slide on the scroll-padding gutter", async ({ page }) => {
+        await carousel(page, "bleed").evaluate((el: any) => el.next());
+        await waitForScrollIdle(page, "bleed");
+
+        expect(await slide(page, "bleed")).toBe(1);
+        expect(Math.abs(await slideOffset(page, "bleed", 1) - 40)).toBeLessThan(2);
+    });
+
+    test("user scroll picks the slide on the gutter, not the centre one", async ({ page }) => {
+        await page.evaluate(() => {
+            const gallery = document.querySelector("#bleed pap-carousel-gallery") as any;
+            const target = gallery.querySelectorAll(':scope > [slot="slide"]')[2] as HTMLElement;
+            gallery.carousel.scrollLeft += target.getBoundingClientRect().left - gallery.carousel.getBoundingClientRect().left - 40;
+        });
+        await waitForScrollIdle(page, "bleed");
+
+        expect(await slide(page, "bleed")).toBe(2);
+    });
+
+    test("next() at the end of the track does nothing", async ({ page }) => {
+        await page.evaluate(() => {
+            const gallery = document.querySelector("#bleed pap-carousel-gallery") as any;
+            gallery.carousel.scrollLeft = gallery.carousel.scrollWidth;
+        });
+        await waitForScrollIdle(page, "bleed");
+        const before = await slide(page, "bleed");
+
+        await carousel(page, "bleed").evaluate((el: any) => el.next());
+        await waitForScrollIdle(page, "bleed");
+
+        expect(await slide(page, "bleed")).toBe(before);
     });
 });

@@ -38,6 +38,25 @@
     <div data-testid="div-provider-e" hello="before-disconnect">
         <context-consumer data-testid="consumer-e"></context-consumer>
     </div>
+
+    <!-- context query: the provider is not an ancestor, the consumer names it by id -->
+    <context-provider id="named-provider" data-testid="named-provider"></context-provider>
+    <context-query-consumer source="named-provider" data-testid="query-consumer"></context-query-consumer>
+    <!-- without source it walks up like a plain consumer -->
+    <div hello="from-parent">
+        <context-query-consumer data-testid="query-consumer-parent"></context-query-consumer>
+    </div>
+
+    <!-- @query outside: two zones, so the walk up has to pick its own -->
+    <section class="query-zone" data-testid="zone-a">
+        <query-outside data-testid="outside-a"></query-outside>
+    </section>
+    <section class="query-zone" data-testid="zone-b">
+        <query-outside data-testid="outside-b"></query-outside>
+    </section>
+    <aside id="query-target" data-testid="query-target"></aside>
+    <query-outside target="query-target" data-testid="outside-by-id"></query-outside>
+    <query-outside target="nowhere" data-testid="outside-missing"></query-outside>
 </body>
 
 </html>

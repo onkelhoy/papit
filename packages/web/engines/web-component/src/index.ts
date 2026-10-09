@@ -12,6 +12,7 @@ export * from "./functions/lerp";
 export * from "./functions/uuid";
 export * from "./functions/cumalative-offset";
 export * from "./functions/next-parent";
+export * from "./functions/find-target";
 export * from "./functions/resolve";
 export * from "./functions/throttle";
 

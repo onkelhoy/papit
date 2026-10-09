@@ -12,7 +12,8 @@ Utility functions that can be used independently from decorators or components.
 - [lerp & lerpValue](./lerp.md) — Linearly interpolate values or remap a value from one range to another.
 - [generateUUID](./generateUUID.md) — Generates a random RFC4122 version 4 UUID.
 - [CumulativeOffset](./CumulativeOffset.md) — Calculates the cumulative top/left offset of an element relative to the document.
-- [nextParent](./nextParent.md) — Finds the closest parent element or shadow host of a given element.
+- [nextParent](./NextParent.md) — Finds the closest parent element or shadow host of a given element.
+- [findTarget](./findTarget.md) — Finds the element a selector names, or the nearest qualifying ancestor (through shadow hosts).
 
 ---
 

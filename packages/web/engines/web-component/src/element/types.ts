@@ -6,8 +6,10 @@ export type Setting = {
 
 export type QueryMeta = {
     propertyKey: PropertyKey;
-    selector: string;
+    selector: string | (() => string);
+    outside?: boolean;
     load?(element: unknown): void;
+    error?(): void;
 }
 
 export type PropertyMeta = Map<string, (newValue: string | null | undefined, oldValue: string | null | undefined) => void>;

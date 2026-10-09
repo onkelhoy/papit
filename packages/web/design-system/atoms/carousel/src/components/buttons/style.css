@@ -1,0 +1,20 @@
+:host {
+    border-radius: 50%;
+    width: var(--space-8, 2rem) !important;
+    height: var(--space-8, 2rem) !important;
+
+    pap-icon {
+        width: var(--space-4, 1rem);
+        height: var(--space-4, 1rem);
+
+        &.next {
+            rotate: -0.25turn;
+            translate: 10% 0;
+        }
+
+        &.prev {
+            rotate: 0.25turn;
+            translate: -10% 0;
+        }
+    }
+}
