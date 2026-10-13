@@ -4,7 +4,7 @@
     "description": "VARIABLE_DESCRIPTION",
     "private": true,
     "scripts": {
-        "analyse": "to come",
+        "analyse": "npm run analyse --workspaces --if-present",
         "publish": "to come",
         "clean": "node bin/clean.mjs",
         "build": "npx @papit/build",
@@ -39,7 +39,9 @@
         "@papit/build": "*",
         "@papit/server": "*",
         "@papit/create": "*",
-        "@papit/version": "*"
+        "@papit/version": "*",
+        "@papit/analyse": "*",
+        "@papit/react": "*"
     },
     "papit": {}
 }

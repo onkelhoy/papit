@@ -20,8 +20,7 @@
     "postversion": "papit-version",
     "component": "npm create @papit --component",
     "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
-    "test:chrome": "npm test -- --project=chromium",
-    "build:react": "bash ./bin/_utils/react.sh"
+    "test:chrome": "npm test -- --project=chromium"
   },
   "main": "./lib/browser.js",
   "types": "./lib/browser.d.ts",

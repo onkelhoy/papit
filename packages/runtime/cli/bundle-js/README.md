@@ -85,7 +85,7 @@ function getEntryPoints(location: string, packageJSON: PackageJson, tsconfig: ts
 }
 ```
 
-Maps package.json `main`, `types`, `entryPoints`, `bin` and `exports` to source files. Each output path is mapped from the tsconfig out folder to the source folder with `.js` / `.d.ts` swapped for `.ts`, falling back to `src/index.ts`. The `"."` export and `main` are named `bundle`.
+Maps package.json `main`, `types`, `entryPoints`, `bin` and `exports` to source files. Each output path is mapped from the tsconfig out folder to the source folder with `.js` / `.d.ts` swapped for `.ts`, then `.tsx` when there is no `.ts` file, falling back to `src/index.ts`. The `"."` export and `main` are named `bundle`.
 
 ### `getESOptions` / `modifyOptions`
 
@@ -130,7 +130,7 @@ The `args` passed in are checked for these keys:
 
 - **Format:** `esm` when package.json `type` is `module`, otherwise `cjs`.
 - **Platform:** `node` when `papit.type` is `"node"`, otherwise `browser`. `papit.type` can also be a record of entry name to platform.
-- **Externals:** all dependencies stay external, so the bundle only holds the package's own code.
+- **Externals:** all dependencies stay external, so the bundle only holds the package's own code. Every entry except the main one also keeps the package's own name external, so an extra entry like `./react` that imports `@papit/x` reuses the main bundle instead of inlining (and re-defining) it.
 - **CSS:** an imported `.css` file becomes a module whose default export is a constructed `CSSStyleSheet`.
 
 # License

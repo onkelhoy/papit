@@ -13,7 +13,7 @@ export type Options = {
     packageJSON: PackageJson,
     logLevel: BuildOptions["logLevel"];
     externals: string[];
-    esoptions: BuildOptions & { platformRecord?: undefined | Record<string, string> };
+    esoptions: BuildOptions & { platformRecord?: undefined | Record<string, string>, packageName?: string };
     entryPoints: ReturnType<typeof getEntryPoints>;
     entryPointArray: Array<{ output: string | undefined, input: string }>;
 }
@@ -89,6 +89,7 @@ const cssModulePlugin = {
 /**
  * esbuild options shared by every entry: bundled with dependencies external, minified unless `dev`,
  * platform from `papit.type`, and `.css` imports turned into a constructed `CSSStyleSheet`.
+ * `packageName` is applied per entry by `modifyOptions`.
  */
 export function getESOptions(
     args: { has: (key: string) => boolean },
@@ -98,7 +99,7 @@ export function getESOptions(
         packageJSON,
         externals,
     }: Partial<Options> = {}
-): BuildOptions & { platformRecord?: undefined | Record<string, string> } {
+): BuildOptions & { platformRecord?: undefined | Record<string, string>, packageName?: string } {
     if (!args) args = getArguments();
     const isDev = args.has("dev");
 
@@ -124,6 +125,7 @@ export function getESOptions(
         platform: ["node"].includes(type ?? "web-component") ? "node" : "browser",
 
         platformRecord: typeof packageJSON.papit?.type === "string" ? undefined : packageJSON.papit?.type,
+        packageName: packageJSON.name,
 
         logLevel: logLevel ?? "error",
         plugins: [cssModulePlugin],
@@ -133,13 +135,17 @@ export function getESOptions(
     };
 }
 
-/** The shared options narrowed to one entry, picking its platform from a `papit.type` record. */
+/**
+ * The shared options narrowed to one entry, picking its platform from a `papit.type` record.
+ * Every entry but the main one (`bundle`) keeps the package's own name external,
+ * so e.g. `./react` importing `@papit/x` reuses the main bundle instead of inlining it.
+ */
 export function modifyOptions(
     entryPoint: { input: string, output: string | undefined, name?: string },
     options: ReturnType<typeof getESOptions>,
 ): BuildOptions {
 
-    const { platformRecord, ...restOptions } = options;
+    const { platformRecord, packageName, ...restOptions } = options;
     let platform = options.platform;
     if (entryPoint.name && platformRecord)
     {
@@ -147,8 +153,15 @@ export function modifyOptions(
         platform = platformRecord[entryPoint.name] as Platform;
     }
 
+    let external = restOptions.external;
+    if (packageName && entryPoint.name !== undefined && entryPoint.name !== "bundle")
+    {
+        external = [...(external ?? []), packageName];
+    }
+
     return {
         ...restOptions,
+        external,
         platform,
         entryPoints: [entryPoint.input],
         outfile: entryPoint.output,

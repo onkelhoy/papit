@@ -149,6 +149,7 @@ If missing, the build will fail.
 | `--dev`     | Use development mode                       |
 | `--prod`    | Use production mode (default)              |
 | `--verbose` | Show detailed build output                 |
+| `--error`   | Print why a package failed, and exit 1 if any package failed (including TypeScript errors) |
 | `--clean`   | Ignore cached build metadata               |
 | `--force`   | Force rebuild even if metadata exists      |
 | `--ci`      | CI mode (no bin reinstall, no cache write) |

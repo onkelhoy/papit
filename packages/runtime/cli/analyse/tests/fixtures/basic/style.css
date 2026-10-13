@@ -1,0 +1,7 @@
+:host {
+    --fixture-gap: 4px;
+
+    display: flex;
+    gap: var(--fixture-gap);
+    color: var(--fixture-color, red);
+}

@@ -8,7 +8,7 @@
     "url": "git+https://github.com/onkelhoy/papit.git"
   },
   "scripts": {
-    "analyse": "to come",
+    "analyse": "npm run analyse --workspaces --if-present",
     "publish": "node bin/publish.mjs",
     "prebuild": "node bin/prebuild.mjs",
     "build": "npx @papit/build",
@@ -35,15 +35,17 @@
   ],
   "devDependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/build": "0.0.7",
-    "@papit/bundle-js": "0.0.3",
-    "@papit/bundle-ts": "0.0.2",
-    "@papit/create": "0.0.11",
-    "@papit/information": "0.0.8",
-    "@papit/server": "1.0.7",
+    "@papit/build": "0.0.8",
+    "@papit/bundle-js": "0.0.4",
+    "@papit/bundle-ts": "0.0.3",
+    "@papit/create": "0.0.12",
+    "@papit/information": "0.0.9",
+    "@papit/server": "1.0.8",
     "@papit/terminal": "0.0.1",
-    "@papit/version": "0.0.7",
+    "@papit/version": "0.0.8",
+    "@types/react": "19.3.0",
     "esbuild": "0.27.2",
+    "react": "19.3.0",
     "typescript": "5.9.3"
   },
   "papit": {

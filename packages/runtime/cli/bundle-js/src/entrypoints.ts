@@ -10,7 +10,7 @@ type Entries = Record<string, EntryPoint>;
 
 /**
  * Maps package.json `main`, `types`, `entryPoints`, `bin` and `exports` to their source files.
- * Outputs are mapped from the out folder to the source folder with `.ts`, falling back to `src/index.ts`.
+ * Outputs are mapped from the out folder to the source folder with `.ts`, then `.tsx`, falling back to `src/index.ts`.
  * `main` and the `"."` export are named `bundle`.
  */
 export function getEntryPoints(
@@ -129,6 +129,7 @@ function getOutputInput(
         .replace(/\.d\.ts$/, ".ts")
         .replace(/\.js$/, ".ts");
 
+    if (!fs.existsSync(path.join(location, input))) input = input.replace(/\.ts$/, ".tsx");
     if (!fs.existsSync(path.join(location, input))) input = path.join(src, "index.ts");
 
     return { output: path.join(location, output), input: path.join(location, input), name };
