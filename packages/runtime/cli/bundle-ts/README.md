@@ -60,15 +60,19 @@ function tsBundle(
     options?: Partial<{
         tsconfig: ts.ParsedCommandLine,
         entryPoints: ReturnType<typeof getEntryPoints>,
-        entryPointsArray: { input: string, output: string }[],
+        entryPointsArray: { input: string, output: string, name?: string }[],
         packageJSON: PackageJson,
     }>,
 ): Promise<"skipped" | Array<{ input: string, logs: string[] }> | undefined>
 ```
 
-Emits declarations for every file under `src/` into `.temp/ts-bundle`, then rolls each `types` entry up into its output file. Resolves `"skipped"` when nothing changed and every output exists, the entries that logged warnings, or `undefined` on success. On a TypeScript emit error it prints the diagnostics and resolves `undefined`.
+Emits declarations for every file under `src/` into `.temp/ts-bundle`, then rolls each `types` entry up into its output file. A `.ts` or `.tsx` source maps to its emitted `.d.ts`. Resolves `"skipped"` when nothing changed and every output exists, the entries that failed or logged warnings, or `undefined` on success. On a TypeScript emit error (with `noEmitOnError`, any type error) it prints the diagnostics and resolves every entry with them as `logs`.
 
 Entry points come from package.json through `getEntryPoints` in `@papit/bundle-js`, the same way the JavaScript bundle finds them. `options` lets a caller skip reading them again.
+
+Every entry except the main one (`bundle`) also keeps the package's own name external, so an extra entry like `./react` that imports `@papit/x` gets `import { X } from "@papit/x"` instead of a copy of the class, which wouldn't be assignable to the real one.
+
+API Extractor leaves module augmentations out of a rollup, so the entry file's own top-level `declare module "x" { ... }` and `declare global { ... }` blocks are copied into its `.d.ts` afterwards. That's how a React wrapper's `JSX.IntrinsicElements` reach consumers.
 
 # Flags
 

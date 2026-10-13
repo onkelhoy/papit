@@ -1,6 +1,7 @@
 # directories
 node_modules/
 packages/**/lib/
+packages/**/analyse.json
 packages/**/.papit/
 isolated/
 .temp/

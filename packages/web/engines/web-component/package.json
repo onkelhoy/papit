@@ -14,6 +14,7 @@
   "version": "0.0.10",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
+    "analyse": "npx @papit/analyse",
     "watch": "tsc -w",
     "start": "npx @papit/server --info --live",
     "test": "npx playwright test -c tests/playwright.config.ts $@",
@@ -61,7 +62,7 @@
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.8",
+    "@papit/information": "0.0.9",
     "@papit/translator": "0.1.1",
     "@papit/codeblock": "0.1.13",
     "typescript": "5.9.3"

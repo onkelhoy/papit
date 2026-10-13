@@ -11,6 +11,11 @@ import { tsBundle } from "@papit/bundle-ts";
 
 import { npmInstall } from "helper";
 
+/**
+ * Builds `node`, or every package in the workspace batches, with bundle-js and bundle-ts.
+ *
+ * @returns the names of the packages that failed
+ */
 export async function build(
     args = new Args(process.argv),
     node?: PackageNode,
@@ -31,12 +36,12 @@ export async function build(
         {
             const result = buildTheme(args, node);
             if (onPackageBuild) onPackageBuild(node, result);
-            return;
+            return failed;
         }
 
         const shouldinstall = await runner(node, failed, args, canprint, logLevel, onPackageBuild);
         if (shouldinstall) await npmInstall(args, canprint);
-        return;
+        return failed;
     }
 
     const ordered = Information.getPriorityBatches(args, p => p.name.startsWith(Information.scope));
@@ -77,6 +82,8 @@ export async function build(
 
         if (shouldinstall) await npmInstall(args, canprint);
     }
+
+    return failed;
 }
 
 async function runner(

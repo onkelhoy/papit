@@ -15,6 +15,8 @@
   "version": "0.0.11",
   "scripts": {
     "build": "npx @papit/build --error",
+    "analyse": "npx @papit/analyse",
+    "generate:react": "npx @papit/react",
     "watch": "tsc -w",
     "start": "npx @papit/server --info --live",
     "test": "npx playwright test -c tests/playwright.config.ts $@",
@@ -22,8 +24,7 @@
     "postversion": "papit-version",
     "component": "npm create @papit --component",
     "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
-    "test:chrome": "npm test -- --project=chromium",
-    "build:react": "bash ./bin/_utils/react.sh"
+    "test:chrome": "npm test -- --project=chromium"
   },
   "main": "./lib/bundle.js",
   "types": "./lib/bundle.d.ts",
@@ -36,6 +37,10 @@
     ".": {
       "import": "./lib/bundle.js",
       "types": "./lib/bundle.d.ts"
+    },
+    "./react": {
+      "import": "./lib/react-wrapper.js",
+      "types": "./lib/react-wrapper.d.ts"
     }
   },
   "author": "henry",
@@ -64,6 +69,14 @@
     "@papit/placement": "0.0.10",
     "@papit/popover": "0.1.3",
     "@papit/web-component": "0.0.10"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@papit/codeblock": "0.1.13",

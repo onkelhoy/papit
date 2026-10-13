@@ -23,11 +23,34 @@ function timestamp(args: { has: (key: string) => boolean }, message?: string) {
 }
 
 /**
+ * API Extractor leaves `declare module "x" { ... }` and `declare global { ... }` out of a rollup.
+ * Copies those of the entry file itself into the rolled-up `output`, before its closing `export { }`.
+ */
+function keepAugmentations(declarations: string, output: string) {
+    if (!fs.existsSync(declarations) || !fs.existsSync(output)) return;
+
+    const source = ts.createSourceFile(declarations, fs.readFileSync(declarations, "utf-8"), ts.ScriptTarget.Latest, true);
+    const blocks = source.statements
+        .filter(statement => ts.isModuleDeclaration(statement) && (ts.isStringLiteral(statement.name) || statement.name.text === "global"))
+        .map(statement => statement.getText(source));
+    if (blocks.length === 0) return;
+
+    const rollup = fs.readFileSync(output, "utf-8");
+    const eol = rollup.includes("\r\n") ? "\r\n" : "\n";
+    const text = blocks.join(eol + eol).replace(/\r?\n/g, eol) + eol + eol;
+    const end = rollup.lastIndexOf("export { }");
+    fs.writeFileSync(output, end === -1 ? rollup + eol + text : rollup.slice(0, end) + text + rollup.slice(end));
+}
+
+/**
  * Emits declarations for `src/` and rolls each package.json `types` entry up into one .d.ts file.
+ * Every entry but the main one (`bundle`) keeps the package's own name external, so e.g. `./react`
+ * importing `@papit/x` gets `import { X } from "@papit/x"` instead of a copy of the class.
+ * The entry file's own `declare module "x"` and `declare global` blocks are kept in its rollup.
  *
  * @param args - flags: `force`/`f` rebuilds regardless of changes, `dev` adds declaration maps, `prod`
- * @returns `"skipped"` when nothing changed, the entries that logged warnings, or `undefined` on success
- * (also on a TypeScript emit error, after printing the diagnostics)
+ * @returns `"skipped"` when nothing changed, the entries that failed or logged warnings, or `undefined` on success.
+ * A TypeScript emit error prints the diagnostics and returns every entry with them as `logs`.
  */
 export async function tsBundle(
     args: { has(key: string): boolean },
@@ -35,7 +58,7 @@ export async function tsBundle(
     options?: Partial<{
         tsconfig: ts.ParsedCommandLine;
         entryPoints: ReturnType<typeof getEntryPoints>;
-        entryPointsArray: { input: string, output: string }[];
+        entryPointsArray: { input: string, output: string, name?: string }[];
         packageJSON: PackageJson;
     }>
 ) {
@@ -43,7 +66,7 @@ export async function tsBundle(
     const tsconfig = options?.tsconfig ?? getTSconfig(args, location);
     const packageJSON = options?.packageJSON ?? JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
 
-    let entryPointsArray: { input: string, output: string }[] = [];
+    let entryPointsArray: { input: string, output: string, name?: string }[] = [];
     if (options?.entryPointsArray)
     {
         entryPointsArray = options.entryPointsArray;
@@ -91,17 +114,25 @@ export async function tsBundle(
     const res = program.emit();
     if (res.emitSkipped)
     {
+        const logs = new Array<string>();
         for (const diag of res.diagnostics)
         {
+            const message = `Error: ${ts.flattenDiagnosticMessageText(diag.messageText, '\n')}`;
             if (diag.file)
             {
                 const { line, character } = diag.file.getLineAndCharacterOfPosition(diag.start!);
                 console.error(`\nFile: ${diag.file.fileName}`);
                 console.error(`Line ${line + 1}, Column ${character + 1}`);
-                console.error(`Error: ${ts.flattenDiagnosticMessageText(diag.messageText, '\n')}\n`);
+                console.error(`${message}\n`);
+                logs.push(`${diag.file.fileName}:${line + 1}:${character + 1} ${message}`);
+            }
+            else
+            {
+                logs.push(message);
             }
         }
-        return;
+        // nothing was emitted, so every entry failed
+        return entryPointsArray.map(entry => ({ input: entry.input, logs }));
     }
     timestamp(args, "before entryPointsArray loop");
 
@@ -115,8 +146,16 @@ export async function tsBundle(
         const rootDir = tsconfig?.options.rootDir ?? path.join(location, 'src');
         const tempEntry = path.join(
             tempOutDir,
-            path.relative(rootDir, entry.input).replace(/\.ts$/, '.d.ts')
+            path.relative(rootDir, entry.input).replace(/\.tsx?$/, '.d.ts')
         );
+
+        // the main entry maps its own name to src, the others resolve it as the external package
+        let paths = tsconfig?.options.paths;
+        if (paths && packageJSON.name && entry.name !== undefined && entry.name !== "bundle")
+        {
+            const { [packageJSON.name]: _self, ...rest } = paths;
+            paths = rest;
+        }
 
         const extractorConfig = ExtractorConfig.prepare({
             configObject: {
@@ -128,7 +167,7 @@ export async function tsBundle(
                     overrideTsconfig: {
                         compilerOptions: {
                             baseUrl: tempOutDir,
-                            paths: tsconfig?.options.paths,
+                            paths,
                         }
                     }
                 },
@@ -168,6 +207,7 @@ export async function tsBundle(
         });
 
         process.stdout.write = originalWrite;
+        keepAugmentations(tempEntry, entry.output);
         // logs.forEach(log => originalWrite(log));
         if (logs.length > 0)
         {
