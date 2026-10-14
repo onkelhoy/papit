@@ -184,16 +184,28 @@
         --radius-medium: var(--space-4);
         --radius-large: var(--space-8);
         --radius-full: 100vh;
+
+        --timing-slow: 420ms;
+        --timing: 180ms;
+        --timing-fast: 80ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        :root {
+            --timing: 0ms;
+            --timing-fast: 0ms;
+            --timing-slow: 0ms;
+        }
     }
 
     /* THEME VIEW TRANSITION */
     @media (prefers-reduced-motion: no-preference) {
         ::view-transition-old(root) {
-            animation-delay: 500ms;
+            animation-delay: var(--timing-slow, 420ms);
         }
 
         ::view-transition-new(root) {
-            animation: theme-transition-in 500ms;
+            animation: theme-transition-in var(--timing-slow, 420ms);
         }
     }
 

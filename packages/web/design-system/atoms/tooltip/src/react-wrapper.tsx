@@ -62,7 +62,7 @@ export function Tooltip({ ref, onToggle, ...props }: TooltipProps): ReactElement
         return () => node.removeEventListener("toggle", onToggle);
     }, [onToggle]);
 
-    return <pap-tooltip {...props} ref={setRef} />;
+    return <pap-tooltip suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

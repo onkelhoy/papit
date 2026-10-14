@@ -13,7 +13,7 @@
 
     label {
         cursor: pointer;
-        transition: background-color ease-out 180ms;
+        transition: background-color ease-out var(--timing, 180ms);
 
         div[part="dropzone"] {
             display: none;

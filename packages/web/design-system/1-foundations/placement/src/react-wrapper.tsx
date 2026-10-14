@@ -41,7 +41,7 @@ export function Placement({ ref, ...props }: PlacementProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-placement {...props} ref={setRef} />;
+    return <pap-placement suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

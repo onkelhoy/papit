@@ -166,15 +166,16 @@ The slides: scrolling, snapping and the loop. Inside a carousel it takes `slide`
 
 ### `<pap-carousel-prev>` / `<pap-carousel-next>`
 
-Outline icon buttons (`pap-button`) that call `prev()` / `next()`.
+Outline icon buttons (`pap-button`) that call `prev()` / `next()`. Without loop they are `disabled` at the ends: prev on the first slide, next on the last position.
 
 | Attribute | Description |
 | --- | --- |
 | `aria-controls` | Id of the carousel, when the button is not inside it |
+| `aria-label` | Set for you from `aria.prev` / `aria.next` (English until a language is loaded); one you set yourself is kept |
 
 | Slot | Description |
 | --- | --- |
-| `icon` | Replaces the default chevron |
+| `icon` | Replaces the default chevron, which is then not rendered (so never fetched) |
 
 ### `<pap-carousel-dots>`
 
@@ -213,6 +214,7 @@ Follows the [WAI-ARIA Carousel pattern](https://www.w3.org/WAI/ARIA/apg/patterns
 - The loop copies are `aria-hidden`, `inert` and carry no `id`, so they are never announced or focused.
 - Keep the controls inside the carousel where you can: the region then groups the slides with their controls. Controls elsewhere still work through `aria-controls`.
 - All controls are real buttons, so Enter and Space activate them.
+- Under `prefers-reduced-motion: reduce` the gallery jumps to the slide instead of scrolling smoothly, also when wrapping around the loop (WCAG 2.3.3).
 
 ---
 

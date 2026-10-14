@@ -46,7 +46,7 @@ export function Tabs({ ref, onChange, orientation, label, ...props }: TabsProps)
         return () => node.removeEventListener("change", onChange);
     }, [onChange]);
 
-    return <pap-tabs aria-orientation={orientation} aria-label={label} {...props} ref={setRef} />;
+    return <pap-tabs aria-orientation={orientation} aria-label={label} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface TabProps extends Omit<HTMLAttributes<TabElement>, "value" | "disabled"> {
@@ -81,7 +81,7 @@ export function Tab({ ref, ...props }: TabProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-tab {...props} ref={setRef} />;
+    return <pap-tab suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface TabPanelProps extends Omit<HTMLAttributes<TabPanelElement>, "value" | "disabled"> {
@@ -116,7 +116,7 @@ export function TabPanel({ ref, ...props }: TabPanelProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-tabpanel {...props} ref={setRef} />;
+    return <pap-tabpanel suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

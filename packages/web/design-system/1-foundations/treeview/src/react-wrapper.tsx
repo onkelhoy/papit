@@ -34,7 +34,7 @@ export function Treeitem({ ref, ...props }: TreeitemProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-treeitem {...props} ref={setRef} />;
+    return <pap-treeitem suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface TreeviewProps extends Omit<HTMLAttributes<TreeviewElement>, "strict" | "mode" | "orientation" | "onInactive" | "onActive" | "onEnter"> {
@@ -103,7 +103,7 @@ export function Treeview({ ref, onInactive, onActive, onEnter, orientation, ...p
         return () => node.removeEventListener("enter", onEnter);
     }, [onEnter]);
 
-    return <pap-treeview aria-orientation={orientation} {...props} ref={setRef} />;
+    return <pap-treeview aria-orientation={orientation} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

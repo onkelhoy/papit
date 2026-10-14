@@ -31,7 +31,7 @@ describe("generateReact on the fixture package", () => {
     });
 
     it("imports the element types by the package's own name", () => {
-        assert.match(code, /^import type \{ Fixture as FixtureElement, FixtureItem as FixtureItemElement \} from "@tmp\/fixture";$/m);
+        assert.match(code, /^import type \{ Fixture as FixtureElement, FixtureItem as FixtureItemElement, FixtureDialog as FixtureDialogElement, FixtureDrawer as FixtureDrawerElement \} from "@tmp\/fixture";$/m);
     });
 
     // SSR: the package defines its elements on import and touches window/HTMLElement at module scope
@@ -44,11 +44,11 @@ describe("generateReact on the fixture package", () => {
     it("uses JSX, no createElement and no forwardRef", () => {
         assert.doesNotMatch(code, /createElement|forwardRef/);
         assert.match(component("Fixture"), /return <fixture-el [^\n]*\{\.\.\.props\} ref=\{setRef\} \/>;/);
-        assert.match(component("FixtureItem"), /return <fixture-item \{\.\.\.props\} ref=\{setRef\} \/>;/);
+        assert.match(component("FixtureItem"), /return <fixture-item suppressHydrationWarning \{\.\.\.props\} ref=\{setRef\} \/>;/);
     });
 
     it("exports one function component per element, named after the class, returning ReactElement", () => {
-        assert.deepStrictEqual([...code.matchAll(/^export function (\w+)\(/gm)].map(m => m[1]), ["Fixture", "FixtureItem"]);
+        assert.deepStrictEqual([...code.matchAll(/^export function (\w+)\(/gm)].map(m => m[1]), ["Fixture", "FixtureItem", "FixtureDialog", "FixtureDrawer"]);
         assert.match(component("Fixture"), /^export function Fixture\(\{[^}]*\}: FixtureProps\): ReactElement \{$/m);
         assert.match(component("FixtureItem"), /^export function FixtureItem\(\{ ref, onReady, \.\.\.props \}: FixtureItemProps\): ReactElement \{$/m);
     });
@@ -129,8 +129,48 @@ describe("generateReact on the fixture package", () => {
 
     it("passes primitives through JSX, under the attribute name when it differs from the property", () => {
         const fixture = component("Fixture");
-        assert.match(fixture, /return <fixture-el label-text=\{label\} click=\{withClick\} \{\.\.\.props\} ref=\{setRef\} \/>;/);
+        assert.match(fixture, /return <fixture-el label-text=\{label\} click=\{withClick\} suppressHydrationWarning \{\.\.\.props\} ref=\{setRef\} \/>;/);
         assert.doesNotMatch(fixture, /\b(open|variant|disabled)\b.*whenDefined/);
+    });
+
+    // the element writes role, tabindex and reflected defaults on connect, which the server markup can't know
+    it("renders every tag with suppressHydrationWarning, before the caller's props", () => {
+        for (const name of ["Fixture", "FixtureItem", "FixtureDialog", "FixtureDrawer"])
+        {
+            assert.match(component(name), /^    return <[a-z-]+ [^\n]*suppressHydrationWarning \{\.\.\.props\} ref=\{setRef\} \/>;$/m, name);
+        }
+    });
+
+    it("types a protected @property by its resolved type, named after its attribute", () => {
+        const dialog = props("FixtureDialog");
+        assert.match(dialog, /    \/\*\* Closes on a backdrop click\. \*\/\n    closeoutsideclick\?: boolean;/);
+        assert.match(dialog, /^    modal\?: boolean;$/m);
+        assert.doesNotMatch(dialog, /ismodal/);
+    });
+
+    it("passes protected props under their attribute, as the property isn't reachable from outside", () => {
+        assert.match(component("FixtureDialog"), /^    return <fixture-dialog close-outside-click=\{closeoutsideclick\} modal=\{[^}]*\} loop=\{[^}]*\} suppressHydrationWarning \{\.\.\.props\} ref=\{setRef\} \/>;$/m);
+    });
+
+    // React leaves a false boolean out of the server markup, where the element then boots with its default true
+    it("renders a default-true boolean that is false as the attribute string \"false\"", () => {
+        const dialog = component("FixtureDialog");
+        assert.match(dialog, /\{ ref, onReady, closeoutsideclick, modal, loop, \.\.\.props \}: FixtureDialogProps/);
+        assert.match(dialog, / modal=\{modal === false \? "false" : modal\} loop=\{loop === false \? "false" : loop\} /);
+    });
+
+    it("leaves a default-false boolean to React, which omits it when false", () => {
+        assert.doesNotMatch(component("Fixture"), /"false"/);
+        assert.match(component("FixtureDialog"), / close-outside-click=\{closeoutsideclick\} /);
+    });
+
+    it("keeps the parent's @property options on an override without a decorator", () => {
+        const drawer = props("FixtureDrawer");
+        assert.match(drawer, /^    header\?: FixtureDrawerElement\["header"\];$/m);
+        assert.match(drawer, /^    closeoutsideclick\?: FixtureDrawerElement\["closeoutsideclick"\];$/m);
+        assert.strictEqual(drawer.match(/^    (header|closeoutsideclick)\?:/gm).length, 2);
+        // the override is public, and its default is true
+        assert.match(component("FixtureDrawer"), / close-outside-click=\{closeoutsideclick === false \? "false" : closeoutsideclick\} modal=/);
     });
 
     it("declares the tags as JSX intrinsic elements, with the props JSX can carry", () => {
@@ -139,6 +179,7 @@ describe("generateReact on the fixture package", () => {
         // the rollup renames the element import outside this block only
         assert.doesNotMatch(augmentation(), /Element\b/);
         assert.match(augmentation(), /^            "fixture-item": Omit<FixtureItemProps, "onReady">;$/m);
+        assert.match(augmentation(), /^            "fixture-dialog": Omit<FixtureDialogProps, "onReady" \| "closeoutsideclick" \| "modal" \| "loop"> & \{ "close-outside-click"\?: FixtureDialogProps\["closeoutsideclick"\]; "modal"\?: FixtureDialogProps\["modal"\] \| "false"; "loop"\?: FixtureDialogProps\["loop"\] \| "false" \};$/m);
         assert.strictEqual(code.match(/declare module/g).length, 1);
     });
 });

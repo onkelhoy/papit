@@ -71,7 +71,7 @@ export function TableOfContent({ ref, onChange, links, ...props }: TableOfConten
         };
     }, [links]);
 
-    return <pap-table-of-content {...props} ref={setRef} />;
+    return <pap-table-of-content suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

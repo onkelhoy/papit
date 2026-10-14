@@ -48,7 +48,7 @@ export function Checkbox({ ref, onChange, controls, ...props }: CheckboxProps): 
         return () => node.removeEventListener("change", onChange);
     }, [onChange]);
 
-    return <pap-checkbox aria-controls={controls} {...props} ref={setRef} />;
+    return <pap-checkbox aria-controls={controls} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

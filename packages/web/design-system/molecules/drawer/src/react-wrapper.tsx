@@ -11,12 +11,14 @@ if (typeof window !== "undefined")
     void import("@papit/drawer");
 }
 
-export interface DrawerProps extends Omit<HTMLAttributes<DrawerElement>, "placement" | "label" | "static" | "header" | "open" | "onOpen" | "onClose"> {
+export interface DrawerProps extends Omit<HTMLAttributes<DrawerElement>, "placement" | "label" | "static" | "closeoutsideclick" | "header" | "open" | "modal" | "onOpen" | "onClose"> {
     placement?: DrawerElement["placement"];
     label?: DrawerElement["label"];
     static?: DrawerElement["static"];
+    closeoutsideclick?: DrawerElement["closeoutsideclick"];
     header?: DrawerElement["header"];
     open?: DrawerElement["open"];
+    modal?: boolean;
     /** on the host whenever the drawer opens (not on the initial render) */
     onOpen?: (event: Event) => void;
     /** on the host whenever the drawer closes, including Escape and backdrop click */
@@ -26,7 +28,7 @@ export interface DrawerProps extends Omit<HTMLAttributes<DrawerElement>, "placem
 }
 
 /** React wrapper for the `pap-drawer` element. */
-export function Drawer({ ref, onOpen, onClose, ...props }: DrawerProps): ReactElement {
+export function Drawer({ ref, onOpen, onClose, closeoutsideclick, modal, ...props }: DrawerProps): ReactElement {
     const element = useRef<DrawerElement | null>(null);
 
     const setRef = useCallback((node: DrawerElement | null) => {
@@ -57,13 +59,13 @@ export function Drawer({ ref, onOpen, onClose, ...props }: DrawerProps): ReactEl
         return () => node.removeEventListener("close", onClose);
     }, [onClose]);
 
-    return <pap-drawer {...props} ref={setRef} />;
+    return <pap-drawer close-outside-click={closeoutsideclick === false ? "false" : closeoutsideclick} modal={modal === false ? "false" : modal} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-drawer": Omit<DrawerProps, "onOpen" | "onClose">;
+            "pap-drawer": Omit<DrawerProps, "onOpen" | "onClose" | "closeoutsideclick" | "modal"> & { "close-outside-click"?: DrawerProps["closeoutsideclick"] | "false"; "modal"?: DrawerProps["modal"] | "false" };
         }
     }
 }

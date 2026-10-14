@@ -1,8 +1,6 @@
 // import statements 
 // system 
 import { bind, CustomElement, html, property, query } from "@papit/web-component";
-
-// foundations 
 import "@papit/icon";
 
 // local 
@@ -244,6 +242,8 @@ export class Dialog extends CustomElement {
     protected handledialogclose() {
         // already closed through close(), a stale _internalopen would swallow the next open
         if (!this.open) return;
+        // a close() and reopen in one tick: this close event is stale, the dialog is open again
+        if (this.dialogElement.open) return;
         this._internalopen = true;
         this.open = false;
     }

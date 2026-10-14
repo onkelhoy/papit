@@ -37,3 +37,18 @@ export class Fixture extends FixtureBase {
 export class FixtureItem extends FixtureBase {
     @property() value: string = "";
 }
+
+// as @papit/dialog: protected props reach the element through their attribute only
+export class FixtureDialog extends FixtureBase {
+    @property() header: string = "";
+    /** Closes on a backdrop click. */
+    @property({ type: Boolean, attribute: "close-outside-click" }) protected closeoutsideclick: boolean = false;
+    @property({ type: Boolean, attribute: "modal" }) protected ismodal: boolean = true;
+    @property({ type: Boolean }) loop: boolean = true;
+}
+
+// as @papit/drawer: overrides without a decorator keep the parent's @property options
+export class FixtureDrawer extends FixtureDialog {
+    override header: FixtureDialog["header"] = "drawer";
+    override closeoutsideclick = true;
+}

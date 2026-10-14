@@ -49,7 +49,7 @@ export function ThemePicker({ ref, onChange, ...props }: ThemePickerProps): Reac
         return () => node.removeEventListener("change", onChange);
     }, [onChange]);
 
-    return <pap-theme-picker {...props} ref={setRef} />;
+    return <pap-theme-picker suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

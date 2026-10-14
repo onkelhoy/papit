@@ -34,6 +34,30 @@ describe("analyseFile", () => {
         );
     });
 
+    it("reads a protected @property with an attribute, as the attribute is public", () => {
+        const property = get().properties.find(p => p.name === "closeoutsideclick");
+        assert.deepStrictEqual(
+            pick(property, ["type", "attribute", "converter", "default", "description", "visibility"]),
+            {
+                type: "boolean",
+                attribute: "close-outside-click",
+                converter: "Boolean",
+                default: "false",
+                description: "Closes on a backdrop click.",
+                visibility: "protected",
+            },
+        );
+    });
+
+    it("leaves out a protected @property without an attribute, private ones and undecorated protected fields", () => {
+        const names = get().properties.map(p => p.name);
+        for (const name of ["busy", "value", "plain"]) assert.ok(!names.includes(name), name);
+    });
+
+    it("leaves visibility out on public properties", () => {
+        assert.ok(!("visibility" in get().properties.find(p => p.name === "label")));
+    });
+
     it("reads a dispatched CustomEvent", () => {
         const toggle = get().events.find(e => e.name === "toggle");
         assert.deepStrictEqual(pick(toggle, ["name", "kind"]), { name: "toggle", kind: "CustomEvent" });

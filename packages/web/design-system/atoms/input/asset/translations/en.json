@@ -3,5 +3,9 @@
     "region": "GB",
     "language": "en-UK"
   },
-  "input": "input"
+  "input": "input",
+  "aria": {
+    "clear": "Clear",
+    "password": "Show password"
+  }
 }

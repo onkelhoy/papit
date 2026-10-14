@@ -11,8 +11,15 @@ if (typeof window !== "undefined")
     void import("@papit/carousel");
 }
 
-export interface CarouselNextProps extends Omit<HTMLAttributes<CarouselNextElement>, "href" | "disabled"> {
+export interface CarouselNextProps extends Omit<HTMLAttributes<CarouselNextElement>, "variant" | "size" | "color" | "href" | "type" | "readonly" | "disabled"> {
+    variant?: CarouselNextElement["variant"];
+    size?: CarouselNextElement["size"];
+    color?: CarouselNextElement["color"];
     href?: CarouselNextElement["href"];
+    /** Form behaviour on activation, like a native button's `type`. */
+    type?: CarouselNextElement["type"];
+    /** Blocks activation (click, Space, Enter) but keeps focus and the normal look. */
+    readonly?: CarouselNextElement["readonly"];
     /**
      * Reactive disabled property.
      * - `rerender: false` → does not trigger a re-render when changed
@@ -43,11 +50,18 @@ export function CarouselNext({ ref, ...props }: CarouselNextProps): ReactElement
         };
     }, [ref]);
 
-    return <pap-carousel-next {...props} ref={setRef} />;
+    return <pap-carousel-next suppressHydrationWarning {...props} ref={setRef} />;
 }
 
-export interface CarouselPrevProps extends Omit<HTMLAttributes<CarouselPrevElement>, "href" | "disabled"> {
+export interface CarouselPrevProps extends Omit<HTMLAttributes<CarouselPrevElement>, "variant" | "size" | "color" | "href" | "type" | "readonly" | "disabled"> {
+    variant?: CarouselPrevElement["variant"];
+    size?: CarouselPrevElement["size"];
+    color?: CarouselPrevElement["color"];
     href?: CarouselPrevElement["href"];
+    /** Form behaviour on activation, like a native button's `type`. */
+    type?: CarouselPrevElement["type"];
+    /** Blocks activation (click, Space, Enter) but keeps focus and the normal look. */
+    readonly?: CarouselPrevElement["readonly"];
     /**
      * Reactive disabled property.
      * - `rerender: false` → does not trigger a re-render when changed
@@ -78,7 +92,7 @@ export function CarouselPrev({ ref, ...props }: CarouselPrevProps): ReactElement
         };
     }, [ref]);
 
-    return <pap-carousel-prev {...props} ref={setRef} />;
+    return <pap-carousel-prev suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface CarouselDotsProps extends HTMLAttributes<CarouselDotsElement> {
@@ -104,7 +118,7 @@ export function CarouselDots({ ref, ...props }: CarouselDotsProps): ReactElement
         };
     }, [ref]);
 
-    return <pap-carousel-dots {...props} ref={setRef} />;
+    return <pap-carousel-dots suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface CarouselGalleryProps extends Omit<HTMLAttributes<CarouselGalleryElement>, "align" | "loop" | "slide" | "clonecount" | "slides" | "stopcount" | "onChange"> {
@@ -121,7 +135,7 @@ export interface CarouselGalleryProps extends Omit<HTMLAttributes<CarouselGaller
 }
 
 /** React wrapper for the `pap-carousel-gallery` element. */
-export function CarouselGallery({ ref, onChange, slides, stopcount, ...props }: CarouselGalleryProps): ReactElement {
+export function CarouselGallery({ ref, onChange, loop, slides, stopcount, ...props }: CarouselGalleryProps): ReactElement {
     const element = useRef<CarouselGalleryElement | null>(null);
 
     const setRef = useCallback((node: CarouselGalleryElement | null) => {
@@ -161,7 +175,7 @@ export function CarouselGallery({ ref, onChange, slides, stopcount, ...props }: 
         };
     }, [slides, stopcount]);
 
-    return <pap-carousel-gallery {...props} ref={setRef} />;
+    return <pap-carousel-gallery loop={loop === false ? "false" : loop} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface CarouselProps extends Omit<HTMLAttributes<CarouselElement>, "autoplay" | "play" | "duration" | "progress" | "loop" | "slide" | "slidecount" | "stopcount" | "onChange"> {
@@ -180,7 +194,7 @@ export interface CarouselProps extends Omit<HTMLAttributes<CarouselElement>, "au
 }
 
 /** React wrapper for the `pap-carousel` element. */
-export function Carousel({ ref, onChange, progress, slidecount, stopcount, ...props }: CarouselProps): ReactElement {
+export function Carousel({ ref, onChange, play, loop, progress, slidecount, stopcount, ...props }: CarouselProps): ReactElement {
     const element = useRef<CarouselElement | null>(null);
 
     const setRef = useCallback((node: CarouselElement | null) => {
@@ -221,7 +235,7 @@ export function Carousel({ ref, onChange, progress, slidecount, stopcount, ...pr
         };
     }, [progress, slidecount, stopcount]);
 
-    return <pap-carousel {...props} ref={setRef} />;
+    return <pap-carousel play={play === false ? "false" : play} loop={loop === false ? "false" : loop} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
@@ -230,8 +244,8 @@ declare module "react" {
             "pap-carousel-next": CarouselNextProps;
             "pap-carousel-prev": CarouselPrevProps;
             "pap-carousel-dots": CarouselDotsProps;
-            "pap-carousel-gallery": Omit<CarouselGalleryProps, "onChange" | "slides" | "stopcount">;
-            "pap-carousel": Omit<CarouselProps, "onChange" | "progress" | "slidecount" | "stopcount">;
+            "pap-carousel-gallery": Omit<CarouselGalleryProps, "onChange" | "loop" | "slides" | "stopcount"> & { "loop"?: CarouselGalleryProps["loop"] | "false" };
+            "pap-carousel": Omit<CarouselProps, "onChange" | "play" | "progress" | "loop" | "slidecount" | "stopcount"> & { "play"?: CarouselProps["play"] | "false"; "loop"?: CarouselProps["loop"] | "false" };
         }
     }
 }

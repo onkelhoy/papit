@@ -43,7 +43,7 @@ export function Sidebar({ ref, ...props }: SidebarProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-sidebar {...props} ref={setRef} />;
+    return <pap-sidebar suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

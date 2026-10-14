@@ -163,6 +163,13 @@ test.describe("@papit/dialog unit tests", () => {
         expect(button).toBe(true);
     });
 
+    test('the close button icon is defined once the dialog renders', async ({ page }) => {
+        await page.waitForFunction(() => !!customElements.get('pap-icon'));
+        const upgraded = await page.getByTestId('base-target').evaluate((el: any) =>
+            el.shadowRoot.querySelector('button pap-icon') instanceof customElements.get('pap-icon')!);
+        expect(upgraded).toBe(true);
+    });
+
     test('built-in close button closes the dialog', async ({ page }) => {
         await page.evaluate(() => {
             (document.querySelector('pap-dialog') as any).show();
@@ -373,6 +380,32 @@ test.describe("@papit/dialog unit tests", () => {
             await page.keyboard.press('Escape');
             await page.waitForFunction(() => (document.querySelector('[data-testid="parsed-open"]') as any).open === false);
             expect(await target.evaluate(inner)).toEqual({ open: false, modal: false });
+        });
+
+        test('close() then showModal() in one tick leaves host and inner dialog open', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.showModal());
+            await target.evaluate((el: any) => {
+                el.close();
+                el.showModal();
+            });
+            // let the native close event of the first close() arrive
+            await page.waitForTimeout(100);
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+            expect(await target.evaluate((el: any) => el.open)).toBe(true);
+            await expect(target).toHaveAttribute('open');
+        });
+
+        test('open = false then the open attribute in one tick leaves host and inner dialog open', async ({ page }) => {
+            const target = page.getByTestId('base-target');
+            await target.evaluate((el: any) => el.open = true);
+            await target.evaluate((el: any) => {
+                el.open = false;
+                el.setAttribute('open', '');
+            });
+            await page.waitForTimeout(100);
+            expect(await target.evaluate(inner)).toEqual({ open: true, modal: true });
+            expect(await target.evaluate((el: any) => el.open)).toBe(true);
         });
 
         test('open = true after close() opens the dialog again', async ({ page }) => {

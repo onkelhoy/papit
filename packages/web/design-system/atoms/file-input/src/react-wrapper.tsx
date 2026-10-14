@@ -68,7 +68,7 @@ export function FileInput({ ref, onChange, onUpload, ...props }: FileInputProps)
         return () => node.removeEventListener("upload", listener);
     }, [onUpload]);
 
-    return <pap-file-input {...props} ref={setRef} />;
+    return <pap-file-input suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

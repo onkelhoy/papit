@@ -66,6 +66,20 @@ Set `clear` to show a button that resets the value once it's non-empty.
 </form>
 ```
 
+Enter in the field submits the form, like a native input (not while an IME is composing).
+
+### Accessibility
+
+The textbox is the native `<input>` inside the shadow root. The host forwards its naming to it:
+
+| On the host                            | Becomes on the inner input                        |
+| -------------------------------------- | ------------------------------------------------- |
+| `aria-label`                           | its `aria-label` (kept in sync)                   |
+| `aria-labelledby` / `aria-describedby` | the referenced elements, by ID in the host's root |
+| `<label for="host-id">`                | its label                                         |
+
+IDs are resolved on connect and when these attributes change. The clear and password buttons are named "Clear" and "Show password" (with `aria-pressed`), translatable through the `aria.clear` and `aria.password` keys.
+
 ## Attributes
 
 | Attribute                 | Type                       | Default  | Description                         |

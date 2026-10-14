@@ -12,7 +12,7 @@
     "wrapper",
     "codegen"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -60,7 +60,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/analyse": "0.0.1",
+    "@papit/analyse": "0.0.3",
     "@papit/arguments": "0.0.1",
     "@papit/information": "0.0.9",
     "@papit/terminal": "0.0.2"
@@ -87,5 +87,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.1"
 }

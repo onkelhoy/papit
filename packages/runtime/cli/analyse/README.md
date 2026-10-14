@@ -85,7 +85,7 @@ Analyses one source file and the stylesheets it imports. The tag name comes from
 
 | Field | Source |
 | --- | --- |
-| `properties` | Public fields. `@property({ type, attribute, reflect })` is mirrored from the engine: `attribute` is the key as written unless set, and `reflect` defaults to true whenever there is an attribute. `@query` and `@translate` fields are left out. `type` is as written; `resolvedType` is what the checker makes of an alias or indexed access (`ButtonColor` → `"primary" \| "secondary" \| …`). |
+| `properties` | Public fields, and protected `@property` fields that have an attribute (`visibility: "protected"`), as the attribute is set from outside. `@property({ type, attribute, reflect })` is mirrored from the engine: `attribute` is the key as written unless set, and `reflect` defaults to true whenever there is an attribute. `@query` and `@translate` fields are left out. `type` is as written; `resolvedType` is what the checker makes of an alias or indexed access (`ButtonColor` → `"primary" \| "secondary" \| …`). |
 | `methods` | Public methods with their signatures. Lifecycle callbacks, `render`, `@bind` handlers and private members are left out. |
 | `events` | `dispatchEvent(new Event \| CustomEvent("name"))`, including inside decorator callbacks, plus `@fires` tags. |
 | `states` | `_internals.states.add("name")`. |

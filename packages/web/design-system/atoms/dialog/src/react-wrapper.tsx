@@ -11,9 +11,11 @@ if (typeof window !== "undefined")
     void import("@papit/dialog");
 }
 
-export interface DialogProps extends Omit<HTMLAttributes<DialogElement>, "header" | "open" | "onOpen" | "onClose"> {
+export interface DialogProps extends Omit<HTMLAttributes<DialogElement>, "header" | "open" | "closeoutsideclick" | "modal" | "onOpen" | "onClose"> {
     header?: DialogElement["header"];
     open?: DialogElement["open"];
+    closeoutsideclick?: boolean;
+    modal?: boolean;
     /** on the host whenever the dialog opens (not on the initial render) */
     onOpen?: (event: Event) => void;
     /** on the host whenever the dialog closes, including Escape and backdrop click */
@@ -23,7 +25,7 @@ export interface DialogProps extends Omit<HTMLAttributes<DialogElement>, "header
 }
 
 /** React wrapper for the `pap-dialog` element. */
-export function Dialog({ ref, onOpen, onClose, ...props }: DialogProps): ReactElement {
+export function Dialog({ ref, onOpen, onClose, closeoutsideclick, modal, ...props }: DialogProps): ReactElement {
     const element = useRef<DialogElement | null>(null);
 
     const setRef = useCallback((node: DialogElement | null) => {
@@ -54,13 +56,13 @@ export function Dialog({ ref, onOpen, onClose, ...props }: DialogProps): ReactEl
         return () => node.removeEventListener("close", onClose);
     }, [onClose]);
 
-    return <pap-dialog {...props} ref={setRef} />;
+    return <pap-dialog close-outside-click={closeoutsideclick} modal={modal === false ? "false" : modal} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-dialog": Omit<DialogProps, "onOpen" | "onClose">;
+            "pap-dialog": Omit<DialogProps, "onOpen" | "onClose" | "closeoutsideclick" | "modal"> & { "close-outside-click"?: DialogProps["closeoutsideclick"]; "modal"?: DialogProps["modal"] | "false" };
         }
     }
 }

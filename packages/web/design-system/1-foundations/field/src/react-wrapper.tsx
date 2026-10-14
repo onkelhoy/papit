@@ -65,7 +65,7 @@ export function Field({ ref, hideStates, error, warning, errorState, warningStat
         };
     }, [error, warning, errorState, warningState]);
 
-    return <pap-field hide-states={hideStates} {...props} ref={setRef} />;
+    return <pap-field hide-states={hideStates} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

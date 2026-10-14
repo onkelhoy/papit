@@ -81,13 +81,13 @@ export function Router({ ref, onWindowClear, onWindowLoad, updatetitle, updateur
         };
     }, [omitters]);
 
-    return <pap-router update-title={updatetitle} update-url={updateurl} trailing-slash={trailingslash} hash-based={hashbased} {...props} ref={setRef} />;
+    return <pap-router update-title={updatetitle === false ? "false" : updatetitle} update-url={updateurl === false ? "false" : updateurl} trailing-slash={trailingslash === false ? "false" : trailingslash} hash-based={hashbased} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-router": Omit<RouterProps, "onWindowClear" | "onWindowLoad" | "updatetitle" | "updateurl" | "trailingslash" | "omitters" | "hashbased"> & { "update-title"?: RouterProps["updatetitle"]; "update-url"?: RouterProps["updateurl"]; "trailing-slash"?: RouterProps["trailingslash"]; "hash-based"?: RouterProps["hashbased"] };
+            "pap-router": Omit<RouterProps, "onWindowClear" | "onWindowLoad" | "updatetitle" | "updateurl" | "trailingslash" | "omitters" | "hashbased"> & { "update-title"?: RouterProps["updatetitle"] | "false"; "update-url"?: RouterProps["updateurl"] | "false"; "trailing-slash"?: RouterProps["trailingslash"] | "false"; "hash-based"?: RouterProps["hashbased"] };
         }
     }
 }

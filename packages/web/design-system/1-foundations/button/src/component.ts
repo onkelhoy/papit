@@ -14,10 +14,14 @@ export class Button extends CustomElementInternals {
     @property variant: "outline" | "clear" | "filled" = "filled";
     @property size: "small" | "medium" | "large" | "icon" = "medium";
     @property color: ButtonColor = "primary";
+    /** Form behaviour on activation, like a native button's `type`. */
+    @property type?: "button" | "submit" | "reset";
+    /** Blocks activation (click, Space, Enter) but keeps focus and the normal look. */
+    @property({ type: Boolean }) readonly?: boolean;
 
     connectedCallback(): void {
         super.connectedCallback();
-        this.setAttribute("role", "button");
+        if (!this.hasAttribute("role")) this.setAttribute("role", "button");
         if (!this.hasAttribute("tabindex")) this.setAttribute("tabindex", "0");
 
         this.addEventListener("click", this.handleclick, true);
@@ -30,7 +34,7 @@ export class Button extends CustomElementInternals {
     // and its keydown is prevented so the page does not scroll
     @bind
     private handlekeydown(e: KeyboardEvent) {
-        if (this.hasAttribute("disabled") || this.hasAttribute("readonly")) return;
+        if (this.hasAttribute("disabled") || this.readonly) return;
 
         const key = keyname(e);
         if (key === "space") e.preventDefault();
@@ -42,7 +46,7 @@ export class Button extends CustomElementInternals {
 
     @bind
     private handlekeyup(e: KeyboardEvent) {
-        if (this.hasAttribute("disabled") || this.hasAttribute("readonly")) return;
+        if (this.hasAttribute("disabled") || this.readonly) return;
 
         const key = keyname(e);
         if (key === "space" || key === "enter" || key === "numpadenter")
@@ -55,7 +59,7 @@ export class Button extends CustomElementInternals {
 
     @bind
     private handleclick(e: Event) {
-        if (this.hasAttribute("disabled") || this.hasAttribute("readonly"))
+        if (this.hasAttribute("disabled") || this.readonly)
         {
             e.stopImmediatePropagation();
             e.preventDefault();
@@ -71,9 +75,8 @@ export class Button extends CustomElementInternals {
             const form = this._internals.form ?? this.closest("form");
             if (!form) return;
 
-            const type = this.getAttribute("type");
-            if (type === "submit") form.requestSubmit();
-            else if (type === "reset") form.reset();
+            if (this.type === "submit") form.requestSubmit();
+            else if (this.type === "reset") form.reset();
         }
     }
 

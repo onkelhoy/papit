@@ -55,7 +55,7 @@ export function Switch({ ref, onChange, ...props }: SwitchProps): ReactElement {
         return () => node.removeEventListener("change", onChange);
     }, [onChange]);
 
-    return <pap-switch {...props} ref={setRef} />;
+    return <pap-switch suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

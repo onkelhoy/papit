@@ -53,7 +53,7 @@ export function Radio({ ref, onChange, ...props }: RadioProps): ReactElement {
         return () => node.removeEventListener("change", onChange);
     }, [onChange]);
 
-    return <pap-radio {...props} ref={setRef} />;
+    return <pap-radio suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

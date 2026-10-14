@@ -11,11 +11,15 @@ if (typeof window !== "undefined")
     void import("@papit/button");
 }
 
-export interface ButtonProps extends Omit<HTMLAttributes<ButtonElement>, "href" | "variant" | "size" | "color" | "disabled"> {
+export interface ButtonProps extends Omit<HTMLAttributes<ButtonElement>, "href" | "variant" | "size" | "color" | "type" | "readonly" | "disabled"> {
     href?: ButtonElement["href"];
     variant?: ButtonElement["variant"];
     size?: ButtonElement["size"];
     color?: ButtonElement["color"];
+    /** Form behaviour on activation, like a native button's `type`. */
+    type?: ButtonElement["type"];
+    /** Blocks activation (click, Space, Enter) but keeps focus and the normal look. */
+    readonly?: ButtonElement["readonly"];
     /**
      * Reactive disabled property.
      * - `rerender: false` → does not trigger a re-render when changed
@@ -46,7 +50,7 @@ export function Button({ ref, ...props }: ButtonProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-button {...props} ref={setRef} />;
+    return <pap-button suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

@@ -146,6 +146,11 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
                 value = parseValue(this.getAttribute(attributeName), settings.type);
                 initialAttribute = true;
             }
+            else if (settings.type === Boolean && typeof value === "string")
+            {
+                // frameworks (React 19) assign props as properties, "false" must not stay truthy
+                value = parseValue(value, Boolean);
+            }
 
             if (settings.readonly && !isInitial)
             {

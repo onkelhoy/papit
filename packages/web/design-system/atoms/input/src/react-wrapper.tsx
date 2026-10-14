@@ -90,7 +90,7 @@ export function Input({ ref, onChange, hideStates, value, error, warning, errorS
         };
     }, [value, error, warning, errorState, warningState]);
 
-    return <pap-input hide-states={hideStates} {...props} ref={setRef} />;
+    return <pap-input hide-states={hideStates} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
