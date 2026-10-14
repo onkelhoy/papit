@@ -9,7 +9,7 @@
     "form",
     "form-associated"
   ],
-  "version": "0.1.6",
+  "version": "0.1.7",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -61,7 +61,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/web-component": "0.0.10"
+    "@papit/web-component": "0.0.11"
   },
   "peerDependencies": {
     "react": "^19"
@@ -73,13 +73,13 @@
   },
   "devDependencies": {
     "@playwright/test": "1.58.0",
-    "@papit/router": "0.1.6",
-    "@papit/tabs": "0.1.6",
+    "@papit/router": "0.1.7",
+    "@papit/tabs": "0.1.7",
     "playwright": "1.58.0",
     "typescript": "5.9.3",
-    "@papit/theme": "0.0.2",
+    "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.13"
+    "@papit/codeblock": "0.1.14"
   },
   "browserslist": [
     "defaults",
@@ -98,5 +98,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.5"
+  "remoteVersion": "0.1.6"
 }

@@ -42,7 +42,7 @@ export function Icon({ ref, ...props }: IconProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-icon {...props} ref={setRef} />;
+    return <pap-icon suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

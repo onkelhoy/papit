@@ -113,8 +113,10 @@ function readProperties(node: ts.ClassDeclaration, documented: Map<string, strin
 
     for (const member of node.members)
     {
-        if (!ts.isPropertyDeclaration(member) || !isPublic(member) || isStatic(member)) continue;
+        if (!ts.isPropertyDeclaration(member) || isStatic(member)) continue;
         if (!ts.isIdentifier(member.name)) continue;
+        const isProtected = hasModifier(member, ts.SyntaxKind.ProtectedKeyword);
+        if (!isPublic(member) && !isProtected) continue;
         if (HIDDEN_FIELD_DECORATORS.some(name => decorator(member, name))) continue;
 
         const name = member.name.text;
@@ -146,6 +148,13 @@ function readProperties(node: ts.ClassDeclaration, documented: Map<string, strin
             const converter = read("type");
             if (converter) property.converter = converter.getText();
             if (read("readonly")?.kind === ts.SyntaxKind.TrueKeyword) property.readonly = true;
+        }
+
+        // a protected field is still set from outside through its attribute, and only then
+        if (isProtected)
+        {
+            if (typeof property.attribute !== "string") continue;
+            property.visibility = "protected";
         }
 
         if (member.initializer) property.default = member.initializer.getText();

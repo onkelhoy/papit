@@ -67,11 +67,11 @@
     "@papit/signals": "0.0.1"
   },
   "devDependencies": {
-    "@papit/theme": "0.0.2",
+    "@papit/theme": "0.0.3",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3",
-    "@papit/codeblock": "0.1.13"
+    "@papit/codeblock": "0.1.14"
   },
   "browserslist": [
     "defaults",

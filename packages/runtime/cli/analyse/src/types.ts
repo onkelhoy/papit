@@ -1,4 +1,4 @@
-/** A class field, with what `@property({ type, attribute, reflect })` adds when decorated. */
+/** A public class field, or a protected `@property` with an attribute, with what `@property({ type, attribute, reflect })` adds when decorated. */
 export type Property = {
   name: string;
   /** TypeScript type as written, e.g. `"boolean"` or `"\"a\" | \"b\""`. */
@@ -17,6 +17,8 @@ export type Property = {
   default?: string;
   description?: string;
   readonly?: boolean;
+  /** `"protected"` for a protected `@property` with an attribute, the only kind kept; absent when public. */
+  visibility?: "protected";
 };
 
 /** A public method. Lifecycle callbacks, `render` and private/protected members are left out. */

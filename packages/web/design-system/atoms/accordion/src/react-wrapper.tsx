@@ -51,7 +51,7 @@ export function Accordion({ ref, value, ...props }: AccordionProps): ReactElemen
         };
     }, [value]);
 
-    return <pap-accordion {...props} ref={setRef} />;
+    return <pap-accordion suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

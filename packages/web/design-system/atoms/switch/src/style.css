@@ -18,7 +18,7 @@
         width: var(--size);
         height: var(--size);
         background-color: var(--background-light, light-dark(oklch(99% 0 0), oklch(22% 0 0)));
-        transition: left cubic-bezier(0.68, -0.55, 0.27, 1.55) 80ms;
+        transition: left cubic-bezier(0.68, -0.55, 0.27, 1.55) var(--timing-fast, 80ms);
         position: absolute;
         border-radius: 50%;
 

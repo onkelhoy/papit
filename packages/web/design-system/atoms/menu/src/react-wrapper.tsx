@@ -34,7 +34,7 @@ export function MenuBar({ ref, ...props }: MenuBarProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-menubar {...props} ref={setRef} />;
+    return <pap-menubar suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface MenuItemProps extends Omit<HTMLAttributes<MenuItemElement>, "placement" | "onClick"> {
@@ -69,7 +69,7 @@ export function MenuItem({ ref, onClick, ...props }: MenuItemProps): ReactElemen
         return () => node.removeEventListener("click", onClick);
     }, [onClick]);
 
-    return <pap-menuitem {...props} ref={setRef} />;
+    return <pap-menuitem suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 export interface MenuProps extends Omit<HTMLAttributes<MenuElement>, "loop" | "open" | "placement" | "onOpen" | "onClose" | "onToggle"> {
@@ -133,7 +133,7 @@ export function Menu({ ref, onOpen, onClose, onToggle, loop, ...props }: MenuPro
         return () => node.removeEventListener("toggle", onToggle);
     }, [onToggle]);
 
-    return <pap-menu data-loop={loop} {...props} ref={setRef} />;
+    return <pap-menu data-loop={loop} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

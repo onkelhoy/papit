@@ -162,6 +162,48 @@ test.describe("button form", () => {
         });
     });
 })
+test.describe("button type and readonly properties", () => {
+    test("type and readonly add no attribute by default", async ({ page }) => {
+        const target = page.getByTestId("base-target");
+        await expect(target).not.toHaveAttribute("type");
+        await expect(target).not.toHaveAttribute("readonly");
+        expect(await target.evaluate((el: any) => [el.type, el.readonly])).toEqual([undefined, undefined]);
+    });
+
+    test("attributes are readable as properties", async ({ page }) => {
+        expect(await page.getByTestId("submit").evaluate((el: any) => el.type)).toBe("submit");
+        expect(await page.getByTestId("readonly").evaluate((el: any) => el.readonly)).toBe(true);
+    });
+
+    test("setting the type property submits the form like the attribute", async ({ page }) => {
+        const target = page.getByTestId("untyped");
+        await target.click();
+        expect(await page.evaluate(() => (window as any).SUBMITTED)).toBeUndefined();
+
+        await target.evaluate((el: any) => { el.type = "submit"; });
+        await expect(target).toHaveAttribute("type", "submit");
+        await target.click();
+        await expect.poll(() => page.evaluate(() => (window as any).SUBMITTED)).toBe(1);
+    });
+
+    test("setting the readonly property blocks click like the attribute", async ({ page }) => {
+        const target = page.getByTestId("base-target");
+        await target.evaluate((el: any) => {
+            (window as any).CLICKS = 0;
+            el.addEventListener("click", () => (window as any).CLICKS++);
+            el.readonly = true;
+        });
+        await expect(target).toHaveAttribute("readonly");
+        await target.click({ force: true });
+        expect(await page.evaluate(() => (window as any).CLICKS)).toBe(0);
+
+        await target.evaluate((el: any) => { el.readonly = false; });
+        await expect(target).not.toHaveAttribute("readonly");
+        await target.click();
+        expect(await page.evaluate(() => (window as any).CLICKS)).toBe(1);
+    });
+});
+
 test.describe("button keyboard", () => {
     // counts clicks and records whether keydown/keyup reached the window with default prevented
     async function track(page: any, testid: string) {

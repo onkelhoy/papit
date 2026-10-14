@@ -153,7 +153,7 @@ Listeners are attached as passed, so bind methods with `@bind`. `getValues(node)
 
 | Setting | Type | Default | Description |
 | ------- | ---- | ------- | ----------- |
-| `type` | `Function` | — | Coerces attribute strings: `Number`, `Boolean`, `Object`, `Array`, … |
+| `type` | `Function` | — | Coerces attribute strings: `Number`, `Boolean`, `Object`, `Array`, …. `Boolean` also parses strings assigned to the property (`el.x = "false"` → `false`) |
 | `attribute` | `boolean \| string` | `true` | Attribute name, `true` for the property name, `false` for none |
 | `reflect` | `boolean` | `true` | Write property changes back to the attribute |
 | `removeAttribute` | `boolean` | `true` | Remove the attribute when the value is `false`, `null` or `undefined` |

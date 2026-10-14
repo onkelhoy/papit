@@ -11,6 +11,8 @@ import sheet from "./style.css" with { type: "css" };
 
 /**
  * Form-associated input with optional format masking, password visibility toggle, and clear button.
+ * Enter submits the form. The host's `aria-label`, `aria-labelledby`, `aria-describedby`
+ * and `<label for>` name the inner input.
  *
  * @example
  * ```html
@@ -125,7 +127,7 @@ export class Input extends Field {
     @property({ rerender: true, reflect: false }) accept?: string;
     @property({ rerender: true, reflect: false }) placeholder?: string;
     @property({ rerender: true, reflect: false }) autocomplete: "on" | "off" | (string & {}) = "on";
-    @property({ rerender: true, reflect: false }) name?: string;
+    @property({ rerender: true }) name?: string;
     @property({ type: Boolean, rerender: true, reflect: false }) clear: boolean = false;
     @property({ type: Boolean, rerender: true, reflect: false }) required: boolean = false;
 
@@ -212,6 +214,13 @@ export class Input extends Field {
     }
 
     @bind
+    private handleKeydown(e: KeyboardEvent) {
+        // implicit submission, the inner input sits outside the form's light DOM
+        if (e.key !== "Enter" || e.isComposing) return;
+        this._internals.form?.requestSubmit();
+    }
+
+    @bind
     private handleClear() {
         this.inputElement.value = "";
         this.dispatchEvent(new Event("change"));
@@ -225,6 +234,8 @@ export class Input extends Field {
     }
 
     render() {
+        const shown = this.type !== "password";
+
         return html`
             <div part="wrapper">
                 <slot name="prefix"></slot>
@@ -240,6 +251,7 @@ export class Input extends Field {
                     name="${this.name ?? ""}"
                     part="input"
                     @input="${this.handleInput}"
+                    @keydown="${this.handleKeydown}"
                     autocomplete="${this.autocomplete === "off" ? "new-password" as any : this.autocomplete}"
                     ${this.disabled ? "disabled" : ""}
                     ${this.required ? "required" : ""}
@@ -247,13 +259,18 @@ export class Input extends Field {
                 <slot name="sufix"></slot>
 
                 ${this.originalType === "password" && html`
-                    <button part="eye" @click="${this.handleEye}">
-                        <pap-icon name="${this.type === "password" ? "eye" : "eye-closed"}"></pap-icon>    
+                    <button 
+                        part="eye" 
+                        aria-label="${this.label("aria.password", "Show password")}" 
+                        aria-pressed="${shown ? "true" : "false"}" 
+                        @click="${this.handleEye}"
+                    >
+                        <pap-icon name="${shown ? "eye-closed" : "eye"}"></pap-icon>    
                     </button>
                 `}
 
                 ${this.clear && String(this.value ?? "").length > 0 && html`
-                    <button part="clear" @click="${this.handleClear}">
+                    <button part="clear" aria-label="${this.label("aria.clear", "Clear")}" @click="${this.handleClear}">
                         <pap-icon name="clear-filled"></pap-icon>
                     </button>
                 `}
@@ -263,6 +280,12 @@ export class Input extends Field {
     }
 
     // helper functions 
+
+    // translated label, English until a loaded language has the key
+    private label(key: string, fallback: string) {
+        const text = this.t(key);
+        return text === key ? fallback : text;
+    }
 
     private getFormat(value: string | null) {
         if (!value) return "";

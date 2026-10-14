@@ -9,8 +9,10 @@ type Listener = { event: string; handler: string; type: string; description?: st
 /**
  * How a prop reaches the element: `pass` through JSX as is, `attribute` through JSX under its
  * attribute name, `assign` as a property once the element is defined.
+ * `type` is written out for a protected property, which the element type can't be indexed by.
+ * `on` marks a boolean that defaults to true, rendered as `"false"` when false.
  */
-type Prop = { name: string; description?: string; via: "pass" | "attribute" | "assign"; attribute?: string };
+type Prop = { name: string; description?: string; via: "pass" | "attribute" | "assign"; attribute?: string; type?: string; on?: boolean };
 type Wrapper = { name: string; tagName: string; element: string; props: Prop[]; listeners: Listener[] };
 
 // type names a CustomEvent detail may use and still compile in the generated file
@@ -36,6 +38,21 @@ function chain(core: Core) {
 function unique<T extends { name: string }>(items: T[]) {
     const seen = new Set<string>();
     return items.filter(item => !seen.has(item.name) && seen.add(item.name));
+}
+
+/** Each property once, nearest first. An override without a decorator keeps the `@property` options of the one it overrides. */
+function properties(classes: Core[]) {
+    const found = new Map<string, Property>();
+    for (const property of classes.flatMap(c => c.properties))
+    {
+        const nearer = found.get(property.name);
+        if (!nearer) found.set(property.name, property);
+        else if (nearer.attribute === undefined && property.attribute !== undefined)
+        {
+            found.set(property.name, { ...property, ...nearer, resolvedType: nearer.resolvedType, visibility: nearer.visibility });
+        }
+    }
+    return [...found.values()];
 }
 
 /** `tab-select` → `onTabSelect`. */
@@ -106,21 +123,39 @@ function primitive(type: string) {
     return parts.length > 0 && parts.every(part => PRIMITIVE.test(part));
 }
 
-function prop(property: Property): Prop {
-    const { name, description } = property;
+function prop(property: Property): Prop | undefined {
+    const { description } = property;
     // the analyser's resolved type sees through aliases and indexed access types
-    if (typeof property.attribute !== "string" || !primitive(property.resolvedType ?? property.type)) return { name, description, via: "assign" };
+    const type = property.resolvedType ?? property.type;
+    const passable = typeof property.attribute === "string" && primitive(type);
 
+    // a protected property is only set through its attribute, so it's named after it: `close-outside-click` → `closeoutsideclick`
+    if (property.visibility)
+    {
+        if (!passable) return undefined;
+        const name = (property.attribute as string).replace(/[^\w$]/g, "");
+        return { ...route(name, property), description, type };
+    }
+
+    const { name } = property;
+    if (!passable) return { name, description, via: "assign" };
+    return { ...route(name, property), description };
+}
+
+/** `pass` or `attribute` for a prop JSX carries, and whether it's a boolean that defaults to true. */
+function route(name: string, property: Property): Prop {
+    const on = property.converter === "Boolean" && property.default === "true";
     // HTML lowercases attribute names, so `defaultValue` still reaches `defaultvalue`
-    if (property.attribute === name.toLowerCase()) return { name, description, via: "pass" };
-    return { name, description, via: "attribute", attribute: property.attribute };
+    if (property.attribute === name.toLowerCase()) return { name, via: "pass", on };
+    return { name, via: "attribute", attribute: property.attribute as string, on };
 }
 
 function wrapper(core: Core): Wrapper {
     const classes = chain(core);
-    const props = unique(classes.flatMap(c => c.properties))
-        .filter((property: Property) => property.attribute !== undefined && !property.readonly)
-        .map(prop);
+    const props = unique(properties(classes)
+        .filter(property => property.attribute !== undefined && !property.readonly)
+        .map(prop)
+        .filter((p): p is Prop => p !== undefined));
     const listeners = unique(classes.filter(c => c.source.package !== ENGINE).flatMap(c => c.events))
         .map(event => ({ event: event.name, handler: handlerName(event.name), type: eventType(event), description: event.description }));
 
@@ -143,7 +178,7 @@ function propsInterface({ name, element, props, listeners }: Wrapper) {
 
     return [
         `export interface ${name}Props extends ${base} {`,
-        ...props.flatMap(p => [...doc(p.description, "    "), `    ${p.name}?: ${element}[${JSON.stringify(p.name)}];`]),
+        ...props.flatMap(p => [...doc(p.description, "    "), `    ${p.name}?: ${p.type ?? `${element}[${JSON.stringify(p.name)}]`};`]),
         ...listeners.flatMap(l => [...doc(l.description, "    "), `    ${l.handler}?: (event: ${l.type}) => void;`]),
         `    ref?: Ref<${element}>;`,
         `    children?: ReactNode;`,
@@ -186,12 +221,16 @@ function assignEffect(tagName: string, assigned: Prop[]) {
     ];
 }
 
+/** Written out in the JSX rather than spread: under its attribute name, or as `"false"` when off. */
+const written = (p: Prop) => p.via === "attribute" || (p.via === "pass" && p.on);
+
 function component(wrapper: Wrapper) {
     const { name, tagName, element, props, listeners } = wrapper;
-    const renamed = props.filter(p => p.via === "attribute");
+    const rendered = props.filter(written);
     const assigned = props.filter(p => p.via === "assign");
-    const destructured = ["ref", ...listeners.map(l => l.handler), ...renamed.map(p => p.name), ...assigned.map(p => p.name), "...props"];
-    const attributes = renamed.map(p => `${p.attribute}={${p.name}} `).join("");
+    const destructured = ["ref", ...listeners.map(l => l.handler), ...rendered.map(p => p.name), ...assigned.map(p => p.name), "...props"];
+    // React leaves a false boolean out of the markup, where the element would boot with its default true
+    const attributes = rendered.map(p => `${p.attribute ?? p.name}={${p.on ? `${p.name} === false ? "false" : ${p.name}` : p.name}} `).join("");
 
     return [
         ...propsInterface(wrapper),
@@ -216,7 +255,8 @@ function component(wrapper: Wrapper) {
         ...listeners.flatMap(listener => [``, ...listenerEffect(listener)]),
         ...assigned.length ? [``, ...assignEffect(tagName, assigned)] : [],
         ``,
-        `    return <${tagName} ${attributes}{...props} ref={setRef} />;`,
+        // the element writes its own host attributes (role, tabindex, reflected defaults) on connect
+        `    return <${tagName} ${attributes}suppressHydrationWarning {...props} ref={setRef} />;`,
         `}`,
     ].join("\n");
 }
@@ -227,11 +267,11 @@ function component(wrapper: Wrapper) {
  * the element import everywhere but in this block, which bundle-ts copies as it is.
  */
 function intrinsic({ name, tagName, props, listeners }: Wrapper) {
-    const omitted = [...listeners.map(l => l.handler), ...props.filter(p => p.via !== "pass").map(p => p.name)];
+    const omitted = [...listeners.map(l => l.handler), ...props.filter(p => p.via !== "pass" || p.on).map(p => p.name)];
     const base = omitted.length ? `Omit<${name}Props, ${union(omitted)}>` : `${name}Props`;
     const renamed = props
-        .filter(p => p.via === "attribute")
-        .map(p => `${JSON.stringify(p.attribute)}?: ${name}Props[${JSON.stringify(p.name)}]`);
+        .filter(written)
+        .map(p => `${JSON.stringify(p.attribute ?? p.name)}?: ${name}Props[${JSON.stringify(p.name)}]${p.on ? ` | "false"` : ""}`);
     return `            ${JSON.stringify(tagName)}: ${renamed.length ? `${base} & { ${renamed.join("; ")} }` : base};`;
 }
 

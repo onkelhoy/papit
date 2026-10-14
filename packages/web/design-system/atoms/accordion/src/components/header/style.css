@@ -15,7 +15,7 @@
 
         pap-icon {
             opacity: 0.6;
-            transition: transform 80ms ease;
+            transition: transform var(--timing-fast, 80ms) ease;
             width: var(--space-5, 20px);
             transform: rotate(-180deg);
         }

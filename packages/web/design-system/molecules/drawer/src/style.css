@@ -16,7 +16,8 @@ dialog[part="panel"] {
     position: relative;
 
     overflow: hidden;
-    background-color: var(--shade-1);
+    /* a raised surface, so the panel separates from the page in dark mode too */
+    background-color: var(--drawer-background, var(--background-light, var(--shade-1)));
     box-sizing: border-box;
 
     /* Hardware acceleration */
@@ -48,6 +49,7 @@ dialog[part="panel"] {
 
     &::backdrop {
         background: rgb(0 0 0 / 0.3);
+        background: var(--drawer-backdrop, light-dark(rgb(0 0 0 / 0.3), rgb(0 0 0 / 0.6)));
         opacity: 0;
         transition:
             opacity var(--timing-fast, 80ms),
@@ -150,7 +152,7 @@ dialog[part="panel"] {
 
 :host(:not([static])) {
     display: inline;
-    background-color: var(--shade-1);
+    background-color: var(--drawer-background, var(--background-light, var(--shade-1)));
 }
 
 @starting-style {

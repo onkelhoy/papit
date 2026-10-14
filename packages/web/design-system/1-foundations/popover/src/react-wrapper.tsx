@@ -53,7 +53,7 @@ export function Popover({ ref, onToggle, ...props }: PopoverProps): ReactElement
         return () => node.removeEventListener("toggle", onToggle);
     }, [onToggle]);
 
-    return <pap-popover {...props} ref={setRef} />;
+    return <pap-popover suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

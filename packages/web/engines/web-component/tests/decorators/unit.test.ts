@@ -58,6 +58,28 @@ test.describe("decorators - property", () => {
         expect(result).toEqual(expected);
     });
 
+    test("boolean property assigned a string is parsed like the attribute", async ({ page }) => {
+        const component = page.getByTestId("a");
+        const expected: [string, boolean][] = [
+            ["false", false], ["FALSE", false], ["f", false], ["0", false],
+            ["true", true], ["", true], ["off", true], ["foo", true],
+        ];
+        const result = await component.evaluate((el: any, values: string[]) => values.map(value => {
+            el.boolean = value;
+            return [value, el.boolean];
+        }), expected.map(([value]) => value));
+        expect(result).toEqual(expected);
+    });
+
+    test("non-boolean property assigned a string keeps the string", async ({ page }) => {
+        const component = page.getByTestId("a");
+        const value = await component.evaluate((el: any) => {
+            el.string = "false";
+            return el.string;
+        });
+        expect(value).toBe("false");
+    });
+
     test("readonly should throw", async ({ page }) => {
         const component = page.getByTestId("a");
         expect(component).toHaveJSProperty("readonly", 3);

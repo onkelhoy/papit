@@ -12,7 +12,7 @@
     "css",
     "javascript"
   ],
-  "version": "0.1.13",
+  "version": "0.1.14",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -64,15 +64,15 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/button": "0.1.6",
+    "@papit/button": "0.1.7",
     "@papit/data-structure": "0.0.2",
-    "@papit/icon": "0.1.9",
+    "@papit/icon": "0.1.10",
     "@papit/lexer": "0.0.1",
-    "@papit/splitter": "0.0.10",
-    "@papit/switch": "0.1.9",
-    "@papit/tooltip": "0.0.11",
+    "@papit/splitter": "0.0.11",
+    "@papit/switch": "0.1.10",
+    "@papit/tooltip": "0.0.12",
     "@papit/translator": "0.1.1",
-    "@papit/web-component": "0.0.10"
+    "@papit/web-component": "0.0.11"
   },
   "peerDependencies": {
     "react": "^19"
@@ -83,9 +83,9 @@
     }
   },
   "devDependencies": {
-    "@papit/theme": "0.0.2",
-    "@papit/router": "0.1.6",
-    "@papit/tabs": "0.1.6",
+    "@papit/theme": "0.0.3",
+    "@papit/router": "0.1.7",
+    "@papit/tabs": "0.1.7",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",
     "typescript": "5.9.3"
@@ -107,5 +107,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.12"
+  "remoteVersion": "0.1.13"
 }

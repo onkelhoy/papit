@@ -157,6 +157,30 @@ test.describe("navigation", () => {
 
         expect(await slide(page, "noloop")).toBe(1);
     });
+
+    test("with reduced motion, next() lands at once, also across the loop", async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: "reduce" });
+
+        // offset of the gallery's slide the moment it changes, before any smooth scroll could get there
+        const landed = (step: string) => page.evaluate((step) => new Promise<number>(resolve => {
+            const host = document.querySelector("#basic") as any;
+            const gallery = host.querySelector("pap-carousel-gallery") as any;
+            const from = gallery.slide;
+            host[step]();
+            const check = () => {
+                if (gallery.slide === from) return requestAnimationFrame(check);
+                const target = gallery.querySelectorAll(':scope > [slot="slide"]')[gallery.slide] as HTMLElement;
+                resolve(target.getBoundingClientRect().left - gallery.carousel.getBoundingClientRect().left);
+            };
+            check();
+        }), step);
+
+        expect(Math.abs(await landed("next"))).toBeLessThan(2);
+        expect(Math.abs(await landed("next"))).toBeLessThan(2);
+        // 2 → 0 wraps, straight onto the real first slide
+        expect(Math.abs(await landed("next"))).toBeLessThan(2);
+        expect(await slide(page, "basic")).toBe(0);
+    });
 });
 
 // ===========================================================================
@@ -185,6 +209,60 @@ test.describe("controls", () => {
         await expect.poll(() => slide(page, "custom")).toBe(0);
     });
 
+    test("the buttons have an accessible name before any language is loaded", async ({ page }) => {
+        await expect(page.getByTestId("basic-prev")).toHaveAccessibleName("previous slide");
+        await expect(page.getByTestId("basic-next")).toHaveAccessibleName("next slide");
+    });
+
+    test("a consumer's aria-label is kept, also on a language change", async ({ page }) => {
+        await expect(page.getByTestId("labelled-prev")).toHaveAccessibleName("Back");
+
+        await page.evaluate(() => (window as any).translator.change({
+            id: "en",
+            translations: { aria: { prev: "previous slide", next: "next slide" } },
+        }));
+        await expect(page.getByTestId("basic-prev")).toHaveAttribute("aria-label", "previous slide");
+        await expect(page.getByTestId("labelled-prev")).toHaveAttribute("aria-label", "Back");
+    });
+
+    test("the default chevron is rendered when no icon is slotted", async ({ page }) => {
+        const icons = await page.getByTestId("basic-next").evaluate((el: any) =>
+            el.shadowRoot.querySelectorAll('pap-icon[name="chevron-down"]').length);
+        expect(icons).toBe(1);
+    });
+
+    test("a slotted icon replaces the chevron, which is then never fetched", async ({ page }) => {
+        // parsed
+        expect(await page.getByTestId("custom-icon-next").evaluate((el: any) =>
+            el.shadowRoot.querySelectorAll("pap-icon").length)).toBe(0);
+
+        // created in script
+        const requests: string[] = [];
+        page.on("request", request => { if (request.url().includes("chevron-down.svg")) requests.push(request.url()); });
+        await page.evaluate(() => {
+            for (const tag of ["pap-carousel-prev", "pap-carousel-next"])
+            {
+                const button = document.createElement(tag);
+                button.setAttribute("aria-controls", "outside");
+                button.className = "scripted";
+                button.innerHTML = '<span slot="icon">*</span>';
+                document.body.append(button);
+            }
+        });
+        await page.waitForTimeout(200);
+
+        expect(requests).toEqual([]);
+        expect(await page.locator(".scripted").evaluateAll(buttons =>
+            buttons.map((el: any) => el.shadowRoot.querySelectorAll("pap-icon").length))).toEqual([0, 0]);
+    });
+
+    test("removing the slotted icon brings the chevron back", async ({ page }) => {
+        const button = page.getByTestId("custom-icon-next");
+        await button.evaluate((el: any) => el.querySelector('[slot="icon"]').remove());
+        await expect.poll(() => button.evaluate((el: any) =>
+            el.shadowRoot.querySelectorAll('pap-icon[name="chevron-down"]').length)).toBe(1);
+    });
+
     test("the buttons are labelled in the current language", async ({ page }) => {
         await page.evaluate(() => (window as any).translator.change({
             id: "en",
@@ -193,6 +271,53 @@ test.describe("controls", () => {
 
         await expect(page.getByTestId("basic-prev")).toHaveAttribute("aria-label", "previous slide");
         await expect(page.getByTestId("basic-next")).toHaveAttribute("aria-label", "next slide");
+    });
+});
+
+// ===========================================================================
+test.describe("controls at the ends", () => {
+    const disabled = (page: Page, testid: string) =>
+        expect.poll(() => page.getByTestId(testid).evaluate((el: any) => !!el.disabled));
+
+    test("without loop, prev is disabled on the first slide and next on the last", async ({ page }) => {
+        await disabled(page, "noloop-prev").toBe(true);
+        await disabled(page, "noloop-next").toBe(false);
+        await expect(page.getByTestId("noloop-prev")).toHaveAttribute("aria-disabled", "true");
+
+        await carousel(page, "noloop").evaluate((el: any) => el.slide = 1);
+        await disabled(page, "noloop-prev").toBe(false);
+        await disabled(page, "noloop-next").toBe(false);
+
+        await carousel(page, "noloop").evaluate((el: any) => el.slide = 2);
+        await disabled(page, "noloop-prev").toBe(false);
+        await disabled(page, "noloop-next").toBe(true);
+    });
+
+    test("a disabled end button does not move the carousel", async ({ page }) => {
+        await disabled(page, "noloop-prev").toBe(true);
+        await page.getByTestId("noloop-prev").click({ force: true });
+        expect(await slide(page, "noloop")).toBe(0);
+    });
+
+    test("toggling loop at runtime enables and disables the ends", async ({ page }) => {
+        await disabled(page, "noloop-prev").toBe(true);
+
+        await carousel(page, "noloop").evaluate((el: any) => el.loop = true);
+        await disabled(page, "noloop-prev").toBe(false);
+        await disabled(page, "noloop-next").toBe(false);
+
+        await carousel(page, "noloop").evaluate((el: any) => el.loop = false);
+        await disabled(page, "noloop-prev").toBe(true);
+    });
+
+    test("with loop, the buttons are never disabled", async ({ page }) => {
+        await disabled(page, "basic-prev").toBe(false);
+        await disabled(page, "basic-next").toBe(false);
+
+        await carousel(page, "basic").evaluate((el: any) => el.slide = 2);
+        await expect.poll(() => slide(page, "basic")).toBe(2);
+        await disabled(page, "basic-prev").toBe(false);
+        await disabled(page, "basic-next").toBe(false);
     });
 });
 

@@ -40,7 +40,7 @@ export function Splitter({ ref, dragging, ...props }: SplitterProps): ReactEleme
         };
     }, [ref]);
 
-    return <pap-splitter data-drag={dragging} {...props} ref={setRef} />;
+    return <pap-splitter data-drag={dragging} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

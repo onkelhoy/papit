@@ -13,6 +13,11 @@ export class Fixture extends CustomElementInternals {
 
     /** Text shown in the label. */
     @property({ type: String, attribute: "label-text", reflect: true }) label: string = "hello";
+    /** Closes on a backdrop click. */
+    @property({ type: Boolean, attribute: "close-outside-click" }) protected closeoutsideclick = false;
+    @property({ type: Boolean, attribute: false }) protected busy = false;
+    @property({ type: Number }) private value: number = 50;
+    protected plain = 0;
 
     /** Opens the fixture and tells listeners. */
     public open() {

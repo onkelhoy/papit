@@ -85,7 +85,7 @@ import "@papit/button";
 | `color`    | `primary \| secondary \| tertiary \| success \| warning \| error \| information` | `primary` | Button color (`tiertery` still works, deprecated)      |
 | `variant`  | `filled \| outline \| clear`                                                     | `filled`  | Button style variant                                   |
 | `size`     | `small \| medium \| large \| icon`                                               | `medium`  | Button size                                            |
-| `type`     | `submit \| reset`                                                                | —         | Form button type                                       |
+| `type`     | `button \| submit \| reset`                                                      | —         | Form button type (attribute or property)               |
 | `href`     | `string`                                                                         | —         | Navigates to URL on click                              |
 | `disabled` | `boolean`                                                                        | —         | Disables all interaction                               |
 | `readonly` | `boolean`                                                                        | —         | Disables all interaction without visual disabled state |

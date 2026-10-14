@@ -18,7 +18,7 @@ export interface ShowcaseProps extends Omit<HTMLAttributes<ShowcaseElement>, "ha
 }
 
 /** React wrapper for the `pap-showcase` element. */
-export function Showcase({ ref, ...props }: ShowcaseProps): ReactElement {
+export function Showcase({ ref, hashbased, ...props }: ShowcaseProps): ReactElement {
     const element = useRef<ShowcaseElement | null>(null);
 
     const setRef = useCallback((node: ShowcaseElement | null) => {
@@ -35,13 +35,13 @@ export function Showcase({ ref, ...props }: ShowcaseProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-showcase {...props} ref={setRef} />;
+    return <pap-showcase hashbased={hashbased === false ? "false" : hashbased} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-showcase": ShowcaseProps;
+            "pap-showcase": Omit<ShowcaseProps, "hashbased"> & { "hashbased"?: ShowcaseProps["hashbased"] | "false" };
         }
     }
 }

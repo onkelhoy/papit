@@ -42,7 +42,7 @@ export function Codeblock({ ref, ...props }: CodeblockProps): ReactElement {
         };
     }, [ref]);
 
-    return <pap-codeblock {...props} ref={setRef} />;
+    return <pap-codeblock suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {

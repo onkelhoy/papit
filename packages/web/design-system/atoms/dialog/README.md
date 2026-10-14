@@ -201,4 +201,4 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 ## Related Components
 
 - [@papit/web-component](https://github.com/onkelhoy/papit/tree/main/packages/web/engines/web-component): Core utilities, decorators, and base component class
-- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon component used for the close button
+- [@papit/icon](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/1-foundations/icon): Icon for the close button, loaded lazily when the dialog first renders

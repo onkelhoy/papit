@@ -2,7 +2,7 @@
     display: grid;
     grid-template-rows: 0;
 
-    transition: grid-template-rows ease 100ms;
+    transition: grid-template-rows ease var(--timing-fast, 100ms);
     overflow: hidden;
     --_border-default: color-mix(in srgb, var(--foreground), transparent 70%);
 

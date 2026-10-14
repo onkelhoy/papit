@@ -10,7 +10,7 @@
     "dark-mode",
     "color-scheme"
   ],
-  "version": "0.0.2",
+  "version": "0.0.3",
   "scripts": {
     "watch": "tsc -w",
     "start": "npx @papit/server --info --live",
@@ -57,7 +57,7 @@
     "playwright": "1.58.0",
     "typescript": "5.9.3",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.13"
+    "@papit/codeblock": "0.1.14"
   },
   "browserslist": [
     "defaults",

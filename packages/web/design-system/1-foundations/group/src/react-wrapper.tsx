@@ -25,7 +25,7 @@ export interface GroupProps extends Omit<HTMLAttributes<GroupElement>, "orientat
 }
 
 /** React wrapper for the `pap-group` element. */
-export function Group({ ref, orientation, ...props }: GroupProps): ReactElement {
+export function Group({ ref, orientation, loop, home, end, ...props }: GroupProps): ReactElement {
     const element = useRef<GroupElement | null>(null);
 
     const setRef = useCallback((node: GroupElement | null) => {
@@ -42,13 +42,13 @@ export function Group({ ref, orientation, ...props }: GroupProps): ReactElement 
         };
     }, [ref]);
 
-    return <pap-group aria-orientation={orientation} {...props} ref={setRef} />;
+    return <pap-group aria-orientation={orientation} loop={loop === false ? "false" : loop} home={home === false ? "false" : home} end={end === false ? "false" : end} suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-group": Omit<GroupProps, "orientation"> & { "aria-orientation"?: GroupProps["orientation"] };
+            "pap-group": Omit<GroupProps, "orientation" | "loop" | "home" | "end"> & { "aria-orientation"?: GroupProps["orientation"]; "loop"?: GroupProps["loop"] | "false"; "home"?: GroupProps["home"] | "false"; "end"?: GroupProps["end"] | "false" };
         }
     }
 }

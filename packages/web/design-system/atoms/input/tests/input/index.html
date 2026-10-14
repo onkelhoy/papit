@@ -27,6 +27,21 @@
     <form>
         <pap-input data-testid="required-target" name="required-field" required></pap-input>
     </form>
+
+    <form data-testid="property-form"></form>
+
+    <pap-input data-testid="label-target" aria-label="Search"></pap-input>
+
+    <span id="labelledby-text">Search</span>
+    <span id="describedby-text">Find anything</span>
+    <pap-input data-testid="labelledby-target" aria-labelledby="labelledby-text" aria-describedby="describedby-text"></pap-input>
+
+    <label for="for-target">Search</label>
+    <pap-input id="for-target" data-testid="for-target"></pap-input>
+
+    <form data-testid="submit-form">
+        <pap-input data-testid="submit-target" name="q"></pap-input>
+    </form>
 </body>
 
 </html>

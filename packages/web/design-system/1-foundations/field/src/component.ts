@@ -53,6 +53,16 @@ export class Field extends CustomElementInternals {
 
     static sheets = [sheet];
 
+    // the host's naming attributes, applied to the target (the focused element is the one announced)
+    @property({ attribute: "aria-label", reflect: false, after(this: Field) { this.applyNaming(); } })
+    private _arialabel?: string;
+    @property({ attribute: "aria-description", reflect: false, after(this: Field) { this.applyNaming(); } })
+    private _ariadescription?: string;
+    @property({ attribute: "aria-labelledby", reflect: false, after(this: Field) { this.applyNaming(); } })
+    private _arialabelledby?: string;
+    @property({ attribute: "aria-describedby", reflect: false, after(this: Field) { this.applyNaming(); } })
+    private _ariadescribedby?: string;
+
     @property({ type: Boolean, attribute: "hide-states" }) hideStates = false;
 
     @property({ type: Object })
@@ -138,6 +148,7 @@ export class Field extends CustomElementInternals {
         value.addEventListener("change", this.handlechange);
         value.addEventListener("invalid", this.handleinvalid);
         this.syncValidity();
+        this.applyNaming();
     }
 
     constructor(shadowRootInit?: Partial<ShadowRootInit> & Partial<ElementSetting>) {
@@ -269,6 +280,29 @@ export class Field extends CustomElementInternals {
         return key;
     }
 
+    // ID refs can't cross the shadow boundary, element refs can: resolve the host's IDs in its own root.
+    // <label for="host-id"> comes through _internals.labels. Elements added later aren't picked up.
+    private applyNaming() {
+        const target = this._target;
+        if (!target) return;
+
+        const root = this.getRootNode() as Document | ShadowRoot;
+        const find = (ids?: string) => (ids?.split(/\s+/).filter(Boolean) ?? [])
+            .map(id => root.getElementById(id))
+            .filter((element): element is HTMLElement => element !== null);
+
+        target.ariaLabel = this._arialabel ?? null;
+        target.ariaDescription = this._ariadescription ?? null;
+
+        const labelledby = find(this._arialabelledby);
+        const labels = Array.from(this._internals.labels) as HTMLElement[];
+        const labelledElements = labelledby.length ? labelledby : labels;
+        target.ariaLabelledByElements = labelledElements.length ? labelledElements : null;
+
+        const describedby = find(this._ariadescribedby);
+        target.ariaDescribedByElements = describedby.length ? describedby : null;
+    }
+
     private isTarget(element: Element | null): element is HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement {
         if (element instanceof HTMLInputElement || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) return true;
         return false;
@@ -312,6 +346,11 @@ export class Field extends CustomElementInternals {
 }
 
 declare global {
+    // element reflection (Chrome 135+, Firefox 136+, Safari 16.4+), not in lib.dom yet
+    interface ARIAMixin {
+        ariaLabelledByElements: ReadonlyArray<Element> | null;
+        ariaDescribedByElements: ReadonlyArray<Element> | null;
+    }
     interface HTMLElementTagNameMap {
         "pap-field": Field;
     }

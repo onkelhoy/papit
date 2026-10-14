@@ -207,14 +207,17 @@ export class CarouselGallery extends CustomElement {
             ? this._clonesafter[index]
             : wrap < 0 ? this._clonesbefore[index - (this.slides.length - this._clonesbefore.length)] : undefined;
 
-        if (clone)
+        // reduced motion: no glide, straight to the real slide (the instant path needs no scrollend bookkeeping)
+        const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (clone && !reduce)
         {
             this._pendingloop = index;
             this.scrollToElement(clone);
             return;
         }
 
-        this.select(index);
+        this.select(index, reduce ? "instant" : "smooth");
     }
     // count the positions the track can scroll to, and tell the carousel
     private measure() {

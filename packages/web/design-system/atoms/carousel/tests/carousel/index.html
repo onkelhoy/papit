@@ -45,6 +45,8 @@
             <div class="slide">B</div>
             <div class="slide">C</div>
         </pap-carousel-gallery>
+        <pap-carousel-prev data-testid="noloop-prev"></pap-carousel-prev>
+        <pap-carousel-next data-testid="noloop-next"></pap-carousel-next>
     </pap-carousel>
 
     <!-- autoplay with a short duration -->
@@ -66,6 +68,10 @@
     </pap-carousel>
     <pap-carousel-prev aria-controls="outside" data-testid="outside-prev"></pap-carousel-prev>
     <pap-carousel-next aria-controls="outside" data-testid="outside-next"></pap-carousel-next>
+    <!-- a label set by the consumer wins -->
+    <pap-carousel-prev aria-controls="outside" aria-label="Back" data-testid="labelled-prev"></pap-carousel-prev>
+    <!-- a custom icon replaces the default chevron -->
+    <pap-carousel-next aria-controls="outside" data-testid="custom-icon-next"><span slot="icon">&rarr;</span></pap-carousel-next>
 
     <!-- your own controls, through the API -->
     <pap-carousel id="custom" aria-label="Custom" data-testid="custom">

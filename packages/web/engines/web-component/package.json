@@ -11,7 +11,7 @@
     "reactive",
     "form-associated"
   ],
-  "version": "0.0.10",
+  "version": "0.0.11",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "analyse": "npx @papit/analyse",
@@ -64,7 +64,7 @@
     "@papit/arguments": "0.0.1",
     "@papit/information": "0.0.9",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.13",
+    "@papit/codeblock": "0.1.14",
     "typescript": "5.9.3"
   },
   "browserslist": [
@@ -84,5 +84,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.9"
+  "remoteVersion": "0.0.10"
 }

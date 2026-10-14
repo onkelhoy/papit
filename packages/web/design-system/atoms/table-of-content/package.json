@@ -62,8 +62,8 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/treeview": "0.0.10",
-    "@papit/web-component": "0.0.10"
+    "@papit/treeview": "0.0.11",
+    "@papit/web-component": "0.0.11"
   },
   "peerDependencies": {
     "react": "^19"
@@ -74,10 +74,10 @@
     }
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.13",
-    "@papit/router": "0.1.6",
-    "@papit/tabs": "0.1.6",
-    "@papit/theme": "0.0.2",
+    "@papit/codeblock": "0.1.14",
+    "@papit/router": "0.1.7",
+    "@papit/tabs": "0.1.7",
+    "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
     "@playwright/test": "1.58.0",
     "playwright": "1.58.0",

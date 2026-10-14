@@ -98,8 +98,11 @@ Fired on the host for every open state change after the initial render, includin
 | --------------- | --------- | ------------------------ |
 | `--timing`      | `180ms`   | Open/close transition    |
 | `--timing-fast` | `80ms`    | Backdrop fade transition |
-| `--shade-1`     | —         | Panel background color   |
+| `--drawer-background` | `--background-light` | Panel background |
+| `--drawer-backdrop` | `rgb(0 0 0 / .3)`, `.6` in dark | Backdrop of a modal drawer |
 | `--space-3`     | `0.75rem` | Panel inner padding      |
+
+Under `prefers-reduced-motion: reduce` the timing properties are `0ms`, so the drawer opens and closes without animating.
 
 ## Accessibility
 
