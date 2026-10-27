@@ -1,3 +1,3 @@
 // exports
 export * from "./component";
-export * from "./types";
+export type { HandshakeHooks } from "./types";

@@ -1,11 +1,16 @@
 {
     "name": "@papit/webrtc",
-    "description": "peer-to-peer implementation with rich topology configuration",
+    "description": "Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord or your own topology, with plan-driven data channels and media streams.",
     "keywords": [
         "papit",
-        "web-component",
-        "typescript",
-        "webrtc"
+        "webrtc",
+        "p2p",
+        "peer-to-peer",
+        "topology",
+        "mesh",
+        "chord",
+        "router",
+        "media"
     ],
     "version": "0.0.1",
     "scripts": {
@@ -53,11 +58,11 @@
         "node": ">=18"
     },
     "dependencies": {
-        "@papit/meta-json": "0.0.1"
+        "@papit/peer-message": "0.0.1"
     },
     "devDependencies": {
-        "@playwright/test": "1.58.0",
-        "playwright": "1.58.0",
+        "@playwright/test": "1.64.1",
+        "playwright": "1.64.1",
         "typescript": "5.9.3"
     },
     "browserslist": [
@@ -66,14 +71,21 @@
         "not dead"
     ],
     "papit": {
-        "skip": true,
         "publish": true,
         "type": "browser",
         "main": "webrtc",
         "htmlprefix": "",
         "components": {
-            "webrtc": {
-                "className": "Webrtc",
+            "link": {
+                "className": "Link",
+                "htmlprefix": "pap"
+            },
+            "topology": {
+                "className": "Topology",
+                "htmlprefix": "pap"
+            },
+            "network": {
+                "className": "Network",
                 "htmlprefix": "pap"
             },
             "socket": {
@@ -84,18 +96,11 @@
                 "className": "Peer",
                 "htmlprefix": "pap"
             },
-            "network": {
-                "className": "Network",
-                "htmlprefix": "pap"
-            },
             "handshake": {
                 "className": "Handshake",
                 "htmlprefix": "pap"
-            },
-            "message": {
-                "className": "Message",
-                "htmlprefix": "pap"
             }
         }
-    }
+    },
+    "remoteVersion": ""
 }

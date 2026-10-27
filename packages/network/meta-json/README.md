@@ -34,7 +34,22 @@ received.meta.type;  // "chat", payload not parsed yet
 received.parse();    // { text: "hej" }
 ```
 
-The payload must be a string or a `Uint8Array`. Anything else goes through `String()`, so an object becomes `"[object Object]"`. Stringify it first.
+The payload can be a string (encoded as UTF-8) or binary: a `Uint8Array`, an `ArrayBuffer` or any other view such as a `DataView`. A view contributes only its own `byteOffset`/`byteLength` range. Anything else goes through `String()`, so an object becomes `"[object Object]"`. Stringify it first.
+
+```js
+const image = new Uint8Array(await blob.arrayBuffer());
+const bytes = MetaJson.Create({ type: "image" }, image).toBinary();
+
+MetaJson.FromBinary(bytes).payload; // Uint8Array, byte-exact
+```
+
+A relay can change `meta` and forward the payload without ever parsing it:
+
+```js
+const msg = MetaJson.FromBinary(bytes);
+msg.meta.hops.push("me");
+send(msg.toBinary(true)); // re-encoded meta, same payload bytes
+```
 
 Low-level, without the class:
 
@@ -77,7 +92,7 @@ class MetaJson<Meta extends Object = object, Payload = any> {
 
 | Member | Purpose |
 | --- | --- |
-| `Create(meta, payload)` | New message. `meta` is merged over `{ sender: "", receiver: "", timestamp: Date.now() }`. |
+| `Create(meta, payload)` | Same as `new this(meta, payload)`, typed to return the subclass. Adds nothing to `meta`. |
 | `FromBinary(data, parsePayload?)` | Decode a buffer. `meta` is parsed, the payload stays bytes unless `parsePayload` is true. |
 | `toBinary(force?)` | Encode. Cached after the first call; pass `true` to re-encode after changing `meta` or `payload`. |
 | `parse()` | `JSON.parse` the payload bytes once, then return the cached value. A non-binary payload is returned as it is. |
@@ -94,9 +109,18 @@ class Codec {
 
 | Method | Purpose |
 | --- | --- |
-| `Encode` | Pack `{ meta, payload }` into one buffer. |
-| `Decode` | Unpack. The payload is a zero-copy `subarray` of `data` unless `parsePayload` is true. Throws `RangeError` on a buffer under 4 bytes and `SyntaxError` on invalid JSON. |
-| `Parse` | UTF-8 decode and `JSON.parse` a buffer. |
+| `Encode` | Pack `{ meta, payload }` into one buffer. Binary payloads are copied as their bytes, strings as UTF-8. |
+| `Decode` | Unpack. The payload is a zero-copy `subarray` of `data` unless `parsePayload` is true. `data` may itself be a subarray of a bigger buffer. |
+| `Parse` | UTF-8 decode and `JSON.parse` a buffer. A view reads only its own byte range. |
+
+### Errors
+
+| Error | Thrown by | When |
+| --- | --- | --- |
+| `RangeError` | `Decode`, `FromBinary` | The buffer is shorter than the 4-byte header. |
+| `RangeError` | `Decode`, `FromBinary` | The header's meta length is larger than the bytes after the header (truncated buffer). |
+| `SyntaxError` | `Decode`, `FromBinary` | The meta section is not valid JSON. |
+| `SyntaxError` | `Decode(data, true)`, `parse()`, `Parse` | The payload is not valid JSON. |
 
 ## Types
 
@@ -118,7 +142,7 @@ offset 0          4                  4 + N
 - The header is the byte length of the meta section, unsigned 32-bit big-endian.
 - The payload has no length of its own. It runs to the end of the buffer.
 - Reading `meta` only decodes the first `4 + N` bytes. That is the point: a relay can route on `meta` and forward the payload untouched.
-- There is no magic number, version or checksum. `Decode` trusts its input, so validate buffers from the wire.
+- There is no magic number, version or checksum. `Decode` checks only that the header fits the buffer, so validate the decoded `meta` from the wire.
 
 # License
 

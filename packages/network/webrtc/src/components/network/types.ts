@@ -1,28 +1,11 @@
-import { MessageType } from "../message";
+import type { NetworkInfo, PeerId } from "@papit/peer-message";
+import type { Topology } from "../topology";
 
-export type Settings = {
-  ttl?: number;
-  hopLimit?: number;
-  host: string;
-  password?: string;
-  limit?: number;
+export type NetworkOptions = {
+  /** This node's id. */
+  me: PeerId;
+  /** The network joined. Supplies the host, the id stamped on outgoing messages, and the topology by name. */
+  info?: NetworkInfo;
+  /** A topology or a name from `topologies`. Defaults to `info.topology`, then `mesh`. */
+  topology?: Topology | string;
 }
-
-export type NetworkInternalMessage =
-  | NetworkJoin
-  | NetworkLeave
-  | NetworkUpdate;
-
-type NetworkJoin = MessageType<"network", {
-  event: "join";
-}>
-type NetworkLeave = MessageType<"network", {
-  event: "leave";
-}>
-type NetworkUpdate = MessageType<"network", {
-  event: "update";
-}>
-
-export type NetworkMessage =
-  | NetworkInternalMessage
-  | MessageType;

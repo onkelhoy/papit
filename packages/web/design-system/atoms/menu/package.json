@@ -1,121 +1,121 @@
 {
-  "name": "@papit/menu",
-  "description": "Accessible dropdown menus, submenus and menubars built on the native Popover API, following the WAI-ARIA menu pattern. Use it for action menus and application menubars.",
-  "keywords": [
-    "papit",
-    "web-component",
-    "typescript",
-    "menu",
-    "menubar",
-    "menuitem",
-    "dropdown",
-    "popover",
-    "accessibility"
-  ],
-  "version": "0.0.12",
-  "scripts": {
-    "build": "npx @papit/build --error",
-    "analyse": "npx @papit/analyse",
-    "generate:react": "npx @papit/react",
-    "watch": "tsc -w",
-    "start": "npx @papit/server --info --live",
-    "test": "npx playwright test -c tests/playwright.config.ts $@",
-    "preversion": "papit-version",
-    "postversion": "papit-version",
-    "component": "npm create @papit --component",
-    "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
-    "test:chrome": "npm test -- --project=chromium"
-  },
-  "main": "./lib/bundle.js",
-  "types": "./lib/bundle.d.ts",
-  "type": "module",
-  "files": [
-    "asset/",
-    "lib/"
-  ],
-  "exports": {
-    ".": {
-      "import": "./lib/bundle.js",
-      "types": "./lib/bundle.d.ts"
+    "name": "@papit/menu",
+    "description": "Accessible dropdown menus, submenus and menubars built on the native Popover API, following the WAI-ARIA menu pattern. Use it for action menus and application menubars.",
+    "keywords": [
+        "papit",
+        "web-component",
+        "typescript",
+        "menu",
+        "menubar",
+        "menuitem",
+        "dropdown",
+        "popover",
+        "accessibility"
+    ],
+    "version": "0.0.12",
+    "scripts": {
+        "build": "npx @papit/build --error",
+        "analyse": "npx @papit/analyse",
+        "generate:react": "npx @papit/react",
+        "watch": "tsc -w",
+        "start": "npx @papit/server --info --live",
+        "test": "npx playwright test -c tests/playwright.config.ts $@",
+        "preversion": "papit-version",
+        "postversion": "papit-version",
+        "component": "npm create @papit --component",
+        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+        "test:chrome": "npm test -- --project=chromium"
     },
-    "./react": {
-      "import": "./lib/react-wrapper.js",
-      "types": "./lib/react-wrapper.d.ts"
-    }
-  },
-  "author": "henry",
-  "private": false,
-  "publishConfig": {
-    "access": "public",
-    "registry": "https://registry.npmjs.org/"
-  },
-  "license": "LicenseRef-Papit-1.0",
-  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/menu",
-  "bugs": {
-    "url": "https://github.com/onkelhoy/papit/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/onkelhoy/papit.git",
-    "directory": "packages/web/design-system/atoms/menu"
-  },
-  "sideEffects": true,
-  "engines": {
-    "node": ">=18"
-  },
-  "dependencies": {
-    "@papit/button": "0.1.7",
-    "@papit/group": "0.0.11",
-    "@papit/placement": "0.0.11",
-    "@papit/popover": "0.1.4",
-    "@papit/web-component": "0.0.11"
-  },
-  "peerDependencies": {
-    "react": "^19"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
-  },
-  "devDependencies": {
-    "@papit/codeblock": "0.1.14",
-    "@papit/router": "0.1.7",
-    "@papit/tabs": "0.1.7",
-    "@papit/theme": "0.0.3",
-    "@papit/translator": "0.1.1",
-    "@playwright/test": "1.58.0",
-    "playwright": "1.58.0",
-    "typescript": "5.9.3"
-  },
-  "browserslist": [
-    "defaults",
-    "not IE 11",
-    "not dead"
-  ],
-  "papit": {
-    "publish": true,
-    "type": "web-component",
-    "main": "menu",
-    "htmlprefix": "pap",
-    "components": {
-      "menu": {
-        "className": "Menu",
-        "htmlprefix": "pap"
-      },
-      "menubar": {
-        "className": "Menubar",
-        "htmlprefix": "pap"
-      },
-      "menuitem": {
-        "className": "Menuitem",
-        "htmlprefix": "pap"
-      },
-      "menubutton": {
-        "className": "Menubutton",
-        "htmlprefix": "pap"
-      }
-    }
-  },
-  "remoteVersion": "0.0.11"
+    "main": "./lib/bundle.js",
+    "types": "./lib/bundle.d.ts",
+    "type": "module",
+    "files": [
+        "asset/",
+        "lib/"
+    ],
+    "exports": {
+        ".": {
+            "import": "./lib/bundle.js",
+            "types": "./lib/bundle.d.ts"
+        },
+        "./react": {
+            "import": "./lib/react-wrapper.js",
+            "types": "./lib/react-wrapper.d.ts"
+        }
+    },
+    "author": "henry",
+    "private": false,
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
+    "license": "LicenseRef-Papit-1.0",
+    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/atoms/menu",
+    "bugs": {
+        "url": "https://github.com/onkelhoy/papit/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/onkelhoy/papit.git",
+        "directory": "packages/web/design-system/atoms/menu"
+    },
+    "sideEffects": true,
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@papit/button": "0.1.7",
+        "@papit/group": "0.0.11",
+        "@papit/placement": "0.0.11",
+        "@papit/popover": "0.1.4",
+        "@papit/web-component": "0.0.11"
+    },
+    "peerDependencies": {
+        "react": "^19"
+    },
+    "peerDependenciesMeta": {
+        "react": {
+            "optional": true
+        }
+    },
+    "devDependencies": {
+        "@papit/codeblock": "0.1.14",
+        "@papit/router": "0.1.7",
+        "@papit/tabs": "0.1.7",
+        "@papit/theme": "0.0.3",
+        "@papit/translator": "0.1.1",
+        "@playwright/test": "1.64.1",
+        "playwright": "1.64.1",
+        "typescript": "5.9.3"
+    },
+    "browserslist": [
+        "defaults",
+        "not IE 11",
+        "not dead"
+    ],
+    "papit": {
+        "publish": true,
+        "type": "web-component",
+        "main": "menu",
+        "htmlprefix": "pap",
+        "components": {
+            "menu": {
+                "className": "Menu",
+                "htmlprefix": "pap"
+            },
+            "menubar": {
+                "className": "Menubar",
+                "htmlprefix": "pap"
+            },
+            "menuitem": {
+                "className": "Menuitem",
+                "htmlprefix": "pap"
+            },
+            "menubutton": {
+                "className": "Menubutton",
+                "htmlprefix": "pap"
+            }
+        }
+    },
+    "remoteVersion": "0.0.12"
 }

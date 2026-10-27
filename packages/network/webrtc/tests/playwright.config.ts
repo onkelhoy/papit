@@ -1,4 +1,3 @@
-import { Arguments } from "@papit/arguments";
 import { Information, PackageGraph } from "@papit/information";
 import { defineConfig, devices } from '@playwright/test';
 import path from "node:path";
@@ -55,9 +54,6 @@ export default defineConfig({
         ? ["**/snapshot.test.ts"]
         : [],
 
-    // Global setup and teardown scripts
-    globalSetup: Arguments.get("global-setup") ?? path.join(dirname, 'setup.ts'),
-    globalTeardown: Arguments.get("global-teardown") ?? path.join(dirname, 'teardown.ts'),
 
     // Configure projects for major browsers.
     projects: [
