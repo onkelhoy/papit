@@ -41,21 +41,13 @@ export class MetaJson<Meta extends Object = object, Payload = any> implements Me
     return this.payload as T;
   }
 
-  /** Creates a message whose meta starts with `sender: ""`, `receiver: ""` and `timestamp: Date.now()`, overridden by `meta`. */
+  /** Same as `new this(meta, payload)`, typed to return the subclass it is called on. */
   static Create<
     This extends new (meta: any, payload: any) => MetaJson<any, any>,
     Meta extends Object = object,
     Payload = Object | string
   >(this: This, meta: Meta, payload: Payload) {
-    return new this(
-      {
-        sender: "",
-        receiver: "",
-        timestamp: Date.now(),
-        ...(meta),
-      },
-      payload,
-    ) as InstanceType<This>;
+    return new this(meta, payload) as InstanceType<This>;
   }
 
   /** Decodes a buffer from `toBinary` / `Codec.Encode`. Returns the subclass it is called on. */

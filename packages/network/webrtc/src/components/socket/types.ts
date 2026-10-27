@@ -1,14 +1,7 @@
-export type SocketMessageType = "handshake" | "socket" | "network";
-
-export type SocketMessage =
-  | ConnectedMessage
-  | ErrorMessage;
-
-type ErrorMessage = {
-  type: "error";
-  error: string;
+export type SocketOptions = {
+  protocols?: string | string[];
+  /** Reconnect attempts before giving up for good. Default: no limit. */
+  attempts?: number;
+  /** ms without a connection (from the start, or since it dropped) before giving up for good. Default: no limit. */
+  timeout?: number;
 }
-type ConnectedMessage = {
-  type: "connected";
-  id: string;
-};

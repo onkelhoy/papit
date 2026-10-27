@@ -1,6 +1,4 @@
-import { MessageType } from "../message";
-
-// internal to handshake system 
+// internal to handshake system
 export type Message =
   | AnswerMessage
   | OfferMessage
@@ -13,11 +11,19 @@ type AnswerMessage = {
 type OfferMessage = {
   type: "offer";
   description: RTCSessionDescriptionInit;
+  streams?: Record<string, string>;
 }
 type CandidateMessage = {
   type: "candidate";
-  candidate: RTCIceCandidate;
+  candidate: RTCIceCandidateInit;
 }
 
-// external like in a socket or relay-peer 
-export type HandshakeMessage = MessageType<"handshake", Message>;
+/** How the media manager plugs into negotiation. */
+export type HandshakeHooks = {
+  /** mid → stream name for the transceivers this side named; sent with every offer. */
+  streams?(): Record<string, string>;
+  /** A remote offer is about to be applied, with its stream map. */
+  offer?(streams: Record<string, string>): void;
+  /** The remote offer is applied; adjust transceivers before the answer is created. */
+  answer?(): void;
+}

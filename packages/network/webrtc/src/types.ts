@@ -3,7 +3,3 @@ export type EmitterEvent = {
   message: string;
   payload: any;
 }
-
-export type Settings = {
-  logLevel?: "verbose" | "debug" | "error";
-}

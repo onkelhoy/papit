@@ -1,11 +1,14 @@
 {
     "name": "@papit/signal-server",
-    "description": "Signaling server mainly for webrtc handshake",
+    "description": "WebSocket signalling server for @papit/webrtc. Reach for it to register and list networks, admit peers and forward their handshake messages until they connect directly.",
     "keywords": [
         "papit",
-        "node",
-        "typescript",
-        "signal-server"
+        "signal-server",
+        "signalling",
+        "webrtc",
+        "websocket",
+        "p2p",
+        "peer-message"
     ],
     "version": "0.0.1",
     "scripts": {
@@ -18,7 +21,7 @@
         "component": "npm create @papit -- --component"
     },
     "bin": {
-        "papit-signal-server": "lib/bundle.js"
+        "papit-signal-server": "lib/bin.js"
     },
     "main": "./lib/bundle.js",
     "types": "./lib/bundle.d.ts",
@@ -54,6 +57,9 @@
         "node": ">=18"
     },
     "dependencies": {
+        "@papit/arguments": "0.0.1",
+        "@papit/peer-message": "0.0.1",
+        "@papit/terminal": "0.0.2",
         "ws": "8.21.1"
     },
     "devDependencies": {
@@ -67,7 +73,6 @@
         "not dead"
     ],
     "papit": {
-        "skip": true,
         "publish": true,
         "type": "node",
         "main": "signal-server",
@@ -77,5 +82,6 @@
                 "htmlprefix": "pap"
             }
         }
-    }
+    },
+    "remoteVersion": ""
 }

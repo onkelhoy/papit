@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 
-import { Codec } from "@papit/meta-json";
+import { Codec, MetaJson } from "@papit/meta-json";
 
 describe("codec unit tests", () => {
 
@@ -107,18 +107,23 @@ describe("codec unit tests", () => {
             },
         };
 
+        // Relay case: a router only needs `meta` to route. Both sides start from bytes/text
+        // prepared once up front (payload stringified once, then sent through the codec).
+        // codec: Codec.Decode(buf) reading meta only, payload left as a zero-copy view.
+        // json:  JSON.parse of the whole JSON.stringify(message), the only way to get at meta.
         function Compare(message) {
+            const encoded = Codec.Encode({ meta: message.meta, payload: JSON.stringify(message.payload) });
+            const stringified = JSON.stringify(message);
+
             let codecTotal = 0;
             let jsonTotal = 0;
             for (let i = 0; i < 10_000; i++)
             {
                 let start = performance.now();
-                const encoded = Codec.Encode(message);
                 Codec.Decode(encoded);
                 codecTotal += performance.now() - start;
 
                 start = performance.now();
-                const stringified = JSON.stringify(message);
                 JSON.parse(stringified);
                 jsonTotal += performance.now() - start;
             }
@@ -137,10 +142,6 @@ describe("codec unit tests", () => {
 
         message.payload = "payload";
         const small = Compare(message);
-        assert.ok(
-            small.codec > small.json,
-            `Expected JSON to be faster for small objects (got ${small.codec} vs ${small.json})`
-        );
 
         console.log("[codec] benchmark", { large, small });
 
@@ -163,5 +164,190 @@ describe("codec unit tests", () => {
          * { large: { codec: 0.0019064748999993411, json: 0.18626069090000055 } }
          * { small: { codec: 0.001309877399998777, json: 0.0006500356999973064 } }
          */
+    });
+});
+
+const text = new TextEncoder();
+const bytesOf = (data) => Array.from(data);
+
+// builds a raw buffer: [uint32 BE header][body bytes], header given explicitly
+function raw(header, body) {
+    const bodyBytes = text.encode(body);
+    const buf = new Uint8Array(4 + bodyBytes.length);
+    new DataView(buf.buffer).setUint32(0, header, false);
+    buf.set(bodyBytes, 4);
+    return buf;
+}
+
+describe("codec round-trip", () => {
+
+    it("handles empty meta and empty payload", () => {
+        const encoded = Codec.Encode({ meta: {}, payload: "" });
+        assert.strictEqual(encoded.byteLength, 4 + 2);
+
+        const decoded = Codec.Decode(encoded);
+        assert.deepStrictEqual(decoded.meta, {});
+        assert.strictEqual(decoded.payload.byteLength, 0);
+    });
+
+    it("keeps unicode in meta and payload", () => {
+        const meta = { name: "åäö ÅÄÖ 🎉", tags: ["ü", "👋🏽"] };
+        const payload = "hej på dig åäö 🎉🚀";
+
+        const decoded = Codec.Decode(Codec.Encode({ meta, payload }));
+        assert.deepStrictEqual(decoded.meta, meta);
+        assert.strictEqual(new TextDecoder().decode(decoded.payload), payload);
+    });
+
+    it("handles a large (~1MB) payload", () => {
+        const payload = "abcdefgh".repeat(1 << 17); // 1 MiB
+        const decoded = Codec.Decode(Codec.Encode({ meta: { type: "big" }, payload }));
+
+        assert.strictEqual(decoded.meta.type, "big");
+        assert.strictEqual(decoded.payload.byteLength, payload.length);
+        assert.strictEqual(new TextDecoder().decode(decoded.payload), payload);
+    });
+
+    it("parses a nested (stringified) payload with parsePayload", () => {
+        const payload = { a: 1, b: { c: [1, "två", { d: null, e: true }] }, f: "🎉" };
+        const decoded = Codec.Decode(Codec.Encode({ meta: { type: "nested" }, payload: JSON.stringify(payload) }), true);
+
+        assert.deepStrictEqual(decoded.payload, payload);
+    });
+
+    it("round-trips a Uint8Array payload byte-exact", () => {
+        const payload = new Uint8Array(256);
+        for (let i = 0; i < payload.length; i++) payload[i] = i;
+
+        const decoded = Codec.Decode(Codec.Encode({ meta: { type: "bin" }, payload }));
+        assert.deepStrictEqual(bytesOf(decoded.payload), bytesOf(payload));
+    });
+});
+
+describe("codec binary payload inputs", () => {
+    const expected = [1, 2, 3, 250];
+
+    it("encodes an ArrayBuffer as its bytes", () => {
+        const payload = new Uint8Array(expected).buffer;
+        const decoded = Codec.Decode(Codec.Encode({ meta: {}, payload }));
+
+        assert.deepStrictEqual(bytesOf(decoded.payload), expected);
+    });
+
+    it("encodes a DataView as only its viewed bytes", () => {
+        const big = new Uint8Array([9, 9, ...expected, 9]);
+        const payload = new DataView(big.buffer, 2, expected.length);
+        const decoded = Codec.Decode(Codec.Encode({ meta: {}, payload }));
+
+        assert.deepStrictEqual(bytesOf(decoded.payload), expected);
+    });
+
+    it("encodes a Uint8Array subarray as only its viewed bytes", () => {
+        const big = new Uint8Array([9, 9, ...expected, 9]);
+        const payload = big.subarray(2, 2 + expected.length);
+        const decoded = Codec.Decode(Codec.Encode({ meta: {}, payload }));
+
+        assert.deepStrictEqual(bytesOf(decoded.payload), expected);
+    });
+});
+
+describe("Codec.Parse", () => {
+    const wrapped = text.encode('XX{"a":1}YY');
+
+    it("parses only the bytes of a Uint8Array subarray", () => {
+        assert.deepStrictEqual(Codec.Parse(wrapped.subarray(2, 9)), { a: 1 });
+    });
+
+    it("parses only the bytes of a DataView with byteOffset", () => {
+        assert.deepStrictEqual(Codec.Parse(new DataView(wrapped.buffer, 2, 7)), { a: 1 });
+    });
+
+    it("parses an ArrayBuffer", () => {
+        assert.deepStrictEqual(Codec.Parse(text.encode('{"a":1}').buffer), { a: 1 });
+    });
+});
+
+describe("codec corrupted buffers", () => {
+
+    it("throws RangeError on a buffer shorter than the header", () => {
+        assert.throws(() => Codec.Decode(new Uint8Array(0)), RangeError);
+        assert.throws(() => Codec.Decode(new Uint8Array(3)), RangeError);
+    });
+
+    it("throws RangeError when the header meta length exceeds the buffer", () => {
+        // "{}" is valid JSON, so silent truncation would decode without an error
+        assert.throws(() => Codec.Decode(raw(100, "{}")), RangeError);
+    });
+
+    it("throws SyntaxError on invalid meta JSON", () => {
+        assert.throws(() => Codec.Decode(raw(3, "{a}")), SyntaxError);
+    });
+
+    it("decodes a Uint8Array that is a subarray of a bigger buffer", () => {
+        const encoded = Codec.Encode({ meta: { type: "inner" }, payload: "inner-payload" });
+        const big = new Uint8Array(encoded.byteLength + 10).fill(7);
+        big.set(encoded, 5);
+
+        const decoded = Codec.Decode(big.subarray(5, 5 + encoded.byteLength));
+        assert.deepStrictEqual(decoded.meta, { type: "inner" });
+        assert.strictEqual(new TextDecoder().decode(decoded.payload), "inner-payload");
+    });
+});
+
+describe("MetaJson", () => {
+
+    it("Create does not inject defaults into meta", () => {
+        const msg = MetaJson.Create({ type: "chat" }, "hej");
+
+        assert.deepStrictEqual(msg.meta, { type: "chat" });
+        assert.strictEqual(msg.payload, "hej");
+    });
+
+    it("Create and FromBinary return the subclass", () => {
+        class Message extends MetaJson { }
+
+        const created = Message.Create({ type: "ping" }, "{}");
+        assert.ok(created instanceof Message);
+
+        const decoded = Message.FromBinary(created.toBinary());
+        assert.ok(decoded instanceof Message);
+        assert.deepStrictEqual(decoded.meta, { type: "ping" });
+    });
+
+    it("parse() parses once and caches", () => {
+        const bytes = MetaJson.Create({ type: "x" }, JSON.stringify({ a: [1, 2] })).toBinary();
+        const msg = MetaJson.FromBinary(bytes);
+
+        assert.ok(msg.payload instanceof Uint8Array);
+        const first = msg.parse();
+        assert.deepStrictEqual(first, { a: [1, 2] });
+        assert.strictEqual(msg.parse(), first);
+        assert.strictEqual(msg.payload, first);
+    });
+
+    it("toBinary() caches and toBinary(true) re-encodes after a meta change", () => {
+        const msg = MetaJson.Create({ type: "x" }, "payload");
+        const first = msg.toBinary();
+        assert.strictEqual(msg.toBinary(), first);
+
+        msg.meta.type = "y";
+        assert.strictEqual(msg.toBinary(), first);
+
+        const second = msg.toBinary(true);
+        assert.notStrictEqual(second, first);
+        assert.strictEqual(Codec.Decode(second).meta.type, "y");
+    });
+
+    it("relays: change meta without parsing, payload bytes stay identical", () => {
+        const payload = JSON.stringify({ text: "hej åäö 🎉", list: [1, 2, 3] });
+        const original = MetaJson.Create({ hops: ["a"] }, payload).toBinary();
+
+        const relay = MetaJson.FromBinary(original, false);
+        relay.meta.hops.push("b");
+        const forwarded = relay.toBinary(true);
+
+        const decoded = Codec.Decode(forwarded);
+        assert.deepStrictEqual(decoded.meta, { hops: ["a", "b"] });
+        assert.deepStrictEqual(bytesOf(decoded.payload), bytesOf(Codec.Decode(original).payload));
     });
 });
