@@ -17,42 +17,49 @@ export function extractImportmap(
         map,
     );
 
+    const visited = new Set<string>();
     for (const name in node.packageJSON.dependencies) 
     {
-        if (name.startsWith(Information.scope)) continue;
-        if (["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"].includes(name)) continue;
-
-        const location = path.join(Information.root.location, "node_modules", name);
-        const pkgLoc = path.join(location, "package.json");
-        if (!fs.existsSync(pkgLoc)) continue;
-        const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
-
-        extractPackageJSON(
-            name,
-            location,
-            packageJSON,
-            map,
-            true,
-        );
+        extractExternal(name, Information.root.location, map, visited);
     }
 
     for (const name in node.packageJSON.devDependencies) 
     {
-        if (name.startsWith(Information.scope)) continue;
-        if (["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"].includes(name)) continue;
+        extractExternal(name, Information.root.location, map, visited);
+    }
+}
 
-        const location = path.join(Information.root.location, "node_modules", name);
-        const pkgLoc = path.join(location, "package.json");
-        if (!fs.existsSync(pkgLoc)) continue;
-        const packageJSON = JSON.parse(fs.readFileSync(pkgLoc, { encoding: "utf-8" }));
+const TOOLING = ["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"];
 
-        extractPackageJSON(
-            name,
-            location,
-            packageJSON,
-            map,
-            true,
-        );
+// maps an external package and, transitively, its own dependencies; each one resolves from
+// the dependent's node_modules first, then the root's, so nested versions are found
+function extractExternal(
+    name: string,
+    from: string,
+    map: Importmap,
+    visited: Set<string>,
+) {
+    if (name.startsWith(Information.scope)) return;
+    if (TOOLING.includes(name)) return;
+
+    const location = [path.join(from, "node_modules", name), path.join(Information.root.location, "node_modules", name)]
+        .find(location => fs.existsSync(path.join(location, "package.json")));
+    if (!location || visited.has(location)) return;
+    visited.add(location);
+
+    const packageJSON = JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
+
+    extractPackageJSON(
+        name,
+        location,
+        packageJSON,
+        map,
+        true,
+    );
+
+    for (const dependency in packageJSON.dependencies)
+    {
+        extractExternal(dependency, location, map, visited);
     }
 }
 

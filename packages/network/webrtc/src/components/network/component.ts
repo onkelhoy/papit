@@ -1,4 +1,4 @@
-import { BROADCAST, Message, NetworkInfo, PeerId, read, relay, RelayAction, Seen, SERVER, TopologyConfig } from "@papit/peer-message";
+import { BROADCAST, Message, NetworkInfo, NetworkType, PayloadMap, PeerId, read, relay, RelayAction, Seen, SERVER, SignalType, TopologyConfig } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
 import type { Link } from "../link";
@@ -24,7 +24,9 @@ type Attached = {
  * @fires error - `CustomEvent<EmitterEvent>`, e.g. malformed bytes from a link
  */
 export class Network extends Emitter {
-  public readonly me: PeerId;
+  public me: PeerId;
+  /** The id the signal server knows this peer by; differs from `me` after a new socket. */
+  public socketId: PeerId;
   public info?: NetworkInfo;
   public topology: Topology;
 
@@ -34,11 +36,14 @@ export class Network extends Emitter {
   private server: Attached | null = null;
   private seen = new Seen();
   private cached: View | null = null;
+  // signalling handed to the server, by id: sent over the topology instead if the server can't deliver it
+  private viaServer = new Map<string, Message>();
 
   constructor(options: NetworkOptions) {
     super();
 
     this.me = options.me;
+    this.socketId = options.me;
     this.info = options.info;
     this.host = options.info?.host ?? options.me;
     this.members.add(options.me);
@@ -96,6 +101,16 @@ export class Network extends Emitter {
     this.invalidate();
     attached.link.close();
     this.emit("unlink", id);
+  }
+
+  /** Takes a new id for `me`, e.g. one the server assigned after a reconnect. */
+  rename(id: PeerId) {
+    this.members.delete(this.me);
+    if (this.host === this.me) this.host = id;
+    if (this.socketId === this.me) this.socketId = id;
+    this.me = id;
+    this.members.add(id);
+    this.invalidate();
   }
 
   /** Replaces the member list (`me` is always kept) and, optionally, the host. */
@@ -159,7 +174,9 @@ export class Network extends Emitter {
     if (direct?.link.send(bytes)) return true;
 
     const own = meta.sender === this.me;
-    if (preferServer && own && this.server?.link.send(bytes)) return true;
+    if (preferServer && own && this.toServer(message, bytes)) return true;
+    // no socket of our own: the host passes the signalling on through its socket
+    if (preferServer && own && !this.server && this.host !== this.me && this.relayToHost(message, bytes)) return true;
 
     if (this.sendTo(this.topology.route(this.view, meta), bytes) > 0) return true;
 
@@ -167,6 +184,65 @@ export class Network extends Emitter {
 
     this.emit("unreachable", message);
     return false;
+  }
+
+  // `fallback` goes over the topology if the server answers that it can't deliver
+  private toServer(message: Message, bytes: Uint8Array, fallback = message) {
+    // the server checks the sender against the socket id, so a peer id it doesn't know goes wrapped
+    if (message.meta.sender !== this.socketId && message.meta.sender === this.me)
+    {
+      message = this.wrap(message, bytes, message.meta.receiver);
+      bytes = message.toBinary(true);
+    }
+    if (!this.server?.link.send(bytes)) return false;
+    this.viaServer.set(message.meta.id, fallback);
+    if (this.viaServer.size > 64) this.viaServer.delete(this.viaServer.keys().next().value!);
+    return true;
+  }
+
+  // wraps signalling in a `network.relay` from me, so the server only ever sees my own id as sender
+  private wrap(message: Message, bytes: Uint8Array, receiver: PeerId) {
+    return Message.Create(
+      { type: NetworkType.Relay, sender: this.server ? this.socketId : this.me, receiver, network: message.meta.network },
+      { message: toBase64(bytes) },
+    );
+  }
+
+  private relayToHost(message: Message, bytes: Uint8Array) {
+    return this.dispatch(this.wrap(message, bytes, this.host));
+  }
+
+  // a member's signalling, relayed to me: mine to read, or to pass on (through my socket when I have one)
+  private handleRelay(message: Message) {
+    const bytes = fromBase64((message.parse() as PayloadMap[NetworkType.Relay]).message);
+    const inner = read(bytes);
+    if (!inner)
+    {
+      this.error("relay", "malformed relayed message", { from: message.meta.sender });
+      return;
+    }
+
+    if (inner.meta.receiver === this.me) return void this.emit("message", inner);
+
+    const wrapped = this.wrap(inner, bytes, inner.meta.receiver);
+    if (this.toServer(wrapped, wrapped.toBinary(true), inner)) return;
+    this.dispatch(inner);
+  }
+
+  // the server couldn't deliver signalling (the receiver has no socket): over the topology, else via the host
+  private reroute(message: Message) {
+    const { ref } = message.parse() as PayloadMap[SignalType.Unreachable];
+    const original = this.viaServer.get(ref);
+    if (!original) return false;
+
+    this.viaServer.delete(ref);
+    const bytes = original.toBinary(true);
+    if (this.links.get(original.meta.receiver)?.link.send(bytes)) return true;
+    if (this.sendTo(this.topology.route(this.view, original.meta), bytes) > 0) return true;
+    if (original.meta.sender === this.me && this.host !== this.me && this.relayToHost(original, bytes)) return true;
+
+    this.emit("unreachable", original);
+    return true;
   }
 
   private sendTo(ids: PeerId[], bytes: Uint8Array) {
@@ -208,6 +284,11 @@ export class Network extends Emitter {
         return;
       }
 
+      // the server addresses me by my socket id
+      if (link.id === SERVER && message.meta.receiver === this.socketId) message.meta.receiver = this.me;
+      if (link.id === SERVER && message.meta.type === SignalType.Unreachable && this.reroute(message)) return;
+      if (message.meta.type === NetworkType.Relay && message.meta.receiver === this.me) return void this.handleRelay(message);
+
       const action = this.decide(message);
       if (action === "drop")
       {
@@ -227,4 +308,14 @@ export class Network extends Emitter {
   private invalidate = () => {
     this.cached = null;
   }
+}
+
+function toBase64(bytes: Uint8Array) {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(binary);
+}
+
+function fromBase64(text: string) {
+  return Uint8Array.from(atob(text), c => c.charCodeAt(0));
 }

@@ -1,6 +1,7 @@
 export type SpawnOptions = {
     args: string[];
     cwd: string;
+    env: Record<string, string | undefined>;
     onData(text: string): void;
     onError(error: Error, stdout: string, stderr: string): void;
     onClose(code: number | null, stdout: string, stderr: string): void;

@@ -46,6 +46,7 @@ export enum NetworkType {
     Leave = "network.leave",
     Media = "network.media",
     Profile = "network.profile",
+    Relay = "network.relay",
 }
 
 // peer ↔ peer, over any link
@@ -132,6 +133,8 @@ export type PayloadMap = {
     [NetworkType.Leave]: { peer: PeerId };
     [NetworkType.Media]: { media: MediaPlan };
     [NetworkType.Profile]: { profile: Profile };
+    /** A signalling message (base64 of its bytes) for the host to pass on through its socket. */
+    [NetworkType.Relay]: { message: string };
     /** `streams` maps transceiver `mid` → media plan stream name, for the streams the offer carries. */
     [HandshakeType.Offer]: { description: SessionDescription; streams?: Record<string, string> };
     [HandshakeType.Answer]: { description: SessionDescription };

@@ -8,9 +8,9 @@ import { Terminal } from "@papit/terminal";
 import { setup, close } from "@papit/server";
 
 function isPlaywright(node) {
-    return (
-        fs.existsSync(path.join(node.location, "playwright.config.ts")) ||
-        fs.existsSync(path.join(node.location, "playwright.config.js"))
+    return ["", "tests"].some(folder =>
+        fs.existsSync(path.join(node.location, folder, "playwright.config.ts")) ||
+        fs.existsSync(path.join(node.location, folder, "playwright.config.js"))
     );
 }
 
@@ -42,7 +42,7 @@ function runner(node, extraEnv = {}, extraArgs = []) {
 
         const child = Terminal.spawn("npm test", {
             cwd: node.location,
-            args: [...process.argv.slice(2), ...extraArgs],
+            args: extraArgs.length ? ["--", ...extraArgs] : [],
             env: { ...process.env, ...extraEnv },
             onData: text => (buffer += text),
             onError: text => (buffer += text),
@@ -66,6 +66,8 @@ function runner(node, extraEnv = {}, extraArgs = []) {
     await setup();
 
     const force = Arguments.has("force");
+    // only playwright packages get --project (e.g. `npm test -- --project=chromium`), after a `--` so npm passes it on
+    const playwrightArgs = process.argv.slice(2).filter(arg => arg.startsWith("--project"));
     const batches = Information.getBatches(Arguments.instance, p => p.name.startsWith(Information.scope));
 
     const testresult_location = path.join(Information.root.location, "test-result.log");
@@ -115,7 +117,7 @@ function runner(node, extraEnv = {}, extraArgs = []) {
             //     Terminal.write(Terminal.dim("○"), node.name, Terminal.dim("no snapshots — skipping snapshot.test.ts"));
             // }
 
-            const { code, buffer } = await runner(node, extraEnv);
+            const { code, buffer } = await runner(node, extraEnv, playwright ? playwrightArgs : []);
 
             if (code === 0)
             {
@@ -127,7 +129,7 @@ function runner(node, extraEnv = {}, extraArgs = []) {
             // Retry — last-failed for playwright, full rerun for node
             if (Arguments.has("ci")) Terminal.write(Terminal.yellow("●"), node.name, Terminal.yellow("failed — retrying"));
 
-            const retryArgs = playwright ? ["--last-failed"] : [];
+            const retryArgs = playwright ? [...playwrightArgs, "--last-failed"] : [];
             const { code: code2, buffer: buffer2 } = await runner(node, extraEnv, retryArgs);
 
             if (code2 === 0)

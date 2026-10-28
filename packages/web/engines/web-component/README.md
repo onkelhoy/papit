@@ -164,7 +164,7 @@ Listeners are attached as passed, so bind methods with `@bind`. `getValues(node)
 | `before(value, old, initial, attributeUpdate)` | `function` | — | Runs before the value is stored |
 | `after(value, old, initial, attributeUpdate)` | `function` | — | Runs after the value is stored (on connect, for values set before the first connect) |
 | `set(value)` / `get(value)` | `function` | — | Transform on write / on read. `set` may return a promise |
-| `hasChanged(value, old)` | `function` | — | Custom change check |
+| `hasChanged(value, old)` | `function` | — | Custom change check, replaces the built-in deep compare |
 | `maxReqursiveSteps` | `number` | `20` | Depth limit when comparing nested objects |
 
 Attribute reflection and `after` hooks are deferred until the element is connected, so `document.createElement` works.

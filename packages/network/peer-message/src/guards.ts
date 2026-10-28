@@ -117,6 +117,7 @@ const payloads = new Map<string, (p: Obj) => boolean>([
     [NetworkType.Leave, p => isId(p.peer)],
     [NetworkType.Media, p => isMediaPlan(p.media)],
     [NetworkType.Profile, p => isProfile(p.profile)],
+    [NetworkType.Relay, p => isString(p.message)],
     [HandshakeType.Offer, p => isDescription(p.description) && optional(p.streams, isStreamMap)],
     [HandshakeType.Answer, p => isDescription(p.description)],
     [HandshakeType.Candidate, p => isCandidate(p.candidate)],

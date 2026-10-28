@@ -292,7 +292,7 @@ export class Terminal extends Colors {
             cwd: options.cwd,
             stdio: process.env.CI ? "inherit" : "pipe",
             shell: true,
-            env: { ...process.env },
+            env: { ...process.env, ...options.env },
         });
 
         if (child.stdout)

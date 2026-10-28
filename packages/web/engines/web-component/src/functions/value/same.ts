@@ -10,6 +10,7 @@ export function same(a: any, b: any, maxReqursiveSteps = 20, reqursiveSteps = 0)
         throw new Error("[decorator] value is exciding the maxReqursiveSteps");
     }
 
+    if (a === b) return true;
     if (typeof a !== typeof b) return false;
     switch (typeof a) 
     {
@@ -20,6 +21,7 @@ export function same(a: any, b: any, maxReqursiveSteps = 20, reqursiveSteps = 0)
 
         case "object":
             {
+                if (a === null || b === null) return false;
                 if (a instanceof Element && b instanceof Element)
                 {
                     return a.outerHTML === b.outerHTML;
@@ -32,6 +34,11 @@ export function same(a: any, b: any, maxReqursiveSteps = 20, reqursiveSteps = 0)
                     if (a.some((v, i) => !same(v, b[i], maxReqursiveSteps, reqursiveSteps + 1))) return false;
                     return true;
                 }
+
+                // class instances (MediaStream, Map, Date, ...) have no own keys to compare, so only identity counts
+                const proto = Object.getPrototypeOf(a);
+                if (proto !== Object.getPrototypeOf(b)) return false;
+                if (proto !== Object.prototype && proto !== null) return false;
 
                 const keysA = Object.keys(a);
                 const keysB = Object.keys(b);

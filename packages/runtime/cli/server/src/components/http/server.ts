@@ -129,7 +129,7 @@ export function start(
                     const url = themes.get("@" + packageName);
                     if (url)
                     {
-                        const file = getFILE({ absolute: path.normalize(url), relative: path.normalize(path.relative(Information.root.location, url)) }, filecache, res);
+                        const file = getFILE({ absolute: path.normalize(url), relative: path.normalize(path.relative(Information.root.location, url)) }, filecache, res, undefined, importmap, themes);
                         if (file === "streamed") return;
 
                         res.statusCode = 200;
@@ -200,7 +200,7 @@ export function start(
                     return;
                 }
 
-                const file = getFILE(url, filecache, res);
+                const file = getFILE(url, filecache, res, undefined, importmap, themes);
                 if (file === "streamed") return;
                 res.statusCode = 200;
                 res.setHeader('Content-Type', file.mimeType);
