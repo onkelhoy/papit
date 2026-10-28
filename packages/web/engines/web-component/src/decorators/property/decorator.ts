@@ -100,8 +100,8 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             cancelReflection(this, propertyKey);
 
             const nvalue = parseValue(newValue, settings.type);
-            if (settings.hasChanged && !settings.hasChanged(nvalue, this[propertyKey])) return;
-            if (sameValue(nvalue, this[propertyKey], settings.maxReqursiveSteps)) return;
+            // hasChanged, when given, decides on its own
+            if (settings.hasChanged ? !settings.hasChanged(nvalue, this[propertyKey]) : sameValue(nvalue, this[propertyKey], settings.maxReqursiveSteps)) return;
 
             this[updateKey] = true;
             this[propertyKey] = nvalue; // assign directly
@@ -164,8 +164,7 @@ function define(target: any, propertyKey: PropertyKey, _settings: Partial<Settin
             }
 
             const oldVal = this[privateKey];
-            if (settings.hasChanged && !settings.hasChanged(value, oldVal)) return;
-            else if (sameValue(value, oldVal, settings.maxReqursiveSteps)) return;
+            if (settings.hasChanged ? !settings.hasChanged(value, oldVal) : sameValue(value, oldVal, settings.maxReqursiveSteps)) return;
 
             if (settings.before) settings.before.call(this, value, oldVal, isInitial, false);
 

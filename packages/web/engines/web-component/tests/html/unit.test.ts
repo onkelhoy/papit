@@ -72,3 +72,30 @@ test.describe("attribute cases", () => {
         expect(pContent).toBe("5");
     });
 });
+
+test.describe("keyed list", () => {
+
+    test("reorder keeps values, order and moves the same nodes", async ({ page }) => {
+        const component = page.getByTestId("keyed");
+        await page.waitForTimeout(300);
+
+        const before = await component.evaluate((el: any) => {
+            const items = [...el.shadowRoot.querySelectorAll("li")];
+            items.forEach((li: any) => li.__tag = li.textContent);
+            return items.map(li => li.textContent);
+        });
+        expect(before).toEqual(["A", "B", "C"]);
+
+        for (const next of [["C", "A", "B"], ["B", "C", "A", "D"], ["D", "A"], ["A", "B", "C"]])
+        {
+            await component.evaluate((el: any, next) => el.items = next, next);
+            await page.waitForTimeout(100);
+
+            const result = await component.evaluate((el: any) =>
+                [...el.shadowRoot.querySelectorAll("li")].map((li: any) => [li.textContent, li.__tag ?? null]));
+            expect(result.map(([text]) => text)).toEqual(next);
+            // a reused node still has its own tag, so it was never handed another item's value
+            for (const [text, tag] of result) if (tag !== null) expect(tag).toBe(text);
+        }
+    });
+});

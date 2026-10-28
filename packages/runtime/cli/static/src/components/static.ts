@@ -7,7 +7,7 @@ import { Information, type PackageNode } from "@papit/information";
 import { Terminal } from "@papit/terminal";
 import { Element } from "@papit/html";
 import { getESOptions, jsBundle } from "@papit/bundle-js";
-import { createInline, meta } from "@papit/server";
+import { createInline, meta, rewriteCssImports } from "@papit/server";
 
 import {
     dependencyPath,
@@ -19,7 +19,6 @@ import {
     planTranslations,
     resolveSpecifier,
     resolveTarget,
-    rewriteCssImports,
     rewriteImportmap,
 } from "./plan";
 import type { StaticOptions, StaticResult } from "../types";

@@ -97,7 +97,7 @@ What the bin runs. It works on `Information.package`, so the process has to run 
 
 `StaticResult` holds the page folder, the page paths written, and the number of assets, languages and `lib/` folders.
 
-The pure helpers behind it are exported too: `resolveTarget`, `normalizeBase`, `assetPath`, `planAssets`, `planTranslations`, `dependencyPath`, `packageEntries`, `isTooling`, `rewriteImportmap`, `rewriteCssImports`, `resolveSpecifier` and `fetchShim`.
+The pure helpers behind it are exported too: `resolveTarget`, `normalizeBase`, `assetPath`, `planAssets`, `planTranslations`, `dependencyPath`, `packageEntries`, `isTooling`, `rewriteImportmap`, `resolveSpecifier` and `fetchShim`, plus `rewriteCssImports` (re-exported from `@papit/server`).
 
 # License
 

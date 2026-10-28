@@ -12,7 +12,7 @@
     "popover",
     "accessibility"
   ],
-  "version": "0.0.12",
+  "version": "0.0.13",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -64,11 +64,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/button": "0.1.7",
-    "@papit/group": "0.0.11",
-    "@papit/placement": "0.0.11",
-    "@papit/popover": "0.1.4",
-    "@papit/web-component": "0.0.11"
+    "@papit/button": "0.1.8",
+    "@papit/group": "0.0.12",
+    "@papit/placement": "0.0.12",
+    "@papit/popover": "0.1.5",
+    "@papit/web-component": "0.0.12"
   },
   "peerDependencies": {
     "react": "^19"
@@ -79,9 +79,9 @@
     }
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.14",
-    "@papit/router": "0.1.7",
-    "@papit/tabs": "0.1.7",
+    "@papit/codeblock": "0.1.15",
+    "@papit/router": "0.1.8",
+    "@papit/tabs": "0.1.8",
     "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
     "@playwright/test": "1.64.1",

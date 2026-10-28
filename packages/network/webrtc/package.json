@@ -13,7 +13,7 @@
     "router",
     "media"
   ],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -59,7 +59,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/peer-message": "0.0.2"
+    "@papit/peer-message": "0.0.3"
   },
   "devDependencies": {
     "@playwright/test": "1.64.1",
@@ -103,5 +103,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.4"
+  "remoteVersion": "0.0.5"
 }

@@ -21,8 +21,8 @@ const hash = (password: string) => createHash("sha256").update(password).digest(
 
 /**
  * WebSocket signalling server for @papit/peer-message.
- * Keeps a network registry, forwards peer messages by `receiver`, and hands a network
- * to its oldest member when the host leaves. Only binary frames are accepted.
+ * Keeps a network registry, forwards peer messages by `receiver`.
+ * Drops a network when its host leaves. Only binary frames are accepted.
  */
 export class SocketServer extends ws.WebSocketServer {
     private heartbeat_timer: NodeJS.Timeout;
@@ -278,17 +278,11 @@ export class SocketServer extends ws.WebSocketServer {
         if (index < 0) return;
         network.members.splice(index, 1);
 
-        if (network.members.length === 0)
+        // the network goes with its host; the members pick a new host among themselves and it registers again
+        if (network.members.length === 0 || network.host === socket.id)
         {
+            for (const member of network.members) this.sockets.get(member)?.networks.delete(id);
             this.networks.delete(id);
-            return;
-        }
-
-        if (network.host === socket.id)
-        {
-            network.host = network.members[0];
-            const host = this.sockets.get(network.host);
-            if (host) this.send(host, SignalType.Host, { network: this.info(network) });
         }
     }
 

@@ -52,8 +52,12 @@ export type ClientOptions = {
    * Joined networks use the one they were created with. Default `"mesh"`.
    */
   topology?: string | TopologyConfig;
-  /** Keep the signalling socket once joined and linked. False drops it, and with it the server fallback. Default true. */
-  keepSocket?: boolean;
+  /**
+   * Keep the signalling socket once joined and linked. `"host"` keeps it on the host only: the others
+   * drop theirs once linked, and their signalling (handshakes of newcomers) goes through the host.
+   * False drops it everywhere. Default `"host"`.
+   */
+  keepSocket?: boolean | "host";
   /** Called on the entry peer for each newcomer; false rejects them. Default: accept everyone. */
   accept?(newcomer: PeerId, info: NetworkInfo): boolean;
   /** ms before `create`, `list` and `join` reject. */
@@ -64,6 +68,8 @@ export type ClientOptions = {
   wake?: boolean;
   /** What this peer says about itself, e.g. `{ name }`. At most 1 KB as JSON. */
   profile?: Profile;
+  /** Becoming host without a socket opens a new one and registers the network again, so others can still join. Default true. */
+  recreate?: boolean;
 }
 
 /** Detail of the client's `"message"` event. */
@@ -108,7 +114,15 @@ export class Client extends Emitter {
   /** Resolves with this peer's id once the server welcomes it. */
   public readonly ready: Promise<PeerId>;
   /** The signalling socket. */
-  public readonly socket: SocketLink;
+  public socket: SocketLink;
+  // an id the server assigned on a reconnect while in a network, taken on leave
+  private reassigned: PeerId | null = null;
+  // the socket was closed on purpose (keepSocket), the client is still in its network
+  private dropped = false;
+  // the network's id on the server after the host registered it again
+  private serverNetwork: string | null = null;
+  // the network's password, kept so a new host can register it again
+  private password: string | undefined;
   /** The router, created on the first welcome. */
   public router: Network | null = null;
   /** Media plan, captures, remote streams and plan channels. */
@@ -137,13 +151,7 @@ export class Client extends Emitter {
     this.media.addEventListener("debug", this.handleForward);
 
     this.ownProfile = options.profile ?? {};
-    this.socket = new SocketLink(options.url, { protocols: options.protocols, timeout: options.connectTimeout });
-    this.socket.addEventListener("welcome", this.handleWelcome);
-    this.socket.addEventListener("close", this.handleSocketClose);
-    this.socket.addEventListener("error", this.handleForward);
-    this.socket.addEventListener("debug", this.handleForward);
-    this.socket.addEventListener("disconnect", this.handleDisconnect);
-    this.socket.addEventListener("open", this.handleSocketOpen);
+    this.socket = this.openSocket();
 
     this.wakingTimer = setTimeout(() => {
       this.wakingTimer = null;
@@ -214,6 +222,17 @@ export class Client extends Emitter {
     return this.router?.view.links ?? [];
   }
 
+  private openSocket() {
+    const socket = new SocketLink(this.options.url, { protocols: this.options.protocols, timeout: this.options.connectTimeout });
+    socket.addEventListener("welcome", this.handleWelcome);
+    socket.addEventListener("close", this.handleSocketClose);
+    socket.addEventListener("error", this.handleForward);
+    socket.addEventListener("debug", this.handleForward);
+    socket.addEventListener("disconnect", this.handleDisconnect);
+    socket.addEventListener("open", this.handleSocketOpen);
+    return socket;
+  }
+
   get host(): PeerId | null {
     return this.network ? this.router?.view.host ?? null : null;
   }
@@ -229,6 +248,7 @@ export class Client extends Emitter {
       message => message.meta.type === SignalType.Registered ? (message.payload as PayloadMap[SignalType.Registered]).network : undefined,
     );
 
+    this.password = options.password;
     this.profileMap = new Map([[this.id!, this.ownProfile]]);
     this.enter(network, [this.id!], network.host);
     return network;
@@ -246,12 +266,14 @@ export class Client extends Emitter {
 
     const updated: NetworkInfo = await this.request(
       SignalType.Update,
-      { ...options, network: network.id },
+      { ...options, network: this.serverNetwork ?? network.id },
       message => message.meta.type === SignalType.Updated ? (message.payload as PayloadMap[SignalType.Updated]).network : undefined,
     );
-    if (!this.network || this.network.id !== updated.id) return updated;
+    if (!this.network || (this.serverNetwork ?? this.network.id) !== updated.id) return updated;
+    if (options.password !== undefined) this.password = options.password || undefined;
 
-    this.network = { ...updated, size: this.network.size, host: this.router!.view.host };
+    // the network keeps its own id when the server knows it under another
+    this.network = { ...updated, id: this.network.id, size: this.network.size, host: this.router!.view.host };
     this.router!.info = this.network;
     if (options.media !== undefined)
     {
@@ -299,6 +321,7 @@ export class Client extends Emitter {
         },
       );
 
+      this.password = password;
       this.profileMap = new Map(Object.entries(welcome.profiles ?? {}));
       this.profileMap.set(this.id!, this.ownProfile);
       this.enter(welcome.network, welcome.members, welcome.network.host);
@@ -336,7 +359,9 @@ export class Client extends Emitter {
     const router = this.router;
     if (!network || !router) return;
 
-    this.signal(SignalType.Leave, { network: network.id });
+    this.signal(SignalType.Leave, { network: this.serverNetwork ?? network.id });
+    this.serverNetwork = null;
+    this.password = undefined;
     this.sendReserved(BROADCAST, NetworkType.Leave, { peer: this.id! });
 
     this.network = null;
@@ -348,6 +373,15 @@ export class Client extends Emitter {
     router.setMembers([]);
     this.profileMap.clear();
     this.emitMembers();
+    if (this.reassigned) this.adopt(this.reassigned);
+  }
+
+  // takes the id the server assigned after a reconnect, so later messages carry it
+  private adopt(id: PeerId) {
+    this.debug("socket", "taking the id the server assigned after a reconnect", { previous: this.id, id });
+    this.reassigned = null;
+    this.id = id;
+    this.router!.rename(id);
   }
 
   /** Leaves, closes the socket and rejects pending requests. */
@@ -505,19 +539,48 @@ export class Client extends Emitter {
     this.wakeTimer = null;
   }
 
+  // the new host without a socket: open one; its welcome registers the network again
+  private recreate() {
+    this.debug("socket", "host without a socket, opening one to register the network again", null);
+    this.dropped = false;
+    this.socket = this.openSocket();
+  }
+
+  // registers the network under a new server id; joins for it are answered with the network's own id
+  private async reregister() {
+    const network = this.network;
+    if (!network) return;
+    try
+    {
+      const registered: NetworkInfo = await this.request(
+        SignalType.Register,
+        { name: network.name, topology: network.topology, private: network.private, ...(this.password ? { password: this.password } : {}), ...(network.meta ? { meta: network.meta } : {}), ...(network.media ? { media: network.media } : {}) },
+        message => message.meta.type === SignalType.Registered ? (message.payload as PayloadMap[SignalType.Registered]).network : undefined,
+      );
+      this.serverNetwork = registered.id;
+    }
+    catch (error)
+    {
+      this.error("host", "could not register the network again", error);
+    }
+  }
+
   private dropSocket() {
-    if (this.options.keepSocket !== false || !this.network || this.pending.size > 0) return;
-    this.debug("socket", "keepSocket is false, closing the signalling socket", null);
+    const keep = this.options.keepSocket ?? "host";
+    if (keep === true || !this.network || this.pending.size > 0) return;
+    if (keep === "host" && this.router?.view.host === this.id) return;
+    this.debug("socket", `keepSocket is ${keep}, closing the signalling socket`, null);
+    this.dropped = true;
     this.socket.close();
   }
 
   // sending helpers
-  private sendReserved<T extends keyof PayloadMap>(receiver: PeerId, type: T, payload: PayloadMap[T], preferServer = false) {
-    return this.router?.send(Message.Create({ type, sender: this.id!, receiver, network: this.network?.id }, payload), { preferServer }) ?? false;
+  private sendReserved<T extends keyof PayloadMap>(receiver: PeerId, type: T, payload: PayloadMap[T], preferServer = false, network = this.network?.id) {
+    return this.router?.send(Message.Create({ type, sender: this.id!, receiver, network }, payload), { preferServer }) ?? false;
   }
 
   private signal<T extends keyof PayloadMap>(type: T, payload: PayloadMap[T]) {
-    const message = Message.Create({ type, sender: this.id!, receiver: SERVER }, payload);
+    const message = Message.Create({ type, sender: this.router?.socketId ?? this.id!, receiver: SERVER }, payload);
     this.router?.send(message);
     return message;
   }
@@ -603,11 +666,12 @@ export class Client extends Emitter {
     const network = this.network;
     const router = this.router!;
     const newcomer = message.meta.sender;
-    if (!network || message.meta.network !== network.id || !newcomer || newcomer === this.id) return;
+    const asked = message.meta.network;
+    if (!network || (asked !== network.id && asked !== this.serverNetwork) || !newcomer || newcomer === this.id) return;
 
     if (this.options.accept && !this.options.accept(newcomer, network))
     {
-      this.sendReserved(newcomer, NetworkType.Reject, { reason: "not accepted" }, true);
+      this.sendReserved(newcomer, NetworkType.Reject, { reason: "not accepted" }, true, asked);
       return;
     }
 
@@ -625,7 +689,7 @@ export class Client extends Emitter {
       members,
       connect: router.topology.neighbors(view, newcomer),
       profiles: this.profiles,
-    }, true);
+    }, true, asked);
     if (existing) this.broadcastMembers(newcomer);
 
     this.emitMembers();
@@ -708,13 +772,27 @@ export class Client extends Emitter {
     const router = this.router;
     if (!router || !this.network || !router.view.members.includes(peer)) return;
 
-    router.setMembers(router.view.members.filter(member => member !== peer));
+    const rest = router.view.members.filter(member => member !== peer);
+    // the host left: everyone picks the same successor, the lowest id
+    const lostHost = peer === router.view.host;
+    const host = lostHost ? [...rest].sort()[0] : router.view.host;
+    router.setMembers(rest, host);
     this.profileMap.delete(peer);
-    this.network = { ...this.network, size: router.view.members.length };
+    this.network = { ...this.network, host, size: router.view.members.length };
     router.info = this.network;
     this.emitMembers();
+    if (lostHost) this.emit("host", host);
 
-    if (router.view.host === this.id) this.broadcastMembers();
+    if (router.view.host === this.id)
+    {
+      this.broadcastMembers();
+      // the server dropped the network with its host: register it again (opening a socket first if needed)
+      if (lostHost && this.options.recreate !== false)
+      {
+        if (this.dropped) this.recreate();
+        else this.reregister();
+      }
+    }
     this.reconcile();
   }
 
@@ -724,7 +802,17 @@ export class Client extends Emitter {
     if (this.router)
     {
       this.setStatus("connected");
-      if (id !== this.id) this.error("reconnect", "the server assigned a new id after a reconnect, the server fallback is lost until you leave and join again", { previous: this.id, id });
+      this.router.addLink(this.socket);
+      if (id === this.router.socketId) return;
+      if (this.network)
+      {
+        // the peer id stays; the server knows us by the new socket id from now on
+        this.reassigned = id;
+        this.router.socketId = id;
+        if (this.router.view.host === this.id) this.reregister();
+        return;
+      }
+      this.adopt(id);
       return;
     }
 
@@ -819,6 +907,7 @@ export class Client extends Emitter {
     if (!this.closed) this.debug("socket", "signalling socket closed", null);
     if (this.wakingTimer !== null) clearTimeout(this.wakingTimer);
     this.wakingTimer = null;
+    if (this.dropped && !this.closed) return; // still in the network, just without a socket
     this.setStatus("closed");
   }
 

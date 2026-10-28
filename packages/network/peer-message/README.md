@@ -208,6 +208,7 @@ What every link in a network carries besides its system channel. The host sets i
 | `network.leave` | peer ↔ peer | `{ peer }` |
 | `network.profile` | member → host | `{ profile }`, the sender changed its own profile |
 | `network.media` | host → peers | `{ media: MediaPlan }`, the plan changed mid-session |
+| `network.relay` | member → host | `{ message }`, base64 bytes of a signalling message from a member without a socket, for the host to send through its own |
 | `handshake.offer` | peer ↔ peer | `{ description: { type, sdp? }, streams? }`, `streams` maps transceiver `mid` → stream name |
 | `handshake.answer` | peer ↔ peer | `{ description: { type, sdp? } }` |
 | `handshake.candidate` | peer ↔ peer | `{ candidate: { candidate?, sdpMid?, sdpMLineIndex?, usernameFragment? } }` |

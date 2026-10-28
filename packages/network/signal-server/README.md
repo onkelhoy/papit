@@ -134,7 +134,7 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | `signal.unregister` | client → server | `{ network }` | none, host only |
 | `signal.list` | client → server | `{}` | `signal.networks { networks }`, public only |
 | `signal.join` | client → server | `{ network, password?, profile? }` | `network.join { profile? }` to the entry peer, `sender` = newcomer; the password is not passed on |
-| `signal.leave` | client → server | `{ network }` | none; may send `signal.host` to the next host |
+| `signal.leave` | client → server | `{ network }` | none; the network is deleted when the host leaves |
 | `signal.host` | server → client | `{ network }` | you are now host |
 | `signal.unreachable` | server → client | `{ receiver, ref }` | the message `ref` couldn't be delivered |
 | `signal.error` | server → client | `{ code, message, ref? }` | see below |
@@ -171,8 +171,7 @@ connect ──▶ signal.welcome {id}
               signal.join ──▶ server checks password, adds member ──▶ network.join to entry peer
 forward:    network.* / handshake.* / app messages, peer → server → peer
 close:      socket closes or sends signal.leave
-              ├─ members remain and host left ──▶ oldest member gets signal.host
-              └─ no members remain           ──▶ network deleted
+              └─ host left, or no members remain ──▶ network deleted (the peers pick a new host, which registers again)
 heartbeat:  ping every interval; no pong by the next one ──▶ terminated, same as close
 spam:       too many strikes on server traffic ──▶ closed (1008)
 rate:       forwarded traffic over forward_rate ──▶ dropped, signal.error {code: "rate"}

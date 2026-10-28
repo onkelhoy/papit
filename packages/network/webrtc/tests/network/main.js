@@ -1,5 +1,5 @@
 import { Network, MemoryLink, topologies, multicast, multicastTopology, registerTopology, resolveTopology } from '@papit/webrtc';
-import { Message, BROADCAST } from '@papit/peer-message';
+import { Message, BROADCAST, SERVER, SignalType } from '@papit/peer-message';
 
 const letters = (n) => Array.from({ length: n }, (_, i) => String.fromCharCode(97 + i));
 
@@ -42,6 +42,44 @@ function build(topology, n, host) {
   return { nodes, links, log, members };
 }
 
+/**
+ * A stand-in signal server: forwards by receiver to the peers connected to it, answers
+ * signal.unreachable for anyone else and counts spoofed senders (which it drops).
+ */
+function fakeServer() {
+  const sockets = {};
+  const log = { spoof: 0 };
+
+  const connect = (id) => {
+    const link = new EventTarget();
+    link.id = SERVER;
+    link.open = true;
+    link.send = (bytes) => {
+      const copy = bytes.slice();
+      queueMicrotask(() => {
+        const { meta } = Message.FromBinary(copy, false);
+        if (meta.sender !== id) return void log.spoof++;
+
+        const target = sockets[meta.receiver];
+        if (target) return void target.dispatchEvent(new CustomEvent("message", { detail: copy }));
+
+        const unreachable = Message.Create({ type: SignalType.Unreachable, sender: SERVER, receiver: id }, { receiver: meta.receiver, ref: meta.id });
+        link.dispatchEvent(new CustomEvent("message", { detail: unreachable.toBinary(true) }));
+      });
+      return true;
+    };
+    link.close = () => {
+      delete sockets[id];
+      link.open = false;
+      link.dispatchEvent(new Event("close"));
+    };
+    sockets[id] = link;
+    return link;
+  };
+
+  return { connect, log };
+}
+
 /** Resolves once the event fires on target. */
 function once(target, type) {
   return new Promise(resolve => target.addEventListener(type, resolve, { once: true }));
@@ -55,5 +93,5 @@ function settle() {
   return new Promise(resolve => setTimeout(resolve));
 }
 
-Object.assign(window, { Message, BROADCAST, build, once, settle, topologies, multicast, multicastTopology, registerTopology, resolveTopology });
+Object.assign(window, { Message, BROADCAST, Network, fakeServer, build, once, settle, topologies, multicast, multicastTopology, registerTopology, resolveTopology });
 window.ready = true;

@@ -106,6 +106,46 @@ test.describe("decorators - property", () => {
     });
 });
 
+test.describe("decorators - property change check", () => {
+    test("null inside an object or array updates instead of throwing", async ({ page }) => {
+        const component = page.getByTestId("a");
+        for (const [first, second] of [[null, {}], [[null], [1]], [{ video: null }, { video: 1 }]])
+        {
+            const result = await component.evaluate(async (el: any, [first, second]) => {
+                el.deep = first; await new Promise(r => setTimeout(r, 20));
+                el.deep = second; await new Promise(r => setTimeout(r, 20));
+                return el.deep;
+            }, [first, second]);
+            expect(result).toEqual(second);
+        }
+    });
+
+    test("a class instance with no own keys updates when swapped", async ({ page }) => {
+        const component = page.getByTestId("a");
+        const swapped = await component.evaluate(async (el: any) => {
+            const a = new Map(), b = new Map();
+            el.deep = { stream: a }; await new Promise(r => setTimeout(r, 20));
+            el.deep = { stream: b }; await new Promise(r => setTimeout(r, 20));
+            const nested = el.deep.stream === b;
+            el.deep = a; await new Promise(r => setTimeout(r, 20));
+            el.deep = b; await new Promise(r => setTimeout(r, 20));
+            return nested && el.deep === b;
+        });
+        expect(swapped).toBe(true);
+    });
+
+    test("hasChanged decides on its own", async ({ page }) => {
+        const component = page.getByTestId("a");
+        const second = await component.evaluate(async (el: any) => {
+            const b = { hello: "henry" };
+            el.identity = { hello: "henry" }; await new Promise(r => setTimeout(r, 20));
+            el.identity = b; await new Promise(r => setTimeout(r, 20));
+            return el.identity === b;
+        });
+        expect(second).toBe(true);
+    });
+});
+
 test.describe("decorators - query", () => {
     test('buttonA should be available', async ({ page }) => {
         const component = page.getByTestId("a");

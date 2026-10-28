@@ -1,27 +1,33 @@
 import type { Part, PartHelpers } from "../types";
+import { getValues } from "../../html";
+
+type Item = { start: Comment; end: Comment; part: Part };
 
 /**
  * @fileoverview Manages a dynamic list of items in the DOM.
  *
  * @details
  * - Supports keyed updates to efficiently reorder items without full re-render.
- * - Creates, reuses, and removes item parts based on stable keys.
- * - Keys default to array index if no `.key` property is present.
+ * - Creates, reuses, moves and removes item parts based on stable keys.
+ * - A key is the value's `.key`, or the `key` attribute of an `html` template root,
+ *   falling back to the array index. A repeated key gets a fresh item.
+ * - Each item sits between its own start and end comment, so it can be moved as a whole.
  *
  * @see ValuePart
  * @see NestedPart
- * 
+ *
  * @created 2025-08-12
  * @author Henry
  */
 export class ListPart implements Part {
-  private keyMap = new Map<any, Part>();
+  private items = new Map<any, Item>();
+  private order: Item[] = [];
 
   constructor(private marker: Comment, private helpers: PartHelpers) {}
 
   /**
    * Updates the list of items.
-   * @param values An array of values; each can have a `.key` for stable identity.
+   * @param values An array of values; each can have a `.key` (or `key` attribute) for stable identity.
    */
   apply(values: any[]) {
     if (!Array.isArray(values)) {
@@ -29,62 +35,89 @@ export class ListPart implements Part {
       return;
     }
 
-    const newKeyMap = new Map<any, Part>();
-    let beforeNode: Node = this.marker;
+    const keys = values.map((value, index) => this.getKey(value, index));
+    const next = new Map<any, Item>();
+    const seen = new Set<any>();
+    keys.forEach((key, index) => {
+      if (seen.has(key)) keys[index] = Symbol("duplicate-key");
+      seen.add(key);
+      const item = this.items.get(keys[index]);
+      if (item) next.set(keys[index], item);
+    });
 
-    // Build new list in order
+    // Remove any items not reused
+    this.items.forEach((item, key) => {
+      if (!next.has(key)) this.removeItem(item);
+    });
+
+    // Lay out in order; cursor is where the next item has to start
+    const reused = new Set(next.values());
+    let cursor: Node = this.order.find(item => reused.has(item))?.start ?? this.marker;
+    const order: Item[] = [];
+
     values.forEach((value, index) => {
-      const key = this.getKey(value, index);
+      const key = keys[index];
+      let item = next.get(key);
 
-      let part = this.keyMap.get(key);
-      if (!part) part = this.createItemPart(beforeNode);
-
-      part.apply(value);
-      if (key != null) newKeyMap.set(key, part);
-
-      // Move insertion point forward
-      beforeNode = this.getEndNode(part) ?? beforeNode;
-    });
-
-    // Remove any parts not reused
-    this.keyMap.forEach((part, key) => {
-      if (!newKeyMap.has(key)) {
-        part.remove();
+      if (!item) {
+        item = this.createItem(cursor);
+        next.set(key, item);
       }
+      else if (item.start === cursor) {
+        cursor = item.end.nextSibling ?? this.marker;
+      }
+      else {
+        this.moveItem(item, cursor);
+      }
+
+      item.part.apply(value);
+      order.push(item);
     });
 
-    this.keyMap = newKeyMap;
+    this.items = next;
+    this.order = order;
   }
 
-  /** Creates a new `ValuePart` before the given node. */
-  private createItemPart(beforeNode?: Node): Part {
-    const marker = document.createComment("item-marker");
-    this.marker.parentNode?.insertBefore(marker, beforeNode || this.marker);
-    return this.helpers.createPart({ kind: "value", marker });
+  /** Creates a new item (start comment + `ValuePart` on its end comment) before the given node. */
+  private createItem(beforeNode: Node): Item {
+    const start = document.createComment("item-start");
+    const end = document.createComment("item-marker");
+    this.marker.parentNode?.insertBefore(start, beforeNode);
+    this.marker.parentNode?.insertBefore(end, beforeNode);
+    return { start, end, part: this.helpers.createPart({ kind: "value", marker: end }) };
+  }
+
+  /** Moves every node of an item, start to end, before the given node. */
+  private moveItem(item: Item, beforeNode: Node) {
+    const parent = this.marker.parentNode;
+    if (!parent) return;
+    let node: Node | null = item.start;
+    while (node) {
+      const next: Node | null = node === item.end ? null : node.nextSibling;
+      parent.insertBefore(node, beforeNode);
+      node = next;
+    }
+  }
+
+  private removeItem(item: Item) {
+    item.part.remove();
+    item.start.parentNode?.removeChild(item.start);
   }
 
   /** Gets a stable key for a value, falling back to the index. */
   private getKey(value: any, index: number) {
-    if (value?.key) return value.key;
-    return index;
-  }
-
-  /** Tries to find the DOM node immediately after a part for insertion tracking. */
-  private getEndNode(part: Part): Node | null {
-    // If part has a root element or fragment, use its last child as end node
-    const node = (part as any).node || (part as any).instance?.root;
-    if (node instanceof DocumentFragment) {
-      return node.childNodes[node.childNodes.length - 1] ?? null;
+    if (value?.key != null) return value.key;
+    if (value?.__isTemplateRoot && value instanceof Element && value.hasAttribute("key")) {
+      return templateKey(value) ?? index;
     }
-    return node ?? (part as any).marker ?? null;
-    // // This assumes parts always have a `marker` property or similar.
-    // return (part as any).marker ?? null;
+    return index;
   }
 
   /** Removes all list items. */
   clear() {
-    this.keyMap.forEach((part) => part.remove());
-    this.keyMap.clear();
+    this.items.forEach((item) => this.removeItem(item));
+    this.items.clear();
+    this.order = [];
   }
 
   /** Removes all list items and the marker itself. */
@@ -92,4 +125,29 @@ export class ListPart implements Part {
     this.clear();
     this.marker.parentNode?.removeChild(this.marker);
   }
+}
+
+// the root's `key` attribute; when it holds interpolations the clone only has markers,
+// so it's rebuilt from the template strings and values
+function templateKey(root: Element): string | undefined {
+  const attribute = root.getAttribute("key")!;
+  if (!attribute.includes("__marker__")) return attribute;
+
+  const strings = (root as any).__template as TemplateStringsArray | undefined;
+  const values = getValues(root);
+  if (!strings || !values) return undefined;
+
+  const start = strings.findIndex(s => /\skey=["']?$/.test(s));
+  if (start < 0) return undefined;
+
+  const quote = /["']$/.test(strings[start]) ? strings[start].at(-1)! : null;
+  let key = "";
+  for (let i = start; i < values.length; i++) {
+    key += String(values[i]);
+    const after = strings[i + 1] ?? "";
+    const close = quote ? after.indexOf(quote) : after.search(/[\s>]/);
+    if (close >= 0) return key + after.slice(0, close);
+    key += after;
+  }
+  return key;
 }

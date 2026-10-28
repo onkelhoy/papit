@@ -14,13 +14,13 @@ function write(file, content) {
 }
 
 // meta() reads the workspace from the process location, so it runs in its own process
-function meta(cwd) {
+function meta(cwd, print = "") {
     const env = { ...process.env, PWD: cwd };
     delete env.npm_config_local_prefix;
     return spawnSync(process.execPath, [
         "--input-type=module",
         "-e",
-        `const { meta } = await import(${JSON.stringify(BUNDLE)}); await meta();`,
+        `const { meta } = await import(${JSON.stringify(BUNDLE)}); const data = await meta(); ${print}`,
     ], { cwd, env, encoding: "utf-8" });
 }
 
@@ -40,5 +40,22 @@ describe("meta", () => {
     it("accepts workspace packages without a papit field", () => {
         const result = meta(root);
         assert.strictEqual(result.status, 0, result.stderr);
+    });
+
+    it("maps the dependencies of external dependencies, nested versions first", () => {
+        const app = path.join(root, "packages/app");
+        write(path.join(app, "package.json"), { name: "@scope/app", version: "0.0.1", dependencies: { "@other/sidebar": "1.0.0" } });
+        write(path.join(root, "node_modules/@other/sidebar/package.json"), { name: "@other/sidebar", main: "index.js", dependencies: { "@other/treeview": "1.0.0", "@other/popover": "2.0.0" } });
+        write(path.join(root, "node_modules/@other/treeview/package.json"), { name: "@other/treeview", main: "index.js" });
+        write(path.join(root, "node_modules/@other/sidebar/node_modules/@other/popover/package.json"), { name: "@other/popover", main: "nested.js" });
+        write(path.join(root, "node_modules/@other/popover/package.json"), { name: "@other/popover", main: "root.js" });
+
+        const result = meta(app, "console.log(JSON.stringify(data.importmap.imports));");
+        assert.strictEqual(result.status, 0, result.stderr);
+        const imports = JSON.parse(result.stdout.trim().split("\n").at(-1));
+
+        assert.ok(imports["@other/sidebar"]?.endsWith("/node_modules/@other/sidebar/index.js"));
+        assert.ok(imports["@other/treeview"]?.endsWith("/node_modules/@other/treeview/index.js"));
+        assert.ok(imports["@other/popover"]?.endsWith("/node_modules/@other/sidebar/node_modules/@other/popover/nested.js"));
     });
 });

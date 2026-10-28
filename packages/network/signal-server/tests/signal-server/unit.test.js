@@ -305,7 +305,7 @@ describe("media plan", { timeout: 5000 }, () => {
         assert.deepStrictEqual(t.wss.networks.get(network.id).media, media);
     });
 
-    it("hands the plan to the next host in signal.host", async () => {
+    it("drops the network when its host leaves", async () => {
         const t = await setup();
         const a = await t.connect();
         const b = await t.connect();
@@ -315,10 +315,11 @@ describe("media plan", { timeout: 5000 }, () => {
         await a.next(NetworkType.Join);
 
         a.send(SignalType.Leave, { network: network.id });
-        const { network: info } = (await b.next(SignalType.Host)).payload;
-        assert.strictEqual(info.host, b.id);
-        assert.deepStrictEqual(info.media, media);
+        const { networks } = await b.request(SignalType.List, {}, SignalType.Networks);
+        assert.deepStrictEqual(networks, []);
+        assert.strictEqual(t.wss.networks.has(network.id), false);
     });
+
 });
 
 describe("join", { timeout: 5000 }, () => {
@@ -602,37 +603,19 @@ describe("rate limits", { timeout: 5000 }, () => {
 
 describe("leaving", { timeout: 5000 }, () => {
 
-    it("hands the network to the oldest member when the host disconnects", async () => {
+    it("drops the network when the host disconnects", async () => {
         const t = await setup();
         const a = await t.connect();
         const b = await t.connect();
-        const c = await t.connect();
         const network = await a.register();
 
         b.send(SignalType.Join, { network: network.id });
-        await a.next(NetworkType.Join);
-        c.send(SignalType.Join, { network: network.id });
         await a.next(NetworkType.Join);
 
         a.socket.close();
-        const { payload, meta } = await b.next(SignalType.Host);
-
-        assert.strictEqual(meta.sender, SERVER);
-        assert.deepStrictEqual(payload.network, { ...network, host: b.id, size: 2 });
-        assert.deepStrictEqual(t.wss.networks.get(network.id).members, [b.id, c.id]);
-    });
-
-    it("hands the network over when the host sends signal.leave", async () => {
-        const t = await setup();
-        const a = await t.connect();
-        const b = await t.connect();
-        const network = await a.register();
-
-        b.send(SignalType.Join, { network: network.id });
-        await a.next(NetworkType.Join);
-
-        a.send(SignalType.Leave, { network: network.id });
-        assert.strictEqual((await b.next(SignalType.Host)).payload.network.host, b.id);
+        await a.closed;
+        const { networks } = await b.request(SignalType.List, {}, SignalType.Networks);
+        assert.deepStrictEqual(networks, []);
     });
 
     it("shrinks the network when a member leaves", async () => {

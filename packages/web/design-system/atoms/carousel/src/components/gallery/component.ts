@@ -494,6 +494,11 @@ export class CarouselGallery extends CustomElement {
         if (Math.round(offset) === 0) return;
         this._programmatic = true;
         this.carousel.scrollLeft += offset;
+        // an instant scroll can end without a scrollend (WebKit): clear once its scroll event has run,
+        // unless a smooth scroll took over meanwhile
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (this._target === null) this._programmatic = false;
+        }));
 
         this.requestUpdate();
     }

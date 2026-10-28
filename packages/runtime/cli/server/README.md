@@ -86,10 +86,12 @@ Responses carry `X-Cache: HIT` or `MISS`. `/favicon.ico` falls back to the serve
 At startup the server walks the workspace graph from `@papit/information` and builds one import map:
 
 - every workspace package maps its package.json `exports` (import condition) and `main` to the file on disk
-- third-party `dependencies` and `devDependencies` are added the same way from the root `node_modules`, except the build tools (`esbuild`, `typescript`, `chokidar`, `@microsoft/api-extractor`, `playwright`)
+- third-party `dependencies` and `devDependencies` are added the same way, together with their own `dependencies` (transitively, each resolved from the dependent's `node_modules` first, then the root's), except the build tools (`esbuild`, `typescript`, `chokidar`, `@microsoft/api-extractor`, `playwright`)
 - the first mapping for a name wins, and an import map already in the page is merged in, not replaced
 
 So `import "@papit/switch"` in a demo page loads the built `lib/bundle.js` of the workspace package, without a publish or install.
+
+Browsers don't use the import map for CSS, so a served `.css` file has its bare `@import`s (`@import "@papit/theme";`, `@import url("x");`) rewritten to the mapped file. A file next to the stylesheet, and relative, absolute or scheme URLs, are left alone. Anything else is left as is with a warning. The rewrite is exported as `rewriteCssImports(css, resolve)` and `@papit/static` uses it too.
 
 # Live reload
 

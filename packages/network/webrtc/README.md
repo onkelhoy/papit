@@ -94,7 +94,8 @@ class Client extends EventTarget {
 | `protocols` | `string \| string[]` | - | WebSocket sub-protocols |
 | `rtc` | `RTCConfiguration` | - | passed to every `RTCPeerConnection`, e.g. `iceServers` |
 | `topology` | `string \| TopologyConfig` | `"mesh"` | for networks you `create`, e.g. `{ name: "multicast", fanout: 5 }`, see [Topology config](#topology-config). A joined network uses the one it was created with |
-| `keepSocket` | `boolean` | `true` | `false` closes the socket once joined and linked |
+| `recreate` | `boolean` | `true` | a new host without a socket opens one and registers the network again |
+| `keepSocket` | `boolean \| "host"` | `"host"` | `"host"`: only the host keeps its socket, the others close theirs once linked and their handshakes with newcomers go through the host (wrapped in `network.relay`, so the server is unchanged). `false` closes it everywhere, `true` keeps it everywhere |
 | `accept` | `(newcomer, info) => boolean` | accept all | runs on the entry peer; `false` sends `network.reject` |
 | `timeout` | `number` | `15000` | ms before `create`, `list` and `join` reject |
 | `connectTimeout` | `number` | none | ms without a server connection before giving up for good; `ready` rejects and `status` becomes `closed` |
@@ -290,6 +291,8 @@ class Channel extends EventTarget {
     readonly peers: PeerId[];                           // peers with this channel open
     send(peer: PeerId, data: string | Blob | ArrayBuffer | ArrayBufferView): boolean;
     broadcast(data): number;                            // how many peers it went to
+    bufferedAmount(peer: PeerId): number;               // bytes queued, not sent yet
+    drain(peer: PeerId, below?: number): Promise<boolean>; // waits until at most `below` (1 MiB) is queued; false if the channel closes
 }
 ```
 
@@ -401,7 +404,9 @@ connect ──▶ signal.welcome {id} ──▶ create ──▶ signal.register
                           leave: signal.leave + network.leave ──▶ close
 ```
 
-If the socket drops, it reconnects with backoff and resends whatever was queued. The server hands out a new id on every reconnect, so after one the server fallback is gone (an `error` with type `reconnect` says so) until you leave and join again. Peer links keep working.
+If the socket drops, it reconnects with backoff and resends whatever was queued. A new socket can come with a new id from the server. Inside a network, the peer id stays the same and only the socket id changes: messages through the server go wrapped in `network.relay` under the socket id. A host with a new socket id registers the network again. Outside a network (and on `leave()`), the client takes the new id. Peer links keep working.
+
+If the host leaves, every member picks the same successor, the lowest remaining id. When that peer has no socket (`keepSocket: "host"` dropped it), it opens one first. The signal server drops a network as soon as its host leaves, so the new host always registers it again (`recreate`, default true), with the password it was created or joined with (kept in memory). Joins under the new server id are welcomed into the same network.
 
 # Status and cold starts
 
@@ -413,7 +418,7 @@ If the socket drops, it reconnects with backoff and resends whatever was queued.
 | `waking` | the first connection has been failing for more than 3 s (`WAKING_AFTER`), e.g. a free host is booting |
 | `connected` | the server welcomed us |
 | `reconnecting` | a connection dropped, and it's retrying |
-| `closed` | `close()`, `connectTimeout`, or `keepSocket: false` dropped the socket |
+| `closed` | `close()`, `connectTimeout`, or `keepSocket` dropped the socket |
 
 While not connected, `wake` pings `/health` so a sleeping host such as Render's free tier starts booting. See [Deploy on Render](https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server#deploy-on-render). `ready` rejects only on `connectTimeout` or `close()`.
 
@@ -453,10 +458,9 @@ The URL, name, topology and last plan are remembered in `localStorage`. The demo
 - A link created while a `network.media` update is still in flight can end up with different channel ids on its two ends. Leave and rejoin to fix it.
 - Remote streams are detected by track mute and unmute, so browsers that fire these late show streams late.
 - No link pruning: links the topology no longer wants stay open until they close.
-- `keepSocket: false` loses the server fallback, so new peers can't be handshaked with or admitted through you.
+- `keepSocket: false` drops the host's socket too, so nobody can join any more. Use `"host"` (the default).
 - `status` and `wake` only cover the signalling socket. Peer links come and go on their own (`peer`, `peer-left`).
 - Profiles are kept by the host and trusted as sent.
-- A socket reconnect gets a new id from the server (see [Lifecycle](#lifecycle)).
 - Peers trust each other: any member can send any app message, and the host controls the member list.
 
 # License

@@ -37,6 +37,36 @@ export class Channel extends EventTarget {
     return this.media.sendOn(this.label, peer, data);
   }
 
+  /** Bytes queued on that peer's channel and not sent yet; 0 when it isn't open. */
+  bufferedAmount(peer: PeerId) {
+    return this.media.channelOn(this.label, peer)?.bufferedAmount ?? 0;
+  }
+
+  /**
+   * Waits until at most `below` bytes are queued on that peer's channel, for pacing large sends.
+   * Resolves true once drained, false when the channel isn't open or closes first.
+   */
+  drain(peer: PeerId, below = 1024 * 1024): Promise<boolean> {
+    const channel = this.media.channelOn(this.label, peer);
+    if (channel?.readyState !== "open") return Promise.resolve(false);
+    if (channel.bufferedAmount <= below) return Promise.resolve(true);
+
+    return new Promise(resolve => {
+      const done = (drained: boolean) => {
+        channel.removeEventListener("bufferedamountlow", handleLow);
+        channel.removeEventListener("close", handleClose);
+        resolve(drained);
+      };
+      const handleLow = () => {
+        if (channel.bufferedAmount <= below) done(true);
+      };
+      const handleClose = () => done(false);
+      channel.bufferedAmountLowThreshold = below;
+      channel.addEventListener("bufferedamountlow", handleLow);
+      channel.addEventListener("close", handleClose);
+    });
+  }
+
   /** Sends to every directly linked peer with the channel open; returns how many. */
   broadcast(data: ChannelData) {
     let sent = 0;
@@ -240,6 +270,11 @@ export class Media extends Emitter {
    */
   refresh() {
     for (const entry of this.entries.values()) this.applyStreams(entry);
+  }
+
+  /** @internal */
+  channelOn(label: string, peer: PeerId) {
+    return this.entries.get(peer)?.channels.get(label);
   }
 
   /** @internal */

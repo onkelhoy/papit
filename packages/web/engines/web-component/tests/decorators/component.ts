@@ -85,6 +85,8 @@ class Component extends CustomElement {
     @property attributeCase = "attribute";
     @property({ attribute: "attribute-case-2" }) attributeCase2 = "attribute";
     @property({ attribute: false }) attributeCase3 = "attribute";
+    @property({ attribute: false }) deep: any = undefined;
+    @property({ attribute: false, hasChanged: (a: any, b: any) => a !== b }) identity: any = undefined;
 
     @property initialValue = "initial";
     @property({ attribute: "initial-value-2" }) initialValue2 = "initial-property";

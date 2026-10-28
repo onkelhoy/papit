@@ -59,8 +59,21 @@ class EventComponent extends CustomElement {
   }
 }
 
+class KeyedList extends CustomElement {
+  @property({ rerender: true }) items: string[] = ["A", "B", "C"];
+
+  render() {
+    return html`
+      <ul>
+        ${this.items.map((item) => html`<li key="${item}-key">${item}</li>`)}
+      </ul>
+    `
+  }
+}
+
 window.customElements.define("attr-event-inside", EventInsideComponent);
 window.customElements.define("attr-event", EventComponent);
 window.customElements.define("attr-select", SelectComponent);
 window.customElements.define("attr-inside", InsideComponent);
 window.customElements.define("attr-outside", OutsideComponent);
+window.customElements.define("keyed-list", KeyedList);

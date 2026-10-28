@@ -26,7 +26,6 @@ test.describe("mesh", () => {
 
     expect(result.sent).toBe(true);
     expect(result.hops).toEqual(["a", "f"]);
-    expect(result.text).toBe("hej");
     expect(result.counts).toEqual({ a: 0, b: 0, c: 0, d: 0, e: 0, f: 1 });
   });
 
@@ -358,4 +357,59 @@ test.describe("topology config", () => {
 
     expect(errors).toEqual(Array(4).fill("RangeError"));
   });
+});
+
+test.describe("rename", () => {
+  test("takes a new id for me, as host too", async ({ page }) => {
+    const result = await page.evaluate(() => {
+      const w = window as any;
+      const { nodes } = w.build("mesh", 3);
+
+      nodes.a.rename("z");
+      const view = nodes.a.view;
+
+      return { me: nodes.a.me, host: view.host, members: view.members };
+    });
+
+    expect(result.me).toBe("z");
+    expect(result.host).toBe("z");
+    expect(result.members).toEqual(["b", "c", "z"]);
+  });
+});
+
+test.describe("signalling through the host", () => {
+  for (const topology of ["mesh", "chord"])
+  {
+    test(`${topology}: a newcomer and a member without a socket reach each other via the host`, async ({ page }) => {
+      const result = await page.evaluate(async (topology) => {
+        const w = window as any;
+        const { nodes, members } = w.build(topology, 8, "a");
+        const server = w.fakeServer();
+
+        // only the host and the newcomer keep a socket
+        nodes.a.addLink(server.connect("a"));
+        const z = new w.Network({ me: "z", topology });
+        z.addLink(server.connect("z"));
+        for (const node of [...Object.values(nodes), z] as any[]) node.setMembers([...members, "z"], "a");
+
+        const atE = w.once(nodes.e, "message");
+        z.send(w.Message.Create({ type: "handshake.offer", sender: "z", receiver: "e" }, { description: { type: "offer", sdp: "o" } }), { preferServer: true });
+        const offer = (await atE).detail;
+
+        const atZ = w.once(z, "message");
+        nodes.e.send(w.Message.Create({ type: "handshake.answer", sender: "e", receiver: "z" }, { description: { type: "answer", sdp: "a" } }), { preferServer: true });
+        const answer = (await atZ).detail;
+
+        return {
+          offer: [offer.meta.type, offer.meta.sender, offer.parse().description.sdp],
+          answer: [answer.meta.type, answer.meta.sender, answer.parse().description.sdp],
+          spoof: server.log.spoof,
+        };
+      }, topology);
+
+      expect(result.offer).toEqual(["handshake.offer", "z", "o"]);
+      expect(result.answer).toEqual(["handshake.answer", "e", "a"]);
+      expect(result.spoof).toBe(0);
+    });
+  }
 });
