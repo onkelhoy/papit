@@ -58,7 +58,13 @@ Fully non-interactive, from inside a workspace:
 npm create @papit -- --package=node --name=my-tool --description="Does a thing." --agree
 ```
 
-The folder under `packages/` is still picked from a menu.
+Add `--destination=<folder>` to skip the folder menu too.
+
+A new project without a single prompt (`--destination` must be empty or missing; it is never removed):
+
+```bash
+npm create @papit -- --project --name=my-project --description="My things." --destination=./my-project --repository=https://github.com/me/my-project
+```
 
 Outside a papit workspace, it always runs the project runner.
 
@@ -79,7 +85,9 @@ Outside a papit workspace, it always runs the project runner.
 | `--commit` | package, component | Commit the result without asking. |
 | `--install` | package | Run `npm install` without asking. |
 | `--yes` / `--no` | package | Answer the commit and install questions. |
+| `--destination=<path>` | package, project | Package: folder the package goes in (`<path>/<name>`), created if missing, no menu. Project: the project folder itself; no confirms, and it fails if the folder isn't empty. Relative to the current directory. |
 | `--location=<path>` | project | Where to create the project. Default: prompted, then `<path>/<name>`. |
+| `--repository=<url>` | project | Repository for the root `package.json` and the README logo. Default `https://github.com/$USER/<name>`. |
 | `--license=<id>` | project | License for the generated `package.json`s. Default `MIT`. |
 | `--skip-git` | project | Don't `git init` and commit. |
 | `--verbose`, `--debug` | all | Log levels, see [@papit/arguments](https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/arguments). |
@@ -88,7 +96,7 @@ Outside a papit workspace, it always runs the project runner.
 
 ## package
 
-1. Pick or create a folder under `packages/` (`--agree` skips the creation confirm).
+1. Pick or create a folder under `packages/` (`--agree` skips the creation confirm), unless `--destination` names it.
 2. Pick a template, unless `--package=<template>` or `--type` names one.
 3. For a web component, settle the html prefix. When the root has none, it offers to save yours as the root's `papit.htmlprefix`.
 4. Ask for name and description. The name must not already exist in the workspace (`<scope>/<name>`).
@@ -109,7 +117,7 @@ The first component of a new package lands directly in `src/` and in `views/expe
 
 ## project
 
-Creates a new papit monorepo from the [project template](#project-template): prompts for name, description and location, asks before replacing an existing folder, copies the template, then `git init`, commits (`init: <name> initialized`) and runs `npm install`. The root package is named `@<name>/root`.
+Creates a new papit monorepo from the [project template](#project-template): prompts for name, description and location, asks before replacing an existing folder (with `--destination`: no prompts, and a non-empty folder is an error), copies the template, renames its `gitignore` to `.gitignore`, then `git init`, commits (`init: <name> initialized`) and runs `npm install`. The root package is named `@<name>/root`, with `repository.url` set from `--repository`.
 
 ## showcase
 
@@ -182,7 +190,7 @@ One per package type, each filled in with the component's name:
 
 # Project template
 
-A root `package.json` with npm workspaces (`packages/**/*`, excluding `asset/` folders) and these scripts:
+A root `package.json` with npm workspaces (`packages/**/*`, excluding `asset/` and `dist/` folders) and these scripts:
 
 | Script | Runs |
 | --- | --- |
@@ -196,7 +204,7 @@ A root `package.json` with npm workspaces (`packages/**/*`, excluding `asset/` f
 
 devDependencies: `@papit/build`, `@papit/bundle-js`, `@papit/bundle-ts`, `@papit/server`, `@papit/create`, `@papit/version`, `@papit/arguments`, `@papit/terminal`, `@papit/information`, `@papit/analyse`, `@papit/react`, `esbuild` and `typescript`. A project that uses `generate:react` adds `react` and `@types/react` as root devDependencies itself.
 
-Also included: `.gitignore` (ignores `packages/**/lib/` and the generated `packages/**/analyse.json`), GitHub workflows for pull requests and publishing, `.vscode` settings, `.nvmrc`, `bin/` helpers and an example custom runner in `bin/runners/example-runner/`.
+Also included: `.gitignore` (ignores `packages/**/lib/`, `packages/**/dist/` and the generated `packages/**/analyse.json`; shipped as `gitignore` because npm never publishes `.gitignore` files), GitHub workflows for pull requests and publishing, `.vscode` settings, `.nvmrc`, `bin/` helpers and an example custom runner in `bin/runners/example-runner/`.
 
 # Template variables
 
@@ -212,9 +220,26 @@ Replaced in every copied file.
 | `VARIABLE_DESCRIPTION` | ✓ | | ✓ | The description. |
 | `VARIABLE_LAYER_FOLDER` | ✓ | | | Name of the folder the package goes in, e.g. `atoms`. |
 | `VARIABLE_LOCAL_DESTINATION` | ✓ | | | Package path from the workspace root. |
-| `VARIABLE_GITHUB_REPO` | ✓ | | | Root `repository.url` without `git+` and `.git`. |
+| `VARIABLE_GITHUB_REPO` | ✓ | | ✓ | Root `repository.url` without `git+` and `.git`. Project: `--repository`. |
+| `VARIABLE_LOGO` | ✓ | | ✓ | `asset/logo.svg` of that repository, see [getLogoURL](#getlogourl). |
 | `VARIABLE_PROJECTLICENSE` | ✓ | | ✓ | Root `license` (default `MIT`). Project: `--license`. |
 | `VARIABLE_USER` | ✓ | | ✓ | `$USER`, prompted when unset. |
+
+# API
+
+The CLI is the main surface. One helper is exported:
+
+## getLogoURL
+
+```ts
+getLogoURL(repository: string): string
+```
+
+Logo URL for a repository URL. GitHub (`git+https://github.com/acc/repo.git`, `https://github.com/acc/repo`, `git@github.com:acc/repo.git`) gives `https://raw.githubusercontent.com/acc/repo/refs/heads/main/asset/logo.svg`; other hosts give `<repo>/blob/main/asset/logo.svg`.
+
+```js
+import { getLogoURL } from "@papit/create";
+```
 
 # License
 

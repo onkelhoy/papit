@@ -75,7 +75,7 @@ export async function meta() {
     {
         for (const node of batch) 
         {
-            if (node.packageJSON.papit.type === "theme")
+            if (node.packageJSON.papit?.type === "theme")
             {
                 const output = node.entrypoints.entries.theme?.import?.output ?? node.entrypoints.entries.bundle?.import?.output;
                 if (output)
@@ -90,7 +90,7 @@ export async function meta() {
                 extractImportmap(node, importmap, importmapFolder);
             }
 
-            if (!Arguments.has("include-node") && node.packageJSON.papit.type === "node") continue;
+            if (!Arguments.has("include-node") && node.packageJSON.papit?.type === "node") continue;
 
             await extractAssets(
                 node.location,

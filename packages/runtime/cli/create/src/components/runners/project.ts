@@ -3,7 +3,7 @@ import fs from "node:fs";
 
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
-import { copyFolder } from "../util";
+import { copyFolder, getLogoURL } from "../util";
 
 export async function projectRunner(createPackageLocation: string) {
     Terminal.write("Project Creation\n")
@@ -23,7 +23,18 @@ export async function projectRunner(createPackageLocation: string) {
         description = ans.input;
     }
 
-    let location = Arguments.string("location");
+    const repository = (Arguments.string("repository") ?? `https://github.com/${process.env.USER}/${name}`).replace(/\.git$/, '').replace(/^git\+/, '');
+
+    // --destination: non-interactive, never removes anything
+    const destinationArg = Arguments.string("destination");
+    const destination = destinationArg !== undefined ? path.resolve(process.cwd(), destinationArg) : undefined;
+    if (destination !== undefined && fs.existsSync(destination) && fs.readdirSync(destination).length > 0)
+    {
+        Terminal.error(`destination is not empty [${destination}]`);
+        process.exit(1);
+    }
+
+    let location = destination ?? Arguments.string("location");
     if (location === undefined)
     {
         const answer = await Terminal.prompt(process.cwd(), true, process.cwd());
@@ -34,7 +45,7 @@ export async function projectRunner(createPackageLocation: string) {
 
     Terminal.createSession();
     await Terminal.sessionBlock(async () => {
-        if (!fs.existsSync(location)) return;
+        if (destination !== undefined || !fs.existsSync(location)) return;
 
         const canremove = await Terminal.confirm(`confirm to remove it [${location}]`);
         if (canremove)
@@ -48,7 +59,7 @@ export async function projectRunner(createPackageLocation: string) {
         }
     });
 
-    const confirmcreatinglocation = await Terminal.confirm("confirm location" + ` [${Terminal.yellow(location)}]`, true);
+    const confirmcreatinglocation = destination !== undefined || await Terminal.confirm("confirm location" + ` [${Terminal.yellow(location)}]`, true);
     if (!confirmcreatinglocation) 
     {
 
@@ -107,10 +118,13 @@ export async function projectRunner(createPackageLocation: string) {
             .replace(/VARIABLE_NAME/g, `@${name}/root`)
             .replace(/VARIABLE_DESCRIPTION/g, description)
             .replace(/VARIABLE_PROJECTLICENSE/g, license || "MIT")
+            .replace(/VARIABLE_LOGO/g, getLogoURL(repository))
+            .replace(/VARIABLE_GITHUB_REPO/g, repository)
             .replace(/VARIABLE_USER/g, process.env.USER ?? "anonymous");
 
         return final;
     });
+
 
     if (initgit)
     {

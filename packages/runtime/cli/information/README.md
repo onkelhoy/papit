@@ -70,12 +70,12 @@ class PackageGraph {
 }
 ```
 
-The workspace root is the nearest folder upwards from `process.cwd()` whose `package.json` has `workspaces`. Every `package.json` under its `packages/` folder becomes a node, except those in an `asset/` folder or with `papit.skip`. Edges come from dependencies that share the root's scope.
+The workspace root is the nearest folder upwards from `process.cwd()` whose `package.json` has `workspaces`. Every `package.json` under its `packages/` folder becomes a node, except those in an `asset/`, `dist/`, `node_modules/` or `.temp/` folder or with `papit.skip`. Edges come from dependencies that share the root's scope.
 
 | Member | Description |
 | --- | --- |
 | `nodes` | every package, the root included |
-| `ERROR` | `true` if building the graph threw (the error is logged) |
+| `ERROR` | `true` if there is no root `package.json`, or building the graph threw (only the latter is logged) |
 | `search` | first node whose location ends with (`"end"`, default) or is a prefix of (`"start"`) `location` |
 | `getAncestors` | the packages `name` depends on, transitively. `typeFilter` limits the edge kinds: `dependencies`, `peerDependencies`, `devDependencies` (default all) |
 | `getDescendants` | the packages that depend on `name`, transitively |

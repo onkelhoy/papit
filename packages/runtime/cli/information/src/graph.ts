@@ -36,6 +36,12 @@ export class Graph {
         {
             const leftovers = new Map<string, string[]>();
             const rootPATH = findWorkspaceRoot(location);
+            if (!fs.existsSync(path.join(rootPATH, "package.json")))
+            {
+                // not inside a project (e.g. bootstrapping one with create)
+                this.ERROR = true;
+                return;
+            }
             const rootJSON = JSON.parse(fs.readFileSync(path.join(rootPATH, "package.json"), { encoding: "utf-8" }));
             this.scope = rootJSON.name.split("/").at(0);
 
@@ -46,6 +52,7 @@ export class Graph {
                 .filter(loc => {
                     if (!loc.endsWith("package.json")) return false;
                     if (/[/\\]asset[/\\]/i.test(loc)) return false;
+                    if (/(^|[/\\])(node_modules|dist|\.temp)[/\\]/i.test(loc)) return false;
                     return true;
                 })
                 .forEach((localFilePath) => {

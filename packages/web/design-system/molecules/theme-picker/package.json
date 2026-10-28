@@ -1,107 +1,107 @@
 {
-    "name": "@papit/theme-picker",
-    "description": "Button and menu for switching a page between light, dark and system colour schemes. Sets data-theme on a target element and can remember the choice in local or session storage.",
-    "keywords": [
-        "papit",
-        "web-component",
-        "typescript",
-        "theme-picker",
-        "theme",
-        "dark-mode",
-        "color-scheme"
-    ],
-    "version": "0.0.12",
-    "scripts": {
-        "build": "npx @papit/build --error",
-        "analyse": "npx @papit/analyse",
-        "generate:react": "npx @papit/react",
-        "watch": "tsc -w",
-        "start": "npx @papit/server --info --live",
-        "test": "npx playwright test -c tests/playwright.config.ts $@",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit --component",
-        "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
-        "test:chrome": "npm test -- --project=chromium"
+  "name": "@papit/theme-picker",
+  "description": "Button and menu for switching a page between light, dark and system colour schemes. Sets data-theme on a target element and can remember the choice in local or session storage.",
+  "keywords": [
+    "papit",
+    "web-component",
+    "typescript",
+    "theme-picker",
+    "theme",
+    "dark-mode",
+    "color-scheme"
+  ],
+  "version": "0.0.12",
+  "scripts": {
+    "build": "npx @papit/build --error",
+    "analyse": "npx @papit/analyse",
+    "generate:react": "npx @papit/react",
+    "watch": "tsc -w",
+    "start": "npx @papit/server --info --live",
+    "test": "npx playwright test -c tests/playwright.config.ts $@",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit --component",
+    "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+    "test:chrome": "npm test -- --project=chromium"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
     },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        },
-        "./react": {
-            "import": "./lib/react-wrapper.js",
-            "types": "./lib/react-wrapper.d.ts"
-        }
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/molecules/theme-picker",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/web/design-system/molecules/theme-picker"
-    },
-    "sideEffects": true,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@papit/button": "0.1.7",
-        "@papit/icon": "0.1.10",
-        "@papit/menu": "0.0.12",
-        "@papit/tooltip": "0.0.12",
-        "@papit/web-component": "0.0.11"
-    },
-    "peerDependencies": {
-        "react": "^19"
-    },
-    "peerDependenciesMeta": {
-        "react": {
-            "optional": true
-        }
-    },
-    "devDependencies": {
-        "@papit/theme": "0.0.3",
-        "@papit/translator": "0.1.1",
-        "@papit/codeblock": "0.1.14",
-        "@playwright/test": "1.64.1",
-        "playwright": "1.64.1",
-        "@papit/router": "0.1.7",
-        "@papit/tabs": "0.1.7",
-        "typescript": "5.9.3"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "web-component",
-        "main": "theme-picker",
-        "htmlprefix": "pap",
-        "components": {
-            "theme-picker": {
-                "className": "ThemePicker",
-                "htmlprefix": "pap"
-            }
-        }
-    },
-    "remoteVersion": "0.0.12"
+    "./react": {
+      "import": "./lib/react-wrapper.js",
+      "types": "./lib/react-wrapper.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/molecules/theme-picker",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/web/design-system/molecules/theme-picker"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/button": "0.1.7",
+    "@papit/icon": "0.1.10",
+    "@papit/menu": "0.0.12",
+    "@papit/tooltip": "0.0.12",
+    "@papit/web-component": "0.0.11"
+  },
+  "peerDependencies": {
+    "react": "^19"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@papit/theme": "0.0.3",
+    "@papit/translator": "0.1.1",
+    "@papit/codeblock": "0.1.14",
+    "@playwright/test": "1.64.1",
+    "playwright": "1.64.1",
+    "@papit/router": "0.1.7",
+    "@papit/tabs": "0.1.7",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "web-component",
+    "main": "theme-picker",
+    "htmlprefix": "pap",
+    "components": {
+      "theme-picker": {
+        "className": "ThemePicker",
+        "htmlprefix": "pap"
+      }
+    }
+  },
+  "remoteVersion": "0.0.12"
 }

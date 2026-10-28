@@ -6,7 +6,7 @@ import { Information, LocalPackage, PackageGraph } from "@papit/information";
 import { Arguments } from "@papit/arguments";
 
 import { componentRunner } from "./component";
-import { copyFolder, getFolders, selectFolder } from "components/util";
+import { copyFolder, getFolders, getLogoURL, selectFolder } from "components/util";
 import { getName } from "components/util/name";
 
 export async function packageRunner(
@@ -23,7 +23,17 @@ export async function packageRunner(
         process.exit(1);
     }
 
-    const layer = await selectFolder();
+    let layer: string;
+    const destinationArg = Arguments.string("destination");
+    if (destinationArg !== undefined)
+    {
+        layer = path.resolve(process.cwd(), destinationArg);
+        fs.mkdirSync(layer, { recursive: true });
+    }
+    else 
+    {
+        layer = await selectFolder();
+    }
 
     const templateFolders = getFolders(path.join(createPackageLocation, "asset", "package-templates"));
     const localRunnerSet = new Set<string>();
@@ -76,7 +86,7 @@ export async function packageRunner(
                     const setasroot = await Terminal.confirm(`you wish to set "${answer}" as the default html-prefix?`);
                     if (setasroot)
                     {
-                        rootPackage.papit.htmlprefix = answer;
+                        rootPackage.papit = { ...rootPackage.papit, htmlprefix: answer };
                         fs.writeFileSync(path.join(Information.root.location, "package.json"), JSON.stringify(rootPackage, null, 2), { encoding: "utf-8" });
                     }
                 }
@@ -165,6 +175,7 @@ export async function packageRunner(
             .replace(/VARIABLE_DESCRIPTION/g, description)
             .replace(/VARIABLE_LAYER_FOLDER/g, layerBasename)
             .replace(/VARIABLE_PROJECTLICENSE/g, rootPackage.license || "MIT")
+            .replace(/VARIABLE_LOGO/g, getLogoURL(repository))
             .replace(/VARIABLE_GITHUB_REPO/g, repository)
             .replace(/VARIABLE_LOCAL_DESTINATION/g, toUnixPath(path.join(localFolder, nameInfo.name)))
             .replace(/VARIABLE_CLASS_NAME/g, nameInfo.className)

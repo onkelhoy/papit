@@ -2,7 +2,7 @@
 
 VARIABLE_DESCRIPTION
 
-![Logo](VARIABLE_GITHUB_REPO/blob/main/asset/logo.svg)
+![Logo](VARIABLE_LOGO)
 
 ---
 

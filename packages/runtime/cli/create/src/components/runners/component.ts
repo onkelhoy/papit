@@ -88,7 +88,7 @@ export async function componentRunner(
         }
     }
 
-    let htmlprefix = Arguments.string("html-prefix") ?? packageInfo?.htmlprefix ?? Information.package.packageJSON.papit.htmlprefix ?? Information.root.packageJSON.papit.htmlprefix;
+    let htmlprefix = Arguments.string("html-prefix") ?? packageInfo?.htmlprefix ?? Information.package.packageJSON.papit?.htmlprefix ?? Information.root.packageJSON.papit?.htmlprefix;
 
     if (htmlprefix?.trim() === "") htmlprefix = undefined;
 
