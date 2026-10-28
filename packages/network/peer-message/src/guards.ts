@@ -1,6 +1,6 @@
 import { Message } from "./component";
-import { MAX_HOPS, MAX_ID_LENGTH, MAX_MEDIA_ENTRIES, MAX_MESSAGE_BYTES, MAX_PROFILE_BYTES, MAX_TTL, RESERVED_CHANNEL_PREFIX, RESERVED_PREFIXES } from "./constants";
-import { HandshakeType, MediaPlan, Meta, Profile, NetworkInfo, NetworkType, SignalType } from "./types";
+import { MAX_HOPS, MAX_ID_LENGTH, MAX_MEDIA_ENTRIES, MAX_MESSAGE_BYTES, MAX_PROFILE_BYTES, MAX_TOPOLOGY_BYTES, MAX_TTL, RESERVED_CHANNEL_PREFIX, RESERVED_PREFIXES } from "./constants";
+import { HandshakeType, MediaPlan, Meta, Profile, NetworkInfo, TopologyConfig, NetworkType, SignalType } from "./types";
 
 type Obj = Record<string, unknown>;
 
@@ -14,17 +14,29 @@ const optional = (x: unknown, check: (x: unknown) => boolean) => x === undefined
 
 const encoder = new TextEncoder();
 
-/** Checks an untrusted profile: a JSON object of at most `MAX_PROFILE_BYTES` UTF-8 bytes. */
-export function isProfile(x: unknown): x is Profile {
-    if (!isObject(x)) return false;
+const fits = (x: unknown, maxBytes: number) => {
     try
     {
-        return encoder.encode(JSON.stringify(x)).byteLength <= MAX_PROFILE_BYTES;
+        return encoder.encode(JSON.stringify(x)).byteLength <= maxBytes;
     }
     catch
     {
         return false;
     }
+};
+
+/** Checks an untrusted profile: a JSON object of at most `MAX_PROFILE_BYTES` UTF-8 bytes. */
+export function isProfile(x: unknown): x is Profile {
+    return isObject(x) && fits(x, MAX_PROFILE_BYTES);
+}
+
+/**
+ * Checks an untrusted topology: a name of 1..`MAX_ID_LENGTH` characters, or a JSON object with such a
+ * `name` of at most `MAX_TOPOLOGY_BYTES` UTF-8 bytes.
+ */
+export function isTopology(x: unknown): x is string | TopologyConfig {
+    if (isString(x)) return isId(x);
+    return isObject(x) && isId(x.name) && fits(x, MAX_TOPOLOGY_BYTES);
 }
 
 const isProfiles = (x: unknown) => isObject(x) && Object.entries(x).every(([id, profile]) => isId(id) && isProfile(profile));
@@ -65,7 +77,7 @@ function isNetworkInfo(x: unknown): x is NetworkInfo {
         && isId(x.id)
         && isString(x.name)
         && isId(x.host)
-        && isString(x.topology)
+        && isTopology(x.topology)
         && isBoolean(x.private)
         && Number.isInteger(x.size) && (x.size as number) >= 0
         && optional(x.meta, isObject)
@@ -85,7 +97,7 @@ const isCandidate = (x: unknown) => isObject(x)
     && optional(x.usernameFragment, v => v === null || isString(v));
 
 const payloads = new Map<string, (p: Obj) => boolean>([
-    [SignalType.Register, p => isString(p.name) && isString(p.topology) && optional(p.private, isBoolean) && optional(p.password, isString) && optional(p.meta, isObject) && optional(p.media, isMediaPlan)],
+    [SignalType.Register, p => isString(p.name) && isTopology(p.topology) && optional(p.private, isBoolean) && optional(p.password, isString) && optional(p.meta, isObject) && optional(p.media, isMediaPlan)],
     [SignalType.Update, p => isId(p.network) && optional(p.name, isString) && optional(p.private, isBoolean) && optional(p.password, isString) && optional(p.meta, isObject) && optional(p.media, isMediaPlan)],
     [SignalType.Unregister, p => isId(p.network)],
     [SignalType.List, () => true],

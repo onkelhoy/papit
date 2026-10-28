@@ -1,80 +1,80 @@
 {
-    "name": "@papit/meta-json",
-    "description": "Binary container that packs a JSON metadata object and a payload into one buffer. Reach for it when a router or relay needs to read message metadata without parsing the payload.",
-    "keywords": [
-        "papit",
-        "meta-json",
-        "binary",
-        "codec",
-        "serialization",
-        "json",
-        "message",
-        "framing",
-        "webrtc"
-    ],
-    "version": "0.0.1",
-    "scripts": {
-        "build": "npx @papit/build -- --error --ancestors",
-        "watch": "tsc -w",
-        "start": "npm run build -- --dev && node ./lib/bundle.js",
-        "test": "node --test tests/**/*.test.js",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit -- --component"
-    },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        }
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/meta-json",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/network/meta-json"
-    },
-    "sideEffects": true,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {},
-    "devDependencies": {
-        "@types/node": "22.10.2",
-        "typescript": "5.9.3"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "node",
-        "main": "meta-json",
-        "components": {
-            "meta-json": {
-                "className": "Meta-json",
-                "htmlprefix": "pap"
-            }
-        }
-    },
-    "remoteVersion": "0.0.1"
+  "name": "@papit/meta-json",
+  "description": "Binary container that packs a JSON metadata object and a payload into one buffer. Reach for it when a router or relay needs to read message metadata without parsing the payload.",
+  "keywords": [
+    "papit",
+    "meta-json",
+    "binary",
+    "codec",
+    "serialization",
+    "json",
+    "message",
+    "framing",
+    "webrtc"
+  ],
+  "version": "0.0.2",
+  "scripts": {
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "test": "node --test tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/meta-json",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/network/meta-json"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "meta-json",
+    "components": {
+      "meta-json": {
+        "className": "Meta-json",
+        "htmlprefix": "pap"
+      }
+    }
+  },
+  "remoteVersion": "0.0.1"
 }

@@ -1,6 +1,6 @@
 # @papit/webrtc
 
-Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord or your own topology, with plan-driven data channels and media streams.
+Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord, multicast tree or your own topology, with plan-driven data channels and media streams.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -93,7 +93,7 @@ class Client extends EventTarget {
 | `url` | `string \| URL` | - | the signal server |
 | `protocols` | `string \| string[]` | - | WebSocket sub-protocols |
 | `rtc` | `RTCConfiguration` | - | passed to every `RTCPeerConnection`, e.g. `iceServers` |
-| `topology` | `string \| Topology` | `"mesh"` | for networks you `create`. A joined network uses the topology it names; a custom one is used when its `name` matches |
+| `topology` | `string \| TopologyConfig` | `"mesh"` | for networks you `create`, e.g. `{ name: "multicast", fanout: 5 }`, see [Topology config](#topology-config). A joined network uses the one it was created with |
 | `keepSocket` | `boolean` | `true` | `false` closes the socket once joined and linked |
 | `accept` | `(newcomer, info) => boolean` | accept all | runs on the entry peer; `false` sends `network.reject` |
 | `timeout` | `number` | `15000` | ms before `create`, `list` and `join` reject |
@@ -130,7 +130,7 @@ The transport-agnostic router under `Client`. Use it on its own with your own li
 
 ```ts
 class Network extends EventTarget {
-    constructor(options: { me: PeerId; info?: NetworkInfo; topology?: Topology | string });
+    constructor(options: { me: PeerId; info?: NetworkInfo; topology?: Topology | string | TopologyConfig });
     readonly me: PeerId;
     info?: NetworkInfo;
     topology: Topology;
@@ -187,12 +187,55 @@ interface Topology {
     route(view: View, meta: Meta): PeerId[];
     filter?(view: View, meta: Meta): RelayAction | undefined;
     media?(view: View, peer: PeerId, plan: MediaPlan): MediaPlan;
+    relay?(view: View, name: string): PeerId | null;
 }
 
-const topologies: Record<string, Topology>; // { mesh, star, chord }
+type TopologyFactory = (config: TopologyConfig) => Topology;
+const topologies: Record<string, TopologyFactory>; // { mesh, star, chord, multicast }
+function registerTopology(name: string, factory: TopologyFactory): void;
+function resolveTopology(topology: string | TopologyConfig, onError?: (error: Error) => void): Topology;
 ```
 
-`neighbors` gives the direct links `id` should hold. `route` gives next hops drawn from `view.links` (`[]` means no peer route). `filter` runs on every received message before `relay`: `"drop"` or `"deliver"` replace relay's decision, while `"forward"` and `"both"` still go through relay's loop and `ttl` checks. `media` narrows the plan per direct link, see [Media](#media).
+`neighbors` gives the direct links `id` should hold. `route` gives next hops drawn from `view.links` (`[]` means no peer route). `filter` runs on every received message before `relay`: `"drop"` or `"deliver"` replace relay's decision, while `"forward"` and `"both"` still go through relay's loop and `ttl` checks. `media` narrows the plan per direct link, see [Media](#media). `relay` names the peer whose incoming stream `name` this node forwards when it has no capture of its own (`null` or omitted: nothing is relayed), see [Relaying streams](#relaying-streams).
+
+## Topology config
+
+A network's topology is a name or a config, `string | { name, ...options }` (`TopologyConfig` from peer-message, at most 1 KB as JSON). It's stored in `NetworkInfo.topology`, so joiners get it with the network. Only the config is shared, never code: each peer builds the topology from its own `topologies` registry.
+
+```js
+new Client({ url, topology: "mesh" });
+new Client({ url, topology: { name: "multicast", fanout: 5 } });
+```
+
+`resolveTopology` looks the name up in `topologies` and calls its factory with the config. An unregistered name, or a factory that throws on the config (`fanout: -1`, say), falls back to `mesh`, and `Client` emits `error` with type `topology`. The check is deterministic, so every peer falls back the same way.
+
+**Breaking:** the `topology` option no longer takes a `Topology` object, since an object can't be shared. Register it with `registerTopology` and pass its name.
+
+## registerTopology
+
+Adds a custom topology factory. Built-in names (`mesh`, `star`, `chord`, `multicast`) throw `RangeError`. Every peer must register the same factory under the same name before it creates or joins:
+
+```js
+import { Client, registerTopology, resolveTopology } from "@papit/webrtc";
+
+registerTopology("quiet", (config) => ({
+    ...resolveTopology("mesh"),
+    name: "quiet",
+    filter: (view, meta) => config.drop?.includes(meta.type) ? "drop" : undefined,
+}));
+const client = new Client({ url: "ws://localhost:3000", topology: { name: "quiet", drop: ["spam"] } });
+```
+
+## multicastTopology
+
+```ts
+function multicastTopology(options?: MulticastOptions): Topology; // named "multicast"
+const multicast: Topology;                                         // multicastTopology() with fanout 3
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `fanout` | `number` | `3` | children per node. Throws `RangeError` unless an integer >= 1 |
 
 # Media
 
@@ -266,14 +309,31 @@ Channels are direct only. A `Channel` reaches the peers you have a link to, and 
 A topology can narrow what goes over one link:
 
 ```js
-const stage = {
-    ...topologies.star,
+registerTopology("stage", () => ({
+    ...star,
     name: "stage",
     media: (view, peer, plan) => view.me === view.host ? plan : { ...plan, streams: {} }, // only the hub sends
-};
+}));
 ```
 
 Only `streams` are narrowed. Channels always follow the full plan, because both ends have to agree on the channel ids. A stream left out for a link isn't sent on it: its slot stays `recvonly`, or ends up inactive if both sides leave it out.
+
+## Relaying streams
+
+When a topology has `relay`, a node with no capture of its own for stream `name` forwards the remote `name` it receives from `relay(view, name)` on every link that [per-link narrowing](#per-link-narrowing) allows. A relayed track is never sent back to the peer it came from. Relays are re-applied whenever the upstream stream starts or ends, a link closes, or the members or host change. `multicast` relays from the parent, so the host's capture flows down the tree:
+
+```js
+const client = new Client({ url: "ws://localhost:3000", topology: "multicast" });
+await client.create({ name: "stage", media: { streams: { camera: { kind: "video" } } } });
+await client.media.start("camera"); // every member receives it, through at most log_k(n) relays
+```
+
+Limits:
+
+- **One source.** The tree is rooted at the host, so only the host's captures reach everyone. A member that captures the same stream sends its own to its subtree instead of relaying.
+- **Re-encoding.** Every hop decodes and re-encodes the track, so latency grows and quality drops a little with depth.
+- **Streams only.** Plan channels stay direct; nothing on a `Channel` is relayed.
+- **Churn.** Members are ordered by sorted id, so a join or leave can move nodes in the tree and swap their parents and links.
 
 ## Mid-session changes
 
@@ -291,17 +351,13 @@ Only `streams` are narrowed. Channels always follow the full plan, because both 
 | `mesh` | every other member | the receiver if linked | every link not in `hops` |
 | `star` | hub (`host`): everyone. Leaf: the hub | leaf: the hub. Hub: the receiver if linked | leaf: the hub. Hub: every link not in `hops` |
 | `chord` | predecessor, successor, and `successor(hash + 2^i)` for i = 0..31 | the receiver if linked, else the closest preceding link on the ring, else the successor | every link not in `hops` |
+| `multicast` | a `fanout`-ary tree rooted at the host: its parent and children | the receiver if linked, else the child above it in the tree, else the parent | parent and children not in `hops` |
 
 Chord hashes ids with FNV-1a onto a 2^32 ring (`fnv1a` is exported), so lookups take O(log n) hops.
 
-A custom topology, here a mesh that drops `"spam"`. Every peer has to use it, so pass it to each `Client` with the same `name`:
+Multicast orders the host first, then the other members by sorted id. Node `i > 0` has parent `⌊(i - 1) / k⌋` and children `k·i + 1 .. k·i + k`. Streams go to children only, and each node relays its parent's streams, so no node uploads more than `fanout` copies. For another fanout, create with `{ name: "multicast", fanout }`.
 
-```js
-import { Client, topologies } from "@papit/webrtc";
-
-const quiet = { ...topologies.mesh, name: "quiet", filter: (view, meta) => meta.type === "spam" ? "drop" : undefined };
-const client = new Client({ url: "ws://localhost:3000", topology: quiet });
-```
+For your own topology, see [registerTopology](#registertopology).
 
 # Routing
 
@@ -376,7 +432,7 @@ npm start
 Start the signal server first. `npm start` also tries port 3000 and moves on to the next free one. Then open `/views/demo/` on the port it prints, in two or more tabs or browsers.
 
 - **Connection:** the server URL (`wss://<app>.onrender.com` for a deployed one), your display name (your profile), and the STUN toggle, which is on by default and needed across networks. A live badge shows *connecting*, *waking up server…*, *connected* or *reconnecting*.
-- **Create:** the name, password, private flag and topology, plus a media plan editor.
+- **Create:** the name, password, private flag and topology (with a fanout for multicast), plus a media plan editor.
   - Channel rows have a label, ordered, and reliable, `maxRetransmits` or `maxPacketLifeTime`. The `_` rule is checked as you type.
   - Stream rows have a name, a kind, and *screen*, which captures with `getDisplayMedia`.
   - Presets: *Chat*, *Video call*, *Game* and *Screen share*.
@@ -393,7 +449,7 @@ The URL, name, topology and last plan are remembered in `localStorage`. The demo
 
 # Known limits
 
-- Media and plan channels are direct only, never relayed. In a star, leaves see only the hub's streams. In a chord, you see only your fingers.
+- Plan channels are direct only. Streams are relayed only by a topology with `relay` (`multicast`): in a star, leaves see only the hub's streams, and in a chord you see only your fingers.
 - A link created while a `network.media` update is still in flight can end up with different channel ids on its two ends. Leave and rejoin to fix it.
 - Remote streams are detected by track mute and unmute, so browsers that fire these late show streams late.
 - No link pruning: links the topology no longer wants stay open until they close.

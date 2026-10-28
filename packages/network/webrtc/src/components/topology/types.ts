@@ -1,4 +1,4 @@
-import type { MediaPlan, Meta, PeerId, RelayAction } from "@papit/peer-message";
+import type { MediaPlan, Meta, PeerId, RelayAction, TopologyConfig } from "@papit/peer-message";
 
 /** What a topology sees of a node. `members` is sorted and includes `me`; `links` are the open direct links. */
 export type View = {
@@ -29,4 +29,12 @@ export interface Topology {
    * on this link (its transceiver goes `recvonly`). Defaults to the full plan.
    */
   media?(view: View, peer: PeerId, plan: MediaPlan): MediaPlan;
+  /**
+   * Optional: the peer whose incoming stream `name` this node forwards on its links when it has no
+   * capture of its own. null or omitted: nothing is relayed.
+   */
+  relay?(view: View, name: string): PeerId | null;
 }
+
+/** Builds a topology from its shared config. Throw to reject the config; the caller falls back to `mesh`. */
+export type TopologyFactory = (config: TopologyConfig) => Topology;

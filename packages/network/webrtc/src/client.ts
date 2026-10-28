@@ -13,6 +13,7 @@ import {
   Profile,
   SERVER,
   SignalType,
+  TopologyConfig,
 } from "@papit/peer-message";
 
 import { Emitter } from "./emitter";
@@ -21,7 +22,7 @@ import { Network } from "./components/network";
 import type { Offer } from "./components/handshake";
 import { PeerLink } from "./components/peer";
 import { SocketLink } from "./components/socket";
-import { mesh, topologies, Topology } from "./components/topology";
+import { resolveTopology } from "./components/topology";
 
 /** How long `create`, `list` and `join` wait for the server or the entry peer. */
 export const REQUEST_TIMEOUT = 15_000;
@@ -46,8 +47,11 @@ export type ClientOptions = {
   protocols?: string | string[];
   /** Passed to every `RTCPeerConnection`, e.g. `{ iceServers }`. */
   rtc?: RTCConfiguration;
-  /** Topology for networks you `create`, and the implementation used when a joined network names it. Default `"mesh"`. */
-  topology?: string | Topology;
+  /**
+   * Topology for networks you `create`: a registered name or a config, e.g. `{ name: "multicast", fanout: 5 }`.
+   * Joined networks use the one they were created with. Default `"mesh"`.
+   */
+  topology?: string | TopologyConfig;
   /** Keep the signalling socket once joined and linked. False drops it, and with it the server fallback. Default true. */
   keepSocket?: boolean;
   /** Called on the entry peer for each newcomer; false rejects them. Default: accept everyone. */
@@ -221,7 +225,7 @@ export class Client extends Emitter {
 
     const network: NetworkInfo = await this.request(
       SignalType.Register,
-      { ...options, topology: this.topologyName() },
+      { ...options, topology: this.options.topology ?? "mesh" },
       message => message.meta.type === SignalType.Registered ? (message.payload as PayloadMap[SignalType.Registered]).network : undefined,
     );
 
@@ -380,7 +384,7 @@ export class Client extends Emitter {
     const router = this.router!;
     this.network = network;
     router.info = network;
-    router.topology = this.resolveTopology(network.topology);
+    router.topology = resolveTopology(network.topology, error => this.error("topology", `${error.message}, falling back to mesh`, network.topology));
     router.setMembers(members, host);
     this.media.setPlan(network.media);
 
@@ -440,6 +444,7 @@ export class Client extends Emitter {
     const router = this.router;
     if (!router || !this.network) return;
 
+    this.media.refresh();
     for (const peer of router.desired())
     {
       if (!this.pending.has(peer) && this.initiates(peer)) this.link(peer);
@@ -504,18 +509,6 @@ export class Client extends Emitter {
     if (this.options.keepSocket !== false || !this.network || this.pending.size > 0) return;
     this.debug("socket", "keepSocket is false, closing the signalling socket", null);
     this.socket.close();
-  }
-
-  private resolveTopology(name: string) {
-    const option = this.options.topology;
-    if (option && typeof option !== "string" && option.name === name) return option;
-    return topologies[name] ?? mesh;
-  }
-
-  private topologyName() {
-    const option = this.options.topology;
-    if (typeof option === "string") return option;
-    return option?.name ?? mesh.name;
   }
 
   // sending helpers

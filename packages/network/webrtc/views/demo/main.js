@@ -111,6 +111,20 @@ function displayName() {
     return name || `guest-${Math.random().toString(36).slice(2, 6)}`;
 }
 
+/** The topology option: a name, or a config for multicast. */
+function topologyOption() {
+    const name = $("topology").value;
+    return name === "multicast" ? { name, fanout: Number($("fanout").value) } : name;
+}
+
+/** NetworkInfo.topology as text: `mesh`, or `multicast (fanout: 5)`. */
+function topologyLabel(topology) {
+    if (typeof topology === "string") return topology;
+    const { name, ...config } = topology;
+    const options = Object.entries(config).map(([key, value]) => `${key}: ${value}`).join(", ");
+    return options ? `${name} (${options})` : name;
+}
+
 function summary(media) {
     const streams = Object.keys(media?.streams ?? {});
     const channels = Object.keys(media?.channels ?? {});
@@ -278,7 +292,7 @@ function connect() {
             url,
             profile: { name },
             rtc: $("stun").checked ? STUN : undefined,
-            topology: $("topology").value,
+            topology: topologyOption(),
         });
     }
     catch (error)
@@ -372,7 +386,7 @@ function renderNetworks(networks) {
         const lock = network.meta?.locked ? "🔒 " : "";
         const info = el("div", {},
             el("strong", { textContent: `${lock}${network.name}` }),
-            el("span", { className: "sub", textContent: `${network.topology} · ${network.size} member${network.size === 1 ? "" : "s"} · ${summary(network.media)}` }),
+            el("span", { className: "sub", textContent: `${topologyLabel(network.topology)} · ${network.size} member${network.size === 1 ? "" : "s"} · ${summary(network.media)}` }),
         );
         const join = el("button", { textContent: "Join", className: "primary" });
         join.addEventListener("click", () => joinNetwork(network.id));
@@ -594,7 +608,7 @@ function render() {
     const network = client.network;
     $("room-title").textContent = network.name;
     if (document.activeElement !== $("room-name")) $("room-name").value = client.profile()?.name ?? "";
-    $("room-meta").textContent = `${network.topology} · ${client.members.length} member${client.members.length === 1 ? "" : "s"} · ${summary(client.media.plan)} · id ${network.id}`;
+    $("room-meta").textContent = `${topologyLabel(network.topology)} · ${client.members.length} member${client.members.length === 1 ? "" : "s"} · ${summary(client.media.plan)} · id ${network.id}`;
     $("edit-plan").hidden = client.host !== client.id;
 
     renderMembers();
@@ -696,5 +710,8 @@ const stored = load();
 if (typeof stored.url === "string") $("url").value = stored.url;
 if (typeof stored.name === "string") $("display-name").value = stored.name;
 if (typeof stored.topology === "string") $("topology").value = stored.topology;
+const showFanout = () => { $("fanout-field").hidden = $("topology").value !== "multicast"; };
+$("topology").addEventListener("change", showFanout);
+showFanout();
 createEditor.set(stored.plan ?? PRESETS.call.plan, Array.isArray(stored.screens) ? stored.screens : []);
 render();

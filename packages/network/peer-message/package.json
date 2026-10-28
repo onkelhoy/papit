@@ -1,76 +1,76 @@
 {
-    "name": "@papit/peer-message",
-    "description": "Shared message format and signalling protocol for @papit/webrtc and @papit/signal-server, built on @papit/meta-json. Reach for it to create, validate and relay peer messages in node or the browser.",
-    "keywords": [
-        "papit",
-        "peer-message",
-        "webrtc",
-        "signalling",
-        "protocol",
-        "message",
-        "relay",
-        "p2p"
-    ],
-    "version": "0.0.1",
-    "scripts": {
-        "build": "npx @papit/build -- --error --ancestors",
-        "watch": "tsc -w",
-        "start": "npm run build -- --dev && node ./lib/bundle.js",
-        "test": "node --test tests/**/*.test.js",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit -- --component"
-    },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        }
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/network/peer-message"
-    },
-    "sideEffects": true,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@papit/meta-json": "0.0.1"
-    },
-    "devDependencies": {
-        "@types/node": "22.10.2",
-        "typescript": "5.9.3"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "node",
-        "main": "peer-message",
-        "components": {}
-    },
-    "remoteVersion": ""
+  "name": "@papit/peer-message",
+  "description": "Shared message format and signalling protocol for @papit/webrtc and @papit/signal-server, built on @papit/meta-json. Reach for it to create, validate and relay peer messages in node or the browser.",
+  "keywords": [
+    "papit",
+    "peer-message",
+    "webrtc",
+    "signalling",
+    "protocol",
+    "message",
+    "relay",
+    "p2p"
+  ],
+  "version": "0.0.2",
+  "scripts": {
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "test": "node --test tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/network/peer-message"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/meta-json": "0.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "peer-message",
+    "components": {}
+  },
+  "remoteVersion": "0.0.1"
 }

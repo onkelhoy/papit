@@ -61,7 +61,7 @@ export type NetworkInfo = {
     id: string;
     name: string;
     host: PeerId;
-    topology: string;
+    topology: string | TopologyConfig;
     private: boolean;
     size: number;
     meta?: Record<string, unknown>;
@@ -77,6 +77,12 @@ export type ChannelInit = {
 }
 
 export type StreamKind = "audio" | "video";
+
+/**
+ * A shareable topology: a registered name plus JSON options for its factory, e.g. `{ name: "multicast", fanout: 5 }`.
+ * At most `MAX_TOPOLOGY_BYTES` serialized. Only config travels; every peer registers the code itself.
+ */
+export type TopologyConfig = { name: string } & Record<string, unknown>;
 
 /** What a peer says about itself, e.g. `{ name }`. JSON, at most `MAX_PROFILE_BYTES` serialized. */
 export type Profile = Record<string, unknown>;
@@ -106,7 +112,7 @@ export type IceCandidate = {
 
 /** Payload shape per reserved `meta.type`. */
 export type PayloadMap = {
-    [SignalType.Register]: { name: string; topology: string; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan };
+    [SignalType.Register]: { name: string; topology: string | TopologyConfig; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan };
     [SignalType.Update]: { network: string; name?: string; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan };
     [SignalType.Unregister]: { network: string };
     [SignalType.List]: {};

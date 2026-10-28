@@ -22,3 +22,5 @@ Thumbs.db
 
 # claude code: personal settings
 .claude/settings.local.json
+
+*-FINDINGS.md
