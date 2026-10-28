@@ -150,3 +150,5 @@ export async function setup() {
 };
 
 export { getURL } from "components/http/url";
+
+export { createInline } from "components/html/inline";
