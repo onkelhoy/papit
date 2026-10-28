@@ -1,92 +1,92 @@
 {
-    "name": "@papit/react",
-    "description": "Generates typed React 19 wrapper components for a web component package from its source, so the elements can be used as React components with props, refs and on-event handlers.",
-    "keywords": [
-        "papit",
-        "cli",
-        "node",
-        "typescript",
-        "react",
-        "web-component",
-        "custom-elements",
-        "wrapper",
-        "codegen"
-    ],
-    "version": "0.0.2",
-    "scripts": {
-        "build": "npx @papit/build --error",
-        "watch": "tsc -w",
-        "start": "npm run build -- --dev && node ./lib/bin.js",
-        "test": "node --test tests/**/*.test.js",
-        "test:only": "node --test --test-only tests/**/*.test.js",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit -- --component"
-    },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        }
-    },
-    "bin": {
-        "papit-react": "lib/bin.js"
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/react",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/onkelhoy/papit.git",
-        "directory": "packages/runtime/cli/react"
-    },
-    "sideEffects": true,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@papit/analyse": "0.0.3",
-        "@papit/arguments": "0.0.1",
-        "@papit/information": "0.0.9",
-        "@papit/terminal": "0.0.2"
-    },
-    "devDependencies": {
-        "@papit/bundle-ts": "0.0.3",
-        "@types/node": "22.10.2",
-        "@types/react": "19.3.0",
-        "react": "19.3.0",
-        "typescript": "5.9.3"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "node",
-        "main": "react",
-        "components": {
-            "react": {
-                "className": "React",
-                "htmlprefix": "pap"
-            }
-        }
-    },
-    "remoteVersion": "0.0.2"
+  "name": "@papit/react",
+  "description": "Generates typed React 19 wrapper components for a web component package from its source, so the elements can be used as React components with props, refs and on-event handlers.",
+  "keywords": [
+    "papit",
+    "cli",
+    "node",
+    "typescript",
+    "react",
+    "web-component",
+    "custom-elements",
+    "wrapper",
+    "codegen"
+  ],
+  "version": "0.0.3",
+  "scripts": {
+    "build": "npx @papit/build --error",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bin.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:only": "node --test --test-only tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "bin": {
+    "papit-react": "lib/bin.js"
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/runtime/cli/react",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/onkelhoy/papit.git",
+    "directory": "packages/runtime/cli/react"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/analyse": "0.0.4",
+    "@papit/arguments": "0.0.1",
+    "@papit/information": "0.0.10",
+    "@papit/terminal": "0.0.2"
+  },
+  "devDependencies": {
+    "@papit/bundle-ts": "0.0.3",
+    "@types/node": "22.10.2",
+    "@types/react": "19.3.0",
+    "react": "19.3.0",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "react",
+    "components": {
+      "react": {
+        "className": "React",
+        "htmlprefix": "pap"
+      }
+    }
+  },
+  "remoteVersion": "0.0.2"
 }

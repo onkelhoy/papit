@@ -105,8 +105,8 @@ export async function build(options: StaticOptions): Promise<StaticResult> {
         const locate = (file: string) => {
             const root = packageRoot(file);
             const name = readJSON(path.join(root, "package.json")).name as string;
-            // a workspace package ships its built folder, a node_modules package all of itself
-            const source = externals.has(root) ? root : path.join(root, path.relative(root, file).split(path.sep)[0]!);
+            // a package ships only the top folder holding the file (e.g. lib/), never all of itself
+            const source = path.join(root, path.relative(root, file).split(path.sep)[0]!);
 
             if (!copied.has(source))
             {

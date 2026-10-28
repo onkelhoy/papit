@@ -24,9 +24,14 @@
     },
     "author": "VARIABLE_USER",
     "license": "VARIABLE_PROJECTLICENSE",
+    "repository": {
+        "type": "git",
+        "url": "git+VARIABLE_GITHUB_REPO.git"
+    },
     "workspaces": [
         "packages/**/*",
-        "!packages/**/asset/**"
+        "!packages/**/asset/**",
+        "!packages/**/dist/**"
     ],
     "devDependencies": {
         "esbuild": "0.27.2",

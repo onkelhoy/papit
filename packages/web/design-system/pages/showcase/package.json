@@ -61,7 +61,7 @@
   "dependencies": {
     "@papit/icon": "0.1.10",
     "@papit/router": "0.1.7",
-    "@papit/server": "1.0.9",
+    "@papit/server": "1.0.10",
     "@papit/sidebar": "0.0.10",
     "@papit/theme-picker": "0.0.12",
     "@papit/translator": "0.1.1",

@@ -90,7 +90,7 @@ export async function showcaseRunner(createPackageLocation: string) {
 
 async function generate(node: PackageNode<LocalPackage>, viewfolders: string[], templateSrc: string) {
     const nameInfo = getName(node.name.replace(Information.scope + "/", "")) ?? { name: node.name, className: node.name };
-    let htmlprefix = Arguments.string("html-prefix") ?? node.packageJSON.papit.htmlprefix ?? Information.root.packageJSON.papit.htmlprefix;
+    let htmlprefix = Arguments.string("html-prefix") ?? node.packageJSON.papit?.htmlprefix ?? Information.root.packageJSON.papit?.htmlprefix;
 
     await copyFolder(
         path.join(templateSrc, "individual"),
@@ -116,8 +116,8 @@ function getBatches(filter: string[]) {
     return Information
         .getPriorityBatches(Arguments.instance, p => p.name.startsWith(Information.scope))
         .map(batch => batch.filter(node => {
-            if (node.packageJSON.papit.skip) return false;
-            if (typeof node.packageJSON.papit.type === "string")
+            if (node.packageJSON.papit?.skip) return false;
+            if (typeof node.packageJSON.papit?.type === "string")
             {
                 if (!filter.includes(node.packageJSON.papit.type)) return false;
             }

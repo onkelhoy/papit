@@ -102,7 +102,8 @@ export async function copyFolder(src: string, dest: string, parser: (content: st
     for (const entry of entries)
     {
         const srcPath = path.join(src, entry.name);
-        const destPath = path.join(dest, entry.name);
+        // npm never publishes .gitignore files, so templates ship them without the dot
+        const destPath = path.join(dest, entry.name === "gitignore" ? ".gitignore" : entry.name);
 
         if (entry.isDirectory())
         {
