@@ -1,4 +1,4 @@
-import { Network, MemoryLink, topologies } from '@papit/webrtc';
+import { Network, MemoryLink, topologies, multicast, multicastTopology, registerTopology, resolveTopology } from '@papit/webrtc';
 import { Message, BROADCAST } from '@papit/peer-message';
 
 const letters = (n) => Array.from({ length: n }, (_, i) => String.fromCharCode(97 + i));
@@ -55,5 +55,5 @@ function settle() {
   return new Promise(resolve => setTimeout(resolve));
 }
 
-Object.assign(window, { Message, BROADCAST, build, once, settle });
+Object.assign(window, { Message, BROADCAST, build, once, settle, topologies, multicast, multicastTopology, registerTopology, resolveTopology });
 window.ready = true;

@@ -234,6 +234,14 @@ export class Media extends Emitter {
     return peers;
   }
 
+  /**
+   * Re-applies streams on every link after the view changed (members, host): a relay's source may have moved.
+   * @internal
+   */
+  refresh() {
+    for (const entry of this.entries.values()) this.applyStreams(entry);
+  }
+
   /** @internal */
   sendOn(label: string, peer: PeerId, data: ChannelData) {
     const channel = this.entries.get(peer)?.channels.get(label);
@@ -340,7 +348,7 @@ export class Media extends Emitter {
       const direction = this.direction(entry, name, allowed);
       if (transceiver.direction !== direction) transceiver.direction = direction;
 
-      const track = direction === "sendrecv" ? this.captures.get(name)?.track ?? null : null;
+      const track = direction === "sendrecv" ? this.source(entry, name) : null;
       if (transceiver.sender.track !== track)
       {
         transceiver.sender.replaceTrack(track).catch(error => this.debug("track", `replaceTrack for ${name} failed`, error));
@@ -380,7 +388,31 @@ export class Media extends Emitter {
 
   private direction(entry: Entry, name: string, allowed = this.allowed(entry.link.id)): RTCRtpTransceiverDirection {
     if (!this._plan.streams?.[name]) return "inactive";
-    return this.captures.has(name) && allowed.has(name) ? "sendrecv" : "recvonly";
+    return this.source(entry, name) && allowed.has(name) ? "sendrecv" : "recvonly";
+  }
+
+  /** The track to send for `name` on this link: the local capture, else the stream relayed from `topology.relay`. */
+  private source(entry: Entry, name: string): MediaStreamTrack | null {
+    const capture = this.captures.get(name);
+    if (capture) return capture.track;
+
+    const view = this.context.view();
+    const topology = this.context.topology();
+    if (!view || !topology?.relay) return null;
+
+    let from: PeerId | null;
+    try
+    {
+      from = topology.relay(view, name);
+    }
+    catch (error)
+    {
+      this.error("topology", `${topology.name}.relay failed`, error);
+      return null;
+    }
+    // never send a relayed track back where it came from
+    if (!from || from === entry.link.id) return null;
+    return this.entries.get(from)?.remote.get(name)?.getTracks()[0] ?? null;
   }
 
   private nameOf(entry: Entry, transceiver: RTCRtpTransceiver) {
@@ -404,6 +436,7 @@ export class Media extends Emitter {
       const stream = new MediaStream([track]);
       entry.remote.set(name, stream);
       this.emit("stream", { peer, name, stream });
+      this.refresh();
     };
     const handleMute = () => {
       const name = this.nameOf(entry, transceiver);
@@ -411,6 +444,7 @@ export class Media extends Emitter {
 
       entry.remote.delete(name);
       this.emit("stream-ended", { peer, name });
+      this.refresh();
     };
 
     track.addEventListener("unmute", handleUnmute);
@@ -433,7 +467,9 @@ export class Media extends Emitter {
     entry.cleanup = [];
     entry.link.handshake.hooks = {};
 
+    const relayed = entry.remote.size > 0;
     for (const name of entry.remote.keys()) this.emit("stream-ended", { peer: entry.link.id, name });
     entry.remote.clear();
+    if (relayed) this.refresh();
   }
 }

@@ -16,6 +16,8 @@ export const MAX_HOPS = 256;
 export const RESERVED_PREFIXES = ["signal.", "network.", "handshake."] as const;
 /** Largest serialized (UTF-8 JSON) profile. */
 export const MAX_PROFILE_BYTES = 1024;
+/** Largest serialized (UTF-8 JSON) topology config. */
+export const MAX_TOPOLOGY_BYTES = 1024;
 /** Most channels, and most streams, a media plan may hold. */
 export const MAX_MEDIA_ENTRIES = 16;
 /** Channel labels starting with this are internal (e.g. `_system`). */

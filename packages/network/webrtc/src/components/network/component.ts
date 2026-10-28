@@ -1,8 +1,8 @@
-import { BROADCAST, Message, NetworkInfo, PeerId, read, relay, RelayAction, Seen, SERVER } from "@papit/peer-message";
+import { BROADCAST, Message, NetworkInfo, PeerId, read, relay, RelayAction, Seen, SERVER, TopologyConfig } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
 import type { Link } from "../link";
-import { mesh, topologies, Topology, View } from "../topology";
+import { resolveTopology, Topology, View } from "../topology";
 import type { NetworkOptions } from "./types";
 
 type Attached = {
@@ -43,8 +43,8 @@ export class Network extends Emitter {
     this.host = options.info?.host ?? options.me;
     this.members.add(options.me);
 
-    const topology = options.topology ?? options.info?.topology;
-    this.topology = (typeof topology === "string" ? topologies[topology] : topology) ?? mesh;
+    const topology = options.topology ?? options.info?.topology ?? "mesh";
+    this.topology = typeof topology === "object" && typeof topology.route === "function" ? topology as Topology : resolveTopology(topology as string | TopologyConfig);
   }
 
   /** What the topology sees: sorted members (with `me`) and the ids of open peer links. */

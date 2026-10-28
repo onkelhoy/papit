@@ -107,6 +107,7 @@ For untrusted input. None of them throw.
 | `read(bytes, maxBytes = MAX_MESSAGE_BYTES)` | Decode and validate a `Uint8Array`, `ArrayBuffer` or other view. Returns a `Message`, or `null` when the input is too big, can't be decoded, has a bad meta, or is a reserved type with a bad payload. |
 | `isMeta(x)` | Shape and limits of a `Meta`. |
 | `isProfile(x)` | A JSON object of at most `MAX_PROFILE_BYTES` UTF-8 bytes. |
+| `isTopology(x)` | A topology name of 1..`MAX_ID_LENGTH` characters, or a `TopologyConfig` with such a `name` of at most `MAX_TOPOLOGY_BYTES` UTF-8 bytes. |
 | `isMediaPlan(x)` | A `MediaPlan`, see [Media plan](#media-plan). |
 | `isPayload(type, x)` | Shape of a parsed payload for a reserved `type`. False for unknown types. |
 | `isReserved(type)` | True for `signal.`, `network.` and `handshake.` types. |
@@ -127,6 +128,7 @@ Relaying a parsed message with `toBinary(true)` is safe: `Message` encodes an ob
 | `MAX_ID_LENGTH` | `64` | longest `id`, `type`, `sender`, `receiver`, `network` or hop |
 | `MAX_HOPS` | `256` | most `hops` entries |
 | `MAX_PROFILE_BYTES` | `1024` | largest serialized profile |
+| `MAX_TOPOLOGY_BYTES` | `1024` | largest serialized topology config |
 | `MAX_MEDIA_ENTRIES` | `16` | most channels, and most streams, in a media plan |
 | `RESERVED_CHANNEL_PREFIX` | `"_"` | channel labels starting with it are internal |
 
@@ -150,12 +152,14 @@ type NetworkInfo = {
     id: string;
     name: string;
     host: PeerId;
-    topology: string;
+    topology: string | TopologyConfig;
     private: boolean;
     size: number;
     meta?: Record<string, unknown>;
     media?: MediaPlan;
 };
+
+type TopologyConfig = { name: string } & Record<string, unknown>; // e.g. { name: "multicast", fanout: 5 }, at most 1 KB as JSON
 
 type Profile = Record<string, unknown>;   // e.g. { name }, at most 1 KB as JSON
 
@@ -184,7 +188,7 @@ What every link in a network carries besides its system channel. The host sets i
 
 | Type | Direction | Payload |
 | --- | --- | --- |
-| `signal.register` | client → server | `{ name, topology, private?, password?, meta?, media? }` |
+| `signal.register` | client → server | `{ name, topology, private?, password?, meta?, media? }`, `topology` is a name or a `TopologyConfig`, stored and returned as-is in `NetworkInfo` |
 | `signal.update` | client → server | `{ network, name?, private?, password?, meta?, media? }` |
 | `signal.unregister` | client → server | `{ network }` |
 | `signal.list` | client → server | `{}` |
