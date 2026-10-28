@@ -1,0 +1,23 @@
+# directories
+node_modules/
+dist/
+lib/
+isolated/
+web/
+.temp/
+.npm/
+.papit/
+
+# test
+test-results/
+test-reports/
+
+# Ignore OS-specific files
+Thumbs.db
+.DS_Store
+
+# Ignore any configuration files that may contain sensitive data
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
