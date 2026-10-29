@@ -9,6 +9,7 @@ export function extractImportmap(
     node: PackageNode,
     map: Importmap,
     mapFolder: string,
+    externals?: Set<string>,
 ) {
     extractPackageJSON(
         node.name,
@@ -27,6 +28,8 @@ export function extractImportmap(
     {
         extractExternal(name, Information.root.location, map, visited);
     }
+
+    visited.forEach(location => externals?.add(location));
 }
 
 const TOOLING = ["chokidar", "esbuild", "@microsoft/api-extractor", "typescript", "playwright"];

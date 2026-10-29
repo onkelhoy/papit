@@ -69,10 +69,10 @@ Other flags are passed on to `@papit/build` when `--live` rebuilds a package.
 
 # What it serves
 
-A GET request is answered by the first of these that matches. Other methods get `405`, and a path that matches nothing currently gets `500`.
+A GET request is answered by the first of these that matches, using only its path (a query string or hash is ignored). Other methods get `405`, and a path that matches nothing currently gets `500`.
 
-1. **Translations**: JSON files in a folder whose name starts with `transl`, `locale` or `i18`, merged per language across the workspace.
-2. **Assets**: files in asset folders of the served package, its workspace dependencies and the server itself, reachable by any trailing part of their path, so `/icons/x.svg` finds `asset/icons/x.svg`. A package's asset wins over the server's default of the same name.
+1. **Translations**: JSON files in a folder whose name starts with `transl`, `locale` or `i18`, merged per language (`meta.language`, else the file name) across the workspace. A URL such as `/translations/en.json` serves the language its file is named after, so an `en.json` declaring `en-UK` doesn't take it over from a real `en`.
+2. **Assets**: files in asset folders of the served package, its workspace dependencies, their third-party dependencies in `node_modules` and the server itself, reachable by any trailing part of their path, so `/icons/x.svg` finds `asset/icons/x.svg`. A workspace asset wins over a `node_modules` one of the same name, and both win over the server's default.
 3. **Themes**: a URL containing the name of a `theme` package serves that theme's built file.
 4. **Files**: an absolute path inside the workspace that exists on disk, else the path resolved against the current folder, the package, then the workspace root. A path that resolves outside the workspace root (e.g. through `../`) gets `403`, before anything is read.
 5. **Folders**: `index.html` if present, otherwise a file explorer page.
@@ -88,6 +88,7 @@ At startup the server walks the workspace graph from `@papit/information` and bu
 - every workspace package maps its package.json `exports` (import condition) and `main` to the file on disk
 - third-party `dependencies` and `devDependencies` are added the same way, together with their own `dependencies` (transitively, each resolved from the dependent's `node_modules` first, then the root's), except the build tools (`esbuild`, `typescript`, `chokidar`, `@microsoft/api-extractor`, `playwright`)
 - the first mapping for a name wins, and an import map already in the page is merged in, not replaced
+- `theme` packages are left out: a theme is CSS, so `@import "@scope/theme";` in a stylesheet works, but `import "@scope/theme"` in a script fails to resolve
 
 So `import "@papit/switch"` in a demo page loads the built `lib/bundle.js` of the workspace package, without a publish or install.
 

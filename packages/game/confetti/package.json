@@ -59,7 +59,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/web-component": "0.0.12"
+    "@papit/web-component": "0.0.13"
   },
   "peerDependencies": {
     "react": "^19"
@@ -75,7 +75,7 @@
     "typescript": "5.9.3",
     "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.15"
+    "@papit/codeblock": "0.1.16"
   },
   "browserslist": [
     "defaults",

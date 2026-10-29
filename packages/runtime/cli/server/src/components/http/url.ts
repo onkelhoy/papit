@@ -14,6 +14,11 @@ export function isInsideRoot(location: string) {
     return relative === "" || (relative !== ".." && !relative.startsWith(".." + path.sep) && !path.isAbsolute(relative));
 }
 
+/** The path part of a request url, without its query string or hash. */
+export function pathname(url: string) {
+    return url.split(/[?#]/, 1)[0];
+}
+
 /**
  * Resolves a request to a file or folder: an absolute path inside the workspace, else the path
  * under the current folder, the package, then the workspace root.
@@ -22,6 +27,9 @@ export function isInsideRoot(location: string) {
 export function getURL(
     request: IncomingMessage,
 ) {
+    // a query string or hash is never part of the file path
+    if (request.url) request.url = pathname(request.url);
+
     // Convert URL path back to native fs path on Windows before any joins
     if (process.platform === 'win32' && request.url && /^\/[A-Za-z]:/.test(request.url))
     {

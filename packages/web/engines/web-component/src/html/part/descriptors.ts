@@ -44,7 +44,7 @@ export function getDescriptors(root: Node): PartDescriptor[] {
         if (/marker-standalone-(\d)+/.test(attr.name)) 
         {
           el.removeAttribute(attr.name);
-          descriptors.push({ kind: 'attr', element: el, name: attr.name, strings: [''], standalone: true });
+          descriptors.push({ kind: 'attr', element: el, name: attr.name, strings: ['', ''], standalone: true });
         }
         else if (/__marker__/.test(attr.value)) 
         {
@@ -56,12 +56,13 @@ export function getDescriptors(root: Node): PartDescriptor[] {
           }
           else
           {
-            const strings = attr.value.split("__marker__").filter(Boolean);
+            // the static text around each value, so "tip-__marker__" is ["tip-", ""]
+            const strings = attr.value.split("__marker__");
             if (attr.name === "key")
             {
               el.removeAttribute("key");
             }
-            descriptors.push({ kind: 'attr', element: el, name: attr.name, strings: strings.length > 0 ? strings : [''] });
+            descriptors.push({ kind: 'attr', element: el, name: attr.name, strings });
           }
         }
       }

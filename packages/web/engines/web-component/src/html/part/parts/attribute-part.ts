@@ -40,6 +40,7 @@ export class AttributePart implements Part {
             value += this.strings[i];
             value += values[i];
         }
+        value += this.strings[values.length] ?? "";
 
         if (value === this.value) return;
         this.value = value;

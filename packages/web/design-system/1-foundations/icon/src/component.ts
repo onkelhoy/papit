@@ -31,6 +31,12 @@ export class Icon extends CustomElement {
     @property({
         rerender: true,
         async after(this: Icon, value: string) {
+            if (!value)
+            {
+                this.assignedName = undefined;
+                return;
+            }
+
             let name = this.getName(value);
 
             if (Icon.icons.has(name))

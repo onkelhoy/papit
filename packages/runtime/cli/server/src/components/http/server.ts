@@ -20,7 +20,7 @@ import { getFILE } from "components/file/get";
 
 import { update as socketUpdate, upgrade } from "./socket";
 import { getPort } from "./port";
-import { getPACKAGE, getURL } from "./url";
+import { getPACKAGE, getURL, pathname } from "./url";
 import { build } from "@papit/build";
 
 let PORT = Arguments.number("port") || 3000;
@@ -93,6 +93,8 @@ export function start(
                     res.setHeader("Allow", "GET");
                     throw new MethodNotAllowedError();
                 }
+
+                if (req.url) req.url = pathname(req.url);
 
                 if (req.url?.startsWith("/.well-known"))
                 {

@@ -114,3 +114,24 @@ describe("create --package", () => {
         assert.ok(read(path.join(location, "README.md")).includes("https://raw.githubusercontent.com/acc/repo/refs/heads/main/asset/logo.svg"));
     });
 });
+
+describe("templates", () => {
+    const ASSET = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../asset");
+    const stubs = fs.readdirSync(ASSET, { recursive: true, encoding: "utf-8" })
+        .filter(file => path.basename(path.dirname(file)) === "translations" && file.endsWith(".json"));
+
+    it("has translation stubs", () => {
+        assert.ok(stubs.length > 0);
+    });
+
+    // the server maps /translations/en.json to its file's language, and a filler key would
+    // overwrite a real namespace of the same name
+    for (const stub of stubs)
+    {
+        it(`translation stub declares its file's language and nothing else: ${stub}`, () => {
+            const json = JSON.parse(read(path.join(ASSET, stub)));
+            assert.strictEqual(json.meta?.language, path.basename(stub, ".json"));
+            assert.deepStrictEqual(Object.keys(json), ["meta"]);
+        });
+    }
+});

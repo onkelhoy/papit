@@ -10,7 +10,7 @@
     "dark-mode",
     "color-scheme"
   ],
-  "version": "0.0.13",
+  "version": "0.0.14",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -62,11 +62,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/button": "0.1.8",
-    "@papit/icon": "0.1.11",
-    "@papit/menu": "0.0.13",
-    "@papit/tooltip": "0.0.13",
-    "@papit/web-component": "0.0.12"
+    "@papit/button": "0.1.9",
+    "@papit/icon": "0.1.12",
+    "@papit/menu": "0.0.14",
+    "@papit/tooltip": "0.0.14",
+    "@papit/web-component": "0.0.13"
   },
   "peerDependencies": {
     "react": "^19"
@@ -79,11 +79,11 @@
   "devDependencies": {
     "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.15",
+    "@papit/codeblock": "0.1.16",
     "@playwright/test": "1.64.1",
     "playwright": "1.64.1",
-    "@papit/router": "0.1.8",
-    "@papit/tabs": "0.1.8",
+    "@papit/router": "0.1.9",
+    "@papit/tabs": "0.1.9",
     "typescript": "5.9.3"
   },
   "browserslist": [
@@ -103,5 +103,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.12"
+  "remoteVersion": "0.0.13"
 }

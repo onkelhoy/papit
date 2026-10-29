@@ -95,6 +95,7 @@ export class Dialog extends CustomElement {
     private _internalopen = false;
     private hasslotheader = false;
     private hasslotfooter = false;
+    private pointerdownoutside = false;
 
     connectedCallback(): void {
         super.connectedCallback();
@@ -221,19 +222,27 @@ export class Dialog extends CustomElement {
         this.requestUpdate();
     }
     @bind
-    protected handledialogclick(e: MouseEvent) {
-        if (!this.closeoutsideclick) return;
-        if (!this.open) return;
-
+    protected handledialogpointerdown(e: PointerEvent) {
+        // read the rect before the click lands, content that resizes on click would move it
         const rect = this.dialogElement.getBoundingClientRect();
 
-        const isInDialog =
-            e.clientX >= rect.left &&
-            e.clientX <= rect.right &&
-            e.clientY >= rect.top &&
-            e.clientY <= rect.bottom;
+        this.pointerdownoutside =
+            e.clientX < rect.left ||
+            e.clientX > rect.right ||
+            e.clientY < rect.top ||
+            e.clientY > rect.bottom;
+    }
+    @bind
+    protected handledialogclick(e: MouseEvent) {
+        const pointerdownoutside = this.pointerdownoutside;
+        this.pointerdownoutside = false;
 
-        if (!isInDialog)
+        if (!this.closeoutsideclick) return;
+        if (!this.open) return;
+        // the backdrop belongs to <dialog>, anything inside (or a keyboard click) hits a child first
+        if (e.target !== this.dialogElement) return;
+
+        if (pointerdownoutside)
         {
             this.close();
         }
@@ -254,6 +263,7 @@ export class Dialog extends CustomElement {
                 id="dialog" 
                 part="dialog"
                 aria-labelledby="title"
+                @pointerdown="${this.handledialogpointerdown}"
                 @click="${this.handledialogclick}"
                 @close="${this.handledialogclose}"
             >

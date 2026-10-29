@@ -15,7 +15,7 @@ A web component that syntax-highlights and live-previews HTML, CSS and JavaScrip
 ## Features
 
 - Syntax highlighting for HTML, CSS, and JavaScript via `@papit/lexer`
-- Live preview panel with optional splitter (`display` attribute)
+- Live preview panel with optional splitter (`display="both"`)
 - Light/dark scheme toggle — detects and tracks the ambient color scheme from parent elements and system preference
 - Collapse/expand code view with a fade-out peek
 - One-click copy to clipboard
@@ -55,7 +55,7 @@ Slot any HTML content directly — the component captures the raw HTML, formats 
 ### With live preview
 
 ```html
-<pap-codeblock display>
+<pap-codeblock display="both">
   <div>
     <span>yes</span>
     <span>no</span>
@@ -63,7 +63,7 @@ Slot any HTML content directly — the component captures the raw HTML, formats 
 </pap-codeblock>
 ```
 
-The `display` attribute enables the preview panel with a draggable splitter between the rendered output and the code view.
+`display="both"` enables the preview panel with a draggable splitter between the rendered output and the code view. A bare `display` shows only the code.
 
 ---
 
@@ -71,7 +71,7 @@ The `display` attribute enables the preview panel with a draggable splitter betw
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `display` | `boolean` | `false` | Enables the live preview panel |
+| `display` | `"both" \| "code" \| "raw"` | — | `both` adds the live preview panel above the code, `raw` shows the full code with no preview. Anything else (including a bare `display`) shows only the code |
 | `color` | `"checker" \| "canvas" \| "background"` | `"checker"` | Background style for the preview area |
 
 ### `color` values

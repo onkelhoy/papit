@@ -10,7 +10,7 @@
     "nav",
     "collapsible"
   ],
-  "version": "0.0.11",
+  "version": "0.0.12",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -62,13 +62,13 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/button": "0.1.8",
-    "@papit/drawer": "0.0.8",
-    "@papit/icon": "0.1.11",
-    "@papit/tooltip": "0.0.13",
+    "@papit/button": "0.1.9",
+    "@papit/drawer": "0.0.9",
+    "@papit/icon": "0.1.12",
+    "@papit/tooltip": "0.0.14",
     "@papit/translator": "0.1.1",
-    "@papit/treeview": "0.0.12",
-    "@papit/web-component": "0.0.12"
+    "@papit/treeview": "0.0.13",
+    "@papit/web-component": "0.0.13"
   },
   "peerDependencies": {
     "react": "^19"
@@ -79,9 +79,9 @@
     }
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.15",
-    "@papit/router": "0.1.8",
-    "@papit/tabs": "0.1.8",
+    "@papit/codeblock": "0.1.16",
+    "@papit/router": "0.1.9",
+    "@papit/tabs": "0.1.9",
     "@papit/theme": "0.0.3",
     "@playwright/test": "1.64.1",
     "playwright": "1.64.1",
@@ -104,5 +104,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.10"
+  "remoteVersion": "0.0.11"
 }

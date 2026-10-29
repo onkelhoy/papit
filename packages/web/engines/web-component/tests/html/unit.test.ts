@@ -71,6 +71,28 @@ test.describe("attribute cases", () => {
         expect(pAttribute).toBe("5");
         expect(pContent).toBe("5");
     });
+
+    test("static text around values in an attribute keeps the following bindings in place", async ({ page }) => {
+        const errors: string[] = [];
+        page.on('pageerror', e => errors.push(e.message));
+        await page.reload();
+        await page.waitForTimeout(300);
+
+        const component = page.getByTestId("partial");
+        const read = () => component.evaluate((el: any) => {
+            const button = el.shadowRoot?.querySelector("button");
+            return { id: button?.getAttribute("data-id"), title: button?.getAttribute("title"), text: button?.textContent };
+        });
+
+        expect(errors).toEqual([]);
+        expect(await read()).toEqual({ id: "tip-henry", title: "henry-0!", text: "0" });
+
+        await component.evaluate((el: any) => el.shadowRoot.querySelector("button").click());
+        await component.evaluate((el: any) => el.setAttribute("name", "oscar"));
+        await page.waitForTimeout(300);
+
+        expect(await read()).toEqual({ id: "tip-oscar", title: "oscar-1!", text: "1" });
+    });
 });
 
 test.describe("keyed list", () => {

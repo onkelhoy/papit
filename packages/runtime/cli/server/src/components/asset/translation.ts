@@ -25,11 +25,13 @@ export function extractTranslation(location: string, file: string, translations:
     // register ALL url variations for this file → language
     const relativeURL = path.relative(location, file);
     const segments = relativeURL.split(path.sep);
+    const name = path.basename(file, '.json');
 
     while (segments.length > 0) 
     {
         const url = '/' + segments.join('/');
-        translations.map[url] = lang;
+        // a url held by the language it is named after (en.json → en) is not taken over by another
+        if (translations.map[url] !== name || lang === name) translations.map[url] = lang;
         segments.shift()
     }
 }
