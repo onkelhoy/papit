@@ -19,7 +19,7 @@
     }
 }
 
-:host([checked]) {
+:host(:state(checked)) {
     div[part="marker"] {
         background: radial-gradient(circle, var(--info) 0 49%, transparent 55% 100%);
     }

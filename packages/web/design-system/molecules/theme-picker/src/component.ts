@@ -29,6 +29,8 @@ export class ThemePicker extends CustomElement {
     private targetElement: HTMLElement | null = null;
     private targetElementObserver: MutationObserver | null = null;
     private internal = false;
+    // "system" shows the theme in effect, so follow the OS preference
+    private darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     @query("pap-tooltip") private tooltipElement!: Tooltip;
     @query("pap-button") private buttonElement!: Button;
@@ -107,6 +109,7 @@ export class ThemePicker extends CustomElement {
 
     connectedCallback() {
         super.connectedCallback();
+        this.darkQuery.addEventListener("change", this.handleschemechange);
 
         const stored = this.storage === "local"
             ? localStorage.getItem("pap-theme")
@@ -118,6 +121,15 @@ export class ThemePicker extends CustomElement {
         {
             this.value = stored;
         }
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback?.();
+        this.darkQuery.removeEventListener("change", this.handleschemechange);
+    }
+
+    private handleschemechange = () => {
+        if (this.value === "system") this.requestUpdate();
     }
 
     private setValue() {
@@ -200,9 +212,8 @@ export class ThemePicker extends CustomElement {
         const t = (key: string) => key; // to be replaced by actual translation later 
         // but I thnk it makes sense to expose it at web-comoponent level since it anyway needs to deal with the effects etc
 
-        let iconName = "computer";
-        if (this.value === "light") iconName = "sun";
-        if (this.value === "dark") iconName = "moon";
+        const resolved = this.value === "system" ? (this.darkQuery.matches ? "dark" : "light") : this.value;
+        const iconName = resolved === "dark" ? "moon" : "sun";
 
         return html`
             <pap-tooltip placement="top">
@@ -223,6 +234,7 @@ export class ThemePicker extends CustomElement {
                 @blur="${this.handletargetblur}" 
             >
                 <pap-icon aria-hidden="true" name="${"/icons/" + iconName + ".svg"}"></pap-icon>
+                ${this.value === "system" ? html`<span part="auto" aria-hidden="true">A</span>` : ""}
             </pap-button>
 
             <pap-menu 

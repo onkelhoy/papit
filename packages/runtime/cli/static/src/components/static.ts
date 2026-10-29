@@ -62,6 +62,8 @@ export async function build(options: StaticOptions): Promise<StaticResult> {
     try
     {
         fs.mkdirSync(output, { recursive: true });
+        // marks the folder as build output, so @papit/server doesn't serve its copied assets
+        fs.writeFileSync(path.join(output, ".papit-static"), "");
         const assetFolders = ["asset", "assets", "public", ...(Arguments.get("asset") ?? [])];
 
         // public/: assets (closest package wins) and merged translations

@@ -85,7 +85,10 @@ export class Menu extends Popover {
         this.style.setProperty("--anchor-name", `--anchor-${this.id}`);
         this.style.setProperty("position-anchor", `--anchor-${this.id}`);
 
-        const closestPopoverTrigger = this.shadowQuery<HTMLElement>(`[popovertarget="${this.id}"]`);
+        // a menu at the top of a shadow root has the host as parent, so look in its own root first
+        const root = this.getRootNode() as Document | ShadowRoot;
+        const closestPopoverTrigger = root.querySelector<HTMLElement>(`[popovertarget="${this.id}"]`)
+            ?? this.shadowQuery<HTMLElement>(`[popovertarget="${this.id}"]`);
         if (closestPopoverTrigger) return this.registerTrigger(closestPopoverTrigger);
 
         // no trigger - so we are a spooky menu

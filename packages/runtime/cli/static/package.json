@@ -10,7 +10,7 @@
     "github-pages",
     "import-map"
   ],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -61,7 +61,7 @@
     "@papit/bundle-js": "0.0.4",
     "@papit/html": "0.0.1",
     "@papit/information": "0.0.10",
-    "@papit/server": "1.0.12",
+    "@papit/server": "1.0.13",
     "@papit/terminal": "0.0.2"
   },
   "devDependencies": {
@@ -78,5 +78,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.4"
+  "remoteVersion": "0.0.5"
 }

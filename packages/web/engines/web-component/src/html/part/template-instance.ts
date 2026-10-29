@@ -39,6 +39,8 @@ export class TemplateInstance implements ITemplateInstance {
     private indexList: number[];
     // where each part's values start: an attribute takes one value per interpolation in it
     private offsets: number[];
+    // the top-level nodes this instance owns, a fragment root is empty once inserted
+    private nodes: Node[];
 
     get element(): Element | null {
         if (this.root instanceof Element) return this.root;
@@ -56,6 +58,7 @@ export class TemplateInstance implements ITemplateInstance {
         private root: Element | DocumentFragment,
         private partFactory: PartFactory,
     ) {
+        this.nodes = root instanceof DocumentFragment ? Array.from(root.childNodes) : [root];
         const descriptors = getDescriptors(root);
 
         const helpers: PartHelpers = {
@@ -122,6 +125,7 @@ export class TemplateInstance implements ITemplateInstance {
     remove() {
         this.meta.forEach(meta => meta.part.remove());
         this.meta = [];
-        this.root.parentNode?.removeChild(this.root);
+        this.nodes.forEach(node => node.parentNode?.removeChild(node));
+        this.nodes = [];
     }
 }

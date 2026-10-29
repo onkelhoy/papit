@@ -47,7 +47,7 @@
 :host(:focus-within) {
     div[part="wrapper"] {
 
-        outline: 2px solid AccentColor;
-        outline-offset: 1px;
+        border-color: var(--focus-color, AccentColor);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--focus-color, AccentColor), 75% transparent);
     }
 }

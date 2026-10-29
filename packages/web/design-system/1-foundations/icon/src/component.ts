@@ -14,13 +14,32 @@ import { CountryEmojiSet } from "types";
  */
 export class Icon extends CustomElement {
     static sheet = sheet;
-    private controller = new AbortController();
     private viewBox = "0 0 24 24";
     private assignedName?: string;
 
     /** SVG markup by name, shared by every instance. Fetched icons are added here; set your own to skip the fetch. */
     static icons = new Map<string, string>(); //{ content: string, viewBox: string | null }>();
     static parser = new DOMParser();
+    /** In-flight fetches by file URL, so a spritesheet is fetched once. */
+    private static pending = new Map<string, Promise<string | null>>();
+
+    private static async fetchSvg(url: string) {
+        try
+        {
+            const res = await fetch(url);
+            if (!/svg/i.test(res.headers.get("Content-Type") ?? ""))
+            {
+                throw "fetched response is not svg";
+            }
+            return await res.text();
+        }
+        catch (e)
+        {
+            console.error("[icon] error could not fetch url", url);
+            console.error(e);
+            return null;
+        }
+    }
 
     /** Keep fetched SVG text in localStorage under `storage` + URL. */
     @property({ type: Boolean }) cache = false;
@@ -61,29 +80,29 @@ export class Icon extends CustomElement {
             // its URL and needs to be fetched 
             const rawUrl = value.split("#")?.at(0) ?? value;
 
+            const requested = this.name;
             let rawdata = this.cache && window.localStorage.getItem(this.storage + rawUrl);
             if (!rawdata)
             {
-                try
+                // every icon asking for the same file shares one fetch
+                let pending = Icon.pending.get(rawUrl);
+                if (!pending)
                 {
-                    const res = await fetch(rawUrl, { signal: this.controller.signal });
-                    if (!/svg/i.test(res.headers.get("Content-Type") ?? ""))
-                    {
-                        throw "fetched response is not svg";
-                    }
-                    rawdata = await res.text();
-
-                    if (this.cache)
-                    {
-                        window.localStorage.setItem(this.storage + rawUrl, rawdata);
-                    }
+                    pending = Icon.fetchSvg(rawUrl);
+                    Icon.pending.set(rawUrl, pending);
                 }
-                catch (e)
-                {
-                    console.error("[icon] error could not fetch url", rawUrl);
-                    console.error(e);
-                    return;
-                }
+                rawdata = await pending;
+                if (!rawdata) Icon.pending.delete(rawUrl);
+                else if (this.cache) window.localStorage.setItem(this.storage + rawUrl, rawdata);
+            }
+            // a newer name was set while this one was fetching
+            if (this.name !== requested) return;
+            // another icon sharing the fetch already parsed it
+            if (Icon.icons.has(name))
+            {
+                this.assignedName = name;
+                this.requestUpdate();
+                return;
             }
             if (!rawdata)
             {
@@ -122,6 +141,8 @@ export class Icon extends CustomElement {
             if (Icon.icons.has(name))
             {
                 this.assignedName = name;
+                // the fetch outlived the render the property set triggered
+                this.requestUpdate();
             }
         }
     }) name?: string;
@@ -144,6 +165,7 @@ export class Icon extends CustomElement {
     }
     private getName(value: string) {
         let name = value;
+        if (!name) return "";
         const hashMatch = value.match(/#(?<name>\w+(?:-\w+)*)/);
         if (hashMatch?.groups)
         {
@@ -180,15 +202,6 @@ export class Icon extends CustomElement {
 
         // Icon.icons.set(name, { content: element.outerHTML.replace(/^\<symbol/, '<svg').replace(/symbol\>$/, 'svg>'), viewBox: element.getAttribute("viewBox") });
         Icon.icons.set(name, element.outerHTML.replace(/^\<symbol/, '<svg').replace(/symbol\>$/, 'svg>'));
-    }
-
-    connectedCallback() {
-        super.connectedCallback?.();
-        this.controller = new AbortController();
-    }
-
-    disconnectedCallback() {
-        this.controller.abort("disconnectedCallback");
     }
 
     render() {

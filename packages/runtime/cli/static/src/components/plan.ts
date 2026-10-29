@@ -136,7 +136,7 @@ export function rewriteImportmap(
  */
 export function fetchShim(urls: Record<string, string>) {
     const json = JSON.stringify(urls).replace(/</g, "\\u003c");
-    return `(()=>{const m=${json};const f=window.fetch;window.fetch=function(i,o){if(typeof i==="string"||i instanceof URL){const u=new URL(i,location.href);if(u.origin===location.origin&&Object.prototype.hasOwnProperty.call(m,u.pathname))i=m[u.pathname]+u.search+u.hash}return f.call(this,i,o)}})();`;
+    return `(()=>{const m=${json};const f=window.fetch;window.fetch=function(i,o){if(typeof i==="string"||i instanceof URL){const u=new URL(i,location.href);if(u.origin===location.origin&&Object.prototype.hasOwnProperty.call(m,decodeURIComponent(u.pathname)))i=m[decodeURIComponent(u.pathname)]+u.search+u.hash}return f.call(this,i,o)}})();`;
 }
 
 /**

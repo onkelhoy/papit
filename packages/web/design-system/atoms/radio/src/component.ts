@@ -58,7 +58,8 @@ import sheet from "./style.css" with { type: "css" };
 export class Radio extends CustomElementInternals {
     static sheet = sheet;
 
-    private static checkedMap = new Map<string, Radio>();
+    // groups are per form, or per tree root without one, like native radios
+    private static checkedMap = new WeakMap<Node, Map<string, Radio>>();
 
     constructor() {
         super({ delegatesFocus: true });
@@ -74,9 +75,16 @@ export class Radio extends CustomElementInternals {
 
             if (name && this.checked) 
             {
-                const other = Radio.checkedMap.get(name);
-                if (other) other.checked = false;
-                Radio.checkedMap.set(name, this);
+                const scope: Node = this._internals.form ?? this.getRootNode();
+                let group = Radio.checkedMap.get(scope);
+                if (!group)
+                {
+                    group = new Map();
+                    Radio.checkedMap.set(scope, group);
+                }
+                const other = group.get(name);
+                if (other && other !== this) other.checked = false;
+                group.set(name, this);
             }
 
             if (this.checked)

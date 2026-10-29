@@ -71,7 +71,7 @@ picker.addEventListener("change", () => console.log(picker.value));
 What happens on the target:
 
 - `light` / `dark`: sets `data-theme` and `style.colorScheme` to the value.
-- `system`: removes `data-theme`, `colorScheme` and the `theme-light` / `theme-dark` classes.
+- `system`: removes `data-theme`, `colorScheme` and the `theme-light` / `theme-dark` classes. The trigger shows the sun or moon in effect (following `prefers-color-scheme`) with a small "A" mark, styleable as `::part(auto)`.
 - The target is watched: if something else sets `data-theme` or a `theme-light` / `theme-dark` class, `value` follows.
 - The switch runs inside `document.startViewTransition` when available. Opening the menu sets `--theme-transition-location` on the target to the picker's position, which `@papit/theme` uses for its reveal animation.
 
