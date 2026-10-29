@@ -138,7 +138,7 @@ pap-radio {
 
 | Event    | Bubbles | Description                  |
 | -------- | ------- | ---------------------------- |
-| `change` | No      | Fired when `checked` changes |
+| `change` | No      | Fired when `checked` changes, on the radio being checked **and** on the one being unchecked. Read `event.target.checked` before acting on it |
 
 ---
 

@@ -104,7 +104,7 @@ export class Tabs extends CustomElement {
                 part="tablist" 
                 role="tablist" 
                 aria-orientation="${this.orientation}"
-                ${this.label && `aria-label="${this.label}"`} 
+                aria-label="${this.label ?? ""}"
             >
                 <slot name="tab"></slot>
             </pap-group>

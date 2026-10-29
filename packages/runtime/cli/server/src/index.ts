@@ -69,7 +69,7 @@ export async function meta() {
     }
 
     const batches = Information.getBatches();
-
+    const externals = new Set<string>();
 
     for (const batch of batches)
     {
@@ -87,9 +87,30 @@ export async function meta() {
 
             if (importmapFolder)
             {
-                extractImportmap(node, importmap, importmapFolder);
+                extractImportmap(node, importmap, importmapFolder, externals);
             }
+        }
+    }
 
+    // node_modules packages' asset folders, extracted first so every workspace asset wins over them
+    for (const location of externals)
+    {
+        const packageJSON = JSON.parse(fs.readFileSync(path.join(location, "package.json"), { encoding: "utf-8" }));
+        if (!Arguments.has("include-node") && packageJSON.papit?.type === "node") continue;
+
+        await extractAssets(
+            location,
+            translations,
+            assets,
+            assetFolders,
+        );
+    }
+
+    for (const batch of batches)
+    {
+        for (const node of batch) 
+        {
+            if (node.packageJSON.papit?.type === "theme") continue;
             if (!Arguments.has("include-node") && node.packageJSON.papit?.type === "node") continue;
 
             await extractAssets(

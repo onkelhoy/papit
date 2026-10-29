@@ -37,6 +37,8 @@ type Meta = {
 export class TemplateInstance implements ITemplateInstance {
     private meta: Meta[];
     private indexList: number[];
+    // where each part's values start: an attribute takes one value per interpolation in it
+    private offsets: number[];
 
     get element(): Element | null {
         if (this.root instanceof Element) return this.root;
@@ -87,6 +89,13 @@ export class TemplateInstance implements ITemplateInstance {
 
         // apply events last - thought it didnt not solve current problem.. 
         this.indexList = [...attributes, ...events, ...rest];
+
+        let offset = 0;
+        this.offsets = descriptors.map(descriptor => {
+            const start = offset;
+            offset += descriptor.kind === "attr" ? descriptor.strings.length - 1 : 1;
+            return start;
+        });
     }
 
     /**
@@ -96,14 +105,16 @@ export class TemplateInstance implements ITemplateInstance {
     update(values: any[]) {
         for (const i of this.indexList) 
         {
-            if (this.meta[i].descriptor.kind === "attr")
+            const offset = this.offsets[i];
+            const descriptor = this.meta[i].descriptor;
+            if (descriptor.kind === "attr")
             {
-                const v = values.slice(i, i + this.meta[i].descriptor.strings.length);
+                const v = values.slice(offset, offset + descriptor.strings.length - 1);
                 this.meta[i].part.apply(v);
             }
             else 
             {
-                this.meta[i].part.apply(values[i]);
+                this.meta[i].part.apply(values[offset]);
             }
         }
     }

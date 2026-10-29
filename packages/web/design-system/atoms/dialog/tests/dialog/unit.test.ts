@@ -321,6 +321,55 @@ test.describe("@papit/dialog unit tests", () => {
     });
 
     // -------------------------------------------------------------------------
+    // close-outside-click
+    // -------------------------------------------------------------------------
+
+    test.describe("close-outside-click", () => {
+        test.beforeEach(async ({ page }) => {
+            await page.getByTestId('base-target').evaluate((el: any) => {
+                el.innerHTML = `
+                    <div data-testid="tall" style="height: 300px"></div>
+                    <button data-testid="shrink">shrink</button>
+                `;
+                el.querySelector('[data-testid="shrink"]').addEventListener('click', () => el.querySelector('[data-testid="tall"]').remove());
+                el.setAttribute('close-outside-click', '');
+                el.showModal();
+            });
+            await page.waitForTimeout(100);
+        });
+
+        test('a click on content that shrinks the dialog keeps it open', async ({ page }) => {
+            await page.getByTestId('shrink').click();
+            await page.waitForTimeout(100);
+            expect(await page.getByTestId('base-target').evaluate((el: any) => el.open)).toBe(true);
+        });
+
+        test('Enter and Space on a button inside keep it open', async ({ page }) => {
+            await page.getByTestId('shrink').focus();
+            await page.keyboard.press('Enter');
+            await page.keyboard.press('Space');
+            await page.waitForTimeout(100);
+            expect(await page.getByTestId('base-target').evaluate((el: any) => el.open)).toBe(true);
+        });
+
+        test('a click on the dialog padding keeps it open', async ({ page }) => {
+            const point = await page.getByTestId('base-target').evaluate((el: any) => {
+                const { left, right, bottom } = el.shadowRoot.querySelector('dialog').getBoundingClientRect();
+                return { x: (left + right) / 2, y: bottom - 2 };
+            });
+            await page.mouse.click(point.x, point.y);
+            await page.waitForTimeout(100);
+            expect(await page.getByTestId('base-target').evaluate((el: any) => el.open)).toBe(true);
+        });
+
+        test('a click on the backdrop closes it', async ({ page }) => {
+            await page.mouse.click(2, 2);
+            await page.waitForTimeout(100);
+            expect(await page.getByTestId('base-target').evaluate((el: any) => el.open)).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------------------
     // open property / attribute
     // -------------------------------------------------------------------------
 

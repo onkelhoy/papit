@@ -252,4 +252,21 @@ test.describe("@papit/tabs unit tests", () => {
             expect(tabindex).not.toBeNull();
         }
     });
+
+    // ── aria-label ─────────────────────────────────────────────────────────────
+
+    test('aria-label is forwarded to the tablist and removed when empty', async ({ page }) => {
+        const result = await page.evaluate(async () => {
+            const tabs = document.createElement('pap-tabs') as any;
+            tabs.setAttribute('aria-label', 'Sections');
+            document.body.appendChild(tabs);
+            await new Promise(r => setTimeout(r, 100));
+            const tablist = tabs.shadowRoot.querySelector('[part="tablist"]');
+            const labelled = tablist.getAttribute('aria-label');
+            tabs.removeAttribute('aria-label');
+            await new Promise(r => setTimeout(r, 100));
+            return { labelled, removed: tablist.hasAttribute('aria-label') };
+        });
+        expect(result).toEqual({ labelled: 'Sections', removed: false });
+    });
 });

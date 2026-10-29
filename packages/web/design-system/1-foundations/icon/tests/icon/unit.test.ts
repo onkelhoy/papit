@@ -17,6 +17,21 @@ test.describe("@papit/icon unit tests", () => {
     const component = await page.$('pap-icon');
     expect(component).not.toBeNull();
   });
+
+  test('an empty or null name renders nothing and does not throw', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', e => errors.push(e.message));
+
+    await page.getByTestId('base-target').evaluate(async (el: any) => {
+      el.name = "";
+      await new Promise(r => setTimeout(r, 50));
+      el.name = null;
+      await new Promise(r => setTimeout(r, 50));
+    });
+
+    expect(errors).toEqual([]);
+    expect(await page.getByTestId('base-target').evaluate((el: any) => el.shadowRoot.querySelector('svg'))).toBeNull();
+  });
 });
 
 test.describe.skip("helpers", () => {

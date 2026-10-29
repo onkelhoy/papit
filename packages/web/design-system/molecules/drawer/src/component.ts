@@ -69,6 +69,7 @@ export class Drawer extends Dialog {
                 id="dialog"
                 part="panel"
                 aria-label="${this.label}"
+                @pointerdown="${this.handledialogpointerdown}"
                 @click="${this.handledialogclick}"
                 @close="${this.handledialogclose}"
                 tabindex="-1"

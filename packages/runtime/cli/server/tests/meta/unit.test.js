@@ -58,4 +58,41 @@ describe("meta", () => {
         assert.ok(imports["@other/treeview"]?.endsWith("/node_modules/@other/treeview/index.js"));
         assert.ok(imports["@other/popover"]?.endsWith("/node_modules/@other/sidebar/node_modules/@other/popover/nested.js"));
     });
+
+    it("serves assets of external dependencies below workspace assets", () => {
+        const app = path.join(root, "packages/icons-app");
+        write(path.join(app, "package.json"), { name: "@scope/icons-app", version: "0.0.1", dependencies: { "@other/icons": "1.0.0" } });
+        fs.mkdirSync(path.join(app, "asset"), { recursive: true });
+        fs.writeFileSync(path.join(app, "asset/close.svg"), "<svg/>");
+        write(path.join(root, "node_modules/@other/icons/package.json"), { name: "@other/icons", main: "index.js" });
+        fs.mkdirSync(path.join(root, "node_modules/@other/icons/asset"), { recursive: true });
+        fs.writeFileSync(path.join(root, "node_modules/@other/icons/asset/close.svg"), "<svg/>");
+        fs.writeFileSync(path.join(root, "node_modules/@other/icons/asset/only.svg"), "<svg/>");
+
+        const result = meta(app, "console.log(JSON.stringify(data.assets));");
+        assert.strictEqual(result.status, 0, result.stderr);
+        const assets = JSON.parse(result.stdout.trim().split("\n").at(-1));
+
+        assert.ok(assets["/only.svg"]?.at(-1)?.endsWith("/node_modules/@other/icons/asset/only.svg"));
+        // the last entry is served first
+        assert.ok(assets["/close.svg"]?.at(-1)?.endsWith("/packages/icons-app/asset/close.svg"));
+    });
+
+    it("maps a translation url to the language its file is named after", () => {
+        write(path.join(root, "packages/lang-a/package.json"), { name: "@scope/lang-a", version: "0.0.1" });
+        write(path.join(root, "packages/lang-a/asset/translations/en.json"), { meta: { language: "en" }, hello: "hello" });
+        write(path.join(root, "packages/lang-a/asset/translations/sv.json"), { meta: { language: "sv" }, hello: "hej" });
+        write(path.join(root, "packages/lang-b/package.json"), { name: "@scope/lang-b", version: "0.0.1" });
+        write(path.join(root, "packages/lang-b/asset/translations/en.json"), { meta: { language: "en-UK" } });
+        write(path.join(root, "packages/lang-c/package.json"), { name: "@scope/lang-c", version: "0.0.1" });
+        write(path.join(root, "packages/lang-c/asset/translations/en.json"), { meta: { language: "en-UK" } });
+
+        const result = meta(root, "console.log(JSON.stringify(data.translations.map));");
+        assert.strictEqual(result.status, 0, result.stderr);
+        const map = JSON.parse(result.stdout.trim().split("\n").at(-1));
+
+        assert.strictEqual(map["/translations/en.json"], "en");
+        assert.strictEqual(map["/translations/sv.json"], "sv");
+        assert.strictEqual(map["/en.json"], "en");
+    });
 });

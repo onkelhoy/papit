@@ -1,7 +1,7 @@
 {
   "name": "@papit/create",
   "description": "Scaffolds papit packages, components and monorepo projects from templates, interactively or through flags. Run it inside a papit workspace to add a package or component, or outside one to start a new project.",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -50,7 +50,7 @@
   "dependencies": {
     "@papit/arguments": "0.0.1",
     "@papit/information": "0.0.10",
-    "@papit/server": "1.0.11",
+    "@papit/server": "1.0.12",
     "@papit/terminal": "0.0.2"
   },
   "devDependencies": {
@@ -77,5 +77,5 @@
     },
     "components": {}
   },
-  "remoteVersion": "0.0.14"
+  "remoteVersion": "0.0.15"
 }

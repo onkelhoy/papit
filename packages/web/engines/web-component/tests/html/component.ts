@@ -71,6 +71,23 @@ class KeyedList extends CustomElement {
   }
 }
 
+class PartialComponent extends CustomElement {
+  @property({ rerender: true }) name = "henry";
+  @property({ rerender: true, type: Number }) count = 0;
+
+  @bind
+  increment() {
+    this.count++;
+  }
+
+  render() {
+    return html`
+      <button data-id="tip-${this.name}" title="${this.name}-${this.count}!" @click="${this.increment}">${this.count}</button>
+    `
+  }
+}
+
+window.customElements.define("attr-partial", PartialComponent);
 window.customElements.define("attr-event-inside", EventInsideComponent);
 window.customElements.define("attr-event", EventComponent);
 window.customElements.define("attr-select", SelectComponent);

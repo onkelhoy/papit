@@ -147,7 +147,17 @@ function compile(templateStringArray: TemplateStringsArray, values: unknown[]): 
 
     if (insideTag)
     {
-      if (/='?"?$/.test(fixedStr))
+      // inside an attribute value when the current tag has an unclosed quote, e.g. title="a ${x}
+      const tag = result.slice(result.lastIndexOf('<'));
+      const quotes = tag.replace(/[^"']/g, '');
+      let open = '';
+      for (const quote of quotes)
+      {
+        if (!open) open = quote;
+        else if (quote === open) open = '';
+      }
+
+      if (open)
         result += '__marker__';
       else
         result += `marker-standalone-${i}="${i}"`;
