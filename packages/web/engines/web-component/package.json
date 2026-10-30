@@ -64,7 +64,7 @@
     "@papit/arguments": "0.0.1",
     "@papit/information": "0.0.10",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.17",
+    "@papit/codeblock": "0.1.18",
     "typescript": "5.9.3"
   },
   "browserslist": [
@@ -84,5 +84,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.13"
+  "remoteVersion": "0.0.14"
 }

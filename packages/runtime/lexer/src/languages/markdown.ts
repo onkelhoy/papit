@@ -1,1356 +1,488 @@
-import { Lexer, type StateRules } from "lexer";
+/**
+ * @fileoverview Markdown tokenizer: turns markdown text into a tree of blocks with inline children.
+ *
+ * @details
+ * - Blocks: ATX and setext headings, paragraphs, fenced and indented code, nested quotes,
+ *   ordered/unordered/task lists (nested by indentation), GFM tables with alignment, rules.
+ * - Inline: `code`, **strong**, *em*, ~~del~~, [links](href "title"), ![images](src),
+ *   <autolinks>, bare http(s) URLs, hard breaks and backslash escapes.
+ * - Raw HTML is not recognised: it stays text, so a renderer that builds DOM nodes stays safe.
+ * - Hrefs are returned as written. Filtering unsafe schemes is the renderer's job.
+ */
 
-// Simple, focused token types
-export type MarkdownToken =
-  | { type: "heading"; level: number; text: string }
-  | { type: "code-block"; lang: string; code: string }
-  | { type: "table"; headers: string[]; rows: string[][] }
-  | { type: "quote"; text: string }
-  | { type: "list"; ordered: boolean; items: string[] }
-  | { type: "paragraph"; text: string }
-  | { type: "blank" }
-  | { type: "tab" };
+export type MarkdownInline =
+    | { type: "text"; text: string }
+    | { type: "code"; text: string }
+    | { type: "break" }
+    | { type: "strong" | "em" | "del"; children: MarkdownInline[] }
+    | { type: "link"; href: string; title?: string; children: MarkdownInline[] }
+    | { type: "image"; src: string; alt: string; title?: string };
 
-type BlockCtx = {
-  level: number;
-  lang: string;
-  items: string[];
-  headers: string[];
-  rows: string[][];
-  currentRow: string[];
-  quote: boolean;
-};
+export type MarkdownAlign = "left" | "center" | "right" | null;
 
-// Block-level: processes line by line
-const blockRules: StateRules<BlockCtx, MarkdownToken> = {
-  EOF: [
-    {
-      condition: () => true,
-      action: (ctx, char, buffer) => {
-        const trimmed = buffer.trim();
-        if (!trimmed) return;
+export type MarkdownListItem = { checked?: boolean; children: MarkdownBlock[] };
 
-        if (ctx.level > 0) 
-          ctx.emit({ type: "heading", level: ctx.level, text: trimmed });
-        else if (ctx.quote)
-          ctx.emit({ type: "quote", text: trimmed });
-        else 
-          ctx.emit({ type: "paragraph", text: trimmed });
-      },
-    },
-  ],
+export type MarkdownBlock =
+    | { type: "heading"; level: number; children: MarkdownInline[] }
+    | { type: "paragraph"; children: MarkdownInline[] }
+    | { type: "code"; lang: string; text: string }
+    | { type: "quote"; children: MarkdownBlock[] }
+    | { type: "list"; ordered: boolean; start: number; loose: boolean; items: MarkdownListItem[] }
+    | { type: "table"; align: MarkdownAlign[]; head: MarkdownInline[][]; rows: MarkdownInline[][][] }
+    | { type: "rule" };
 
-  lineStart: [
-    // Blank line
-    { condition: /\n/, action: (ctx) => ctx.emit({ type: "blank" }) },
-    
-    // Heading: #
-    { condition: "#", next: "maybeHeading" },
-    
-    // Code block: ```
-    { condition: "`", next: "maybeCodeBlock" },
-    
-    // Quote: >
-    { condition: ">", next: "quote", action: ctx => {
-      ctx.quote = true;
-    } },
-    
-    // Table: |
-    {
-      condition: "|",
-      next: "tableCell",
-      action: (ctx) => {
-        ctx.headers = [];
-        ctx.rows = [];
-        ctx.currentRow = [];
-      },
-    },
-    
-    // List: - or 1.
-    { condition: "-", next: "maybeList" },
-    { condition: /\d/, next: "maybeOrderedList", action: (ctx, char) => ctx.append(char) },
-    
-    // Regular paragraph
-    { condition: (char) => char?.trim() !== "", next: "paragraph", action: (ctx, char) => ctx.append(char) },
-  ],
+const FENCE = /^ {0,3}(`{3,}|~{3,})\s*([^`\s]*)/;
+const HEADING = /^ {0,3}(#{1,6})(?:\s+(.*?))?(?:\s+#+)?\s*$/;
+const SETEXT = /^ {0,3}(=+|-+)\s*$/;
+const RULE = /^ {0,3}([-*_])(?:\s*\1){2,}\s*$/;
+const QUOTE = /^ {0,3}>\s?/;
+const ITEM = /^( {0,3})([-*+]|(\d{1,9})[.)])( +|$)/;
+const DIVIDER = /^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$/;
+const INDENTED = /^ {4}/;
 
-  // === HEADINGS ===
-  maybeHeading: [
-    { condition: "#", action: ctx => ctx.level = 2, next: "heading" },
-    { condition: " ", action: ctx => ctx.level = 1, next: "headingText" },
-    { condition: () => true, action: (ctx, char) => ctx.append("#" + char), next: "paragraph" }
-  ],
+// ---------------------------------------------------------------- blocks
 
-  heading: [
-    { condition: "#", action: (ctx) => ctx.level++ },
-    { condition: " ", next: "headingText" },
-  ],
-
-  headingText: [
-    {
-      condition: /\n/,
-      next: "lineStart",
-      action: (ctx, char, buffer) => {
-        ctx.emit({ type: "heading", level: ctx.level, text: buffer.trim() });
-        ctx.level = 0;
-      },
-    },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  // === CODE BLOCKS ===
-  maybeCodeBlock: [
-    { condition: "`", next: "maybeCodeBlock2" },
-    { condition: () => true, next: "paragraph", action: (ctx, char) => ctx.append("`" + char) },
-  ],
-
-  maybeCodeBlock2: [
-    { condition: "`", next: "codeBlockLang" },
-    { condition: () => true, next: "paragraph", action: (ctx, char) => ctx.append("``" + char) },
-  ],
-
-  codeBlockLang: [
-    { condition: /\n/, next: "codeBlockContent" },
-    { condition: () => true, action: (ctx, char) => (ctx.lang += char) },
-  ],
-
-  codeBlockContent: [
-    { condition: "`", next: "maybeCodeBlockEnd" },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  maybeCodeBlockEnd: [
-    { condition: "`", next: "maybeCodeBlockEnd2" },
-    { condition: () => true, next: "codeBlockContent", action: (ctx, char) => ctx.append("`" + char) },
-  ],
-
-  maybeCodeBlockEnd2: [
-    {
-      condition: "`",
-      next: "lineStart",
-      action: (ctx, char, buffer) => {
-        ctx.emit({ type: "code-block", lang: ctx.lang.trim(), code: buffer.trimEnd() });
-        ctx.lang = "";
-      },
-    },
-    { condition: () => true, next: "codeBlockContent", action: (ctx, char) => ctx.append("``" + char) },
-  ],
-
-  // === QUOTES ===
-  quote: [
-    { condition: " ", next: "quoteText" },
-    { condition: () => true, next: "quoteText", action: (ctx, char) => ctx.append(char) },
-  ],
-
-  quoteText: [
-    { condition: /\n/, next: "quoteEnd" },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  quoteEnd: [
-    {
-      condition: /\n/,
-      next: "lineStart",
-      action: (ctx, char, buffer) => {
-        ctx.quote = false;
-        ctx.emit({ type: "quote", text: buffer.trim() });
-      },
-    },
-    { condition: ">", action: ctx => ctx.append("\n"), next: "quote" }
-  ],
-
-  // === TABLES ===
-  tableCell: [
-    {
-      condition: "|",
-      action: (ctx, char, buffer) => {
-        ctx.currentRow.push(buffer.trim());
-      },
-    },
-    {
-      condition: /\n/,
-      next: "maybeTableSeparator",
-      action: (ctx, char, buffer) => {
-        if (buffer.trim()) ctx.currentRow.push(buffer.trim());
-        ctx.headers = [...ctx.currentRow];
-        ctx.currentRow = [];
-      },
-    },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  maybeTableSeparator: [
-    {
-      condition: "|",
-      next: "tableSeparator",
-    },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        // Not a table, just a paragraph with pipes
-        ctx.emit({ type: "paragraph", text: ctx.headers.join(" | ") });
-        ctx.headers = [];
-        ctx.append(char);
-      },
-    },
-  ],
-
-  tableSeparator: [
-    { condition: /[-:\s]/, action: () => {} }, // Skip separator content
-    {
-      condition: /\n/,
-      next: "tableRow",
-    },
-  ],
-
-  tableRow: [
-    {
-      condition: "|",
-      next: "tableRowCell",
-      action: (ctx) => {
-        ctx.currentRow = [];
-      },
-    },
-    {
-      condition: /\n/,
-      next: "lineStart",
-      action: (ctx) => {
-        // Empty line ends table
-        ctx.emit({ type: "table", headers: ctx.headers, rows: ctx.rows });
-        ctx.headers = [];
-        ctx.rows = [];
-      },
-    },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        // Not a table row, end table
-        ctx.emit({ type: "table", headers: ctx.headers, rows: ctx.rows });
-        ctx.headers = [];
-        ctx.rows = [];
-        ctx.append(char);
-      },
-    },
-  ],
-
-  tableRowCell: [
-    {
-      condition: "|",
-      action: (ctx, char, buffer) => {
-        ctx.currentRow.push(buffer.trim());
-      },
-    },
-    {
-      condition: /\n/,
-      next: "tableRow",
-      action: (ctx, char, buffer) => {
-        if (buffer.trim()) ctx.currentRow.push(buffer.trim());
-        ctx.rows.push([...ctx.currentRow]);
-        ctx.currentRow = [];
-      },
-    },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  // === LISTS ===
-  maybeList: [
-    {
-      condition: " ",
-      next: "listItem",
-      action: (ctx) => {
-        ctx.items = [];
-        ctx.level = 0; // 0 = unordered
-      },
-    },
-    { condition: () => true, next: "paragraph", action: (ctx, char) => ctx.append("-" + char) },
-  ],
-
-  maybeOrderedList: [
-    { condition: /\d/, action: (ctx, char) => ctx.append(char) },
-    {
-      condition: ".",
-      next: "maybeOrderedListSpace",
-    },
-    { condition: () => true, next: "paragraph", action: (ctx, char) => ctx.append(char) },
-  ],
-
-  maybeOrderedListSpace: [
-    {
-      condition: " ",
-      next: "listItem",
-      action: (ctx, char, buffer) => {
-        ctx.items = [];
-        ctx.level = 1; // 1 = ordered
-      },
-    },
-    { condition: () => true, next: "paragraph", action: (ctx, char) => ctx.append("." + char) },
-  ],
-
-  listItem: [
-    {
-      condition: /\n/,
-      next: "maybeListContinue",
-      action: (ctx, char, buffer) => {
-        ctx.items.push(buffer.trim());
-      },
-    },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-
-  maybeListContinue: [
-    { condition: "-", next: "maybeListContinue2" },
-    { condition: /\d/, next: "maybeOrderedListContinue", action: (ctx, char) => ctx.append(char) },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        ctx.emit({ type: "list", ordered: ctx.level === 1, items: ctx.items });
-        ctx.items = [];
-        ctx.append(char);
-      },
-    },
-  ],
-
-  maybeListContinue2: [
-    { condition: " ", next: "listItem" },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        ctx.emit({ type: "list", ordered: ctx.level === 1, items: ctx.items });
-        ctx.items = [];
-        ctx.append("-" + char);
-      },
-    },
-  ],
-
-  maybeOrderedListContinue: [
-    { condition: /\d/, action: (ctx, char) => ctx.append(char) },
-    { condition: ".", next: "maybeOrderedListContinue2" },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        ctx.emit({ type: "list", ordered: ctx.level === 1, items: ctx.items });
-        ctx.items = [];
-        ctx.append(char);
-      },
-    },
-  ],
-
-  maybeOrderedListContinue2: [
-    { condition: " ", next: "listItem" },
-    {
-      condition: () => true,
-      next: "lineStart",
-      action: (ctx, char) => {
-        ctx.emit({ type: "list", ordered: ctx.level === 1, items: ctx.items });
-        ctx.items = [];
-        ctx.append("." + char);
-      },
-    },
-  ],
-
-  // === PARAGRAPHS ===
-  paragraph: [
-    {
-      condition: /\n/,
-      next: "lineStart",
-      action: (ctx, char, buffer) => {
-        if (buffer.trim()) {
-          ctx.emit({ type: "paragraph", text: buffer.trim() });
-        }
-      },
-    },
-    { condition: () => true, action: (ctx, char) => ctx.append(char) },
-  ],
-};
-
-export function markdown(content: string): MarkdownToken[] {
-  const lexer = new Lexer<BlockCtx, MarkdownToken>(
-    blockRules, 
-    "lineStart", {
-      level: 0,
-      lang: "",
-      items: [],
-      headers: [],
-      rows: [],
-      currentRow: [],
-      quote: false,
-    }
-  );
-
-  return lexer.run(content);
+/** Tokenizes markdown into blocks. */
+export function markdown(text: string): MarkdownBlock[] {
+    return blocks(text.replace(/\r\n?/g, "\n").replace(/\t/g, "    ").split("\n"));
 }
 
-// import { Lexer, StateRules } from "./lexer";
+function blocks(lines: string[]): MarkdownBlock[] {
+    const out: MarkdownBlock[] = [];
+    let paragraph: string[] = [];
 
-// // Block-level context
-// type BlockCtx = {
-//   indent: number;
-//   listLevel: number;
-//   codeLanguage: string;
-//   inCodeBlock: boolean;
-//   tableHeaders: string[];
-//   tableAlignments: ("left" | "center" | "right" | null)[];
-//   tableCurrentRow: string[];
-//   inTable: boolean;
-// };
+    const flush = () => {
+        if (paragraph.length) out.push({ type: "paragraph", children: markdownInline(paragraph.join("\n").trim()) });
+        paragraph = [];
+    };
 
-// // Block-level tokens
-// export type BlockToken =
-//   | { type: "heading"; level: number; content: string }
-//   | { type: "code-block"; language?: string; content: string }
-//   | { type: "quote"; content: string }
-//   | { type: "list-item"; ordered: boolean; checked?: boolean; content: string }
-//   | { type: "horizontal-rule" }
-//   | { type: "table"; headers: string[]; alignments: ("left" | "center" | "right" | null)[]; rows: string[][] }
-//   | { type: "paragraph"; content: string }
-//   | { type: "blank-line" };
+    for (let i = 0; i < lines.length; i++)
+    {
+        const line = lines[i];
 
-// // Inline-level tokens
-// export type InlineToken =
-//   | { type: "text"; value: string }
-//   | { type: "bold"; value: string }
-//   | { type: "italic"; value: string }
-//   | { type: "code"; value: string }
-//   | { type: "link"; text: string; href: string; title?: string }
-//   | { type: "image"; alt: string; src: string; title?: string }
-//   | { type: "line-break" };
+        if (!line.trim())
+        {
+            flush();
+            continue;
+        }
 
-// // Combined markdown token
-// export type MarkdownToken = BlockToken & { inline?: InlineToken[] };
+        // indented code can't interrupt a paragraph
+        if (!paragraph.length && INDENTED.test(line))
+        {
+            const code: string[] = [];
+            while (i < lines.length && (INDENTED.test(lines[i]) || !lines[i].trim())) code.push(lines[i++].slice(4));
+            i--;
+            while (code.length && !code[code.length - 1].trim()) code.pop();
+            out.push({ type: "code", lang: "", text: code.join("\n") });
+            continue;
+        }
 
-// // ============================================================================
-// // PASS 1: Block-level lexer (line-by-line)
-// // ============================================================================
+        // fenced code: up to a closing fence at least as long, or to the end
+        const fence = line.match(FENCE);
+        if (fence)
+        {
+            flush();
+            const close = new RegExp(`^ {0,3}\\${fence[1][0]}{${fence[1].length},}\\s*$`);
+            const code: string[] = [];
+            i++;
+            while (i < lines.length && !close.test(lines[i])) code.push(lines[i++]);
+            out.push({ type: "code", lang: fence[2], text: code.join("\n") });
+            continue;
+        }
 
-// const blockRules: StateRules<BlockCtx, BlockToken> = {
-//   EOF: [
-//     {
-//       condition: () => true,
-//       action: (ctx, char, buffer) => {
-//         if (buffer.trim()) {
-//           ctx.emit({ type: "paragraph", content: buffer.trim() });
-//         }
-//       },
-//     },
-//   ],
+        const heading = line.match(HEADING);
+        if (heading)
+        {
+            flush();
+            out.push({ type: "heading", level: heading[1].length, children: markdownInline(heading[2] ?? "") });
+            continue;
+        }
 
-//   lineStart: [
-//     // Headings: # ## ###
-//     {
-//       condition: "#",
-//       next: "heading",
-//       action: (ctx) => {
-//         ctx.indent = 1;
-//       },
-//     },
-//     // Code block: ```
-//     {
-//       condition: "`",
-//       next: "potentialCodeBlock",
-//     },
-//     // Quote: >
-//     {
-//       condition: ">",
-//       next: "quote",
-//     },
-//     // Horizontal rule: --- or ***
-//     {
-//       condition: "-",
-//       next: "potentialHR",
-//     },
-//     {
-//       condition: "*",
-//       next: "potentialHRorList",
-//     },
-//     // Table or ordered list: |
-//     {
-//       condition: "|",
-//       next: "tableRow",
-//       action: (ctx) => {
-//         if (!ctx.inTable) {
-//           ctx.inTable = true;
-//           ctx.tableCurrentRow = [];
-//         }
-//       },
-//     },
-//     // Ordered list: 1. 2.
-//     {
-//       condition: /\d/,
-//       next: "potentialOrderedList",
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//     // Unordered list: - or *
-//     // Blank line
-//     {
-//       condition: /\n/,
-//       action: (ctx) => {
-//         // End table if we were in one
-//         if (ctx.inTable && ctx.tableHeaders.length > 0) {
-//           ctx.emit({
-//             type: "table",
-//             headers: ctx.tableHeaders,
-//             alignments: ctx.tableAlignments,
-//             rows: [],
-//           });
-//           ctx.tableHeaders = [];
-//           ctx.tableAlignments = [];
-//           ctx.tableCurrentRow = [];
-//           ctx.inTable = false;
-//         }
-//         ctx.emit({ type: "blank-line" });
-//       },
-//     },
-//     // Regular paragraph
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         // End table if we were in one
-//         if (ctx.inTable && ctx.tableHeaders.length > 0) {
-//           ctx.emit({
-//             type: "table",
-//             headers: ctx.tableHeaders,
-//             alignments: ctx.tableAlignments,
-//             rows: [],
-//           });
-//           ctx.tableHeaders = [];
-//           ctx.tableAlignments = [];
-//           ctx.tableCurrentRow = [];
-//           ctx.inTable = false;
-//         }
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        // a ===/--- line under a paragraph makes it a heading
+        const setext = paragraph.length ? line.match(SETEXT) : null;
+        if (setext)
+        {
+            out.push({ type: "heading", level: setext[1][0] === "=" ? 1 : 2, children: markdownInline(paragraph.join("\n").trim()) });
+            paragraph = [];
+            continue;
+        }
 
-//   heading: [
-//     {
-//       condition: "#",
-//       action: (ctx) => {
-//         ctx.indent++;
-//       },
-//     },
-//     {
-//       condition: " ",
-//       next: "headingContent",
-//     },
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "heading", level: ctx.indent, content: buffer.trim() });
-//         ctx.indent = 0;
-//       },
-//     },
-//   ],
+        if (RULE.test(line))
+        {
+            flush();
+            out.push({ type: "rule" });
+            continue;
+        }
 
-//   headingContent: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "heading", level: ctx.indent, content: buffer.trim() });
-//         ctx.indent = 0;
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        if (QUOTE.test(line))
+        {
+            flush();
+            const quoted: string[] = [];
+            while (i < lines.length && QUOTE.test(lines[i])) quoted.push(lines[i++].replace(QUOTE, ""));
+            i--;
+            out.push({ type: "quote", children: blocks(quoted) });
+            continue;
+        }
 
-//   potentialCodeBlock: [
-//     {
-//       condition: "`",
-//       next: "potentialCodeBlock2",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("`");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        // a table is a row with pipes followed by a divider row
+        if (line.includes("|") && i + 1 < lines.length && lines[i + 1].includes("-") && DIVIDER.test(lines[i + 1]))
+        {
+            flush();
+            const head = cells(line);
+            const align = cells(lines[i + 1]).map(cell => {
+                const left = cell.startsWith(":");
+                const right = cell.endsWith(":");
+                return left && right ? "center" : right ? "right" : left ? "left" : null;
+            });
+            const rows: MarkdownInline[][][] = [];
+            i += 2;
+            while (i < lines.length && lines[i].trim() && lines[i].includes("|"))
+            {
+                const row = cells(lines[i++]);
+                rows.push(head.map((_, index) => markdownInline(row[index] ?? "")));
+            }
+            i--;
+            out.push({ type: "table", align: head.map((_, index) => align[index] ?? null), head: head.map(cell => markdownInline(cell)), rows });
+            continue;
+        }
 
-//   potentialCodeBlock2: [
-//     {
-//       condition: "`",
-//       next: "codeBlockLanguage",
-//       action: (ctx) => {
-//         ctx.inCodeBlock = true;
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("``");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        if (ITEM.test(line))
+        {
+            flush();
+            i = list(lines, i, out) - 1;
+            continue;
+        }
 
-//   codeBlockLanguage: [
-//     {
-//       condition: /\n/,
-//       next: "codeBlockContent",
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => {
-//         ctx.codeLanguage += char;
-//       },
-//     },
-//   ],
+        paragraph.push(line);
+    }
+    flush();
 
-//   codeBlockContent: [
-//     {
-//       condition: "`",
-//       next: "potentialCodeBlockEnd",
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+    return out;
+}
 
-//   potentialCodeBlockEnd: [
-//     {
-//       condition: "`",
-//       next: "potentialCodeBlockEnd2",
-//     },
-//     {
-//       condition: () => true,
-//       next: "codeBlockContent",
-//       action: (ctx, char) => {
-//         ctx.append("`");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+/** Reads a list starting at `start` into `out`, returns the index of the first line after it. */
+function list(lines: string[], start: number, out: MarkdownBlock[]): number {
+    const first = lines[start].match(ITEM)!;
+    const ordered = first[3] !== undefined;
+    const block: MarkdownBlock = { type: "list", ordered, start: ordered ? Number(first[3]) : 1, loose: false, items: [] };
 
-//   potentialCodeBlockEnd2: [
-//     {
-//       condition: "`",
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({
-//           type: "code-block",
-//           language: ctx.codeLanguage || undefined,
-//           content: buffer.trimEnd(),
-//         });
-//         ctx.codeLanguage = "";
-//         ctx.inCodeBlock = false;
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "codeBlockContent",
-//       action: (ctx, char) => {
-//         ctx.append("``");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+    let i = start;
+    while (i < lines.length)
+    {
+        const item = lines[i].match(ITEM);
+        if (!item || (item[3] !== undefined) !== ordered) break;
 
-//   quote: [
-//     {
-//       condition: " ",
-//       next: "quoteContent",
-//     },
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx) => ctx.emit({ type: "quote", content: "" }),
-//     },
-//     {
-//       condition: () => true,
-//       next: "quoteContent",
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        const marker = item[1].length;
+        // content starts after the marker and its spaces; an empty item continues one past the marker
+        const indent = item[4] ? item[0].length : marker + item[2].length + 1;
+        const content = [lines[i].slice(item[0].length)];
+        i++;
 
-//   quoteContent: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "quote", content: buffer.trim() });
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        while (i < lines.length)
+        {
+            const next = lines[i];
+            if (!next.trim())
+            {
+                let j = i;
+                while (j < lines.length && !lines[j].trim()) j++;
+                if (j >= lines.length) break;
 
-//   potentialHR: [
-//     {
-//       condition: "-",
-//       next: "potentialHR2",
-//     },
-//     {
-//       condition: " ",
-//       next: "listItem",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("-");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+                if (indentOf(lines[j]) > marker)
+                {
+                    // a blank line inside an item makes the list loose
+                    block.loose = true;
+                    while (i < j) { content.push(""); i++; }
+                    continue;
+                }
 
-//   potentialHR2: [
-//     {
-//       condition: "-",
-//       next: "horizontalRule",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("--");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+                const sibling = lines[j].match(ITEM);
+                if (sibling && (sibling[3] !== undefined) === ordered && sibling[1].length === marker)
+                {
+                    block.loose = true;
+                    i = j;
+                }
+                break;
+            }
 
-//   horizontalRule: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx) => ctx.emit({ type: "horizontal-rule" }),
-//     },
-//     {
-//       condition: () => true,
-//     },
-//   ],
+            const depth = indentOf(next);
+            if (depth > marker)
+            {
+                content.push(next.slice(Math.min(indent, depth)));
+                i++;
+                continue;
+            }
 
-//   potentialHRorList: [
-//     {
-//       condition: "*",
-//       next: "potentialHR2Star",
-//     },
-//     {
-//       condition: " ",
-//       next: "listItem",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("*");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+            // lazy continuation of the item's paragraph
+            if (!startsBlock(next))
+            {
+                content.push(next.trim());
+                i++;
+                continue;
+            }
+            break;
+        }
 
-//   potentialHR2Star: [
-//     {
-//       condition: "*",
-//       next: "horizontalRule",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append("**");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        let checked: boolean | undefined;
+        const task = content[0].match(/^\[([ xX])\]\s+/);
+        if (task)
+        {
+            checked = task[1] !== " ";
+            content[0] = content[0].slice(task[0].length);
+        }
 
-//   potentialOrderedList: [
-//     {
-//       condition: /\d/,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//     {
-//       condition: ".",
-//       next: "orderedListSpace",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        block.items.push({ checked, children: blocks(content) });
+    }
 
-//   orderedListSpace: [
-//     {
-//       condition: " ",
-//       next: "orderedListContent",
-//     },
-//     {
-//       condition: () => true,
-//       next: "paragraph",
-//       action: (ctx, char) => {
-//         ctx.append(".");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+    out.push(block);
+    return i;
+}
 
-//   orderedListContent: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "list-item", ordered: true, content: buffer.trim() });
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+function startsBlock(line: string) {
+    return ITEM.test(line) || FENCE.test(line) || HEADING.test(line) || RULE.test(line) || QUOTE.test(line);
+}
 
-//   listItem: [
-//     {
-//       condition: "[",
-//       next: "checkboxList",
-//     },
-//     {
-//       condition: () => true,
-//       next: "unorderedListContent",
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+function indentOf(line: string) {
+    return line.length - line.trimStart().length;
+}
 
-//   checkboxList: [
-//     {
-//       condition: " ",
-//       next: "checkboxUnchecked",
-//     },
-//     {
-//       condition: "x",
-//       next: "checkboxChecked",
-//     },
-//     {
-//       condition: "X",
-//       next: "checkboxChecked",
-//     },
-//     {
-//       condition: () => true,
-//       next: "unorderedListContent",
-//       action: (ctx, char) => {
-//         ctx.append("[");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+// table cells: outer pipes are optional, \| is a literal pipe
+function cells(line: string) {
+    return line.trim()
+        .replace(/^\|/, "")
+        .replace(/(?<!\\)\|$/, "")
+        .split(/(?<!\\)\|/)
+        .map(cell => cell.trim().replace(/\\\|/g, "|"));
+}
 
-//   checkboxUnchecked: [
-//     {
-//       condition: "]",
-//       next: "checkboxContent",
-//       action: (ctx) => {
-//         ctx.indent = 0; // unchecked
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "unorderedListContent",
-//       action: (ctx, char) => {
-//         ctx.append("[ ");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+// ---------------------------------------------------------------- inline
 
-//   checkboxChecked: [
-//     {
-//       condition: "]",
-//       next: "checkboxContent",
-//       action: (ctx) => {
-//         ctx.indent = 1; // checked
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "unorderedListContent",
-//       action: (ctx, char) => {
-//         ctx.append("[x");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+// longest first, so ** wins over *
+const MARKS: { mark: string; type: "strong" | "em" | "del" }[] = [
+    { mark: "**", type: "strong" },
+    { mark: "__", type: "strong" },
+    { mark: "~~", type: "del" },
+    { mark: "*", type: "em" },
+    { mark: "_", type: "em" },
+];
 
-//   checkboxContent: [
-//     {
-//       condition: " ",
-//     },
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({
-//           type: "list-item",
-//           ordered: false,
-//           checked: ctx.indent === 1,
-//           content: buffer.trim(),
-//         });
-//         ctx.indent = 0;
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+const ESCAPABLE = /[!-/:-@[-`{-~]/;
+const WORD = /[\p{L}\p{N}]/u;
+const URL_PATTERN = /https?:\/\/[^\s<>"']+/gi;
+// trailing punctuation that usually ends the sentence, not the URL
+const TRAILING = /[.,;:!?)\]}'"]+$/;
 
-//   unorderedListContent: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "list-item", ordered: false, content: buffer.trim() });
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+/** Tokenizes the inline content of one paragraph, heading, list item or table cell. */
+export function markdownInline(text: string): MarkdownInline[] {
+    const out: MarkdownInline[] = [];
+    let plain = "";
+    const push = (node: MarkdownInline) => {
+        if (plain) out.push(...autolink(plain));
+        plain = "";
+        out.push(node);
+    };
 
-//   paragraph: [
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx, char, buffer) => {
-//         if (buffer.trim()) {
-//           ctx.emit({ type: "paragraph", content: buffer.trim() });
-//         }
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+    let i = 0;
+    while (i < text.length)
+    {
+        const char = text[i];
+        const rest = text.slice(i);
 
-//   // Table parsing states
-//   tableRow: [
-//     {
-//       condition: "|",
-//       action: (ctx, char, buffer) => {
-//         ctx.tableCurrentRow.push(buffer.trim());
-//       },
-//     },
-//     {
-//       condition: /\n/,
-//       next: "potentialTableSeparator",
-//       action: (ctx, char, buffer) => {
-//         // Add last cell
-//         if (buffer.trim() || ctx.tableCurrentRow.length > 0) {
-//           ctx.tableCurrentRow.push(buffer.trim());
-//         }
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        if (char === "\\" && i + 1 < text.length)
+        {
+            if (text[i + 1] === "\n")
+            {
+                push({ type: "break" });
+                i += 2;
+                continue;
+            }
+            if (ESCAPABLE.test(text[i + 1]))
+            {
+                plain += text[i + 1];
+                i += 2;
+                continue;
+            }
+        }
 
-//   potentialTableSeparator: [
-//     {
-//       condition: "|",
-//       next: "tableSeparator",
-//       action: (ctx) => {
-//         // Previous row was headers
-//         ctx.tableHeaders = [...ctx.tableCurrentRow];
-//         ctx.tableCurrentRow = [];
-//         ctx.tableAlignments = [];
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "lineStart",
-//       action: (ctx, char) => {
-//         // Not a table, it was just a line with pipes
-//         if (ctx.tableCurrentRow.length > 0) {
-//           const content = ctx.tableCurrentRow.join(" | ");
-//           ctx.emit({ type: "paragraph", content });
-//           ctx.tableCurrentRow = [];
-//           ctx.inTable = false;
-//         }
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        // two spaces before a newline are a hard break, otherwise the newline is soft
+        if (char === "\n")
+        {
+            const hard = / {2,}$/.test(plain);
+            plain = plain.replace(/ +$/, "");
+            if (hard) push({ type: "break" });
+            else plain += "\n";
+            i++;
+            while (text[i] === " ") i++;
+            continue;
+        }
 
-//   tableSeparator: [
-//     {
-//       condition: "|",
-//       action: (ctx, char, buffer) => {
-//         // Parse alignment from separator (e.g., :---, :---:, ---:)
-//         const trimmed = buffer.trim();
-//         let alignment: "left" | "center" | "right" | null = null;
-        
-//         if (trimmed.startsWith(":") && trimmed.endsWith(":")) {
-//           alignment = "center";
-//         } else if (trimmed.startsWith(":")) {
-//           alignment = "left";
-//         } else if (trimmed.endsWith(":")) {
-//           alignment = "right";
-//         }
-        
-//         ctx.tableAlignments.push(alignment);
-//       },
-//     },
-//     {
-//       condition: /\n/,
-//       next: "tableDataRow",
-//       action: (ctx, char, buffer) => {
-//         // Add last alignment
-//         const trimmed = buffer.trim();
-//         let alignment: "left" | "center" | "right" | null = null;
-        
-//         if (trimmed.startsWith(":") && trimmed.endsWith(":")) {
-//           alignment = "center";
-//         } else if (trimmed.startsWith(":")) {
-//           alignment = "left";
-//         } else if (trimmed.endsWith(":")) {
-//           alignment = "right";
-//         }
-        
-//         ctx.tableAlignments.push(alignment);
-//         ctx.tableCurrentRow = [];
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
+        // `code`: closed by a run of the same length, nothing inside is parsed
+        if (char === "`")
+        {
+            const run = rest.match(/^`+/)![0];
+            const end = codeEnd(text, i + run.length, run);
+            if (end > -1)
+            {
+                let code = text.slice(i + run.length, end).replace(/\n/g, " ");
+                if (/^ .* $/.test(code) && code.trim()) code = code.slice(1, -1);
+                push({ type: "code", text: code });
+                i = end + run.length;
+                continue;
+            }
+            plain += run;
+            i += run.length;
+            continue;
+        }
 
-//   tableDataRow: [
-//     {
-//       condition: "|",
-//       next: "tableDataRowContent",
-//     },
-//     {
-//       condition: /\n/,
-//       next: "lineStart",
-//       action: (ctx) => {
-//         // Empty line ends table
-//         if (ctx.tableHeaders.length > 0) {
-//           ctx.emit({
-//             type: "table",
-//             headers: ctx.tableHeaders,
-//             alignments: ctx.tableAlignments,
-//             rows: [],
-//           });
-//           ctx.tableHeaders = [];
-//           ctx.tableAlignments = [];
-//           ctx.tableCurrentRow = [];
-//           ctx.inTable = false;
-//         }
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       next: "lineStart",
-//       action: (ctx, char) => {
-//         // Not a table row, end table
-//         if (ctx.tableHeaders.length > 0) {
-//           ctx.emit({
-//             type: "table",
-//             headers: ctx.tableHeaders,
-//             alignments: ctx.tableAlignments,
-//             rows: [],
-//           });
-//           ctx.tableHeaders = [];
-//           ctx.tableAlignments = [];
-//           ctx.tableCurrentRow = [];
-//           ctx.inTable = false;
-//         }
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+        if (char === "!" && text[i + 1] === "[")
+        {
+            const found = link(text, i + 1);
+            if (found)
+            {
+                push({ type: "image", src: found.href, alt: found.label, ...(found.title !== undefined && { title: found.title }) });
+                i = found.end;
+                continue;
+            }
+        }
 
-//   tableDataRowContent: [
-//     {
-//       condition: "|",
-//       action: (ctx, char, buffer) => {
-//         ctx.tableCurrentRow.push(buffer.trim());
-//       },
-//     },
-//     {
-//       condition: /\n/,
-//       next: "tableDataRow",
-//       action: (ctx, char, buffer) => {
-//         // Add last cell and emit row
-//         if (buffer.trim() || ctx.tableCurrentRow.length > 0) {
-//           ctx.tableCurrentRow.push(buffer.trim());
-//         }
-        
-//         // Emit the row as part of building the table
-//         // We'll collect rows in a different way - actually let's just emit
-//         // each row and then merge them later
-//         ctx.emit({
-//           type: "table",
-//           headers: ctx.tableHeaders,
-//           alignments: ctx.tableAlignments,
-//           rows: [ctx.tableCurrentRow],
-//         });
-        
-//         ctx.tableCurrentRow = [];
-//       },
-//     },
-//     {
-//       condition: () => true,
-//       action: (ctx, char) => ctx.append(char),
-//     },
-//   ],
-// };
+        if (char === "[")
+        {
+            const found = link(text, i);
+            if (found)
+            {
+                push({ type: "link", href: found.href, ...(found.title !== undefined && { title: found.title }), children: markdownInline(found.label).map(unlink) });
+                i = found.end;
+                continue;
+            }
+        }
 
-// // ============================================================================
-// // PASS 2: Inline-level lexer (processes content within blocks)
-// // ============================================================================
+        if (char === "<")
+        {
+            const auto = rest.match(/^<((?:https?|mailto):[^\s<>]+)>/i);
+            if (auto)
+            {
+                push({ type: "link", href: auto[1], children: [{ type: "text", text: auto[1].replace(/^mailto:/i, "") }] });
+                i += auto[0].length;
+                continue;
+            }
+        }
 
-// type InlineCtx = {
-//   linkText: string;
-//   linkHref: string;
-//   linkTitle: string;
-// };
+        const paired = MARKS.find(({ mark }) => rest.startsWith(mark));
+        if (paired)
+        {
+            const close = closing(text, i, paired.mark);
+            if (close > 0)
+            {
+                push({ type: paired.type, children: markdownInline(text.slice(i + paired.mark.length, close)) });
+                i = close + paired.mark.length;
+                continue;
+            }
+            // an unmatched run stays text as a whole, so "**" doesn't retry as two "*"
+            plain += paired.mark;
+            i += paired.mark.length;
+            continue;
+        }
 
-// const inlineRules: StateRules<InlineCtx, InlineToken> = {
-//   EOF: [
-//     { 
-//       condition: () => true, 
-//       action: (ctx, char, buffer) => buffer.length > 0 && ctx.emit({ type: "text", value: buffer }) 
-//     },
-//   ],
+        plain += char;
+        i++;
+    }
+    if (plain) out.push(...autolink(plain));
+    return out;
+}
 
-//   text: [
-//     { 
-//       condition: "*", 
-//       next: "italicOrBold",
-//       action: (ctx, char, buffer) => buffer && ctx.emit({ type: "text", value: buffer }),
-//     },
-//     { condition: "`", next: "code" },
-//     {
-//       condition: "!",
-//       next: "potentialImage",
-//       action: (ctx, char, buffer) => buffer && ctx.emit({ type: "text", value: buffer }),
-//     },
-//     {
-//       condition: "[",
-//       next: "linkText",
-//       action: (ctx, char, buffer) => buffer && ctx.emit({ type: "text", value: buffer }),
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
+function codeEnd(text: string, from: number, run: string) {
+    let at = text.indexOf(run, from);
+    while (at > -1)
+    {
+        if (text[at + run.length] !== "`" && text[at - 1] !== "`") return at;
+        at = text.indexOf(run, at + 1);
+    }
+    return -1;
+}
 
-//   italicOrBold: [
-//     { condition: "*", next: "bold" },
-//     { condition: () => true, next: "italic", action: (ctx, char) => ctx.append(char) },
-//   ],
+// where `mark` opened at `start` closes, or -1. The text inside must not start or end with a space,
+// so "2 * 3 * 4" stays plain; a single * must not be part of a ** pair; _ doesn't work inside words
+function closing(text: string, start: number, mark: string): number {
+    const from = start + mark.length;
+    if (from >= text.length || /\s/.test(text[from])) return -1;
+    if (mark[0] === "_" && WORD.test(text[start - 1] ?? "")) return -1;
 
+    for (let at = from + 1; at < text.length; at++)
+    {
+        if (text[at] === "\\")
+        {
+            at++;
+            continue;
+        }
+        // skip code spans, a mark inside one doesn't close
+        if (text[at] === "`")
+        {
+            const run = text.slice(at).match(/^`+/)![0];
+            const end = codeEnd(text, at + run.length, run);
+            if (end > -1) at = end + run.length - 1;
+            continue;
+        }
+        if (!text.startsWith(mark, at)) continue;
+        if (/\s/.test(text[at - 1])) continue;
+        if (mark.length === 1 && (text[at + 1] === mark || text[at - 1] === mark)) continue;
+        if (mark[0] === "_" && WORD.test(text[at + mark.length] ?? "")) continue;
+        return at;
+    }
+    return -1;
+}
 
-//   // Bold: **text**
-//   bold: [
-//     { condition: "*", next: "boldEnd" },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
-//   boldEnd: [
-//     { condition: "*", next: "text", action: (ctx, char, buffer) => ctx.emit({ type: "bold", value: buffer }) },
-//     { condition: () => true, action: (ctx) => ctx.append("*"), next: "bold" },
-//   ],
+// [label](href "title") with `at` on the "[": brackets in the label may nest
+function link(text: string, at: number) {
+    let depth = 0;
+    let i = at;
+    for (; i < text.length; i++)
+    {
+        if (text[i] === "\\") i++;
+        else if (text[i] === "[") depth++;
+        else if (text[i] === "]" && --depth === 0) break;
+    }
+    if (i >= text.length || text[i + 1] !== "(") return null;
 
-//   // Italic: *text*
-//   italic: [
-//     {
-//       condition: "*",
-//       next: "text",
-//       action: (ctx, char, buffer) => ctx.emit({ type: "italic", value: buffer }),
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
+    const target = text.slice(i + 2).match(/^\s*(<[^>\n]*>|[^\s()]*(?:\([^\s()]*\)[^\s()]*)*)(?:\s+("[^"]*"|'[^']*'|\([^)]*\)))?\s*\)/);
+    if (!target) return null;
 
-//   // Code: `code`
-//   code: [
-//     {
-//       condition: "`",
-//       next: "text",
-//       action: (ctx, char, buffer) => ctx.emit({ type: "code", value: buffer }),
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
+    return {
+        label: text.slice(at + 1, i),
+        href: target[1].replace(/^<|>$/g, ""),
+        title: target[2]?.slice(1, -1),
+        end: i + 2 + target[0].length,
+    };
+}
 
-//   // Image: ![alt](src)
-//   potentialImage: [
-//     {
-//       condition: "[",
-//       next: "imageAlt",
-//     },
-//     {
-//       condition: () => true,
-//       next: "text",
-//       action: (ctx, char) => {
-//         ctx.append("!");
-//         ctx.append(char);
-//       },
-//     },
-//   ],
+// a link label is text only: a link inside it becomes its text
+function unlink(node: MarkdownInline): MarkdownInline {
+    if (node.type === "link") return { type: "text", text: textOf(node.children) };
+    if (node.type === "strong" || node.type === "em" || node.type === "del") return { ...node, children: node.children.map(unlink) };
+    return node;
+}
 
-//   imageAlt: [
-//     {
-//       condition: "]",
-//       next: "imageSrcStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.linkText = buffer;
-//       },
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
+function textOf(nodes: MarkdownInline[]): string {
+    return nodes.map(node => {
+        if (node.type === "text" || node.type === "code") return node.text;
+        if (node.type === "image") return node.alt;
+        if (node.type === "break") return "\n";
+        return textOf(node.children);
+    }).join("");
+}
 
-//   imageSrcStart: [
-//     {
-//       condition: "(",
-//       next: "imageSrc",
-//     },
-//     {
-//       condition: () => true,
-//       next: "text",
-//       action: (ctx, char) => {
-//         ctx.append("![");
-//         ctx.append(ctx.linkText);
-//         ctx.append("]");
-//         ctx.append(char);
-//         ctx.linkText = "";
-//       },
-//     },
-//   ],
+// splits plain text into text and bare-link nodes; trailing punctuation stays outside the link
+function autolink(text: string): MarkdownInline[] {
+    const out: MarkdownInline[] = [];
+    let last = 0;
 
-//   imageSrc: [
-//     {
-//       condition: ")",
-//       next: "text",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "image", alt: ctx.linkText, src: buffer });
-//         ctx.linkText = "";
-//       },
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
+    for (const match of text.matchAll(URL_PATTERN))
+    {
+        const start = match.index ?? 0;
+        const url = match[0].replace(TRAILING, "");
+        if (start > last) out.push({ type: "text", text: text.slice(last, start) });
+        out.push({ type: "link", href: url, children: [{ type: "text", text: url }] });
+        last = start + url.length;
+    }
 
-//   // Link: [text](href)
-//   linkText: [
-//     {
-//       condition: "]",
-//       next: "linkHrefStart",
-//       action: (ctx, char, buffer) => {
-//         ctx.linkText = buffer;
-//       },
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
-
-//   linkHrefStart: [
-//     {
-//       condition: "(",
-//       next: "linkHref",
-//     },
-//     {
-//       condition: () => true,
-//       next: "text",
-//       action: (ctx, char) => {
-//         ctx.append("[");
-//         ctx.append(ctx.linkText);
-//         ctx.append("]");
-//         ctx.append(char);
-//         ctx.linkText = "";
-//       },
-//     },
-//   ],
-
-//   linkHref: [
-//     {
-//       condition: ")",
-//       next: "text",
-//       action: (ctx, char, buffer) => {
-//         ctx.emit({ type: "link", text: ctx.linkText, href: buffer });
-//         ctx.linkText = "";
-//       },
-//     },
-//     { condition: () => true, action: (ctx, char) => ctx.append(char) },
-//   ],
-// };
-
-// // ============================================================================
-// // Public API
-// // ============================================================================
-
-// export function markdown(value: string): MarkdownToken[] {
-//   // Pass 1: Block-level tokenization
-//   const blockLexer = new Lexer<BlockCtx, BlockToken>(blockRules, "lineStart", {
-//     indent: 0,
-//     listLevel: 0,
-//     codeLanguage: "",
-//     inCodeBlock: false,
-//     tableHeaders: [],
-//     tableAlignments: [],
-//     tableCurrentRow: [],
-//     inTable: false,
-//   });
-
-//   const blockTokens = blockLexer.run(value + "\n");
-
-//   // Merge consecutive table tokens into one
-//   const mergedTokens: BlockToken[] = [];
-//   let currentTable: BlockToken | null = null;
-
-//   for (const token of blockTokens) {
-//     if (token.type === "table") {
-//       if (currentTable && currentTable.type === "table") {
-//         // Merge rows
-//         currentTable.rows.push(...token.rows);
-//       } else {
-//         currentTable = { ...token };
-//         mergedTokens.push(currentTable);
-//       }
-//     } else {
-//       currentTable = null;
-//       mergedTokens.push(token);
-//     }
-//   }
-
-//   // Pass 2: Inline tokenization for content-bearing blocks
-//   const inlineLexer = (content: string): InlineToken[] => {
-//     const lexer = new Lexer<InlineCtx, InlineToken>(inlineRules, "text", {
-//       linkText: "",
-//       linkHref: "",
-//       linkTitle: "",
-//     });
-//     return lexer.run(content);
-//   };
-
-//   // Combine block and inline tokens
-//   return mergedTokens.map((block) => {
-//     if (block.type === "table") {
-//       // Process inline content in table headers and cells
-//       return {
-//         ...block,
-//         headers: block.headers.map((h) => h), // Could add inline processing here
-//         rows: block.rows.map((row) => row.map((cell) => cell)), // Could add inline processing here
-//       };
-//     } else if ("content" in block && block.content) {
-//       return { ...block, inline: inlineLexer(block.content) };
-//     }
-//     return block;
-//   }) as MarkdownToken[];
-// }
+    if (last < text.length) out.push({ type: "text", text: text.slice(last) });
+    return out;
+}

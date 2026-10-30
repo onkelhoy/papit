@@ -12,7 +12,7 @@
     "css",
     "javascript"
   ],
-  "version": "0.1.17",
+  "version": "0.1.18",
   "scripts": {
     "build": "npx @papit/build --error",
     "analyse": "npx @papit/analyse",
@@ -67,7 +67,7 @@
     "@papit/button": "0.1.10",
     "@papit/data-structure": "0.0.2",
     "@papit/icon": "0.1.13",
-    "@papit/lexer": "0.0.1",
+    "@papit/lexer": "0.0.2",
     "@papit/splitter": "0.0.14",
     "@papit/switch": "0.1.13",
     "@papit/tooltip": "0.0.15",
@@ -107,5 +107,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.16"
+  "remoteVersion": "0.1.17"
 }

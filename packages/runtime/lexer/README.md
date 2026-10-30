@@ -1,6 +1,6 @@
 # @papit/lexer
 
-Character-level state machine lexer: describe states and rules, get a token list back. Ships ready-made HTML, CSS and JavaScript tokenizers, and powers @papit/html.
+Character-level state machine lexer: describe states and rules, get a token list back. Ships ready-made HTML, CSS, JavaScript and Markdown tokenizers, and powers @papit/html.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -44,6 +44,25 @@ css("a:hover { color: red; }");
 
 js("const n = 42;\n");
 // keyword "const", whitespace, identifier "n", whitespace, operator "=", whitespace, number "42", punctuation ";", whitespace
+```
+
+Markdown, as a tree of blocks with inline children:
+
+```js
+import { markdown, markdownInline } from "@papit/lexer";
+
+markdown("# Hi\n\nSome **bold** text");
+// [
+//   { type: "heading", level: 1, children: [{ type: "text", text: "Hi" }] },
+//   { type: "paragraph", children: [
+//     { type: "text", text: "Some " },
+//     { type: "strong", children: [{ type: "text", text: "bold" }] },
+//     { type: "text", text: " text" },
+//   ] },
+// ]
+
+markdownInline("see [docs](/docs)");
+// [{ type: "text", text: "see " }, { type: "link", href: "/docs", children: [{ type: "text", text: "docs" }] }]
 ```
 
 Write your own lexer:
@@ -111,6 +130,8 @@ The `ctx` passed to an action is a shallow copy of `initialCtx` plus three helpe
 function html(value: string): HtmlToken[]
 function css(value: string): CSSToken[]
 function js(value: string): JSToken[]
+function markdown(value: string): MarkdownBlock[]
+function markdownInline(value: string): MarkdownInline[]
 ```
 
 | Function | Token types |
@@ -118,13 +139,16 @@ function js(value: string): JSToken[]
 | `html` | `text`, `doctype`, `comment`, `startTag` (`name`, `attributes`, `selfClosing`), `endTag` (`name`) |
 | `css` | `selector`, `property`, `value`, `atRule`, `comment`, `braceOpen`, `braceClose`, `colon`, `semicolon` |
 | `js` | `keyword`, `identifier`, `number`, `string`, `template`, `operator`, `punctuation`, `whitespace`, `comment` |
+| `markdown` | `heading` (`level`), `paragraph`, `code` (`lang`, `text`), `quote`, `list` (`ordered`, `start`, `loose`, `items` of `{ checked?, children }`), `table` (`align`, `head`, `rows`), `rule` |
+| `markdownInline` | `text`, `code`, `break`, `strong`, `em`, `del`, `link` (`href`, `title?`), `image` (`src`, `alt`, `title?`) |
 
-Every token except the bare punctuation ones carries a `value` string. `cssRules` and `jsRules` are exported to build on.
+Every `html`, `css` and `js` token except the bare punctuation ones carries a `value` string. Markdown tokens nest: blocks hold `children` blocks or inline tokens, and `text`/`code` carry `text`. `cssRules` and `jsRules` are exported to build on.
 
 ### Limits
 
 - `css` handles flat rule sets. Rules nested in an at-rule block (e.g. inside `@media`) come out as properties and values.
 - `js` is a syntax-highlighting grade tokenizer: no regex literals, no distinction between division and other `/` uses.
+- `markdown` follows CommonMark and GFM closely, not to the letter. Raw HTML and reference-style links (`[a][1]`) stay text, quotes have no lazy continuation lines, and `href`/`src` come back as written, so filter unsafe schemes before rendering them.
 - `reconsume()` on the last character of the input has no effect, so `js` drops a final operator or punctuation character (`js("a;")` gives only `a`). End JavaScript input with whitespace.
 
 # License
