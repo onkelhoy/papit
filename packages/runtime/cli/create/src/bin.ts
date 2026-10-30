@@ -23,6 +23,15 @@ import { showcaseRunner } from "./components/runners/showcase";
     const createPackageLocation = path.dirname(import.meta.dirname);
     const CREATE_PACKAGE = JSON.parse(fs.readFileSync(path.join(createPackageLocation, "package.json"), { encoding: "utf-8" })) as LocalPackage;
 
+    // print the flag table from the README (npm always ships it) instead of starting a runner
+    if (process.argv.includes("--help") || process.argv.includes("-h"))
+    {
+        const readme = fs.readFileSync(path.join(createPackageLocation, "README.md"), { encoding: "utf-8" });
+        const section = readme.match(/^# CLI flags\n[\s\S]*?(?=^# )/m)?.[0] ?? readme;
+        console.log(section.trim());
+        process.exit(0);
+    }
+
     // const  = PackageGraph.get("@papit/create");
     if (!CREATE_PACKAGE)
     {

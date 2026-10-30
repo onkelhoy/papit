@@ -19,6 +19,8 @@ export async function extractAssets(
 ) {
     const files = crawl(location, (name, filepath, isDir) => {
         if (SKIP.has(name)) return false;
+        // a @papit/static output holds copies that would shadow the real assets
+        if (isDir && fs.existsSync(path.join(filepath, ".papit-static"))) return false;
 
         if (!isDir)
         {

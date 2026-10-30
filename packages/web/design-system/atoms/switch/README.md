@@ -40,6 +40,8 @@ import "@papit/switch";
 
 ## With label
 
+`pap-switch` renders no content of its own, so text inside it isn't shown. Wrap it in a `<label>` to give it a visible and accessible name.
+
 ```html
 <label>
   Notifications

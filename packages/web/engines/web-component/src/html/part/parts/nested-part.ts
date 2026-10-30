@@ -6,7 +6,7 @@ import { getValues } from "../../html";
  *
  * @details
  * - Accepts only elements marked with `__isTemplateRoot`.
- * - Creates a child template instance once and reuses it on updates.
+ * - Creates a child template instance once and reuses it while the template stays the same.
  * - Updates child instance values without re-rendering the parent.
  *
  * @see Part
@@ -19,6 +19,8 @@ import { getValues } from "../../html";
  */
 export class NestedPart implements Part {
   private instance: ITemplateInstance | null = null;
+  // which template the instance came from, a different one remounts
+  private key: unknown = undefined;
 
   constructor(
     private marker: Comment,
@@ -36,9 +38,12 @@ export class NestedPart implements Part {
     }
 
     const values = getValues(newValue);
+    const key = (newValue as any).__template ?? newValue;
+    if (this.instance && key !== this.key) this.clear();
 
     if (!this.instance) {
       this.instance = this.helpers.createTemplateInstance(newValue);
+      this.key = key;
 
       // Insert into DOM before the marker
       this.marker.parentNode!.insertBefore(newValue, this.marker);
@@ -55,6 +60,7 @@ export class NestedPart implements Part {
     if (this.instance) {
       this.instance.remove();
       this.instance = null;
+      this.key = undefined;
     }
   }
   

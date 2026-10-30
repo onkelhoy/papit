@@ -335,7 +335,9 @@ export class CustomElement extends HTMLElement {
         if (!this.queryMeta) return;
         for (let meta of this.queryMeta)
         {
-            if ((this as any)[meta.propertyKey]) continue;
+            // keep a cached element only while a re-render hasn't removed it
+            const cached = (this as any)[meta.propertyKey] as Element | null;
+            if (cached && cached.isConnected && (meta.outside || this.root.contains(cached))) continue;
             const query = (typeof meta.selector === "function" ? meta.selector.call(this) : meta.selector) ?? String(meta.propertyKey);
 
             let element: Element | null = null;
