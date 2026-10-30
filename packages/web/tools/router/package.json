@@ -80,7 +80,7 @@
     "typescript": "5.9.3",
     "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
-    "@papit/codeblock": "0.1.17"
+    "@papit/codeblock": "0.1.18"
   },
   "browserslist": [
     "defaults",
@@ -99,5 +99,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.9"
+  "remoteVersion": "0.1.10"
 }

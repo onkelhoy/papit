@@ -74,7 +74,7 @@
     }
   },
   "devDependencies": {
-    "@papit/codeblock": "0.1.17",
+    "@papit/codeblock": "0.1.18",
     "@papit/group": "0.0.14",
     "@papit/theme": "0.0.3",
     "@papit/translator": "0.1.1",
@@ -99,5 +99,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.10"
+  "remoteVersion": "0.0.11"
 }

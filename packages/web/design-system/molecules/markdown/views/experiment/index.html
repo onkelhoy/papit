@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Markdown | experiment</h1>
+
+    <section>
+        <h2>Live editor</h2>
+        <div class="editor">
+            <textarea id="source" spellcheck="false"></textarea>
+            <pap-markdown id="preview"></pap-markdown>
+        </div>
+    </section>
+
+    <section>
+        <h2>From its own text</h2>
+        <pap-codeblock>
+            <pap-markdown>
+                ## Inline children
+
+                Text written inside the element, *indentation* is removed.
+
+                - [x] tasks
+                - [ ] lists
+            </pap-markdown>
+        </pap-codeblock>
+    </section>
+
+    <section>
+        <h2>From a URL</h2>
+        <pap-codeblock>
+            <pap-markdown src="public/example.md"></pap-markdown>
+        </pap-codeblock>
+    </section>
+</body>
+
+</html>

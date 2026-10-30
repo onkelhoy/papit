@@ -11,7 +11,7 @@
     "icons",
     "cli"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -59,7 +59,7 @@
   },
   "dependencies": {
     "@papit/arguments": "0.0.1",
-    "@papit/html": "0.0.1",
+    "@papit/html": "0.0.2",
     "@papit/information": "0.0.10",
     "@papit/terminal": "0.0.2"
   },
@@ -82,5 +82,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }
