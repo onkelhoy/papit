@@ -5,7 +5,7 @@ description: How @papit web components are designed and built. Covers atomic lay
 
 # Design system
 
-Load `papit-global` first, plus `papit-web-component` whenever you touch how a component renders or reacts.
+Load `papit-web-component` whenever you touch how a component renders or reacts.
 
 ## Philosophy
 - **From scratch, standards first.** Native platform features (ElementInternals, `:state()`, `adoptedStyleSheets`, `@position-try`, popover, `<dialog>`) over reinvention; reinvention over dependencies.
@@ -33,7 +33,7 @@ src/style.css      imported as `import sheet from "./style.css" with { type: "cs
 src/index.ts       export * + guarded customElements.define("pap-<name>", Class)
 src/types.ts       exported types
 views/showcase/    demo used by the showcase package; views/experiment/ for scratch
-tests/<name>/      Playwright fixture + suites (see papit-testing)
+tests/<name>/      Playwright fixture + suites
 asset/translations/en.json
 ```
 Declare the tag in `HTMLElementTagNameMap`. Scaffold new packages from the repo root with `npm run create`, and new sub-components inside a package with `npm run component`. Both are **interactive** (folder picker + prompts), so ask the user to run them via `! npm run create` rather than hand-copying templates. The templates live in `packages/runtime/cli/create/asset/`.
@@ -44,7 +44,7 @@ Use tokens, never raw values:
 - spacing: `--base-unit`, `--space-1 … --space-20`
 - radius: `--radius-small|medium|large|full`
 
-Per-component overrides follow `--<component>-<thing>` falling back to the token, e.g. `var(--button-primary, var(--primary))`. Light/dark follows `color-scheme`, with `data-theme="light|dark|opposite"` to force it. Check both modes by eye in `views/` (no CSS tests, see `papit-testing`).
+Per-component overrides follow `--<component>-<thing>` falling back to the token, e.g. `var(--button-primary, var(--primary))`. Light/dark follows `color-scheme`, with `data-theme="light|dark|opposite"` to force it. Check both modes by eye in `views/` (no CSS tests).
 - Name tokens exactly (`tertiary`, not `tiertery`).
 - Modern CSS needs a fallback for Chromium < latest, Firefox and Safari: declare a plain value before `contrast-color()`, and always give `color-mix()` an interpolation space (`color-mix(in srgb, …)`).
 - Undefined elements stay hidden (`*:not(:defined) { visibility: hidden }` in theme). An element that never upgrades is invisible, not an error, so test the upgrade explicitly.

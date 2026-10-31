@@ -20,7 +20,7 @@ import { getFILE } from "components/file/get";
 
 import { update as socketUpdate, upgrade } from "./socket";
 import { getPort } from "./port";
-import { getPACKAGE, getURL, pathname } from "./url";
+import { decodePath, getPACKAGE, getURL, pathname } from "./url";
 import { build } from "@papit/build";
 
 let PORT = Arguments.number("port") || 3000;
@@ -72,13 +72,14 @@ export function start(
             if (!Arguments.silent) Terminal.write("server:", Terminal.blue(PORT), Terminal.yellow("- running"));
             if (Arguments.has("open"))
             {
-                const url = path.join(`http://localhost:${PORT}`, path.relative(Information.root.location, Information.package.location));
-                const joined = path.join(url, Arguments.string("open") ?? Arguments.string("folder") ?? "");
+                const folder = path.join(path.relative(Information.root.location, Information.package.location), Arguments.string("open") ?? Arguments.string("folder") ?? "");
+                const url = `http://localhost:${PORT}/${folder.split(path.sep).join("/")}`;
+                const open = (command: string) => Terminal.execute(command, Information.root.location).catch(() => Terminal.warn("could not open the browser", url));
                 switch (process.platform)
                 {
-                    case "win32": Terminal.execute(`start "${joined}"`, url); break;
-                    case "darwin": Terminal.execute(`open "${joined}"`, url); break;
-                    case "linux": Terminal.execute(`xdg-open "${joined}"`, url); break;
+                    case "win32": open(`start "" "${url}"`); break; // the first quoted argument of start is the window title
+                    case "darwin": open(`open "${url}"`); break;
+                    case "linux": open(`xdg-open "${url}"`); break;
                 }
             }
             resolve();
@@ -94,7 +95,7 @@ export function start(
                     throw new MethodNotAllowedError();
                 }
 
-                if (req.url) req.url = pathname(req.url);
+                if (req.url) req.url = decodePath(pathname(req.url));
 
                 if (req.url?.startsWith("/.well-known"))
                 {
@@ -314,7 +315,7 @@ function live() {
         const url = { absolute: filePath, relative: path.relative(Information.root.location, filePath) };
         const packageNode = getPACKAGE(url);
 
-        if (url.relative.includes(packageNode.sourceFolder + "/"))
+        if (url.relative.includes(packageNode.sourceFolder + path.sep))
         {
             runBuild(packageNode);
         }
@@ -332,7 +333,7 @@ function live() {
                     location: packageNode.location,
                     src: packageNode.sourceFolder,
                 },
-                includes: url.relative.includes(packageNode.sourceFolder + "/")
+                includes: url.relative.includes(packageNode.sourceFolder + path.sep)
             })
         }
     });

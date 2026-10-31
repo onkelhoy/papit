@@ -34,10 +34,11 @@ export async function streamAsset(
 ) {
     const normalized = path.normalize(url);
 
-    // we need to check translations 
-    if (translations.map[normalized])
+    // we need to check translations, their urls always use forward slashes
+    const translationURL = normalized.split(path.sep).join("/");
+    if (translations.map[translationURL])
     {
-        const lang = translations.map[normalized]
+        const lang = translations.map[translationURL]
         if (lang)
         {
             return {

@@ -44,12 +44,11 @@ Never commit to `main` directly. Stay on one branch until the issue is done.
 | `dep`     | dependency changes (add, upgrade, audit)                |
 | `wip`     | work in progress, not expected to be final              |
 
-**Granularity — TDD:**
+**Granularity:**
 
-1. The failing test is its own commit (`test: [switch] space toggles`).
-2. The implementation that makes it pass is a separate commit (`add` / `feat` / `fix`).
-3. Follow-up fixes are their own commits too.
-4. Unrelated concerns (docs, version, deps) never ride along in a test or implementation commit.
+1. Work in thin slices: rough working version first, then behaviour, edge cases, tests and docs.
+2. Each slice is its own commit.
+3. Unrelated concerns (docs, version, deps) never ride along in an implementation commit.
 
 Commits get squashed at merge time, and the `changelog:` in the squash message is what keeps this history. Keep messages honest.
 

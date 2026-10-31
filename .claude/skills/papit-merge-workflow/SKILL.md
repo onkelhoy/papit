@@ -17,7 +17,7 @@ Each branch becomes exactly one commit carrying the full changelog, joined to `m
 ## Preconditions
 - `gh` is installed and authenticated (`gh auth status`). If not, stop and ask the user to run `brew install gh` then `! gh auth login`. Never fake a PR.
 - Working tree clean, all work committed on the branch.
-- Definition of done met for every package touched (see `papit-global`). If not, say what's missing before merging.
+- Definition of done met for every package touched (see `CLAUDE.md`). If not, say what's missing before merging.
 - `npm run build` and the touched packages' `npm test` pass locally.
 
 ## 1. Review the branch

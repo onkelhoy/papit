@@ -19,6 +19,18 @@ export function pathname(url: string) {
     return url.split(/[?#]/, 1)[0];
 }
 
+/** A url path decoded back to the file path it names; a malformed escape is left as it is. */
+export function decodePath(url: string) {
+    try
+    {
+        return decodeURIComponent(url);
+    }
+    catch
+    {
+        return url;
+    }
+}
+
 /**
  * Resolves a request to a file or folder: an absolute path inside the workspace, else the path
  * under the current folder, the package, then the workspace root.
@@ -89,7 +101,7 @@ export function getPackageLocationFromImportMeta(location: string) {
 
 function getNearestPackageLocation(location: string) {
     let target = location;
-    while (target !== "/" && !fs.existsSync(path.join(target, "package.json"))) 
+    while (target !== path.dirname(target) && !fs.existsSync(path.join(target, "package.json"))) 
     {
         target = path.dirname(target);
     }

@@ -17,7 +17,7 @@
     "analyse": "npx @papit/analyse",
     "watch": "tsc -w",
     "start": "npx @papit/server --info --live",
-    "test": "npx playwright test -c tests/playwright.config.ts $@",
+    "test": "npx playwright test -c tests/playwright.config.ts",
     "preversion": "papit-version",
     "postversion": "papit-version",
     "component": "npm create @papit -- --component",
@@ -61,8 +61,8 @@
   "devDependencies": {
     "@playwright/test": "1.64.1",
     "playwright": "1.64.1",
-    "@papit/arguments": "0.0.1",
-    "@papit/information": "0.0.10",
+    "@papit/arguments": "0.0.2",
+    "@papit/information": "0.0.11",
     "@papit/translator": "0.1.1",
     "@papit/codeblock": "0.1.18",
     "typescript": "5.9.3"

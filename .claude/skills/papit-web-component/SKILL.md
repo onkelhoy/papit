@@ -5,10 +5,10 @@ description: Internals of @papit/web-component (packages/web/engines/web-compone
 
 # @papit/web-component
 
-Load `papit-global` first. Detailed per-feature docs already exist in `packages/web/engines/web-component/docs/` (decorators, html, parts, custom-element). Read the relevant one before changing that area, and update it in the same branch.
+Detailed per-feature docs already exist in `packages/web/engines/web-component/docs/` (decorators, html, parts, custom-element). Read the relevant one before changing that area, and update it in the same branch.
 
 ## Why it matters
-Every web package depends on it, so a change here is a change to all ~25 components. Treat it like a public framework: backwards compatible by default. Any breaking change is flagged to the architect and gets a `note:` in the merge message.
+Every web package depends on it, so a change here is a change to all ~25 components. Treat it like a public framework: backwards compatible by default. Any breaking change is flagged to the owner and gets a `note:` in the merge message.
 
 ## Shape
 ```
@@ -45,4 +45,4 @@ Use `@bind` for event handler methods, `@query(selector)` for shadow refs resolv
 - **No global side effects** at import except `customElements.define`, and that happens in each component's `index.ts`, never in the engine.
 
 ## Testing
-Playwright suites live in `tests/decorators/` and `tests/html/`, each with its own `component.ts` test fixture element. Every suite should also cover `functions/` (pure, easy to cover), element lifecycle (first render, sheet adoption, requestUpdate debounce, disconnect cleanup), `createElement` path, `lightDOM` mode. See `papit-testing`.
+Playwright suites live in `tests/decorators/` and `tests/html/`, each with its own `component.ts` test fixture element. Every suite should also cover `functions/` (pure, easy to cover), element lifecycle (first render, sheet adoption, requestUpdate debounce, disconnect cleanup), `createElement` path, `lightDOM` mode.

@@ -168,7 +168,7 @@ export async function componentRunner(
     fs.writeFileSync(packageJSONLocation, JSON.stringify(localPackage, null, 2), { encoding: "utf-8" });
     if (shouldCommit)
     {
-        await Terminal.execute(`git add ${packageJSONLocation}`, Information.root.location);
+        await Terminal.execute(`git add "${packageJSONLocation}"`, Information.root.location);
     }
 
 
@@ -210,7 +210,7 @@ export async function componentRunner(
         {
             try
             {
-                await Terminal.execute(`git add ${dest}`, Information.root.location);
+                await Terminal.execute(`git add "${dest}"`, Information.root.location);
             }
             catch
             {

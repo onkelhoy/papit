@@ -54,11 +54,16 @@ export async function prompt(
     }
     process.stdout.write(starttext);
 
-    // Reserve suggestion row BEFORE writing starttext
-    process.stdout.write("\n\x1b[1A");
+    // without a tty nothing answers the cursor query (git bash, pipes)
+    const interactive = process.stdin.isTTY && process.stdout.isTTY;
+    if (interactive)
+    {
+        // Reserve suggestion row BEFORE writing starttext
+        process.stdout.write("\n\x1b[1A");
 
-    process.stdout.write(starttext);
-    const anchorPos = await getCursorPos();
+        process.stdout.write(starttext);
+    }
+    const anchorPos = interactive ? await getCursorPos() : null;
     // NOW hand over to readline
     readline.emitKeypressEvents(process.stdin);
 
@@ -73,7 +78,17 @@ export async function prompt(
             if (process.stdin.isTTY) process.stdin.setRawMode(wasRaw ?? false);
         };
 
+        // no cursor report: only the current line can be redrawn, and in cooked mode the terminal echoes for us
+        const redrawLine = () => {
+            if (!process.stdin.isRaw) return;
+
+            process.stdout.write(`\r\x1b[K${starttext}${input}`);
+            if (cursor < input.length) process.stdout.write(`\x1b[${input.length - cursor}D`);
+        };
+
         const redraw = () => {
+            if (!anchorPos) return redrawLine();
+
             process.stdout.write(`\x1b[${anchorPos.row};1H`); // col 1, not anchorPos.col
             process.stdout.write("\x1b[J");
             process.stdout.write(starttext); // always rewrite "> " or "name: "
@@ -99,11 +114,11 @@ export async function prompt(
 
         const restoreCursor = () => {
             const cols = process.stdout.columns ?? 80;
-            const absolute = (anchorPos.col - 1) + cursor; // col is 1-based
+            const absolute = (anchorPos!.col - 1) + cursor; // col is 1-based
             const rowOffset = Math.floor(absolute / cols);
             const colOffset = (absolute % cols) + 1;
 
-            process.stdout.write(`\x1b[${anchorPos.row + rowOffset};${colOffset}H`);
+            process.stdout.write(`\x1b[${anchorPos!.row + rowOffset};${colOffset}H`);
         };
 
         const word_minus = () => {
@@ -125,7 +140,7 @@ export async function prompt(
         }
 
         const handleKeydown = (str: string, key: any) => {
-            const enter = key.name === "return";
+            const enter = key.name === "return" || key.name === "enter"; // "enter" is a bare \n, what cooked input sends
 
             if (
                 (key.ctrl && key.name === "c") ||
@@ -243,16 +258,28 @@ let base_path = ""; // Track the directory we're completing in
 
 const normalizeInputPath = (input: string, cwd?: string): string => {
     if (input.startsWith("~")) return input.replace(/^\~/, os.homedir());
-    if (!/^[\.|\/]/.test(input)) return path.join(cwd ?? process.cwd(), input);
+    if (!path.isAbsolute(input) && !/^[\.|\/]/.test(input)) return path.join(cwd ?? process.cwd(), input);
     return input;
 };
 
-function getCursorPos(): Promise<{ row: number; col: number }> {
+let cursorReports = true;
+
+/** Asks the terminal where the cursor is; `null` when it doesn't answer, which some never do. */
+function getCursorPos(timeout = 1000): Promise<{ row: number; col: number } | null> {
+    if (!cursorReports) return Promise.resolve(null);
+
     return new Promise((resolve) => {
+        const timer = setTimeout(() => {
+            cursorReports = false;
+            process.stdin.removeListener("data", onData);
+            resolve(null);
+        }, timeout);
+
         const onData = (data: Buffer) => {
             const match = data.toString().match(/\[(\d+);(\d+)R/);
             if (match)
             {
+                clearTimeout(timer);
                 process.stdin.removeListener("data", onData);
                 resolve({ row: parseInt(match[1]), col: parseInt(match[2]) });
             }
@@ -273,14 +300,14 @@ function getSuggestions(cwd?: string) {
         // Input is a directory, search inside it
         searchDir = currentpath;
         // If input is empty, base_path should be empty (current directory)
-        base_path = input === "" ? "" : (input.endsWith("/") ? input : input + "/");
+        base_path = input === "" ? "" : (input.endsWith("/") || input.endsWith(path.sep) ? input : input + "/");
     } else
     {
         // Input is partial, search in parent directory
         searchDir = path.dirname(currentpath);
 
         // Extract the directory part from the original input string
-        const lastSlash = input.lastIndexOf("/");
+        const lastSlash = Math.max(input.lastIndexOf("/"), input.lastIndexOf(path.sep));
         base_path = lastSlash >= 0 ? input.slice(0, lastSlash + 1) : "";
     }
 

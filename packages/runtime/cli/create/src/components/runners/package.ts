@@ -241,7 +241,7 @@ export async function packageRunner(
         const { close } = Terminal.loading("installing");
         try
         {
-            await Terminal.execute('npm install', description);
+            await Terminal.execute('npm install', Information.root.location);
         }
         catch (e)
         {
@@ -264,8 +264,8 @@ export async function packageRunner(
     {
         try
         {
-            await Terminal.execute(`git add ${lockfile_location}`, destination);
-            await Terminal.execute(`git add ${destination}`, destination);
+            await Terminal.execute(`git add "${lockfile_location}"`, destination);
+            await Terminal.execute(`git add "${destination}"`, destination);
             await Terminal.execute(`git commit -m "add: ${fullName} package"`, destination);
             // Terminal.clearSession();
         }

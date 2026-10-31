@@ -170,7 +170,7 @@ export async function setup() {
     );
 };
 
-export { getURL } from "components/http/url";
+export { decodePath, getURL } from "components/http/url";
 
 export { createInline } from "components/html/inline";
 export { rewriteCssImports } from "components/file/css";
