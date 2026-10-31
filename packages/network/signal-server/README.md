@@ -1,6 +1,6 @@
 # @papit/signal-server
 
-WebSocket signalling server for @papit/webrtc. Reach for it to register and list networks, admit peers and forward their handshake messages until they connect directly.
+WebSocket signalling server for @papit/webrtc with built-in web push. Reach for it to register and list networks, admit peers, forward their handshake messages until they connect directly, and wake offline users without storing anything.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -62,6 +62,13 @@ close();
 | `--spam-reset` | `1500` | ms of quiet that clears the strikes |
 | `--max-strikes` | `3` | strikes before the socket is closed |
 | `--max-payload` | `262144` | largest frame in bytes; bigger frames close the socket (1009) |
+| `--allow-origin` | any | CORS origins, comma separated |
+| `--no-push` | push on | turns the push routes off |
+| `--generate-vapid` | | prints a VAPID key pair and exits |
+| `--vapid-subject` | `VAPID_SUBJECT` env, else the papit repo | `mailto:` or `https:` contact shown to push services |
+| `--push-rate` | `60` | POST requests per minute per client address, bursts up to the same amount; `0` turns the limit off |
+| `--trust-proxy` | off | number of proxies in front of the server, a bare flag means 1; see [Client address](#client-address) |
+| `--allow-private` | off | lets pushes reach private addresses, see [Private networks](#private-networks) |
 
 # API
 
@@ -113,10 +120,11 @@ function close(): void;
 | WebSocket upgrade | the signalling socket |
 | `GET /networks` | `200`, `NetworkInfo[]` as JSON |
 | `GET /health` | `200`, `{ "ok": true }`, for health checks and for waking a sleeping host |
+| `/push/*` | see [Web push](#web-push) |
 | `OPTIONS *` | `204` with CORS headers |
 | anything else | `405` |
 
-`close` is safe to call more than once. `SIGINT` calls it too.
+`start` throws on bad push config: only one VAPID key set, keys that aren't a pair, or a bad subject. `close` is safe to call more than once. `SIGINT` calls it too.
 
 ## Types
 
@@ -177,6 +185,114 @@ spam:       too many strikes on server traffic ──▶ closed (1008)
 rate:       forwarded traffic over forward_rate ──▶ dropped, signal.error {code: "rate"}
 ```
 
+# Web push
+
+Wakes a user whose app is closed, so they can come online and connect. The server stores nothing: it encrypts a browser's push subscription into a token and hands it back. Apps keep tokens on their own devices, so a token works after a restart or a sleep, and with no network open at all.
+
+Whoever holds a token can push to that browser. The server has no idea who a user is, and there is no lookup by user id. How tokens travel is up to the app: a peer profile, a link, a QR code.
+
+## Keys
+
+Browsers tie a subscription to a VAPID key pair. Generate one once and keep it, because new keys void every subscription and token.
+
+```bash
+npx @papit/signal-server --generate-vapid
+```
+
+Set the output as `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` in the environment. They are env only, and the private key must never be committed. Without them the server makes throwaway keys at start and warns: push works, but every token dies on restart.
+
+## Routes
+
+| Request | Body | Response |
+| --- | --- | --- |
+| `GET /push/key` | | `{ key, persistent }`, the key for `pushManager.subscribe`; `persistent` is false with throwaway keys |
+| `POST /push/subscribe` | `{ subscription }` | `{ token }` |
+| `POST /push/send` | `{ token, payload, ttl?, urgency? }` | `{ status }` |
+
+`payload` is any JSON up to 3993 bytes. The app decides what it means, so a call, a cancel and a decline are all just pushes. `ttl` is in seconds (default `60`, at most 28 days), and `urgency` is `very-low`, `low`, `normal` or `high` (default `high`).
+
+| Status | Meaning |
+| --- | --- |
+| `sent` | the push service took it |
+| `gone` | the subscription is dead for good, drop the token |
+| `failed` | try again later |
+
+Errors are `{ error }`: `400` bad input, `413` too large, `429` over `--push-rate`.
+
+## Usage
+
+In the browser, from a user tap (iOS requires it) and with a service worker registered:
+
+```js
+const server = "https://<app>.onrender.com";
+const { key } = await (await fetch(`${server}/push/key`)).json();
+
+const registration = await navigator.serviceWorker.ready;
+const subscription = await registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+
+const response = await fetch(`${server}/push/subscribe`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ subscription }),
+});
+const { token } = await response.json();
+```
+
+From anyone holding the token:
+
+```js
+await fetch(`${server}/push/send`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, payload: { type: "call", from: "Ada" } }),
+});
+```
+
+In the service worker, always show a notification. Browsers require it:
+
+```js
+self.addEventListener("push", (event) => {
+    const { from } = event.data.json();
+    event.waitUntil(self.registration.showNotification(`Incoming call from ${from}`));
+});
+```
+
+Refresh the token on app load, because a subscription can change.
+
+## Testing on devices
+
+Check these by hand, because automated tests only reach a local push service. Serve the app over https.
+
+| Device | Notes |
+| --- | --- |
+| Android Chrome | works in a tab; close the app, then send |
+| Desktop | the browser must be running for a push to arrive |
+| iOS 16.4+ | only in a PWA installed to the home screen, and notification actions are ignored |
+
+## Client address
+
+`--push-rate` counts per client address. Behind proxies every request comes from the last proxy, so `--trust-proxy <hops>` reads that many entries from the end of `x-forwarded-for`. Entries further left are whatever the client sent. Too low and users share one limit; too high and clients can fake their address. Without a proxy, leave it off.
+
+## Private networks
+
+By default pushes only go to https endpoints on public hosts, and a subscription pointing at `localhost`, an IP address or a private range is refused. Otherwise anyone could make a public server call its own internal network.
+
+`--allow-private` lifts this, including http, for a server inside a private network. Never use it on a public server. Redirects are never followed either way. The browser picks the push service, so a closed network still needs a self-hosted service and a browser that can use it.
+
+## Exports
+
+The pieces behind the routes, for your own HTTP server:
+
+| Export | Purpose |
+| --- | --- |
+| `createPushRoutes(config)` | `{ handle(request, response, pathname, headers), close() }`, config is `PushConfig` |
+| `generateVapidKeys()`, `validateVapidKeys(keys)` | create and check a key pair |
+| `sealSubscription(subscription, keys)`, `openSubscription(token, keys)` | subscription to token and back; `openSubscription` returns null on a bad token |
+| `sendPush(subscription, payload, keys, subject, options?)` | sends one push, resolves to a status, never throws |
+| `parseSubscription(value, allowPrivate?)`, `isPublicEndpoint(endpoint, lookup?)` | validate untrusted input |
+| `RateLimiter`, `clientAddress(request, trustProxy?)` | the limiter behind `--push-rate` |
+| `encryptPush(payload, subscription)`, `vapidAuthorization(endpoint, keys, subject)`, `MAX_PUSH_BYTES` | the raw protocol, RFC 8291 and RFC 8292 |
+
 # Deploy on Render
 
 These notes follow Render's usual setup for a Node web service. Check Render's own docs for the current details.
@@ -188,8 +304,9 @@ These notes follow Render's usual setup for a Node web service. Check Render's o
 3. Leave the port alone. Render sets the `PORT` environment variable and the server listens on it. Don't pass `--port` there.
 4. Set the **health check path** to `/health`.
 5. Connect clients to `wss://<app>.onrender.com`. Render terminates TLS, so the client uses `wss://` while the server itself speaks plain `ws`.
+6. For web push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` under **Environment**, and add `--trust-proxy <hops>` to the start command. Check `x-forwarded-for` on a real request to find the hop count, it depends on Render's current setup.
 
-On the free tier, Render spins an idle service down, and the first request after that waits for a cold start, which can take tens of seconds. `@papit/webrtc`'s `Client` deals with it: it keeps retrying the socket, pings `https://<app>.onrender.com/health` to start the boot, and reports `client.status === "waking"` meanwhile. A sleeping server loses all networks, since they live only in memory.
+On the free tier, Render spins an idle service down, and the first request after that waits for a cold start, which can take tens of seconds. `@papit/webrtc`'s `Client` deals with it: it keeps retrying the socket, pings `https://<app>.onrender.com/health` to start the boot, and reports `client.status === "waking"` meanwhile. A sleeping server loses all networks, since they live only in memory. Push tokens survive it: a `/push/send` wakes the server, so it answers after the cold start.
 
 # License
 

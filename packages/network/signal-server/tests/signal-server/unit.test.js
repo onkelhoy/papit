@@ -670,6 +670,41 @@ describe("heartbeat", { timeout: 5000 }, () => {
         await dead.closed;
         assert.strictEqual(live.socket.readyState, WebSocket.OPEN);
     });
+
+    it("frees the network when the host stops answering, a new peer can take over", async () => {
+        const t = await setup({ heartbeat_interval: 100 });
+        const host = await t.connect({ autoPong: false });
+        const member = await t.connect();
+        const network = await host.register();
+
+        member.send(SignalType.Join, { network: network.id });
+        await host.next(NetworkType.Join);
+
+        await host.closed;
+        const { networks } = await member.request(SignalType.List, {}, SignalType.Networks);
+        assert.deepStrictEqual(networks, []);
+
+        const newcomer = await t.connect();
+        const replacement = await newcomer.register();
+        assert.strictEqual(replacement.host, newcomer.id);
+        assert.strictEqual(replacement.name, network.name);
+    });
+
+    it("leaves the host alone when a member stops answering", async () => {
+        const t = await setup({ heartbeat_interval: 100 });
+        const host = await t.connect();
+        const member = await t.connect({ autoPong: false });
+        const network = await host.register();
+
+        member.send(SignalType.Join, { network: network.id });
+        await host.next(NetworkType.Join);
+
+        await member.closed;
+        const { networks } = await host.request(SignalType.List, {}, SignalType.Networks);
+        assert.strictEqual(networks.length, 1);
+        assert.strictEqual(networks[0].host, host.id);
+        assert.strictEqual(networks[0].size, 1);
+    });
 });
 
 describe("close", { timeout: 5000 }, () => {

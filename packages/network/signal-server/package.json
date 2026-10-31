@@ -1,6 +1,6 @@
 {
   "name": "@papit/signal-server",
-  "description": "WebSocket signalling server for @papit/webrtc. Reach for it to register and list networks, admit peers and forward their handshake messages until they connect directly.",
+  "description": "WebSocket signalling server for @papit/webrtc with built-in web push. Reach for it to register and list networks, admit peers, forward their handshake messages until they connect directly, and wake offline users without storing anything.",
   "keywords": [
     "papit",
     "signal-server",
@@ -8,9 +8,11 @@
     "webrtc",
     "websocket",
     "p2p",
-    "peer-message"
+    "peer-message",
+    "web-push",
+    "vapid"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -83,5 +85,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }

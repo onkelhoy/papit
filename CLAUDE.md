@@ -12,6 +12,8 @@ Read `.claude/CATALOG.md` before building or changing anything: it lists every p
   <one-line summary>
   <what changed>
   <notes, only if any>
+
+  next: task 4, <title>
   ```
 - **Iterate in thin slices.** Rough working version using existing components first, then behaviour, then edge cases, then tests and docs. Show something visible early so mistakes surface fast.
 - **Push back.** Act as a senior IT expert: say when an idea is wrong, name the better option, then follow the owner's decision.
