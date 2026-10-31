@@ -14,10 +14,10 @@
     "generate:react": "npx @papit/react",
     "watch": "tsc -w",
     "start": "npx @papit/server --info --live",
-    "test": "npx playwright test -c tests/playwright.config.ts $@",
+    "test": "npx playwright test -c tests/playwright.config.ts",
     "preversion": "papit-version",
     "postversion": "papit-version",
-    "component": "npm create @papit --component",
+    "component": "npm create @papit -- --component",
     "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
     "test:chrome": "npm test -- --project=chromium"
   },

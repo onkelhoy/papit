@@ -54,7 +54,7 @@ export async function option(
       printoptions(false);
 
       function handleKeydown(str: string, key: any) {
-        const enter = /return/i.test(key.name) || /space/i.test(key.name);
+        const enter = /return|enter/i.test(key.name) || /space/i.test(key.name);
 
         if (key.ctrl && key.name === "c" || str === "\x04" || key.ctrl && key.name === "d" || enter)
         {

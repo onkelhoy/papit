@@ -39,6 +39,9 @@ import { showcaseRunner } from "./components/runners/showcase";
         process.exit(1);
     }
 
+    // windows names it USERNAME
+    if (!process.env.USER) process.env.USER = process.env.USERNAME;
+
     if (!process.env.USER)
     {
         Terminal.createSession();

@@ -5,7 +5,7 @@ import os from "node:os";
 import path from "node:path";
 import { Duplex } from "node:stream";
 import { Information } from "@papit/information";
-import { getURL, upgrade } from "@papit/server";
+import { decodePath, getURL, upgrade } from "@papit/server";
 
 const root = Information.root.location;
 
@@ -91,5 +91,19 @@ describe("websocket register path traversal", () => {
 
         const touched = exists.mock.calls.map(call => String(call.arguments[0])).filter(p => !isInside(p));
         assert.deepStrictEqual(touched, []);
+    });
+});
+
+describe("decodePath", () => {
+    it("decodes what pathToFileURL encodes", () => {
+        assert.strictEqual(decodePath("/my%20dir/file.js"), "/my dir/file.js");
+    });
+
+    it("leaves a malformed escape alone", () => {
+        assert.strictEqual(decodePath("/100%.js"), "/100%.js");
+    });
+
+    it("an encoded ../ is still rejected once decoded", () => {
+        assertForbidden(decodePath((depth + outsideFile).replaceAll("/", "%2f")));
     });
 });

@@ -79,7 +79,7 @@ export class Args extends Loglevel {
                 flagName = name;
             }
 
-            this.add(name, value);
+            this.add(name, value ?? true);
         });
 
         super.init(this);
