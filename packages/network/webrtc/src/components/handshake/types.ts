@@ -7,11 +7,13 @@ export type Message =
 type AnswerMessage = {
   type: "answer";
   description: RTCSessionDescriptionInit;
+  session: string;
 }
 type OfferMessage = {
   type: "offer";
   description: RTCSessionDescriptionInit;
   streams?: Record<string, string>;
+  session: string;
 }
 type CandidateMessage = {
   type: "candidate";

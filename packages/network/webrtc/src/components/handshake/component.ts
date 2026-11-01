@@ -5,7 +5,7 @@ import type { Network } from "../network";
 import type { HandshakeHooks, Message } from "./types";
 
 /** A received `handshake.offer` payload. */
-export type Offer = { description: RTCSessionDescriptionInit; streams?: PayloadMap[HandshakeType.Offer]["streams"] };
+export type Offer = { description: RTCSessionDescriptionInit; streams?: PayloadMap[HandshakeType.Offer]["streams"]; session?: string };
 
 /** How long the first negotiation may take before it fails. */
 export const HANDSHAKE_TIMEOUT = 15_000;
@@ -21,9 +21,14 @@ export class Handshake extends Emitter {
 
   /** Media hooks, set by the media manager before `start()`. */
   public hooks: HandshakeHooks = {};
+  /** Names this connection in offers and answers, so the other side can tell a new one from a renegotiation. */
+  public readonly session = crypto.randomUUID();
+  /** The other side's `session`, once known. */
+  public remoteSession: string | null = null;
 
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private extended = false;
   private ignoreOffer = false;
   private makingOffer = false;
   private connected = false;
@@ -68,7 +73,7 @@ export class Handshake extends Emitter {
       }
 
       this.settle = { resolve, reject };
-      this.timer = setTimeout(() => this.fail("timeout"), this.timeout);
+      this.timer = setTimeout(this.handleTimeout, this.timeout);
 
       if (offer) this.handleIncomingOffer(offer);
       else if (!this.makingOffer && this.connection.signalingState === "stable") this.createOffer();
@@ -105,7 +110,7 @@ export class Handshake extends Emitter {
   /** Before the channel opened this fails the handshake; afterwards a failed renegotiation is only reported. */
   private fail(reason: string) {
     const state = this.state();
-    this.error("handshake", `handshake with ${this.target} failed: ${reason} (signaling ${state.signaling}, ice ${state.ice}, gathering ${state.gathering}, local candidates ${JSON.stringify(state.localCandidates)}, remote candidates ${state.remoteCandidates})`, { target: this.target, reason, ...state });
+    this.error("handshake", `handshake with ${this.target} failed: ${reason} (signaling ${state.signaling}, ice ${state.ice}, connection ${state.connection}, channel ${state.channel}, gathering ${state.gathering}, local candidates ${JSON.stringify(state.localCandidates)}, remote candidates ${state.remoteCandidates})`, { target: this.target, reason, ...state });
     if (this.connected) return;
 
     const settle = this.settle;
@@ -121,6 +126,7 @@ export class Handshake extends Emitter {
       ice: this.connection.iceConnectionState,
       gathering: this.connection.iceGatheringState,
       connection: this.connection.connectionState,
+      channel: this.channel.readyState,
       localCandidates: { ...this.localCandidates },
       remoteCandidates: this.remoteCandidates,
     };
@@ -134,7 +140,7 @@ export class Handshake extends Emitter {
       this.makingOffer = true;
       await this.connection.setLocalDescription();
       if (this.terminated) return;
-      this.send({ type: "offer", description: this.connection.localDescription!.toJSON(), streams: this.hooks.streams?.() });
+      this.send({ type: "offer", description: this.connection.localDescription!.toJSON(), streams: this.hooks.streams?.(), session: this.session });
     }
     catch (error)
     {
@@ -171,6 +177,17 @@ export class Handshake extends Emitter {
   }
 
   // event handlers
+  private handleTimeout = () => {
+    this.timer = null;
+    const ice = this.connection.iceConnectionState;
+    if (this.extended || (ice !== "connected" && ice !== "completed")) return void this.fail("timeout");
+
+    // a working route: give the channel another round instead of throwing it away
+    this.extended = true;
+    this.debug("timeout", `ice ${ice} but the channel to ${this.target} isn't open yet, waiting another ${this.timeout}ms`, this.state());
+    this.timer = setTimeout(this.handleTimeout, this.timeout);
+  }
+
   private handleNetworkMessage = (event: Event) => {
     const message = (event as CustomEvent<PeerMessage>).detail;
     if (!message || message.meta.receiver !== this.me || message.meta.sender !== this.target) return;
@@ -178,7 +195,7 @@ export class Handshake extends Emitter {
     switch (message.meta.type)
     {
       case HandshakeType.Answer:
-        this.handleIncomingAnswer(message.payload.description);
+        this.handleIncomingAnswer(message.payload);
         break;
 
       case HandshakeType.Offer:
@@ -232,7 +249,8 @@ export class Handshake extends Emitter {
   }
 
   // incoming event handlers
-  private async handleIncomingOffer({ description, streams }: Offer) {
+  private async handleIncomingOffer({ description, streams, session }: Offer) {
+    this.remoteSession = session ?? this.remoteSession;
     try
     {
       const collision = this.makingOffer || this.connection.signalingState !== "stable";
@@ -251,7 +269,7 @@ export class Handshake extends Emitter {
 
       await this.connection.setLocalDescription();
       if (this.terminated) return;
-      this.send({ type: "answer", description: this.connection.localDescription!.toJSON() });
+      this.send({ type: "answer", description: this.connection.localDescription!.toJSON(), session: this.session });
     }
     catch (error)
     {
@@ -260,12 +278,13 @@ export class Handshake extends Emitter {
     }
   }
 
-  private async handleIncomingAnswer(answer: RTCSessionDescriptionInit) {
+  private async handleIncomingAnswer({ description, session }: { description: RTCSessionDescriptionInit; session?: string }) {
     if (this.connection.signalingState !== "have-local-offer") return;
+    this.remoteSession = session ?? this.remoteSession;
 
     try
     {
-      await this.connection.setRemoteDescription(answer);
+      await this.connection.setRemoteDescription(description);
       await this.flushPendingIceCandidates();
     }
     catch

@@ -1,4 +1,4 @@
-import { BROADCAST, Message, NetworkInfo, NetworkType, PayloadMap, PeerId, read, relay, RelayAction, Seen, SERVER, SignalType, TopologyConfig } from "@papit/peer-message";
+import { BROADCAST, isReserved, Message, NetworkInfo, NetworkType, PayloadMap, PeerId, read, relay, RelayAction, Seen, SERVER, SignalType, TopologyConfig } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
 import type { Link } from "../link";
@@ -29,6 +29,8 @@ export class Network extends Emitter {
   public socketId: PeerId;
   public info?: NetworkInfo;
   public topology: Topology;
+  /** For a network opened over another: sends a message (base64) to a peer through that parent. False when it can't. */
+  public carrier?: (receiver: PeerId, message: string) => boolean;
 
   private host: PeerId;
   private members = new Set<PeerId>();
@@ -38,6 +40,8 @@ export class Network extends Emitter {
   private cached: View | null = null;
   // signalling handed to the server, by id: sent over the topology instead if the server can't deliver it
   private viaServer = new Map<string, Message>();
+  // socket ids of members that came back through the server, which only knows them by those
+  private sockets = new Map<PeerId, PeerId>();
 
   constructor(options: NetworkOptions) {
     super();
@@ -61,6 +65,11 @@ export class Network extends Emitter {
       links: [...this.links.keys()].filter(id => this.links.get(id)!.link.open).sort(),
     };
     return this.cached;
+  }
+
+  /** The link to `id`, open or not. */
+  link(id: PeerId) {
+    return this.links.get(id)?.link;
   }
 
   /** Attaches a link; one with id `SERVER` becomes the server link. Replaces (and closes) an existing link with the same id. */
@@ -153,6 +162,17 @@ export class Network extends Emitter {
     return this.dispatch(message, options?.preferServer);
   }
 
+  /** Takes a message (base64) `sender` passed over the parent network. It must be `sender`'s own. */
+  receive(encoded: string, sender: PeerId) {
+    const bytes = fromBase64(encoded);
+    if (read(bytes)?.meta.sender !== sender)
+    {
+      this.error("carrier", "a carried message isn't from the peer that sent it", { from: sender });
+      return;
+    }
+    this.take(bytes, sender);
+  }
+
   /** Closes and removes every link, the server link included, and forgets the members. */
   close() {
     for (const id of [...this.links.keys()]) this.removeLink(id);
@@ -165,6 +185,13 @@ export class Network extends Emitter {
     const meta = message.meta;
     const bytes = message.toBinary(true);
 
+    // the server only takes a socket's own messages, so these never travel over peers
+    if (meta.receiver === SERVER && (!this.server || meta.sender !== this.socketId))
+    {
+      this.emit("drop", message);
+      return false;
+    }
+
     if (meta.receiver === BROADCAST)
     {
       return this.sendTo(this.topology.route(this.view, meta), bytes) > 0;
@@ -176,11 +203,15 @@ export class Network extends Emitter {
     const own = meta.sender === this.me;
     if (preferServer && own && this.toServer(message, bytes)) return true;
     // no socket of our own: the host passes the signalling on through its socket
-    if (preferServer && own && !this.server && this.host !== this.me && this.relayToHost(message, bytes)) return true;
+    const viaHost = preferServer && own && !this.server && this.host !== this.me;
+    if (viaHost && !this.carrier && this.relayToHost(message, bytes)) return true;
 
     if (this.sendTo(this.topology.route(this.view, meta), bytes) > 0) return true;
 
-    if (own && !preferServer && this.server?.link.send(bytes)) return true;
+    if (own && !preferServer && this.toServer(message, bytes)) return true;
+    if (own && this.carrier?.(meta.receiver, toBase64(bytes))) return true;
+    // the parent is gone: the links this network still has are all that's left
+    if (viaHost && this.carrier && this.relayToHost(message, bytes)) return true;
 
     this.emit("unreachable", message);
     return false;
@@ -189,9 +220,10 @@ export class Network extends Emitter {
   // `fallback` goes over the topology if the server answers that it can't deliver
   private toServer(message: Message, bytes: Uint8Array, fallback = message) {
     // the server checks the sender against the socket id, so a peer id it doesn't know goes wrapped
-    if (message.meta.sender !== this.socketId && message.meta.sender === this.me)
+    const socket = this.sockets.get(message.meta.receiver);
+    if (message.meta.sender === this.me && message.meta.type !== NetworkType.Relay && (socket || message.meta.sender !== this.socketId))
     {
-      message = this.wrap(message, bytes, message.meta.receiver);
+      message = this.wrap(message, bytes, socket ?? message.meta.receiver);
       bytes = message.toBinary(true);
     }
     if (!this.server?.link.send(bytes)) return false;
@@ -213,7 +245,7 @@ export class Network extends Emitter {
   }
 
   // a member's signalling, relayed to me: mine to read, or to pass on (through my socket when I have one)
-  private handleRelay(message: Message) {
+  private handleRelay(message: Message, from: PeerId) {
     const bytes = fromBase64((message.parse() as PayloadMap[NetworkType.Relay]).message);
     const inner = read(bytes);
     if (!inner)
@@ -222,11 +254,22 @@ export class Network extends Emitter {
       return;
     }
 
+    if (this.forged(inner, message.meta.sender)) return void this.emit("drop", inner);
+    if (from === SERVER && this.members.has(inner.meta.sender) && message.meta.sender !== inner.meta.sender)
+    {
+      this.sockets.set(inner.meta.sender, message.meta.sender);
+      if (this.sockets.size > 64) this.sockets.delete(this.sockets.keys().next().value!);
+    }
     if (inner.meta.receiver === this.me) return void this.emit("message", inner);
 
-    const wrapped = this.wrap(inner, bytes, inner.meta.receiver);
+    const wrapped = this.wrap(inner, bytes, this.sockets.get(inner.meta.receiver) ?? inner.meta.receiver);
     if (this.toServer(wrapped, wrapped.toBinary(true), inner)) return;
     this.dispatch(inner);
+  }
+
+  // the server already checks senders, for what it forwards itself
+  private forged(message: Message, from: PeerId) {
+    return !!this.topology.direct && from !== SERVER && message.meta.sender !== from && !isReserved(message.meta.type);
   }
 
   // the server couldn't deliver signalling (the receiver has no socket): over the topology, else via the host
@@ -268,15 +311,19 @@ export class Network extends Emitter {
 
   // event handlers
   private handleLinkMessage(link: Link, event: Event) {
+    this.take((event as CustomEvent<Uint8Array>).detail, link.id);
+  }
+
+  private take(bytes: Uint8Array, from: PeerId) {
     try
     {
-      const bytes = (event as CustomEvent<Uint8Array>).detail;
       const message = read(bytes);
       if (!message)
       {
-        this.error("read", "malformed message", { from: link.id });
+        this.error("read", "malformed message", { from });
         return;
       }
+      if (this.forged(message, from)) return void this.emit("drop", message);
 
       if (message.meta.receiver === BROADCAST && !this.seen.check(message.meta.id))
       {
@@ -285,9 +332,9 @@ export class Network extends Emitter {
       }
 
       // the server addresses me by my socket id
-      if (link.id === SERVER && message.meta.receiver === this.socketId) message.meta.receiver = this.me;
-      if (link.id === SERVER && message.meta.type === SignalType.Unreachable && this.reroute(message)) return;
-      if (message.meta.type === NetworkType.Relay && message.meta.receiver === this.me) return void this.handleRelay(message);
+      if (from === SERVER && message.meta.receiver === this.socketId) message.meta.receiver = this.me;
+      if (from === SERVER && message.meta.type === SignalType.Unreachable && this.reroute(message)) return;
+      if (message.meta.type === NetworkType.Relay && message.meta.receiver === this.me) return void this.handleRelay(message, from);
 
       const action = this.decide(message);
       if (action === "drop")
@@ -301,7 +348,7 @@ export class Network extends Emitter {
     }
     catch (error)
     {
-      this.error("link", "failed to handle a link message", { from: link.id, error });
+      this.error("link", "failed to handle a link message", { from, error });
     }
   }
 

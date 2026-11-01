@@ -72,7 +72,8 @@ class Client extends EventTarget {
     readonly profiles: Record<PeerId, Profile>;
     profile(peer?: PeerId): Profile | undefined;
     setProfile(profile: Profile): boolean;
-    readonly socket: SocketLink;
+    readonly serverId: string | null;
+    readonly socket: SocketLink | null;
     router: Network | null;
 
     readonly media: Media;
@@ -81,6 +82,9 @@ class Client extends EventTarget {
     update(options: { name?: string; private?: boolean; password?: string; meta?: object; media?: MediaPlan }): Promise<NetworkInfo>;
     list(): Promise<NetworkInfo[]>;
     join(networkId: string, password?: string): Promise<NetworkInfo>;
+    reregister(): Promise<string>;
+    room(options: RoomOptions): Promise<Client>;
+    joinRoom(id: string, host: PeerId, password?: string): Promise<Client>;
     send(receiver: PeerId, type: string, payload?: unknown): boolean;
     broadcast(type: string, payload?: unknown): boolean;
     leave(): void;
@@ -98,6 +102,7 @@ class Client extends EventTarget {
 | `keepSocket` | `boolean \| "host"` | `"host"` | `"host"`: only the host keeps its socket, the others close theirs once linked and their handshakes with newcomers go through the host (wrapped in `network.relay`, so the server is unchanged). `false` closes it everywhere, `true` keeps it everywhere |
 | `accept` | `(newcomer, info) => boolean` | accept all | runs on the entry peer; `false` sends `network.reject` |
 | `timeout` | `number` | `15000` | ms before `create`, `list` and `join` reject |
+| `linkTimeout` | `number` | `15000` | ms a link may take to open. It gets a second round when ICE connected in time |
 | `connectTimeout` | `number` | none | ms without a server connection before giving up for good; `ready` rejects and `status` becomes `closed` |
 | `wake` | `boolean` | `true` | while not connected, `GET <http url>/health` every 4 s so a sleeping host boots (`ws:` → `http:`, `wss:` → `https:`); errors are ignored |
 | `profile` | `Profile` | `{}` | what you say about yourself, e.g. `{ name }`, at most 1 KB as JSON |
@@ -108,11 +113,13 @@ class Client extends EventTarget {
 | `update` | Host only. Sends `signal.update`. A new `media` plan is also sent to every member as `network.media` and applied to every link. |
 | `list` | Public networks on the server. |
 | `join` | Resolves on `network.welcome`. Rejects on `signal.error`, `network.reject`, `signal.unreachable` for this request, or a timeout. |
+| `reregister` | Host only. Registers the network again under a new server id and tells the members. A new host does this by itself, with retries, so call it after an `error` of type `host`. Resolves with the new `serverId`. |
+| `room` / `joinRoom` | Opens or joins a network over the peers you already have, see [Rooms](#rooms). |
 | `send` / `broadcast` | App messages. A reserved type (`signal.*`, `network.*`, `handshake.*`) emits `error` instead and returns false. |
 | `setProfile` | Changes your profile. In a network it goes to the host as `network.profile`, and the host shares it in `network.members`. False, plus an `error`, for anything but a JSON object of up to 1 KB. |
 | `profile` / `profiles` | One member's profile (yours without an id), or all known profiles by id. Profiles of members who left are dropped. |
 | `leave` | Sends `signal.leave`, broadcasts `network.leave`, closes every peer link. |
-| `close` | `leave`, then closes the socket and rejects pending requests. |
+| `close` | Closes your rooms, then `leave`, closes the socket and rejects pending requests. |
 
 | Event | Detail |
 | --- | --- |
@@ -123,7 +130,38 @@ class Client extends EventTarget {
 | `host` | `PeerId` |
 | `unreachable` | `{ receiver, ref }`, `ref` is the message id |
 | `drop` | `Message`, dropped by relay rules or a topology filter |
+| `server-id` | `string`, the new `serverId`. The host tells the members in `network.members`, so it fires on them too |
 | `error` / `debug` | `{ type, message, payload }` |
+
+`serverId` is the id the server knows the network by, and the one to put in an invite. `network.id` never changes, so after a new host registers the network the two differ.
+
+## Rooms
+
+A room is a network opened on top of one you are already in. It has no socket and nothing on the server, so it works with the server asleep or down. It is a `Client` of its own, with its own `RTCPeerConnection`s, so a call doesn't go when the lobby's links change.
+
+```ts
+// host: opening it takes no server call
+const room = await lobby.room({ name: "call", password: "optional" });
+lobby.send(friend, "invite", { id: room.network.id, host: room.host });
+
+// guest
+const room = await lobby.joinRoom(invite.id, invite.host);
+room.addEventListener("message", ({ detail }) => console.log(detail.payload));
+```
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `name` | `string` | - | the room's name |
+| `password` | `string` | - | checked by the room's host. It travels over lobby peers, which can read it |
+| `meta` | `object` | - | stored on the room's `network` |
+| `media` | `MediaPlan` | - | the room's [media plan](#media) |
+| `topology` | `string \| TopologyConfig` | `"mesh"` | the parent's topology isn't inherited |
+| `accept` | `(newcomer, info) => boolean` | accept all | runs on the room's host |
+| `profile` | `Profile` | the parent's | what you say about yourself in this room |
+
+A room is used like any client, except that `create`, `join`, `list` and `reregister` reject, because they need the server. `update` changes the room locally. `room.close()` or `room.leave()` leaves it. A room survives `leave()` on its parent and closes with `close()`.
+
+Rooms have no list and their invites go stale: `joinRoom` only works through the current `room.host`, and needs both of you in the parent network.
 
 ## Network
 
@@ -187,6 +225,7 @@ interface Topology {
     neighbors(view: View, id: PeerId): PeerId[];
     route(view: View, meta: Meta): PeerId[];
     filter?(view: View, meta: Meta): RelayAction | undefined;
+    readonly direct?: boolean;
     media?(view: View, peer: PeerId, plan: MediaPlan): MediaPlan;
     relay?(view: View, name: string): PeerId | null;
 }
@@ -197,7 +236,7 @@ function registerTopology(name: string, factory: TopologyFactory): void;
 function resolveTopology(topology: string | TopologyConfig, onError?: (error: Error) => void): Topology;
 ```
 
-`neighbors` gives the direct links `id` should hold. `route` gives next hops drawn from `view.links` (`[]` means no peer route). `filter` runs on every received message before `relay`: `"drop"` or `"deliver"` replace relay's decision, while `"forward"` and `"both"` still go through relay's loop and `ttl` checks. `media` narrows the plan per direct link, see [Media](#media). `relay` names the peer whose incoming stream `name` this node forwards when it has no capture of its own (`null` or omitted: nothing is relayed), see [Relaying streams](#relaying-streams).
+`neighbors` gives the direct links `id` should hold. `route` gives next hops drawn from `view.links` (`[]` means no peer route). `filter` runs on every received message before `relay`: `"drop"` or `"deliver"` replace relay's decision, while `"forward"` and `"both"` still go through relay's loop and `ttl` checks. `media` narrows the plan per direct link, see [Media](#media). `relay` names the peer whose incoming stream `name` this node forwards when it has no capture of its own (`null` or omitted: nothing is relayed), see [Relaying streams](#relaying-streams). `direct` says nothing is ever relayed, so an app message whose sender isn't the link's peer is dropped. `mesh` sets it.
 
 ## Topology config
 
@@ -370,11 +409,12 @@ Outgoing, in order:
 2. With `preferServer` (handshakes and welcomes): the server link.
 3. `topology.route`.
 4. The server link, for this node's own unicast messages only. The server doesn't relay broadcasts or other senders' messages.
-5. `unreachable`.
+5. In a room: the parent network, in a `network.room` envelope. Then the room's host, over the room's links.
+6. `unreachable`.
 
-A broadcast goes to the `route` result and is marked seen.
+A message for `SERVER` is never sent over peers: without a server link, or with another sender, it emits `drop`. A broadcast goes to the `route` result and is marked seen.
 
-Incoming bytes go through peer-message's `read` (malformed → `error`). A broadcast already seen is dropped quietly. Then come `topology.filter` and `relay(meta, me)`: `deliver` / `both` emit `message`, `forward` / `both` re-route without re-stamping, and `drop` emits `drop`.
+Incoming bytes go through peer-message's `read` (malformed → `error`). In a topology with `direct`, an app message whose sender isn't the link's peer emits `drop`, also when it comes wrapped in `network.relay`. A broadcast already seen is dropped quietly. Then come `topology.filter` and `relay(meta, me)`: `deliver` / `both` emit `message`, `forward` / `both` re-route without re-stamping, and `drop` emits `drop`.
 
 # Protocol
 
@@ -384,6 +424,10 @@ The message types and payloads are listed in [peer-message's protocol table](htt
 | --- | --- |
 | join | The server forwards `network.join` to the entry peer (the host by default). The entry checks `accept`, adds the newcomer and sends `network.welcome { network, members, connect }` via the server, where `connect = topology.neighbors(view, newcomer)`. It then sends `network.members { members, host }` to the existing members. The entry reconciles, and so does the newcomer for everyone in `connect`, with the initiator rule below. |
 | reconcile | On `network.members`, a lost link or `network.leave`, each peer opens links for `desired()`. Exactly one side of a pair initiates: the lower id, unless the other side's `neighbors` don't include us (chord fingers are one-way). Peers with a pending handshake are skipped. One initiator matters, because rolling back a first offer discards its data channels. |
+| retry | A link that fails before it opens is tried again by the side that opened it: 3 times, 2 s apart and growing. On a timeout with ICE connected the handshake first waits another round. |
+| lost link | When an open link drops without `network.leave`, the member stays for `linkTimeout` plus 2 s while the link is retried. A member with no socket and no route to the host opens its socket for this and makes the offer itself. A closed tab with no `network.leave` therefore shows as gone that much later. |
+| stale link | Every offer and answer names its connection in `session`. An offer with a new `session` means the peer's end is gone, so it replaces the old link. |
+| room | `network.join`, `network.welcome` and handshakes travel between peers in `network.room { room, message }`, routed over the parent network like any peer message. The receiver hands it to that room, and only if its sender is the envelope's sender. |
 | media | `network.media { media }` from the host replaces the plan on every peer, which applies it to its links (see [Mid-session changes](#mid-session-changes)). |
 | host change | When the host leaves, the server sends `signal.host` to the next host. It sends `network.members { members, host: me }` to every member, through the server if it has no route yet, and reconciles. A host also sends the members to every peer whose link opens. |
 | leave | `signal.leave` to the server and `network.leave { peer }` broadcast. Peers drop the member and its profile, then reconcile. |
@@ -404,7 +448,7 @@ connect ──▶ signal.welcome {id} ──▶ create ──▶ signal.register
                           leave: signal.leave + network.leave ──▶ close
 ```
 
-If the socket drops, it reconnects with backoff and resends whatever was queued. A new socket can come with a new id from the server. Inside a network, the peer id stays the same and only the socket id changes: messages through the server go wrapped in `network.relay` under the socket id. A host with a new socket id registers the network again. Outside a network (and on `leave()`), the client takes the new id. Peer links keep working.
+If the socket drops, it reconnects with backoff and sends what was queued once the server has welcomed it. What was queued under the old socket id is dropped with a `debug` line, because the server would refuse it as a spoof. A new socket can come with a new id from the server. Inside a network, the peer id stays the same and only the socket id changes: messages through the server go wrapped in `network.relay` under the socket id. A host with a new socket id registers the network again. Outside a network (and on `leave()`), the client takes the new id. Peer links keep working.
 
 If the host leaves, every member picks the same successor, the lowest remaining id. When that peer has no socket (`keepSocket: "host"` dropped it), it opens one first. The signal server drops a network as soon as its host leaves, so the new host always registers it again (`recreate`, default true), with the password it was created or joined with (kept in memory). Joins under the new server id are welcomed into the same network.
 
@@ -448,6 +492,7 @@ Start the signal server first. `npm start` also tries port 3000 and moves on to 
   - start/stop per stream, and a video grid labelled "<name> · <stream>"
   - for the host only, **Edit media plan**, which updates everyone
   - **Leave**
+- **Rooms**, in a network: open one, copy its invite, paste it in another tab and ping. Stop the signal server to check that rooms don't need it.
 - **Event log**, with a *debug* toggle for handshake and ICE detail.
 
 The URL, name, topology and last plan are remembered in `localStorage`. The demo records which streams are screen captures, and whether the network has a password, in the network's `meta` (`screens`, `locked`), because `NetworkInfo` has no fields for them.
@@ -461,7 +506,9 @@ The URL, name, topology and last plan are remembered in `localStorage`. The demo
 - `keepSocket: false` drops the host's socket too, so nobody can join any more. Use `"host"` (the default).
 - `status` and `wake` only cover the signalling socket. Peer links come and go on their own (`peer`, `peer-left`).
 - Profiles are kept by the host and trusted as sent.
-- Peers trust each other: any member can send any app message, and the host controls the member list.
+- Peers trust each other: the host controls the member list, and in a topology that relays (`chord`, `star`, `multicast`) any member can send an app message under another's id. A `mesh` drops those, but only app messages.
+- A member that reconnected under a new socket id can't reach a mesh peer through the server, because that peer can't check the sender. Its peer links keep working.
+- A mesh member with no socket and no link to anyone can only come back through the host: with the host gone too, it waits out the lost link and drops the members.
 
 # License
 

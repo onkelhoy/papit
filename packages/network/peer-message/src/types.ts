@@ -47,6 +47,7 @@ export enum NetworkType {
     Media = "network.media",
     Profile = "network.profile",
     Relay = "network.relay",
+    Room = "network.room",
 }
 
 // peer ↔ peer, over any link
@@ -129,15 +130,21 @@ export type PayloadMap = {
     [NetworkType.Join]: { password?: string; profile?: Profile };
     [NetworkType.Welcome]: { network: NetworkInfo; members: PeerId[]; connect: PeerId[]; profiles?: Record<PeerId, Profile> };
     [NetworkType.Reject]: { reason: string };
-    [NetworkType.Members]: { members: PeerId[]; host?: PeerId; profiles?: Record<PeerId, Profile> };
+    /** `serverId` is the id the server knows the network by, when the host registered it again. */
+    [NetworkType.Members]: { members: PeerId[]; host?: PeerId; profiles?: Record<PeerId, Profile>; serverId?: string };
     [NetworkType.Leave]: { peer: PeerId };
     [NetworkType.Media]: { media: MediaPlan };
     [NetworkType.Profile]: { profile: Profile };
     /** A signalling message (base64 of its bytes) for the host to pass on through its socket. */
     [NetworkType.Relay]: { message: string };
-    /** `streams` maps transceiver `mid` → media plan stream name, for the streams the offer carries. */
-    [HandshakeType.Offer]: { description: SessionDescription; streams?: Record<string, string> };
-    [HandshakeType.Answer]: { description: SessionDescription };
+    /** A message (base64 of its bytes) of a network opened over this one, for the receiver's `room`. */
+    [NetworkType.Room]: { room: string; message: string };
+    /**
+     * `streams` maps transceiver `mid` → media plan stream name, for the streams the offer carries.
+     * `session` names the sender's connection: a new one means its end of the old link is gone.
+     */
+    [HandshakeType.Offer]: { description: SessionDescription; streams?: Record<string, string>; session?: string };
+    [HandshakeType.Answer]: { description: SessionDescription; session?: string };
     [HandshakeType.Candidate]: { candidate: IceCandidate };
 }
 

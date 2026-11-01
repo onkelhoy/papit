@@ -29,6 +29,7 @@ export class SocketLink extends Emitter implements Link {
   private timer: ReturnType<typeof setTimeout> | null = null;
   private deadline: ReturnType<typeof setTimeout> | null = null;
   private offline: Uint8Array[] = [];
+  private welcomed = false;
   private closed = false;
   private readonly maxAttempts: number;
 
@@ -46,10 +47,10 @@ export class SocketLink extends Emitter implements Link {
     return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  /** Sends now, or queues until the socket is (re)connected. False once closed for good. */
+  /** Sends now, or queues until the server has welcomed the socket (again). False once closed for good. */
   send(bytes: Uint8Array) {
     if (this.closed) return false;
-    if (!this.open)
+    if (!this.open || !this.welcomed)
     {
       this.offline.push(bytes.slice());
       return true;
@@ -106,6 +107,7 @@ export class SocketLink extends Emitter implements Link {
     const ws = this.ws;
     if (!ws) return null;
 
+    this.welcomed = false;
     ws.removeEventListener("message", this.handleMessage);
     ws.removeEventListener("error", this.handleError);
     ws.removeEventListener("open", this.handleOpen);
@@ -114,12 +116,15 @@ export class SocketLink extends Emitter implements Link {
     return ws;
   }
 
-  private flush() {
+  // what was queued under the previous id would be refused as a spoof
+  private flush(previous: PeerId | null) {
     const queue = this.offline;
     this.offline = [];
     for (const bytes of queue)
     {
-      this.ws!.send(bytes);
+      const type = previous && previous !== this.me ? stale(bytes, previous) : null;
+      if (type) this.debug("socket", `dropped a queued ${type}, it was sent under the previous socket id`, { previous });
+      else this.ws!.send(bytes);
     }
   }
 
@@ -127,7 +132,6 @@ export class SocketLink extends Emitter implements Link {
   private handleOpen = () => {
     this.attempts = 0;
     this.clearDeadline();
-    this.flush();
     this.dispatchEvent(new Event("open"));
   }
 
@@ -138,7 +142,10 @@ export class SocketLink extends Emitter implements Link {
     const message = read(bytes);
     if (message?.meta.type === SignalType.Welcome && message.meta.sender === SERVER)
     {
+      const previous = this.me;
       this.me = message.payload.id;
+      this.welcomed = true;
+      this.flush(previous);
       this.emit("welcome", this.me);
     }
 
@@ -166,4 +173,9 @@ export class SocketLink extends Emitter implements Link {
     this.emit("disconnect", { attempts: this.attempts, delay });
     this.timer = setTimeout(this.connect, delay);
   }
+}
+
+function stale(bytes: Uint8Array, sender: PeerId) {
+  const message = read(bytes);
+  return message?.meta.sender === sender ? message.meta.type : null;
 }

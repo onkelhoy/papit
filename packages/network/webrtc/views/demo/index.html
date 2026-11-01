@@ -85,6 +85,20 @@
                 <ul id="members" class="list"></ul>
             </section>
 
+            <section class="card" id="rooms-card">
+                <h2>Rooms</h2>
+                <p class="hint">Opened over this network's peers, with no socket and nothing on the server. Stop the signal server to try it.</p>
+                <form id="room-open" class="row">
+                    <input id="room-new" value="call" maxlength="64" placeholder="room name" />
+                    <button class="primary">Open room</button>
+                </form>
+                <form id="room-join" class="row">
+                    <input id="room-invite" placeholder="paste an invite" spellcheck="false" />
+                    <button>Join</button>
+                </form>
+                <ul id="rooms" class="list"></ul>
+            </section>
+
             <section class="card wide" id="streams">
                 <h2>Streams</h2>
                 <div id="stream-controls" class="row"></div>

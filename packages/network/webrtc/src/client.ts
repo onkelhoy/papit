@@ -19,7 +19,7 @@ import {
 import { Emitter } from "./emitter";
 import { Media } from "./components/media";
 import { Network } from "./components/network";
-import type { Offer } from "./components/handshake";
+import { HANDSHAKE_TIMEOUT, type Offer } from "./components/handshake";
 import { PeerLink } from "./components/peer";
 import { SocketLink } from "./components/socket";
 import { resolveTopology } from "./components/topology";
@@ -30,6 +30,11 @@ export const REQUEST_TIMEOUT = 15_000;
 export const WAKING_AFTER = 3_000;
 /** ms between `/health` pings while not connected. */
 export const WAKE_INTERVAL = 4_000;
+
+/** How many times a link that failed to open is tried again. */
+export const LINK_RETRIES = 3;
+/** ms before the first retry of a link; each further retry waits this much longer. */
+export const LINK_RETRY_DELAY = 2_000;
 
 /** Connection state of a `Client`, see `client.status`. */
 export type ClientStatus = "connecting" | "waking" | "connected" | "reconnecting" | "closed";
@@ -62,6 +67,8 @@ export type ClientOptions = {
   accept?(newcomer: PeerId, info: NetworkInfo): boolean;
   /** ms before `create`, `list` and `join` reject. */
   timeout?: number;
+  /** ms a link may take to open, doubled when ICE connected in time. Default `HANDSHAKE_TIMEOUT`. */
+  linkTimeout?: number;
   /** ms without a server connection before giving up for good (`ready` rejects). Default: keep trying. */
   connectTimeout?: number;
   /** While not connected, ping `<http url>/health` every few seconds so a sleeping host boots. Default true. */
@@ -72,12 +79,32 @@ export type ClientOptions = {
   recreate?: boolean;
 }
 
+/** What `client.room` opens. A room is always private: its id and host travel by invite. */
+export type RoomOptions = {
+  name: string;
+  /** Checked by the room's host. It travels over lobby peers, which can read it. */
+  password?: string;
+  meta?: Record<string, unknown>;
+  media?: MediaPlan;
+  /** Default `"mesh"`, whatever the parent network uses. */
+  topology?: string | TopologyConfig;
+  /** Called on the room's host for each newcomer; false rejects them. Default: accept everyone. */
+  accept?(newcomer: PeerId, info: NetworkInfo): boolean;
+  /** Default: the parent client's profile. */
+  profile?: Profile;
+}
+
 /** Detail of the client's `"message"` event. */
 export type ClientMessage<Payload = unknown> = {
   type: string;
   sender: PeerId;
   payload: Payload;
   meta: Meta;
+}
+
+type Retry = {
+  attempts: number;
+  timer: ReturnType<typeof setTimeout> | null;
 }
 
 type Request = {
@@ -99,12 +126,17 @@ type Request = {
  * @fires members - `CustomEvent<{ members: PeerId[], profiles: Record<PeerId, Profile> }>`, the members or their profiles changed
  * @fires status - `CustomEvent<ClientStatus>`, see `status`
  * @fires host - `CustomEvent<PeerId>`, the host changed
+ * @fires server-id - `CustomEvent<string>`, the id the server knows the network by changed, see `serverId`
  * @fires unreachable - `CustomEvent<{ receiver, ref }>`, a message could not be delivered
  * @fires drop - `CustomEvent<Message>`, a received message was dropped (loop, ttl, filter)
  * @fires error - `CustomEvent<EmitterEvent>`
  * @fires debug - `CustomEvent<EmitterEvent>`
  *
  * Media (streams, channels) lives on `client.media`, see `Media`.
+ *
+ * `client.room` opens a network over the peers this client already has, with no socket and nothing on
+ * the server. The room is a `Client` of its own, with its own `RTCPeerConnection`s. It survives
+ * `leave()` on its parent and closes with `close()`.
  */
 export class Client extends Emitter {
   /** This peer's id, null until the server welcomes it. */
@@ -113,8 +145,8 @@ export class Client extends Emitter {
   public network: NetworkInfo | null = null;
   /** Resolves with this peer's id once the server welcomes it. */
   public readonly ready: Promise<PeerId>;
-  /** The signalling socket. */
-  public socket: SocketLink;
+  /** The signalling socket, null for a room. */
+  public socket: SocketLink | null;
   // an id the server assigned on a reconnect while in a network, taken on leave
   private reassigned: PeerId | null = null;
   // the socket was closed on purpose (keepSocket), the client is still in its network
@@ -128,7 +160,13 @@ export class Client extends Emitter {
   /** Media plan, captures, remote streams and plan channels. */
   public readonly media: Media;
 
+  private parent: Client | null = null;
+  private roomId = "";
+  private rooms = new Map<string, Client>();
   private pending = new Map<PeerId, PeerLink>();
+  private retries = new Map<PeerId, Retry>();
+  // members whose link dropped without a leave, kept until the link is back or the time is up
+  private lost = new Map<PeerId, ReturnType<typeof setTimeout>>();
   private _status: ClientStatus = "connecting";
   private connectedOnce = false;
   private ownProfile: Profile;
@@ -136,11 +174,12 @@ export class Client extends Emitter {
   private wakingTimer: ReturnType<typeof setTimeout> | null = null;
   private wakeTimer: ReturnType<typeof setInterval> | null = null;
   private requests: Request[] = [];
+  private registerTimer: ReturnType<typeof setTimeout> | null = null;
   private joining: string | null = null;
   private closed = false;
   private readonly options: ClientOptions;
 
-  constructor(options: ClientOptions) {
+  constructor(options: ClientOptions, parent?: { client: Client; room: string }) {
     super();
     this.options = options;
     this.media = new Media({
@@ -151,6 +190,22 @@ export class Client extends Emitter {
     this.media.addEventListener("debug", this.handleForward);
 
     this.ownProfile = options.profile ?? {};
+
+    if (parent)
+    {
+      this.parent = parent.client;
+      this.roomId = parent.room;
+      this.socket = null;
+      this.dropped = true;
+      this.id = parent.client.id;
+      this._status = "connected";
+      this.ready = Promise.resolve(this.id!);
+      this.router = new Network({ me: this.id!, topology: options.topology });
+      this.router.carrier = (receiver, message) => parent.client.carry(parent.room, receiver, message);
+      this.attachRouter(this.router);
+      return;
+    }
+
     this.socket = this.openSocket();
 
     this.wakingTimer = setTimeout(() => {
@@ -160,8 +215,8 @@ export class Client extends Emitter {
     this.startWake();
 
     this.ready = new Promise<PeerId>((resolve, reject) => {
-      this.socket.addEventListener("welcome", (event: Event) => resolve((event as CustomEvent<PeerId>).detail), { once: true });
-      this.socket.addEventListener("close", () => reject(new Error(this.closed ? "client closed" : "could not connect to the server")), { once: true });
+      this.socket!.addEventListener("welcome", (event: Event) => resolve((event as CustomEvent<PeerId>).detail), { once: true });
+      this.socket!.addEventListener("close", () => reject(new Error(this.closed ? "client closed" : "could not connect to the server")), { once: true });
     });
     this.ready.catch(() => { });
   }
@@ -172,6 +227,11 @@ export class Client extends Emitter {
    */
   get status(): ClientStatus {
     return this._status;
+  }
+
+  /** The id the server knows the network by, null outside one. Differs from `network.id` once a new host registered it again: invites use this one. */
+  get serverId(): string | null {
+    return this.serverNetwork ?? this.network?.id ?? null;
   }
 
   /** Every known member profile by id (yours included while in a network). */
@@ -240,6 +300,7 @@ export class Client extends Emitter {
   /** Registers a new network on the server; this peer becomes its host. */
   async create(options: { name: string; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan }): Promise<NetworkInfo> {
     await this.ready;
+    this.assertOnServer();
     if (this.network) throw new Error("already in a network, leave first");
 
     const network: NetworkInfo = await this.request(
@@ -264,7 +325,8 @@ export class Client extends Emitter {
     if (!network) throw new Error("not in a network");
     if (this.host !== this.id) throw new Error("only the host can update the network");
 
-    const updated: NetworkInfo = await this.request(
+    const { password: _, ...changes } = options;
+    const updated: NetworkInfo = this.parent ? { ...network, ...changes } : await this.request(
       SignalType.Update,
       { ...options, network: this.serverNetwork ?? network.id },
       message => message.meta.type === SignalType.Updated ? (message.payload as PayloadMap[SignalType.Updated]).network : undefined,
@@ -289,6 +351,7 @@ export class Client extends Emitter {
   /** Public networks on the server. */
   async list(): Promise<NetworkInfo[]> {
     await this.ready;
+    this.assertOnServer();
     return this.request(
       SignalType.List,
       {},
@@ -303,14 +366,20 @@ export class Client extends Emitter {
    */
   async join(network: string, password?: string): Promise<NetworkInfo> {
     await this.ready;
+    this.assertOnServer();
     if (this.network) throw new Error("already in a network, leave first");
+    return this.enterVia(network, password);
+  }
 
+  // `host`: asks a room's host over the parent network instead of the server
+  private async enterVia(network: string, password?: string, host?: PeerId): Promise<NetworkInfo> {
     this.joining = network;
     try
     {
+      const payload = { ...(password ? { password } : {}), profile: this.ownProfile };
       const welcome: PayloadMap[NetworkType.Welcome] = await this.request(
         SignalType.Join,
-        { network, ...(password ? { password } : {}), profile: this.ownProfile },
+        { network, ...payload },
         message => {
           if (message.meta.network !== network) return undefined;
           if (message.meta.type === NetworkType.Reject)
@@ -319,9 +388,15 @@ export class Client extends Emitter {
           }
           return message.meta.type === NetworkType.Welcome ? message.payload : undefined;
         },
+        host ? () => {
+          const message = Message.Create({ type: NetworkType.Join, sender: this.id!, receiver: host, network }, payload);
+          this.router!.send(message, { preferServer: true });
+          return message;
+        } : undefined,
       );
 
       this.password = password;
+      if (network !== welcome.network.id) this.serverNetwork = network;
       this.profileMap = new Map(Object.entries(welcome.profiles ?? {}));
       this.profileMap.set(this.id!, this.ownProfile);
       this.enter(welcome.network, welcome.members, welcome.network.host);
@@ -335,6 +410,59 @@ export class Client extends Emitter {
     {
       this.joining = null;
     }
+  }
+
+  /**
+   * Opens a network on top of this one, with no socket and nothing registered on the server. This peer
+   * hosts it. Others join with `joinRoom(room.network.id, room.host)`, so send them those in a message.
+   */
+  async room(options: RoomOptions): Promise<Client> {
+    await this.ready;
+    if (!this.network) throw new Error("not in a network");
+
+    const { name, password, meta, media, topology = "mesh" } = options;
+    const room = this.openRoom(crypto.randomUUID(), options);
+    const id = this.id!;
+    room.password = password;
+    room.profileMap = new Map([[id, room.ownProfile]]);
+    room.enter({ id: room.roomId, name, host: id, topology, private: true, size: 1, ...(meta ? { meta } : {}), ...(media ? { media } : {}) }, [id], id);
+    return room;
+  }
+
+  /** Joins a room through its `host`, over this network. Rejects on a reject or a timeout. */
+  async joinRoom(id: string, host: PeerId, password?: string): Promise<Client> {
+    await this.ready;
+    if (!this.network) throw new Error("not in a network");
+    if (this.rooms.has(id)) throw new Error("already in that room");
+
+    const room = this.openRoom(id, {});
+    try
+    {
+      await room.enterVia(id, password, host);
+      return room;
+    }
+    catch (error)
+    {
+      room.close();
+      throw error;
+    }
+  }
+
+  private openRoom(id: string, options: Partial<RoomOptions>) {
+    const { topology, accept, profile = this.ownProfile } = options;
+    const room = new Client({ ...this.options, topology, accept, profile, recreate: false }, { client: this, room: id });
+    this.rooms.set(id, room);
+    return room;
+  }
+
+  private assertOnServer() {
+    if (this.parent) throw new Error("a room isn't on the server, open it with room() or joinRoom()");
+  }
+
+  // sends a room's message to a peer over this network
+  private carry(room: string, receiver: PeerId, message: string) {
+    if (!this.network || !this.rooms.has(room) || this.id !== this.rooms.get(room)!.id) return false;
+    return this.sendReserved(receiver, NetworkType.Room, { room, message }, true);
   }
 
   /** Sends an app message to one peer. Reserved types emit `"error"` instead. */
@@ -359,14 +487,18 @@ export class Client extends Emitter {
     const router = this.router;
     if (!network || !router) return;
 
+    this.parent?.rooms.delete(this.roomId);
     this.signal(SignalType.Leave, { network: this.serverNetwork ?? network.id });
     this.serverNetwork = null;
     this.password = undefined;
+    this.clearRegisterTimer();
     this.sendReserved(BROADCAST, NetworkType.Leave, { peer: this.id! });
 
     this.network = null;
     router.info = undefined;
     this.media.setPlan(undefined);
+    for (const peer of [...this.retries.keys()]) this.clearRetry(peer);
+    for (const peer of [...this.lost.keys()]) this.clearLost(peer);
     for (const link of this.pending.values()) link.close();
     this.pending.clear();
     for (const peer of router.view.links) router.removeLink(peer);
@@ -384,11 +516,13 @@ export class Client extends Emitter {
     this.router!.rename(id);
   }
 
-  /** Leaves, closes the socket and rejects pending requests. */
+  /** Leaves, closes the socket and any rooms, and rejects pending requests. */
   close() {
     if (this.closed) return;
     this.closed = true;
 
+    for (const room of [...this.rooms.values()]) room.close();
+    this.parent?.rooms.delete(this.roomId);
     this.leave();
     this.stopWake();
     if (this.wakingTimer !== null) clearTimeout(this.wakingTimer);
@@ -398,13 +532,17 @@ export class Client extends Emitter {
     this.media.removeEventListener("debug", this.handleForward);
     for (const request of [...this.requests]) this.settle(request, undefined, new Error("client closed"));
 
-    this.socket.removeEventListener("welcome", this.handleWelcome);
-    this.socket.removeEventListener("disconnect", this.handleDisconnect);
-    this.socket.removeEventListener("open", this.handleSocketOpen);
-    this.socket.close();
-    this.socket.removeEventListener("close", this.handleSocketClose);
-    this.socket.removeEventListener("error", this.handleForward);
-    this.socket.removeEventListener("debug", this.handleForward);
+    if (this.socket)
+    {
+      this.socket.removeEventListener("welcome", this.handleWelcome);
+      this.socket.removeEventListener("disconnect", this.handleDisconnect);
+      this.socket.removeEventListener("open", this.handleSocketOpen);
+      this.socket.close();
+      this.socket.removeEventListener("close", this.handleSocketClose);
+      this.socket.removeEventListener("error", this.handleForward);
+      this.socket.removeEventListener("debug", this.handleForward);
+    }
+    else this.setStatus("closed");
 
     if (this.router)
     {
@@ -430,7 +568,7 @@ export class Client extends Emitter {
     const router = this.router;
     if (!router || this.pending.has(peer) || router.view.links.includes(peer)) return;
 
-    const link = new PeerLink(this.id!, peer, router, { rtc: this.options.rtc });
+    const link = new PeerLink(this.id!, peer, router, { rtc: this.options.rtc, timeout: this.options.linkTimeout });
     this.pending.set(peer, link);
     this.media.attach(link);
 
@@ -443,6 +581,8 @@ export class Client extends Emitter {
     const handleOpen = () => {
       if (this.pending.get(peer) === link) this.pending.delete(peer);
       if (!this.network) return void link.close();
+      this.clearRetry(peer);
+      this.clearLost(peer);
 
       router.addLink(link);
       this.dropSocket();
@@ -452,6 +592,7 @@ export class Client extends Emitter {
       if (this.pending.get(peer) !== link) return;
       this.pending.delete(peer);
       this.debug("link", `link to ${peer} closed before it opened (${link.connection.connectionState})`, { peer });
+      this.retry(peer);
     };
 
     link.addEventListener("open", handleOpen);
@@ -461,6 +602,65 @@ export class Client extends Emitter {
 
     this.debug("link", `${offer ? "answering" : "offering"} ${peer}`, { peer });
     link.connect(offer);
+  }
+
+  /** Tries a failed link again after a delay. Only the side that opens the link retries, unless forced; the other answers. */
+  private retry(peer: PeerId, force = false) {
+    const router = this.router;
+    if (!router || !this.network || !router.view.members.includes(peer)) return;
+    if (!force && !this.retries.has(peer) && !this.initiates(peer)) return;
+
+    const retry = this.retries.get(peer) ?? { attempts: 0, timer: null };
+    if (retry.timer !== null) return;
+    if (retry.attempts >= LINK_RETRIES)
+    {
+      this.clearRetry(peer);
+      this.error("link", `gave up on the link to ${peer} after ${LINK_RETRIES} retries`, { peer });
+      return;
+    }
+
+    retry.attempts++;
+    this.retries.set(peer, retry);
+    this.debug("link", `retrying the link to ${peer} (attempt ${retry.attempts} of ${LINK_RETRIES})`, { peer });
+    retry.timer = setTimeout(() => {
+      retry.timer = null;
+      if (this.router?.desired().includes(peer)) this.link(peer);
+      else this.clearRetry(peer);
+    }, retry.attempts * LINK_RETRY_DELAY);
+  }
+
+  private clearRetry(peer: PeerId) {
+    const retry = this.retries.get(peer);
+    if (retry?.timer != null) clearTimeout(retry.timer);
+    this.retries.delete(peer);
+  }
+
+  /**
+   * A link to a wanted member dropped without a `network.leave`: both may still be online, so the
+   * member stays while the link is tried again. False when there's nothing to wait for.
+   */
+  private hold(peer: PeerId) {
+    const router = this.router;
+    if (!router || !this.network || !router.view.members.includes(peer) || !router.desired().includes(peer)) return false;
+    if (this.lost.has(peer)) return true;
+
+    this.lost.set(peer, setTimeout(() => {
+      this.debug("link", `no link to ${peer} in time, dropping the member`, { peer });
+      this.forget(peer);
+      this.pending.get(peer)?.close();
+    }, (this.options.linkTimeout ?? HANDSHAKE_TIMEOUT) + LINK_RETRY_DELAY));
+
+    // no socket and no peer route to the host: the server is the only way back, and only this side can use it
+    const stranded = this.dropped && !this.parent && peer === router.view.host && router.topology.route(router.view, { receiver: peer, hops: [this.id!] } as Meta).length === 0;
+    if (stranded) this.recreate();
+    this.retry(peer, stranded);
+    return true;
+  }
+
+  private clearLost(peer: PeerId) {
+    const timer = this.lost.get(peer);
+    if (timer !== undefined) clearTimeout(timer);
+    this.lost.delete(peer);
   }
 
   /**
@@ -497,7 +697,7 @@ export class Client extends Emitter {
     for (const member of members)
     {
       if (member === this.id || member === except) continue;
-      this.sendReserved(member, NetworkType.Members, { members, host: router.view.host, profiles: this.profiles });
+      this.sendReserved(member, NetworkType.Members, { members, host: router.view.host, profiles: this.profiles, ...this.serverField() });
     }
   }
 
@@ -539,35 +739,66 @@ export class Client extends Emitter {
     this.wakeTimer = null;
   }
 
-  // the new host without a socket: open one; its welcome registers the network again
+  // no socket but in need of one: the new host's welcome registers the network again, a stranded member offers to the host
   private recreate() {
-    this.debug("socket", "host without a socket, opening one to register the network again", null);
+    this.debug("socket", "opening the signalling socket again", null);
     this.dropped = false;
     this.socket = this.openSocket();
   }
 
-  // registers the network under a new server id; joins for it are answered with the network's own id
-  private async reregister() {
+  /**
+   * Registers the network again under a new server id (host only) and tells the members. Joins for it
+   * are answered with the network's own id. A new host does this by itself, with retries; call it
+   * after an `"error"` of type `"host"`. Resolves with the new `serverId`.
+   */
+  async reregister(): Promise<string> {
+    this.assertOnServer();
     const network = this.network;
-    if (!network) return;
-    try
-    {
-      const registered: NetworkInfo = await this.request(
-        SignalType.Register,
-        { name: network.name, topology: network.topology, private: network.private, ...(this.password ? { password: this.password } : {}), ...(network.meta ? { meta: network.meta } : {}), ...(network.media ? { media: network.media } : {}) },
-        message => message.meta.type === SignalType.Registered ? (message.payload as PayloadMap[SignalType.Registered]).network : undefined,
-      );
-      this.serverNetwork = registered.id;
-    }
-    catch (error)
-    {
-      this.error("host", "could not register the network again", error);
-    }
+    if (!network) throw new Error("not in a network");
+    if (this.host !== this.id) throw new Error("only the host can register the network");
+
+    const registered: NetworkInfo = await this.request(
+      SignalType.Register,
+      { name: network.name, topology: network.topology, private: network.private, ...(this.password ? { password: this.password } : {}), ...(network.meta ? { meta: network.meta } : {}), ...(network.media ? { media: network.media } : {}) },
+      message => message.meta.type === SignalType.Registered ? (message.payload as PayloadMap[SignalType.Registered]).network : undefined,
+    );
+    if (this.network?.id !== network.id) throw new Error("left the network");
+
+    this.setServerId(registered.id);
+    this.broadcastMembers();
+    return registered.id;
+  }
+
+  private register(attempt = 0) {
+    this.clearRegisterTimer();
+    this.reregister().catch((error) => {
+      if (!this.network || this.closed) return;
+      if (attempt >= LINK_RETRIES) return void this.error("host", "could not register the network again", error);
+
+      this.debug("host", `retrying to register the network (attempt ${attempt + 1} of ${LINK_RETRIES})`, error);
+      this.registerTimer = setTimeout(() => this.register(attempt + 1), (attempt + 1) * LINK_RETRY_DELAY);
+    });
+  }
+
+  private clearRegisterTimer() {
+    if (this.registerTimer !== null) clearTimeout(this.registerTimer);
+    this.registerTimer = null;
+  }
+
+  private setServerId(id: string) {
+    if (id === this.serverId) return;
+    this.serverNetwork = id;
+    this.emit("server-id", id);
+  }
+
+  // only when it differs from the network's id
+  private serverField() {
+    return this.serverNetwork ? { serverId: this.serverNetwork } : {};
   }
 
   private dropSocket() {
     const keep = this.options.keepSocket ?? "host";
-    if (keep === true || !this.network || this.pending.size > 0) return;
+    if (keep === true || !this.network || this.pending.size > 0 || !this.socket) return;
     if (keep === "host" && this.router?.view.host === this.id) return;
     this.debug("socket", `keepSocket is ${keep}, closing the signalling socket`, null);
     this.dropped = true;
@@ -581,13 +812,13 @@ export class Client extends Emitter {
 
   private signal<T extends keyof PayloadMap>(type: T, payload: PayloadMap[T]) {
     const message = Message.Create({ type, sender: this.router?.socketId ?? this.id!, receiver: SERVER }, payload);
-    this.router?.send(message);
+    if (!this.dropped) this.router?.send(message);
     return message;
   }
 
-  private request<T>(type: SignalType, payload: object, match: (message: Message) => unknown) {
+  private request<T>(type: SignalType, payload: object, match: (message: Message) => unknown, send = () => this.signal(type as keyof PayloadMap, payload as any)) {
     return new Promise<T>((resolve, reject) => {
-      const message = this.signal(type as keyof PayloadMap, payload as any);
+      const message = send();
       const request: Request = {
         id: message.meta.id,
         match,
@@ -675,8 +906,15 @@ export class Client extends Emitter {
       return;
     }
 
+    const { profile, password } = message.payload as PayloadMap[NetworkType.Join];
+    // no server checked this newcomer
+    if (this.parent && (router.view.host !== this.id || (this.password && password !== this.password)))
+    {
+      this.sendReserved(newcomer, NetworkType.Reject, { reason: router.view.host !== this.id ? "not the host" : "wrong password" }, true, asked);
+      return;
+    }
+
     const existing = router.view.members.length > 1;
-    const { profile } = message.payload as PayloadMap[NetworkType.Join];
     this.profileMap.set(newcomer, profile ?? {});
     router.setMembers([...router.view.members, newcomer]);
     const view = router.view;
@@ -702,6 +940,7 @@ export class Client extends Emitter {
     const sender = message.meta.sender;
     if (!this.network || message.meta.network !== this.network.id) return;
     if (sender !== router.view.host && payload.host !== sender) return; // only the host sets the members
+    if (payload.serverId) this.setServerId(payload.serverId);
 
     const previous = router.view.host;
     const host = payload.host ?? previous;
@@ -767,8 +1006,35 @@ export class Client extends Emitter {
     this.reconcile();
   }
 
+  private handleRoom(message: Message) {
+    const { room, message: carried } = message.payload as PayloadMap[NetworkType.Room];
+    this.rooms.get(room)?.router?.receive(carried, message.meta.sender);
+  }
+
+  /** A new session from a linked peer means its end of the link is gone: ours goes too, and the offer opens a new one. */
+  private handleOffer(message: Message) {
+    if (!this.network && !this.joining) return;
+
+    const peer = message.meta.sender;
+    const offer = message.payload as Offer;
+    const pending = this.pending.get(peer);
+    const link = pending ?? this.router!.link(peer);
+    const remote = link instanceof PeerLink ? link.handshake.remoteSession : null;
+    // our own unanswered offer goes too: the other side only offers when it can't be reached
+    if ((remote || pending) && offer.session && offer.session !== remote)
+    {
+      this.debug("link", `${peer} opened a new connection, replacing the old link`, { peer });
+      if (pending) pending.close();
+      else this.router!.removeLink(peer);
+    }
+
+    if (!this.pending.has(peer)) this.link(peer, offer);
+  }
+
   /** Drops a member that left or lost its link, then repairs the topology. */
   private forget(peer: PeerId) {
+    this.clearLost(peer);
+    this.clearRetry(peer);
     const router = this.router;
     if (!router || !this.network || !router.view.members.includes(peer)) return;
 
@@ -790,7 +1056,7 @@ export class Client extends Emitter {
       if (lostHost && this.options.recreate !== false)
       {
         if (this.dropped) this.recreate();
-        else this.reregister();
+        else this.register();
       }
     }
     this.reconcile();
@@ -802,14 +1068,14 @@ export class Client extends Emitter {
     if (this.router)
     {
       this.setStatus("connected");
-      this.router.addLink(this.socket);
+      this.router.addLink(this.socket!);
       if (id === this.router.socketId) return;
       if (this.network)
       {
         // the peer id stays; the server knows us by the new socket id from now on
         this.reassigned = id;
         this.router.socketId = id;
-        if (this.router.view.host === this.id) this.reregister();
+        if (this.router.view.host === this.id) this.register();
         return;
       }
       this.adopt(id);
@@ -820,7 +1086,7 @@ export class Client extends Emitter {
     this.id = id;
     this.router = new Network({ me: id, topology: this.options.topology });
     this.attachRouter(this.router);
-    this.router.addLink(this.socket);
+    this.router.addLink(this.socket!);
     this.setStatus("connected");
   }
 
@@ -848,12 +1114,8 @@ export class Client extends Emitter {
         case NetworkType.Leave: return this.handleLeave(message);
         case NetworkType.Media: return this.handleMedia(message);
         case NetworkType.Profile: return this.handleProfile(message);
-        case HandshakeType.Offer:
-          if ((this.network || this.joining) && !this.pending.has(meta.sender))
-          {
-            this.link(meta.sender, message.payload as Offer);
-          }
-          return;
+        case NetworkType.Room: return this.handleRoom(message);
+        case HandshakeType.Offer: return this.handleOffer(message);
       }
 
       if (isReserved(meta.type)) return; // handshake answers/candidates are handled by their PeerLink
@@ -877,7 +1139,7 @@ export class Client extends Emitter {
     const router = this.router;
     if (router && this.network && router.view.host === this.id)
     {
-      this.sendReserved(id, NetworkType.Members, { members: [...router.view.members], host: this.id });
+      this.sendReserved(id, NetworkType.Members, { members: [...router.view.members], host: this.id, ...this.serverField() });
     }
   }
 
@@ -886,7 +1148,7 @@ export class Client extends Emitter {
     if (id === SERVER) return;
 
     this.emit("peer-left", id);
-    this.forget(id);
+    if (!this.hold(id)) this.forget(id);
   }
 
   private handleUnreachable = (event: Event) => {
