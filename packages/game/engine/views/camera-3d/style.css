@@ -1,0 +1,19 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: var(--text, #080808);
+    margin: 0;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+label {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+}

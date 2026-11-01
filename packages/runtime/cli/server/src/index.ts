@@ -71,6 +71,18 @@ export async function meta() {
     const batches = Information.getBatches();
     const externals = new Set<string>();
 
+    // Workaround: @papit/information's getBatches() excludes any node with
+    // type === "root". In a real monorepo that's correct (it's the workspace
+    // meta-package). In a standalone project, root === package, so this
+    // silently drops the only package there is. Add it back as its own batch.
+    const ownIncluded = batches.some(batch =>
+        batch.some(node => node.name === Information.package.name)
+    );
+    if (!ownIncluded)
+    {
+        batches.push([Information.package]);
+    }
+
     for (const batch of batches)
     {
         for (const node of batch) 

@@ -117,6 +117,7 @@ v.add([1, 2, 3]);
 v.subtract([0, 1, 0]);
 v.multiply(2);
 v.divide([2, 2, 2]);
+v.lerp([1, 2, 3], 0.5); // moves v halfway there
 ```
 
 ### Normalization & Magnitude
@@ -155,6 +156,7 @@ v.add([1, 0, 0]).rotateY(Math.PI / 4);
 
 ```ts
 const v2 = Vector3.add(a, b);
+const v3 = Vector3.lerp(a, b, 0.5);
 ```
 
 Static helpers automatically clone vectors.
@@ -174,7 +176,7 @@ This library is a **math primitive**, not a scene graph or engine.
 
 ## Related Packages
 
-- [`@papit/game-matrix`](https://www.npmjs.com/package/@papit/game-matrix) — Matrix math for transformations and graphics pipelines
+- [`@papit/matrix`](https://www.npmjs.com/package/@papit/matrix) — Matrix math for transformations and graphics pipelines
 
 ## License
 

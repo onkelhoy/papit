@@ -4,6 +4,23 @@ import {Vector, Vector2, Vector3} from "@papit/vector";
 
 describe("Vector (N-dimensional) tests", () => {
 
+    it('should lerp in place and stay on the ends', () => {
+        const v = new Vector3(0, 10, -4);
+        const result = v.lerp(new Vector3(10, 20, 4), .5);
+        assert.strictEqual(result, v);
+        assert.deepStrictEqual([...v], [5, 15, 0]);
+        assert.deepStrictEqual([...v.clone.lerp([1, 2, 3], 0)], [5, 15, 0]);
+        assert.deepStrictEqual([...v.clone.lerp([1, 2, 3], 1)], [1, 2, 3]);
+    });
+
+    it('should lerp to a new vector with the static version', () => {
+        const a = new Vector2(0, 0);
+        const b = Vector2.lerp(a, [4, 8], .25);
+        assert.ok(b instanceof Vector2);
+        assert.deepStrictEqual([...a], [0, 0]);
+        assert.deepStrictEqual([...b], [1, 2]);
+    });
+
     it('should expose xyzw & rgba getters and setters', () => {
         const v = new Vector(1, 2, 3, 4);
         assert.strictEqual(v.x, 1);

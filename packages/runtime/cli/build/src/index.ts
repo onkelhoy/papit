@@ -194,7 +194,13 @@ async function runner(
     }
     catch (e)
     {
-        if (canprint) 
+        // the bundlers saved their timestamps before building, without this the next run says skipped
+        for (const suffix of ["papit-bundle-js", "papit-bundle-ts"])
+        {
+            fs.rmSync(path.join(node.location, ".temp", `mstime.${suffix}.json`), { force: true });
+        }
+
+        if (canprint)
         {
             close();
 

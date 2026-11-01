@@ -80,3 +80,43 @@ describe("Graph", () => {
         }
     });
 });
+
+describe("Graph.getOrder", () => {
+    let root;
+
+    before(() => {
+        root = fs.mkdtempSync(path.join(os.tmpdir(), "papit-"));
+
+        write(path.join(root, "package.json"), { name: "@scope/root", workspaces: ["packages/**/*"] });
+        write(path.join(root, "packages/cycle-a/package.json"), { name: "@scope/cycle-a", devDependencies: { "@scope/cycle-b": "0.0.1" } });
+        write(path.join(root, "packages/cycle-b/package.json"), { name: "@scope/cycle-b", devDependencies: { "@scope/cycle-a": "0.0.1" } });
+        write(path.join(root, "packages/app/package.json"), { name: "@scope/app", dependencies: { "@scope/lib": "0.0.1" }, devDependencies: { "@scope/cycle-a": "0.0.1" } });
+        write(path.join(root, "packages/lib/package.json"), { name: "@scope/lib", devDependencies: { "@scope/cycle-a": "0.0.1" } });
+        write(path.join(root, "packages/early/package.json"), { name: "@scope/early", devDependencies: { "@scope/late": "0.0.1" } });
+        write(path.join(root, "packages/late/package.json"), { name: "@scope/late", dependencies: { "@scope/early": "0.0.1" } });
+    });
+
+    after(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it("keeps dependencies first when a devDependency cycle blocks the sort", () => {
+        const graph = graphAt(root);
+        const batches = graph.getOrder({
+            packages: graph.nodes.filter(node => node.type !== "root"),
+            sortFilter: ["dependencies", "peerDependencies", "devDependencies"],
+        });
+        const batchOf = name => batches.findIndex(batch => batch.some(node => node.name === name));
+
+        assert.ok(batchOf("@scope/lib") < batchOf("@scope/app"));
+        assert.strictEqual(batches.flat().length, 6);
+    });
+
+    it("keeps a devDependency on a package found later as a devDependency", () => {
+        const graph = graphAt(root);
+        const batches = graph.getOrder({ packages: graph.nodes.filter(node => node.type !== "root") });
+        const batchOf = name => batches.findIndex(batch => batch.some(node => node.name === name));
+
+        assert.ok(batchOf("@scope/early") < batchOf("@scope/late"));
+    });
+});

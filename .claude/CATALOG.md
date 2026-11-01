@@ -17,6 +17,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 
 **Tools**
 - `theme`: CSS tokens (colours, spacing, radii) for light and dark
+- `pixels`: reads images and canvases pixel by pixel
 - `signals`: signals and effects
 - `translator`: language store, lazy loading (uses signals)
 - `router`: client-side router element. Barely tested in real use and had problems, expect updates

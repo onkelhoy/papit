@@ -1,6 +1,6 @@
 # @papit/confetti
 
-Canvas confetti burst web component (pap-confetti) with optional sound effects. Trigger it from code, by clicking the element, or from a linked button to celebrate a user action.
+A confetti web component that fires canvas particles, for celebrations on a page.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
