@@ -294,6 +294,10 @@ function connect() {
             profile: { name },
             rtc: $("stun").checked ? STUN : undefined,
             topology: topologyOption(),
+            acceptMerge: (network, size) => {
+                log("info", `${network.name} (${size}) asks to merge`);
+                return $("allow-merge").checked;
+            },
         });
     }
     catch (error)
@@ -355,6 +359,7 @@ function wire(c) {
     c.addEventListener("peer", (event) => { log("info", `linked to ${nameOf(event.detail)}`); render(); });
     c.addEventListener("peer-left", (event) => { log("info", `link to ${nameOf(event.detail)} closed`); render(); });
     c.addEventListener("members", () => render());
+    c.addEventListener("merged", (event) => { log("info", `merged: now in ${event.detail.name} with ${event.detail.size} members`); render(); });
     c.addEventListener("host", (event) => { log("info", `host is ${nameOf(event.detail)}`); render(); });
     c.addEventListener("unreachable", (event) => log("error", `unreachable: ${short(event.detail.receiver)}`, event.detail));
     c.addEventListener("drop", (event) => log("debug", `dropped ${event.detail.meta.type} from ${short(event.detail.meta.sender)}`));
@@ -668,6 +673,7 @@ function render() {
     if (document.activeElement !== $("room-name")) $("room-name").value = client.profile()?.name ?? "";
     $("room-meta").textContent = `${topologyLabel(network.topology)} · ${client.members.length} member${client.members.length === 1 ? "" : "s"} · ${summary(client.media.plan)} · id ${network.id}`;
     $("edit-plan").hidden = client.host !== client.id;
+    $("merge-row").hidden = client.host !== client.id;
 
     renderMembers();
     renderStreams();
@@ -720,6 +726,14 @@ $("leave").addEventListener("click", () => {
     log("info", "left the network");
     render();
 });
+
+$("merge-button").addEventListener("click", () => action("merge", async (c) => {
+    const id = $("merge-id").value.trim();
+    if (!id) throw new Error("paste the id of the network to merge with");
+    log("info", `merging with ${short(id)}…`);
+    await c.merge(id, $("merge-password").value || undefined);
+    render();
+}));
 
 $("edit-plan").addEventListener("click", () => {
     editEditor.set(client.media.plan, screensOf(client.network));

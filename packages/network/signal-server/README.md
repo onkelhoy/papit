@@ -143,6 +143,8 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | `signal.list` | client → server | `{}` | `signal.networks { networks }`, public only |
 | `signal.join` | client → server | `{ network, password?, profile? }` | `network.join { profile? }` to the entry peer, `sender` = newcomer; the password is not passed on |
 | `signal.leave` | client → server | `{ network }` | none; the network is deleted when the host leaves |
+| `signal.merge` | client → server | `{ network, from, size, password?, peer? }` | `network.merge { network, size, password?, peer? }` to the host of `network`, `sender` = requester. The requester must host `from`. The receiving host checks the password, which is why it's passed on here |
+| `signal.drain` | client → server | `{ draining }` | `signal.drained {}` when `draining`. Until `draining: false` or the socket closes, whatever is sent to it gets `signal.unreachable` |
 | `signal.host` | server → client | `{ network }` | you are now host |
 | `signal.unreachable` | server → client | `{ receiver, ref }` | the message `ref` couldn't be delivered |
 | `signal.error` | server → client | `{ code, message, ref? }` | see below |
@@ -151,10 +153,10 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 
 | Error code | When |
 | --- | --- |
-| `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload |
+| `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload, or a network merging with itself |
 | `spoof` | `meta.sender` isn't the socket's id; the message names the type and the sender |
 | `unsupported` | a non-`signal.*` (or server → client) type sent to the server, or `receiver: "*"` |
-| `forbidden` | update/unregister by a non-host, a wrong password on join, or a `signal.*` message sent to a peer |
+| `forbidden` | update/unregister/merge by a non-host, a wrong password on join, a `signal.*` message sent to a peer, or a client sending `network.join` itself |
 | `rate` | a forwarded message over the `forward_rate` budget; it is dropped, the socket stays open |
 | `not-found` | unknown network |
 

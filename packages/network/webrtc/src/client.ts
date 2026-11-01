@@ -36,6 +36,17 @@ export const LINK_RETRIES = 3;
 /** ms before the first retry of a link; each further retry waits this much longer. */
 export const LINK_RETRY_DELAY = 2_000;
 
+/** How long a merge may take until both groups share the member list. */
+export const MERGE_TIMEOUT = 30_000;
+/** ms per member in the window peers pick their start from after a merge, so they don't all signal at once. */
+export const MERGE_PACE = 5;
+/** Links a peer opens at once after a merge. */
+export const MERGE_LINKS = 4;
+/** ms a peer waits with every link up before it closes the ones the topology no longer wants. */
+export const LINK_SETTLE = 3_000;
+/** ms after a merge a peer stops waiting for the links it still wants. */
+export const MERGE_LIMIT = 60_000;
+
 /** Connection state of a `Client`, see `client.status`. */
 export type ClientStatus = "connecting" | "waking" | "connected" | "reconnecting" | "closed";
 
@@ -65,6 +76,8 @@ export type ClientOptions = {
   keepSocket?: boolean | "host";
   /** Called on the entry peer for each newcomer; false rejects them. Default: accept everyone. */
   accept?(newcomer: PeerId, info: NetworkInfo): boolean;
+  /** Called on the host when another network asks to merge, with its real size. Default: refuse, since a merge can move this whole network. */
+  acceptMerge?(network: NetworkInfo, size: number): boolean;
   /** ms before `create`, `list` and `join` reject. */
   timeout?: number;
   /** ms a link may take to open, doubled when ICE connected in time. Default `HANDSHAKE_TIMEOUT`. */
@@ -107,6 +120,24 @@ type Retry = {
   timer: ReturnType<typeof setTimeout> | null;
 }
 
+type Merge = {
+  // the other host, empty while waiting for its answer
+  peer: PeerId;
+  size: number;
+  stays: boolean;
+  done: Promise<NetworkInfo>;
+  resolve(network: NetworkInfo): void;
+  reject(reason: Error): void;
+  timer: ReturnType<typeof setTimeout>;
+}
+
+// a peer's way through the links a merge asks for
+type Pace = {
+  start: ReturnType<typeof setTimeout> | null;
+  settle: ReturnType<typeof setTimeout> | null;
+  limit: ReturnType<typeof setTimeout>;
+}
+
 type Request = {
   id: string;
   match(message: Message): unknown;
@@ -127,6 +158,7 @@ type Request = {
  * @fires status - `CustomEvent<ClientStatus>`, see `status`
  * @fires host - `CustomEvent<PeerId>`, the host changed
  * @fires server-id - `CustomEvent<string>`, the id the server knows the network by changed, see `serverId`
+ * @fires merged - `CustomEvent<NetworkInfo>`, this peer's network merged with another and this is the result
  * @fires unreachable - `CustomEvent<{ receiver, ref }>`, a message could not be delivered
  * @fires drop - `CustomEvent<Message>`, a received message was dropped (loop, ttl, filter)
  * @fires error - `CustomEvent<EmitterEvent>`
@@ -151,6 +183,8 @@ export class Client extends Emitter {
   private reassigned: PeerId | null = null;
   // the socket was closed on purpose (keepSocket), the client is still in its network
   private dropped = false;
+  // waiting for the server's go-ahead to close the socket
+  private draining = false;
   // the network's id on the server after the host registered it again
   private serverNetwork: string | null = null;
   // the network's password, kept so a new host can register it again
@@ -176,6 +210,11 @@ export class Client extends Emitter {
   private requests: Request[] = [];
   private registerTimer: ReturnType<typeof setTimeout> | null = null;
   private joining: string | null = null;
+  private merging: Merge | null = null;
+  private pace: Pace | null = null;
+  // peers whose link is closing on purpose, not because they left
+  private pruned = new Set<PeerId>();
+  private tidyTimer: ReturnType<typeof setTimeout> | null = null;
   private closed = false;
   private readonly options: ClientOptions;
 
@@ -275,6 +314,11 @@ export class Client extends Emitter {
   /** Current members, sorted, this peer included. */
   get members(): readonly PeerId[] {
     return this.router?.view.members ?? [];
+  }
+
+  // the members in the host's order, which is what goes over the wire: `members` is sorted
+  private order() {
+    return [...this.router!.view.order!];
   }
 
   /** Peers with an open direct link. */
@@ -413,6 +457,220 @@ export class Client extends Emitter {
   }
 
   /**
+   * Merges this network with another (host only, both hosts need a socket). The other host must allow
+   * it with `acceptMerge`, and both networks must use the same topology. The larger network stays, a
+   * tie keeps the lower host id: everyone ends up in it, keeping the links its topology still wants.
+   * Only the hosts use the server, the rest happens over peer links. Resolves with the merged network.
+   */
+  async merge(network: string, password?: string): Promise<NetworkInfo> {
+    await this.ready;
+    this.assertOnServer();
+    if (!this.network) throw new Error("not in a network");
+    if (this.host !== this.id) throw new Error("only the host can merge the network");
+    if (this.merging) throw new Error("already merging");
+    if (this.dropped) await this.reopen();
+
+    const merge = this.startMerge();
+    const { size } = merge;
+    try
+    {
+      const accept: PayloadMap[NetworkType.MergeAccept] = await this.request(
+        SignalType.Merge,
+        { network, from: this.serverId!, size, ...(password ? { password } : {}), peer: this.id! },
+        message => {
+          if (message.meta.network !== network) return undefined;
+          if (message.meta.type === NetworkType.Reject)
+          {
+            throw new Error(`rejected: ${(message.payload as PayloadMap[NetworkType.Reject]).reason}`);
+          }
+          return message.meta.type === NetworkType.MergeAccept ? message.payload : undefined;
+        },
+      );
+      if ((this.merging as Merge | null) !== merge) throw new Error("the merge was cancelled");
+
+      this.bridge(merge, accept.peer, accept.size);
+      this.router!.setSocket(accept.peer, accept.socket);
+      this.link(accept.peer);
+      return await merge.done;
+    }
+    catch (error)
+    {
+      if (this.merging === merge) this.endMerge(error as Error);
+      throw error;
+    }
+  }
+
+  private startMerge() {
+    let resolve!: Merge["resolve"];
+    let reject!: Merge["reject"];
+    const done = new Promise<NetworkInfo>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    done.catch(() => { });
+
+    const merge: Merge = {
+      peer: "",
+      size: this.members.length,
+      stays: false,
+      done,
+      resolve,
+      reject,
+      timer: setTimeout(() => this.endMerge(new Error("merge timed out")), MERGE_TIMEOUT),
+    };
+    this.merging = merge;
+    return merge;
+  }
+
+  // both hosts work out the same answer
+  private bridge(merge: Merge, peer: PeerId, size: number) {
+    merge.peer = peer;
+    merge.stays = merge.size > size || (merge.size === size && this.id! < peer);
+    this.router!.bridge = peer;
+  }
+
+  /** Ends the current merge: with `error` it's off, and the host link goes. */
+  private endMerge(error?: Error, network?: NetworkInfo) {
+    const merge = this.merging;
+    if (!merge) return;
+
+    this.merging = null;
+    clearTimeout(merge.timer);
+    if (!error) return void merge.resolve(network!);
+
+    const router = this.router!;
+    if (router.bridge)
+    {
+      this.pending.get(router.bridge)?.close();
+      router.removeLink(router.bridge);
+      router.bridge = null;
+    }
+    merge.reject(error);
+  }
+
+  private sendMergeList(peer: PeerId) {
+    this.sendReserved(peer, NetworkType.MergeList, {
+      network: this.network!,
+      members: this.order(),
+      profiles: this.profiles,
+      ...this.serverField(),
+      ...(this.password ? { password: this.password } : {}),
+    });
+  }
+
+  /**
+   * Gives every peer the new list at once. Each works out for itself what changes, so nothing needs
+   * coordinating from here on and a host dying later doesn't stop anything.
+   */
+  private unite(view: PayloadMap[NetworkType.MergeView], other?: PeerId) {
+    const router = this.router!;
+    const previous = router.view.host;
+    const group = new Set(router.view.members);
+    const { network, members, profiles, serverId, password } = view;
+
+    router.split = {
+      gateway: other ?? previous,
+      foreign: new Set(members.filter(member => !group.has(member))),
+      led: !!other,
+    };
+    router.bridge = null;
+    this.network = network;
+    router.info = network;
+    router.setMembers(members, network.host);
+    this.password = password;
+    this.setServerId(serverId ?? network.id);
+    this.profileMap = new Map(Object.entries(profiles ?? {}));
+    this.profileMap.set(this.id!, this.ownProfile);
+    if (JSON.stringify(network.media ?? {}) !== JSON.stringify(this.media.plan)) this.media.setPlan(network.media);
+
+    this.emitMembers();
+    if (network.host !== previous) this.emit("host", network.host);
+    if (other) this.emit("peer", other);
+    this.emit("merged", network);
+    this.startPace();
+  }
+
+  private startPace() {
+    this.stopPace();
+    const delay = Math.random() * this.members.length * MERGE_PACE;
+    const pace: Pace = {
+      start: setTimeout(() => {
+        pace.start = null;
+        this.reconcile();
+      }, delay),
+      settle: null,
+      limit: setTimeout(() => this.finishPace(), MERGE_LIMIT),
+    };
+    this.pace = pace;
+  }
+
+  private stopPace() {
+    const pace = this.pace;
+    if (!pace) return;
+
+    this.pace = null;
+    if (pace.start !== null) clearTimeout(pace.start);
+    if (pace.settle !== null) clearTimeout(pace.settle);
+    clearTimeout(pace.limit);
+  }
+
+  /** Every wanted link is up, or the time is: the old links nobody wants go, and the merge is over for this peer. */
+  private finishPace() {
+    const router = this.router;
+    this.stopPace();
+    if (!router) return;
+
+    router.split = null;
+    this.prune();
+    this.dropSocket();
+  }
+
+  // asks the other side to close the links neither wants: a change of members can leave some behind
+  private prune() {
+    for (const peer of this.router!.view.links)
+    {
+      if (this.wanted(peer)) continue;
+      this.pruned.add(peer);
+      this.sendReserved(peer, NetworkType.Prune, {});
+    }
+  }
+
+  private tidy() {
+    const router = this.router;
+    if (!router || this.tidyTimer !== null || !router.view.links.some(peer => !this.wanted(peer))) return;
+
+    this.tidyTimer = setTimeout(() => {
+      this.tidyTimer = null;
+      if (this.pace || !this.network) return;
+      if (router.desired().length > 0 || this.pending.size > 0) return this.tidy();
+      this.prune();
+    }, LINK_SETTLE);
+  }
+
+  // either side of the pair wants the link
+  private wanted(peer: PeerId) {
+    const router = this.router!;
+    const view = router.view;
+    return view.members.includes(peer) && (router.topology.neighbors(view, this.id!).includes(peer) || router.topology.neighbors(view, peer).includes(this.id!));
+  }
+
+  // a host without a socket: opens one, which registers the network again
+  private reopen() {
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        this.removeEventListener("server-id", handle);
+        reject(new Error("could not reach the server"));
+      }, this.options.timeout ?? REQUEST_TIMEOUT);
+      const handle = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      this.addEventListener("server-id", handle, { once: true });
+      this.recreate();
+    });
+  }
+
+  /**
    * Opens a network on top of this one, with no socket and nothing registered on the server. This peer
    * hosts it. Others join with `joinRoom(room.network.id, room.host)`, so send them those in a message.
    */
@@ -488,6 +746,12 @@ export class Client extends Emitter {
     if (!network || !router) return;
 
     this.parent?.rooms.delete(this.roomId);
+    this.endMerge(new Error("left the network"));
+    this.stopPace();
+    router.split = null;
+    this.pruned.clear();
+    if (this.tidyTimer !== null) clearTimeout(this.tidyTimer);
+    this.tidyTimer = null;
     this.signal(SignalType.Leave, { network: this.serverNetwork ?? network.id });
     this.serverNetwork = null;
     this.password = undefined;
@@ -586,13 +850,16 @@ export class Client extends Emitter {
 
       router.addLink(link);
       this.dropSocket();
+      if (this.pace) this.reconcile();
     };
     const handleClose = () => {
       cleanup();
       if (this.pending.get(peer) !== link) return;
       this.pending.delete(peer);
+      if (this.merging?.peer === peer) return void this.endMerge(new Error("could not link to the other host"));
       this.debug("link", `link to ${peer} closed before it opened (${link.connection.connectionState})`, { peer });
       this.retry(peer);
+      if (this.pace) this.reconcile();
     };
 
     link.addEventListener("open", handleOpen);
@@ -679,10 +946,31 @@ export class Client extends Emitter {
     if (!router || !this.network) return;
 
     this.media.refresh();
+    if (this.pace) return this.paceLinks();
     for (const peer of router.desired())
     {
       if (!this.pending.has(peer) && this.initiates(peer)) this.link(peer);
     }
+    this.tidy();
+  }
+
+  // after a merge: the links that make routing work first, then the rest a few at a time
+  private paceLinks() {
+    const router = this.router!;
+    const pace = this.pace!;
+    if (pace.start !== null) return;
+
+    const desired = router.desired();
+    if (desired.length === 0 && this.pending.size === 0)
+    {
+      pace.settle ??= setTimeout(() => this.finishPace(), LINK_SETTLE);
+      return;
+    }
+
+    const mine = desired.filter(peer => !this.pending.has(peer) && this.initiates(peer));
+    const stitch = router.topology.stitch?.(router.view, this.id!).filter(peer => mine.includes(peer)) ?? [];
+    const next = stitch.length > 0 ? stitch : mine;
+    for (const peer of next.slice(0, Math.max(0, MERGE_LINKS - this.pending.size))) this.link(peer);
   }
 
   /**
@@ -693,7 +981,7 @@ export class Client extends Emitter {
     const router = this.router;
     if (!router || !this.network) return;
 
-    const members = [...router.view.members];
+    const members = this.order();
     for (const member of members)
     {
       if (member === this.id || member === except) continue;
@@ -797,12 +1085,28 @@ export class Client extends Emitter {
   }
 
   private dropSocket() {
+    if (this.draining || !this.socketDroppable()) return;
+
+    // a closing socket drops what's arriving, so the server stops first: whoever sends now hears it can't be delivered
+    this.draining = true;
+    const drained = (done: boolean) => {
+      this.draining = false;
+      if (this.closed) return;
+      if (this.socketDroppable())
+      {
+        this.debug("socket", "closing the signalling socket, keepSocket lets it go", done);
+        this.dropped = true;
+        this.socket!.close();
+      }
+      else if (done) this.signal(SignalType.Drain, { draining: false });
+    };
+    this.request<boolean>(SignalType.Drain, { draining: true }, message => message.meta.type === SignalType.Drained ? true : undefined).then(drained, () => drained(false));
+  }
+
+  private socketDroppable() {
     const keep = this.options.keepSocket ?? "host";
-    if (keep === true || !this.network || this.pending.size > 0 || !this.socket) return;
-    if (keep === "host" && this.router?.view.host === this.id) return;
-    this.debug("socket", `keepSocket is ${keep}, closing the signalling socket`, null);
-    this.dropped = true;
-    this.socket.close();
+    if (keep === true || !this.network || this.pending.size > 0 || !this.socket || this.dropped || this.merging || this.pace) return false;
+    return keep !== "host" || this.router?.view.host !== this.id;
   }
 
   // sending helpers
@@ -906,6 +1210,13 @@ export class Client extends Emitter {
       return;
     }
 
+    // the hosts are swapping member lists, a newcomer would miss one of them
+    if (this.merging)
+    {
+      this.sendReserved(newcomer, NetworkType.Reject, { reason: "merging" }, true, asked);
+      return;
+    }
+
     const { profile, password } = message.payload as PayloadMap[NetworkType.Join];
     // no server checked this newcomer
     if (this.parent && (router.view.host !== this.id || (this.password && password !== this.password)))
@@ -916,9 +1227,9 @@ export class Client extends Emitter {
 
     const existing = router.view.members.length > 1;
     this.profileMap.set(newcomer, profile ?? {});
-    router.setMembers([...router.view.members, newcomer]);
+    router.setMembers([...this.order(), newcomer]);
     const view = router.view;
-    const members = [...view.members];
+    const members = this.order();
     this.network = { ...network, size: members.length };
     router.info = this.network;
 
@@ -998,12 +1309,84 @@ export class Client extends Emitter {
 
     this.network = network;
     router.info = network;
-    router.setMembers(router.view.members, this.id!);
+    router.setMembers(this.order(), this.id!);
     this.profileMap.set(this.id!, this.ownProfile);
     if (JSON.stringify(network.media ?? {}) !== JSON.stringify(this.media.plan)) this.media.setPlan(network.media);
     this.emit("host", this.id);
     this.broadcastMembers();
     this.reconcile();
+  }
+
+  private handleMerge(message: Message) {
+    const router = this.router!;
+    const { network, size, password, peer = message.meta.sender } = message.payload as PayloadMap[NetworkType.Merge];
+    const asked = message.meta.network;
+    const own = this.network;
+    // the requester may not be known by its peer id yet, so a refusal goes to its socket
+    const reject = (reason: string) => void this.sendReserved(message.meta.sender, NetworkType.Reject, { reason }, true, asked);
+
+    if (!own || this.parent || (asked !== own.id && asked !== this.serverNetwork) || router.view.host !== this.id) return reject("not the host");
+    if (!this.options.acceptMerge?.(network, size)) return reject("not accepted");
+    if (this.password && password !== this.password) return reject("wrong password");
+    if (JSON.stringify(network.topology) !== JSON.stringify(own.topology)) return reject("different topology");
+    // both hosts asked at once: the lower id's request goes first
+    if (this.merging && (this.merging.peer || this.id! < peer)) return reject("merging");
+    if (this.merging) this.endMerge(new Error("rejected: merging"));
+
+    router.setSocket(peer, message.meta.sender);
+    const merge = this.startMerge();
+    this.bridge(merge, peer, size);
+    this.sendReserved(peer, NetworkType.MergeAccept, { peer: this.id!, socket: router.socketId, size: merge.size }, true, asked);
+  }
+
+  /** The other host's list: both groups' peers get the union, each from their own host. */
+  private handleMergeList(message: Message) {
+    const router = this.router!;
+    const merge = this.merging;
+    if (!merge || !this.network || message.meta.sender !== merge.peer) return;
+
+    const list = message.payload as PayloadMap[NetworkType.MergeList];
+    const group = this.order();
+    const incoming = list.members.filter(member => !group.includes(member));
+    const staying = merge.stays
+      ? { network: this.network, serverId: this.serverId!, password: this.password }
+      : { network: list.network, serverId: list.serverId ?? list.network.id, password: list.password };
+    const members = merge.stays ? [...group, ...incoming] : [...list.members, ...group.filter(member => !list.members.includes(member))];
+
+    const view: PayloadMap[NetworkType.MergeView] = {
+      network: { ...staying.network, host: merge.stays ? this.id! : merge.peer, size: members.length },
+      members,
+      profiles: { ...this.profiles, ...list.profiles },
+      serverId: staying.serverId,
+      ...(staying.password ? { password: staying.password } : {}),
+    };
+
+    for (const member of group)
+    {
+      if (member !== this.id) this.sendReserved(member, NetworkType.MergeView, view);
+    }
+    if (!merge.stays) this.signal(SignalType.Unregister, { network: this.serverId! });
+
+    this.endMerge(undefined, view.network);
+    this.unite(view, merge.peer);
+    this.reconcile();
+  }
+
+  private handleMergeView(message: Message) {
+    if (!this.network || message.meta.network !== this.network.id || message.meta.sender !== this.router!.view.host) return;
+
+    this.unite(message.payload as PayloadMap[NetworkType.MergeView]);
+    this.reconcile();
+  }
+
+  /** The other side is done with this link. While still linking up it may be my route, so I send my own prune when I'm done. */
+  private handlePrune(message: Message) {
+    const router = this.router!;
+    const peer = message.meta.sender;
+    if (this.pace || this.wanted(peer)) return;
+
+    this.pruned.add(peer);
+    router.removeLink(peer);
   }
 
   private handleRoom(message: Message) {
@@ -1020,7 +1403,9 @@ export class Client extends Emitter {
     const pending = this.pending.get(peer);
     const link = pending ?? this.router!.link(peer);
     const remote = link instanceof PeerLink ? link.handshake.remoteSession : null;
-    // our own unanswered offer goes too: the other side only offers when it can't be reached
+    // two offers crossed: if both sides gave up theirs, both would answer a closed connection. The lower id's stands
+    if (pending && !remote && this.id! < peer && performance.now() - pending.opened < LINK_RETRY_DELAY) return;
+    // an older unanswered offer of ours goes too: the other side only offers when it can't be reached
     if ((remote || pending) && offer.session && offer.session !== remote)
     {
       this.debug("link", `${peer} opened a new connection, replacing the old link`, { peer });
@@ -1038,12 +1423,19 @@ export class Client extends Emitter {
     const router = this.router;
     if (!router || !this.network || !router.view.members.includes(peer)) return;
 
-    const rest = router.view.members.filter(member => member !== peer);
-    // the host left: everyone picks the same successor, the lowest id
-    const lostHost = peer === router.view.host;
-    const host = lostHost ? [...rest].sort()[0] : router.view.host;
+    // the way to the other group died before any link crossed: the groups go on apart
+    const split = router.split;
+    const lostGateway = peer === split?.gateway;
+    const cut = lostGateway && !router.view.links.some(link => link !== peer && split.foreign.has(link));
+    if (lostGateway) router.split = null;
+
+    const rest = this.order().filter(member => member !== peer && !(cut && split.foreign.has(member)));
+    // the host left: everyone picks the same successor, the lowest id. A host cut off keeps its group, it has the socket
+    const lostHost = !rest.includes(router.view.host);
+    const host = !lostHost ? router.view.host : cut && split.led ? this.id! : [...rest].sort()[0];
     router.setMembers(rest, host);
     this.profileMap.delete(peer);
+    if (cut) for (const member of split.foreign) this.profileMap.delete(member);
     this.network = { ...this.network, host, size: router.view.members.length };
     router.info = this.network;
     this.emitMembers();
@@ -1102,9 +1494,11 @@ export class Client extends Emitter {
       {
         case SignalType.Welcome:
         case SignalType.Registered:
+        case SignalType.Drained:
         case SignalType.Networks:
         case NetworkType.Welcome:
         case NetworkType.Reject:
+        case NetworkType.MergeAccept:
           return; // replies to requests no longer pending
         case SignalType.Host: return this.handleHost(message);
         case SignalType.Unreachable: return void this.emit("unreachable", message.payload);
@@ -1115,6 +1509,10 @@ export class Client extends Emitter {
         case NetworkType.Media: return this.handleMedia(message);
         case NetworkType.Profile: return this.handleProfile(message);
         case NetworkType.Room: return this.handleRoom(message);
+        case NetworkType.Merge: return this.handleMerge(message);
+        case NetworkType.MergeList: return this.handleMergeList(message);
+        case NetworkType.MergeView: return this.handleMergeView(message);
+        case NetworkType.Prune: return this.handlePrune(message);
         case HandshakeType.Offer: return this.handleOffer(message);
       }
 
@@ -1132,6 +1530,7 @@ export class Client extends Emitter {
   private handleLink = (event: Event) => {
     const id = (event as CustomEvent<PeerId>).detail;
     if (id === SERVER) return;
+    if (id === this.router?.bridge) return this.sendMergeList(id);
 
     this.emit("peer", id);
 
@@ -1139,15 +1538,19 @@ export class Client extends Emitter {
     const router = this.router;
     if (router && this.network && router.view.host === this.id)
     {
-      this.sendReserved(id, NetworkType.Members, { members: [...router.view.members], host: this.id, ...this.serverField() });
+      this.sendReserved(id, NetworkType.Members, { members: this.order(), host: this.id, ...this.serverField() });
     }
   }
 
   private handleUnlink = (event: Event) => {
     const id = (event as CustomEvent<PeerId>).detail;
     if (id === SERVER) return;
+    // the host link: a merge in progress is off, the groups never saw each other
+    if (id === this.router?.bridge) return this.endMerge(new Error("lost the other host"));
 
     this.emit("peer-left", id);
+    if (this.pruned.delete(id)) return;
+    if (id === this.router?.split?.gateway) return this.forget(id);
     if (!this.hold(id)) this.forget(id);
   }
 

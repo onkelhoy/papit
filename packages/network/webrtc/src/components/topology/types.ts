@@ -6,6 +6,8 @@ export type View = {
   host: PeerId;
   members: readonly PeerId[];
   links: readonly PeerId[];
+  /** `members` in the host's list order, for a topology where order matters. Defaults to `members`. */
+  order?: readonly PeerId[];
 }
 
 /**
@@ -21,6 +23,13 @@ export interface Topology {
   readonly direct?: boolean;
   /** The direct links `id` should hold, given `view.members`. */
   neighbors(view: View, id: PeerId): PeerId[];
+  /**
+   * Optional: the links of `id` that make routing work, opened first after a merge so the rest can follow
+   * slowly. Defaults to treating every neighbor alike.
+   */
+  stitch?(view: View, id: PeerId): PeerId[];
+  /** Optional: the `ttl` of a message this node sends, when crossing the network can take more than `DEFAULT_TTL` hops. */
+  ttl?(view: View): number;
   /** Next hops for `meta`, drawn from `view.links`. `[]` when there is no peer route. */
   route(view: View, meta: Meta): PeerId[];
   /**

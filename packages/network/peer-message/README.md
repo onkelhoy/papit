@@ -194,10 +194,13 @@ What every link in a network carries besides its system channel. The host sets i
 | `signal.list` | client → server | `{}` |
 | `signal.join` | client → server | `{ network, password?, profile? }` |
 | `signal.leave` | client → server | `{ network }` |
+| `signal.merge` | client → server | `{ network, from, size, password?, peer? }`, asks the host of `network` to merge with `from`, the network the sender hosts. `peer` is the sender's peer id when it isn't its socket id |
+| `signal.drain` | client → server | `{ draining }`, sent before closing a socket on purpose. While `draining` the server stops forwarding to it |
 | `signal.welcome` | server → client | `{ id }` |
 | `signal.registered` | server → client | `{ network: NetworkInfo }` |
 | `signal.updated` | server → client | `{ network: NetworkInfo }` |
 | `signal.networks` | server → client | `{ networks: NetworkInfo[] }` |
+| `signal.drained` | server → client | `{}`, nothing more is on its way to this socket |
 | `signal.host` | server → client | `{ network: NetworkInfo }`, you are now host |
 | `signal.unreachable` | server → client | `{ receiver, ref }`, `ref` is the undeliverable message's id |
 | `signal.error` | server → client | `{ code, message, ref? }` |
@@ -210,6 +213,11 @@ What every link in a network carries besides its system channel. The host sets i
 | `network.media` | host → peers | `{ media: MediaPlan }`, the plan changed mid-session |
 | `network.relay` | member → host | `{ message }`, base64 bytes of a signalling message from a member without a socket, for the host to send through its own |
 | `network.room` | peer ↔ peer | `{ room, message }`, base64 bytes of a message of a network opened over this one, for the receiver's `room` |
+| `network.merge` | host → host | `{ network: NetworkInfo, size, password?, peer? }`, the server's forward of `signal.merge` |
+| `network.merge-accept` | host → host | `{ peer, socket, size }`, the accepting host's ids and real size. A refusal is a `network.reject` |
+| `network.merge-list` | host → host | `{ network: NetworkInfo, members, profiles?, serverId?, password? }`, over the link between the hosts |
+| `network.merge-view` | host → members | `{ network: NetworkInfo, members, profiles?, serverId?, password? }`, the merged network, sent by a member's current host |
+| `network.prune` | peer ↔ peer | `{}`, asks the peer to close a link neither side wants. Neither is leaving |
 | `handshake.offer` | peer ↔ peer | `{ description: { type, sdp? }, streams?, session? }`, `streams` maps transceiver `mid` → stream name, `session` names the sender's connection |
 | `handshake.answer` | peer ↔ peer | `{ description: { type, sdp? }, session? }` |
 | `handshake.candidate` | peer ↔ peer | `{ candidate: { candidate?, sdpMid?, sdpMLineIndex?, usernameFragment? } }` |

@@ -10,6 +10,7 @@ const isBoolean = (x: unknown): x is boolean => typeof x === "boolean";
 const isId = (x: unknown, allowEmpty = false): x is string =>
     isString(x) && x.length <= MAX_ID_LENGTH && (allowEmpty || x.length > 0);
 const isIds = (x: unknown): x is string[] => Array.isArray(x) && x.every(id => isId(id));
+const isSize = (x: unknown) => Number.isInteger(x) && (x as number) >= 0;
 const optional = (x: unknown, check: (x: unknown) => boolean) => x === undefined || check(x);
 
 const encoder = new TextEncoder();
@@ -96,6 +97,8 @@ const isCandidate = (x: unknown) => isObject(x)
     && optional(x.sdpMLineIndex, v => v === null || Number.isInteger(v))
     && optional(x.usernameFragment, v => v === null || isString(v));
 
+const isMergeView = (p: Obj) => isNetworkInfo(p.network) && isIds(p.members) && optional(p.profiles, isProfiles) && optional(p.serverId, isId) && optional(p.password, isString);
+
 const payloads = new Map<string, (p: Obj) => boolean>([
     [SignalType.Register, p => isString(p.name) && isTopology(p.topology) && optional(p.private, isBoolean) && optional(p.password, isString) && optional(p.meta, isObject) && optional(p.media, isMediaPlan)],
     [SignalType.Update, p => isId(p.network) && optional(p.name, isString) && optional(p.private, isBoolean) && optional(p.password, isString) && optional(p.meta, isObject) && optional(p.media, isMediaPlan)],
@@ -103,6 +106,9 @@ const payloads = new Map<string, (p: Obj) => boolean>([
     [SignalType.List, () => true],
     [SignalType.Join, p => isId(p.network) && optional(p.password, isString) && optional(p.profile, isProfile)],
     [SignalType.Leave, p => isId(p.network)],
+    [SignalType.Merge, p => isId(p.network) && isId(p.from) && isSize(p.size) && optional(p.password, isString) && optional(p.peer, isId)],
+    [SignalType.Drain, p => isBoolean(p.draining)],
+    [SignalType.Drained, () => true],
     [SignalType.Welcome, p => isId(p.id)],
     [SignalType.Registered, p => isNetworkInfo(p.network)],
     [SignalType.Updated, p => isNetworkInfo(p.network)],
@@ -119,6 +125,11 @@ const payloads = new Map<string, (p: Obj) => boolean>([
     [NetworkType.Profile, p => isProfile(p.profile)],
     [NetworkType.Relay, p => isString(p.message)],
     [NetworkType.Room, p => isId(p.room) && isString(p.message)],
+    [NetworkType.Merge, p => isNetworkInfo(p.network) && isSize(p.size) && optional(p.password, isString) && optional(p.peer, isId)],
+    [NetworkType.MergeAccept, p => isId(p.peer) && isId(p.socket) && isSize(p.size)],
+    [NetworkType.MergeList, isMergeView],
+    [NetworkType.MergeView, isMergeView],
+    [NetworkType.Prune, () => true],
     [HandshakeType.Offer, p => isDescription(p.description) && optional(p.streams, isStreamMap) && optional(p.session, isString)],
     [HandshakeType.Answer, p => isDescription(p.description) && optional(p.session, isString)],
     [HandshakeType.Candidate, p => isCandidate(p.candidate)],

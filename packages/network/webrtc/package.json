@@ -1,6 +1,6 @@
 {
   "name": "@papit/webrtc",
-  "description": "Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord, multicast tree or your own topology, with plan-driven data channels and media streams.",
+  "description": "Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord, ring, multicast tree or your own topology, with plan-driven data channels and media streams.",
   "keywords": [
     "papit",
     "webrtc",

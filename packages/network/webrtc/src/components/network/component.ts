@@ -31,6 +31,11 @@ export class Network extends Emitter {
   public topology: Topology;
   /** For a network opened over another: sends a message (base64) to a peer through that parent. False when it can't. */
   public carrier?: (receiver: PeerId, message: string) => boolean;
+  /**
+   * After a merge, until the two groups are linked: the members of the other group and the peer that
+   * reaches them, a host or, for a host, the other host. `led` marks one of the two hosts.
+   */
+  public split: { gateway: PeerId; foreign: Set<PeerId>; led: boolean } | null = null;
 
   private host: PeerId;
   private members = new Set<PeerId>();
@@ -42,6 +47,7 @@ export class Network extends Emitter {
   private viaServer = new Map<string, Message>();
   // socket ids of members that came back through the server, which only knows them by those
   private sockets = new Map<PeerId, PeerId>();
+  private bridged: PeerId | null = null;
 
   constructor(options: NetworkOptions) {
     super();
@@ -56,13 +62,24 @@ export class Network extends Emitter {
     this.topology = typeof topology === "object" && typeof topology.route === "function" ? topology as Topology : resolveTopology(topology as string | TopologyConfig);
   }
 
+  /** The other host before a merge: a link outside the view, so no traffic crosses it by accident. */
+  get bridge() {
+    return this.bridged;
+  }
+
+  set bridge(id: PeerId | null) {
+    this.bridged = id;
+    this.invalidate();
+  }
+
   /** What the topology sees: sorted members (with `me`) and the ids of open peer links. */
   get view(): View {
     this.cached ??= {
       me: this.me,
       host: this.host,
       members: [...this.members].sort(),
-      links: [...this.links.keys()].filter(id => this.links.get(id)!.link.open).sort(),
+      order: [...this.members],
+      links: [...this.links.keys()].filter(id => id !== this.bridged && this.links.get(id)!.link.open).sort(),
     };
     return this.cached;
   }
@@ -112,6 +129,11 @@ export class Network extends Emitter {
     this.emit("unlink", id);
   }
 
+  /** Records the socket id of a peer the server knows by another id. */
+  setSocket(peer: PeerId, socket: PeerId) {
+    if (peer !== socket) this.sockets.set(peer, socket);
+  }
+
   /** Takes a new id for `me`, e.g. one the server assigned after a reconnect. */
   rename(id: PeerId) {
     this.members.delete(this.me);
@@ -158,6 +180,7 @@ export class Network extends Emitter {
       return true;
     }
 
+    if (meta.sender === this.me && this.topology.ttl) meta.ttl = Math.max(meta.ttl, this.topology.ttl(this.view));
     if (meta.receiver === BROADCAST) this.seen.check(meta.id);
     return this.dispatch(message, options?.preferServer);
   }
@@ -181,7 +204,7 @@ export class Network extends Emitter {
   }
 
   // routing
-  private dispatch(message: Message, preferServer = false) {
+  private dispatch(message: Message, preferServer = false): boolean {
     const meta = message.meta;
     const bytes = message.toBinary(true);
 
@@ -200,13 +223,17 @@ export class Network extends Emitter {
     const direct = meta.receiver === SERVER ? this.server : this.links.get(meta.receiver);
     if (direct?.link.send(bytes)) return true;
 
+    // the other group, mid-merge: never the server, the host links carry it
+    const split = this.split;
+    if (split?.foreign.has(meta.receiver) && meta.receiver !== split.gateway) return this.dispatch(this.wrap(message, bytes, split.gateway));
+
     const own = meta.sender === this.me;
     if (preferServer && own && this.toServer(message, bytes)) return true;
     // no socket of our own: the host passes the signalling on through its socket
     const viaHost = preferServer && own && !this.server && this.host !== this.me;
     if (viaHost && !this.carrier && this.relayToHost(message, bytes)) return true;
 
-    if (this.sendTo(this.topology.route(this.view, meta), bytes) > 0) return true;
+    if (this.sendTo(this.route(meta), bytes) > 0) return true;
 
     if (own && !preferServer && this.toServer(message, bytes)) return true;
     if (own && this.carrier?.(meta.receiver, toBase64(bytes))) return true;
@@ -215,6 +242,13 @@ export class Network extends Emitter {
 
     this.emit("unreachable", message);
     return false;
+  }
+
+  // mid-merge the other group can't route to mine, it would hand the message straight back
+  private route(meta: Message["meta"]) {
+    const view = this.view;
+    const foreign = this.split?.foreign;
+    return this.topology.route(foreign ? { ...view, links: view.links.filter(link => !foreign.has(link)) } : view, meta);
   }
 
   // `fallback` goes over the topology if the server answers that it can't deliver
@@ -254,13 +288,14 @@ export class Network extends Emitter {
       return;
     }
 
-    if (this.forged(inner, message.meta.sender)) return void this.emit("drop", inner);
+    if (this.forged(inner, message.meta.sender) || this.unchecked(inner, message.meta.sender)) return void this.emit("drop", inner);
     if (from === SERVER && this.members.has(inner.meta.sender) && message.meta.sender !== inner.meta.sender)
     {
       this.sockets.set(inner.meta.sender, message.meta.sender);
       if (this.sockets.size > 64) this.sockets.delete(this.sockets.keys().next().value!);
     }
-    if (inner.meta.receiver === this.me) return void this.emit("message", inner);
+    if (inner.meta.receiver === this.me || inner.meta.receiver === this.socketId) return void this.emit("message", inner);
+    if (this.split || this.links.get(inner.meta.receiver)?.link.open) return void this.dispatch(inner);
 
     const wrapped = this.wrap(inner, bytes, this.sockets.get(inner.meta.receiver) ?? inner.meta.receiver);
     if (this.toServer(wrapped, wrapped.toBinary(true), inner)) return;
@@ -270,6 +305,11 @@ export class Network extends Emitter {
   // the server already checks senders, for what it forwards itself
   private forged(message: Message, from: PeerId) {
     return !!this.topology.direct && from !== SERVER && message.meta.sender !== from && !isReserved(message.meta.type);
+  }
+
+  // the server checks a join's password, so one that went around it counts for nothing. A room's host checks its own
+  private unchecked(message: Message, from: PeerId) {
+    return message.meta.type === NetworkType.Join && from !== SERVER && !this.carrier;
   }
 
   // the server couldn't deliver signalling (the receiver has no socket): over the topology, else via the host
@@ -323,7 +363,7 @@ export class Network extends Emitter {
         this.error("read", "malformed message", { from });
         return;
       }
-      if (this.forged(message, from)) return void this.emit("drop", message);
+      if (this.forged(message, from) || this.unchecked(message, from)) return void this.emit("drop", message);
 
       if (message.meta.receiver === BROADCAST && !this.seen.check(message.meta.id))
       {

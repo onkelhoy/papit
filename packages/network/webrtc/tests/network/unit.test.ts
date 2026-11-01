@@ -304,22 +304,22 @@ test.describe("topology config", () => {
   test("a name resolves to the built-in", async ({ page }) => {
     const names = await page.evaluate(() => {
       const w = window as any;
-      return ["mesh", "star", "chord", "multicast"].map(name => w.resolveTopology(name).name);
+      return ["mesh", "star", "chord", "ring", "multicast"].map(name => w.resolveTopology(name).name);
     });
 
-    expect(names).toEqual(["mesh", "star", "chord", "multicast"]);
+    expect(names).toEqual(["mesh", "star", "chord", "ring", "multicast"]);
   });
 
   test("a registered custom topology resolves with its config", async ({ page }) => {
     const result = await page.evaluate(() => {
       const w = window as any;
-      w.registerTopology("ring", (config: any) => ({ ...w.resolveTopology("mesh"), name: "ring", size: config.size }));
+      w.registerTopology("hoop", (config: any) => ({ ...w.resolveTopology("mesh"), name: "hoop", size: config.size }));
       const errors: unknown[] = [];
-      const ring = w.resolveTopology({ name: "ring", size: 4 }, (error: unknown) => errors.push(error));
+      const ring = w.resolveTopology({ name: "hoop", size: 4 }, (error: unknown) => errors.push(error));
       return { name: ring.name, size: ring.size, errors: errors.length };
     });
 
-    expect(result).toEqual({ name: "ring", size: 4, errors: 0 });
+    expect(result).toEqual({ name: "hoop", size: 4, errors: 0 });
   });
 
   test("an unknown name falls back to mesh and reports it", async ({ page }) => {
@@ -349,13 +349,13 @@ test.describe("topology config", () => {
   test("registering a built-in name throws", async ({ page }) => {
     const errors = await page.evaluate(() => {
       const w = window as any;
-      return ["mesh", "star", "chord", "multicast"].map(name => {
+      return ["mesh", "star", "chord", "ring", "multicast"].map(name => {
         try { w.registerTopology(name, () => w.resolveTopology("mesh")); return "ok"; }
         catch (e) { return (e as Error).name; }
       });
     });
 
-    expect(errors).toEqual(Array(4).fill("RangeError"));
+    expect(errors).toEqual(Array(5).fill("RangeError"));
   });
 });
 

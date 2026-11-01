@@ -66,6 +66,13 @@ export const chord: Topology = {
     wanted.delete(id);
     return [...wanted];
   },
+  // the two rings interleave after a merge: predecessor and successor join them, old fingers stay valid as shortcuts
+  stitch(view: View, id: PeerId) {
+    const { ids } = ring(view.members);
+    const index = ids.indexOf(id);
+    if (index < 0 || ids.length < 2) return [];
+    return [...new Set([ids[(index - 1 + ids.length) % ids.length], ids[(index + 1) % ids.length]])];
+  },
   route(view: View, meta) {
     if (meta.receiver === BROADCAST) return view.links.filter(link => !meta.hops.includes(link));
     if (view.links.includes(meta.receiver)) return [meta.receiver];
