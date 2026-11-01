@@ -117,3 +117,15 @@ changelog:
 - **`changelog:`**: one line per meaningful commit, verbatim, oldest first. Leave out noise (`wip: dump`, `fix: typo`) and keep everything that tells the story.
 
 Rebase-squash tips in vim: `:2,$s/^pick /s /` squashes everything into the first commit, and `:%s/\([^:]\+\): /- \1: /g` to turn messages into changelog lines.
+
+## 6. Pipelines
+
+A package is **new** when npm doesn't have its version. A version bump is what marks a package for release, and for testing.
+
+- **Pull request:** builds and tests packages that are new and have files changed in the PR, plus the packages they need to build. An unreleased package from an earlier PR is left alone. Playwright is installed only when a selected package uses it.
+- **Publish:** a GitHub release publishes every new package. A package that fails to build or publish doesn't stop the others. It and the packages depending on it are left out, and the run ends red.
+- **Playwright cache:** `update-playwright-cache` saves it from `main` when the Playwright version changes and once a week. Pull requests only read it.
+
+Each run lists one line per package, with its logs folded, and a table on the run's summary page.
+
+`bin/` and `.github/workflows/` are also in the `create` project template. `npm run check:template` fails when they differ, and the pull request pipeline runs it.

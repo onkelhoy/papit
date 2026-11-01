@@ -1,74 +1,72 @@
+import fs from "node:fs";
 import path from "node:path";
 
 import { Arguments } from "@papit/arguments";
-import { Information } from "@papit/information";
+import { Information, PackageGraph } from "@papit/information";
 import { Terminal } from "@papit/terminal";
 
-function runner(node, extraEnv = {}, extraArgs = []) {
-    return new Promise(resolve => {
-        const { close, update } = Terminal.loading(
-            `${Terminal.dim("publishing")} ${node.name}`,
-            80,
-            frame => {
-                if (frame === 50) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- so slow..")}`);
-                if (frame === 150) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- jeez")}`);
-                if (frame === 400) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- yeah this is borked")}`);
-            }
-        );
+import { getNewPackages } from "./changed.mjs";
+import { BUILD_FAILED, Report, run, seconds } from "./report.mjs";
 
-        let buffer = "";
-        process.env.LOCATION = path.relative(Information.root.location, node.location);
+async function runner(node) {
+    process.env.LOCATION = path.relative(Information.root.location, node.location);
 
-        const dryRun = Arguments.has("dry-run") ? "--dry-run" : "";
-        const child = Terminal.spawn(`npm publish --access public --loglevel verbose --provenance ${dryRun}`, {
-            cwd: node.location,
-            args: [...process.argv.slice(2), ...extraArgs],
-            env: { ...process.env, ...extraEnv },
-            onData: text => (buffer += text),
-            onError: text => (buffer += text),
-        });
+    const { close, update } = Terminal.loading(
+        `${Terminal.dim("publishing")} ${node.name}`,
+        80,
+        frame => {
+            if (frame === 50) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- so slow..")}`);
+            if (frame === 150) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- jeez")}`);
+            if (frame === 400) update(`${Terminal.dim("publishing")} ${node.name} ${Terminal.dim("- yeah this is borked")}`);
+        }
+    );
 
-        child.on("close", code => {
-            close();
-            resolve({ code, buffer });
-        });
-    });
+    const dryRun = Arguments.has("dry-run") ? "--dry-run" : "";
+    const args = process.argv.slice(2).join(" ");
+    const result = await run(`npm publish --access public --loglevel verbose --provenance ${dryRun} ${args}`, node.location);
+
+    close();
+    return result;
 }
 
 (async function () {
+    const nodes = await getNewPackages({ publish: true });
+    const report = new Report("publish", nodes.length);
+    const buildFailed = fs.existsSync(BUILD_FAILED) ? JSON.parse(fs.readFileSync(BUILD_FAILED, "utf-8")) : [];
+    const failed = new Set(buildFailed);
 
-    const batches = Information.getBatches();
-
-    for (const batch of batches)
+    for (const node of nodes)
     {
-        for (const node of batch)
+        if (buildFailed.includes(node.name))
         {
-            // Skip unchanged packages in CI
-            if (Arguments.has("ci") || process.env.CI)
-            {
-                const remote = await node.remote() ?? node.packageJSON.remoteVersion;
-                if (node.packageJSON.version === remote && remote)
-                {
-                    Terminal.write(Terminal.blue("●"), node.name, Terminal.green("skipped"));
-                    continue;
-                }
-            }
-
-            const { code, buffer } = await runner(node);
-
-            if (code === 0)
-            {
-                Terminal.write(Terminal.green("●"), node.name, Terminal.green("passed"));
-            }
-            else
-            {
-                Terminal.write(Terminal.red("●"), node.name, Terminal.red("failed"));
-                // only print lines that look like actual errors
-                const errors = buffer.split("\n").filter(line => line.includes("npm error") || line.includes("ERR!"));
-                Terminal.write(errors.join("\n") || buffer);
-            }
+            report.add({ name: node.name, status: "failed", detail: "build failed, not published" });
+            continue;
         }
+
+        // a dependent pins the exact version, which didn't make it to npm
+        const missing = PackageGraph.getAncestors(node.name, ["dependencies", "peerDependencies"]).find(ancestor => failed.has(ancestor.name));
+        if (missing)
+        {
+            failed.add(node.name);
+            report.add({ name: node.name, status: "skipped", detail: `needs ${missing.name}` });
+            continue;
+        }
+
+        const start = Date.now();
+        const { code, output } = await runner(node);
+        const version = node.packageJSON.version;
+
+        if (code === 0)
+        {
+            report.add({ name: node.name, status: "passed", detail: `${version} · ${seconds(start)}`, output });
+            continue;
+        }
+
+        failed.add(node.name);
+        // only print lines that look like actual errors
+        const errors = output.split("\n").filter(line => line.includes("npm error") || line.includes("ERR!"));
+        report.add({ name: node.name, status: "failed", detail: `${version} · ${seconds(start)}`, output: errors.join("\n") || output });
     }
 
-    process.exit(0);
+    process.exit(report.finish() ? 0 : 1);
 }());

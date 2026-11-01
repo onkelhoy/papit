@@ -31,10 +31,17 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Prepare tools
         env:
           CI: true
-        run: npm run build -- --ci --remote
+        run: npm run prebuild --if-present
+
+      # one package failing to build shouldn't hold back the rest, publish leaves it out and fails at the end
+      - name: Build
+        continue-on-error: true
+        env:
+          CI: true
+        run: node bin/build.mjs --ci --publish
 
       - name: Publish to npmjs.com
         run: npm run publish -- --provenance ${{ github.event.inputs.dry_run == 'true' && '--dry-run' || '' }}

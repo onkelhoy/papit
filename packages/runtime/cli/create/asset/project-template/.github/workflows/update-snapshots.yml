@@ -16,6 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.ref }}
+          fetch-depth: 0 # bin/changed.mjs compares against the merge base
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
