@@ -10,13 +10,18 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  
+
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # bin/changed.mjs compares against the merge base
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -24,39 +29,49 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
-      # Short-lived build cache (retry helper only)
-      - name: Cache build output
-        uses: actions/cache@v4
-        with:
-          path: packages/**/lib
-          key: build-${{ runner.os }}-${{ github.run_attempt }}
-          restore-keys: |
-            build-${{ runner.os }}-
-
       - name: Install dependencies
         run: npm install # was ci before but esbuild appearently introduced some problems
 
-      - name: Build
-        env: 
-          CI: true
-        run: npm run build -- --ci --remote
+      - name: Check the create template
+        run: npm run check:template --if-present
 
-      # Long-lived Playwright cache (read-only in PRs)
+      - name: Prepare tools
+        env:
+          CI: true
+        run: npm run prebuild --if-present
+
+      - name: Find new packages
+        id: changed
+        env:
+          CI: true
+        run: node bin/changed.mjs
+
+      - name: Build
+        env:
+          CI: true
+        run: node bin/build.mjs --ci
+
+      - name: Read Playwright version
+        id: playwright
+        if: steps.changed.outputs.playwright == 'true'
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test']?.version")" >> "$GITHUB_OUTPUT"
+
+      # Saved by update-playwright-cache on main, a cache saved here would only reach this PR
       - name: Restore Playwright cache
-        uses: actions/cache@v4
+        if: steps.changed.outputs.playwright == 'true'
+        uses: actions/cache/restore@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright
-          restore-keys: |
-            ${{ runner.os }}-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright
+        if: steps.changed.outputs.playwright == 'true'
         run: npx playwright install --with-deps
 
       - name: Run tests
-        env: 
+        env:
           CI: true
-        run: npm test -- --ci --remote
+        run: npm test -- --ci
 
       - name: Upload Playwright artifacts
         if: failure()

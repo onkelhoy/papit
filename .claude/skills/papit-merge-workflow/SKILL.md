@@ -77,7 +77,7 @@ Force-pushing your own branch after the squash is expected. Never force-push `ma
 ```bash
 gh pr checks <pr> --watch
 ```
-`pull-request.yml` builds and runs every package's tests. Red CI → fix on the branch (new commit), then redo steps 3–4 so the branch is one commit again. Never merge red.
+`pull-request.yml` builds and tests the new packages: a version ahead of npm, with files changed in this PR. A package without a bump isn't tested, so bump what should be released. Red CI → fix on the branch (new commit), then redo steps 3–4 so the branch is one commit again. Never merge red.
 
 ## 6. Merge
 Merging is outward-facing. Confirm with the user right before it unless they already said "merge" for this PR.

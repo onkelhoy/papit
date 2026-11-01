@@ -5,7 +5,7 @@
     "private": true,
     "scripts": {
         "analyse": "npm run analyse --workspaces --if-present",
-        "publish": "to come",
+        "publish": "node bin/publish.mjs",
         "clean": "node bin/clean.mjs",
         "build": "npx @papit/build",
         "test": "node bin/test.mjs",

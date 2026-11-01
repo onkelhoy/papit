@@ -7,12 +7,8 @@ import { Information } from "@papit/information";
 import { Terminal } from "@papit/terminal";
 import { setup, close } from "@papit/server";
 
-function isPlaywright(node) {
-    return ["", "tests"].some(folder =>
-        fs.existsSync(path.join(node.location, folder, "playwright.config.ts")) ||
-        fs.existsSync(path.join(node.location, folder, "playwright.config.js"))
-    );
-}
+import { getNewPackages, isPlaywright } from "./changed.mjs";
+import { Report, run, seconds } from "./report.mjs";
 
 function hasSnapshots(node) {
     const dir = path.join(node.location, "tests", "snapshots");
@@ -25,50 +21,57 @@ function hasSnapshots(node) {
     }
 }
 
-function runner(node, extraEnv = {}, extraArgs = []) {
-    return new Promise(resolve => {
-        const { close, update } = Terminal.loading(
-            `${Terminal.dim("testing")} ${node.name}`,
-            80,
-            frame => {
-                if (frame === 50) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- so slow..")}`);
-                if (frame === 150) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- jeez")}`);
-                if (frame === 400) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- yeah this is borked")}`);
-            }
-        );
+async function runner(node, extraEnv = {}, extraArgs = []) {
+    process.env.LOCATION = path.relative(Information.root.location, node.location);
 
-        let buffer = "";
-        process.env.LOCATION = path.relative(Information.root.location, node.location);
+    const command = extraArgs.length ? `npm test -- ${extraArgs.join(" ")}` : "npm test";
+    if (Arguments.has("ci")) return run(command, node.location, extraEnv);
 
-        const child = Terminal.spawn("npm test", {
-            cwd: node.location,
-            args: extraArgs.length ? ["--", ...extraArgs] : [],
-            env: { ...process.env, ...extraEnv },
-            onData: text => (buffer += text),
-            onError: text => (buffer += text),
-        });
+    const { close, update } = Terminal.loading(
+        `${Terminal.dim("testing")} ${node.name}`,
+        80,
+        frame => {
+            if (frame === 50) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- so slow..")}`);
+            if (frame === 150) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- jeez")}`);
+            if (frame === 400) update(`${Terminal.dim("testing")} ${node.name} ${Terminal.dim("- yeah this is borked")}`);
+        }
+    );
 
-        child.on("close", code => {
-            close();
-            resolve({ code, buffer });
-        });
-    });
+    const result = await run(command, node.location, extraEnv);
+    close();
+    return result;
+}
+
+function testCount(output) {
+    const count = /(?:^|\s)(\d+) passed/.exec(output)?.[1] ?? /(?:ℹ|#) pass (\d+)/.exec(output)?.[1];
+    return count ? `${count} tests · ` : "";
 }
 
 (async function () {
     Arguments.set("port", 3500);
     Arguments.set("root", true);
+    if (process.env.CI) Arguments.set("ci", true);
     if (Arguments.has("ci")) Arguments.set("remote", true);
     if (Arguments.has("ci")) process.env.CI = "true";
 
-    // const summery = [];
+    // CI tests what is new in this PR, locally everything
+    const nodes = Arguments.has("ci")
+        ? await getNewPackages()
+        : Information.getBatches(Arguments.instance, p => p.name.startsWith(Information.scope)).flat();
+    const report = new Report("test", nodes.length);
+
+    if (nodes.length === 0)
+    {
+        report.finish();
+        process.exit(0);
+    }
 
     await setup();
 
     const force = Arguments.has("force");
     // only playwright packages get --project (e.g. `npm test -- --project=chromium`), after a `--` so npm passes it on
     const playwrightArgs = process.argv.slice(2).filter(arg => arg.startsWith("--project"));
-    const batches = Information.getBatches(Arguments.instance, p => p.name.startsWith(Information.scope));
+    if (Arguments.has("ci")) playwrightArgs.push("--reporter=list,github");
 
     const testresult_location = path.join(Information.root.location, "test-result.log");
     if (!Arguments.has("ci") && fs.existsSync(testresult_location)) fs.rmSync(testresult_location);
@@ -84,69 +87,43 @@ function runner(node, extraEnv = {}, extraArgs = []) {
         testresultstream.write("\n\n==== (meta end) ====\n\n")
     }
 
-    for (const batch of batches)
+    for (const node of nodes)
     {
-        for (const node of batch)
+        if (node.packageJSON.papit?.skip)
         {
+            report.add({ name: node.name, status: "skipped" });
+            log({ name: node.name, status: "skipped" }, testresultstream);
+            continue;
+        }
 
-            if (node.packageJSON.papit.skip)
-            {
-                Terminal.write(Terminal.blue("●"), node.name, Terminal.green("skipped"));
-                log({ name: node.name, status: "skipped" }, testresultstream);
-                continue;
-            }
+        const start = Date.now();
+        const playwright = isPlaywright(node);
+        const skipSnapshots = Arguments.has("ci") || (!force && playwright && !hasSnapshots(node));
+        const extraEnv = skipSnapshots ? { SKIP_SNAPSHOTS: "true" } : {};
 
-            // Skip unchanged packages in CI
-            if (Arguments.has("ci") || process.env.CI)
-            {
-                const remote = await node.remote() ?? node.packageJSON.remoteVersion;
-                if (node.packageJSON.version === remote && remote)
-                {
-                    Terminal.write(Terminal.blue("●"), node.name, Terminal.green("skipped"));
-                    log({ name: node.name, status: "skipped" }, testresultstream);
-                    continue;
-                }
-            }
+        const { code, output } = await runner(node, extraEnv, playwright ? playwrightArgs : []);
 
-            const playwright = isPlaywright(node);
-            const skipSnapshots = Arguments.has("ci") || (!force && playwright && !hasSnapshots(node));
-            const extraEnv = skipSnapshots ? { SKIP_SNAPSHOTS: "true" } : {};
+        if (code === 0)
+        {
+            report.add({ name: node.name, status: "passed", detail: testCount(output) + seconds(start), output });
+            log({ name: node.name, status: "passed", buffer: output }, testresultstream);
+            continue;
+        }
 
-            // if (skipSnapshots)
-            // {
-            //     Terminal.write(Terminal.dim("○"), node.name, Terminal.dim("no snapshots — skipping snapshot.test.ts"));
-            // }
+        // Retry — last-failed for playwright, full rerun for node
+        const retryArgs = playwright ? [...playwrightArgs, "--last-failed"] : [];
+        const retry = await runner(node, extraEnv, retryArgs);
+        const buffer = `${output}\n\n==== retry ====\n\n${retry.output}`;
 
-            const { code, buffer } = await runner(node, extraEnv, playwright ? playwrightArgs : []);
-
-            if (code === 0)
-            {
-                Terminal.write(Terminal.green("●"), node.name, Terminal.green("passed"));
-                log({ name: node.name, status: "passed", buffer }, testresultstream);
-                continue;
-            }
-
-            // Retry — last-failed for playwright, full rerun for node
-            if (Arguments.has("ci")) Terminal.write(Terminal.yellow("●"), node.name, Terminal.yellow("failed — retrying"));
-
-            const retryArgs = playwright ? [...playwrightArgs, "--last-failed"] : [];
-            const { code: code2, buffer: buffer2 } = await runner(node, extraEnv, retryArgs);
-
-            if (code2 === 0)
-            {
-                if (Arguments.has("ci")) Terminal.write(Terminal.green("●"), node.name, Terminal.green("passed (flaky)"));
-                else Terminal.write(Terminal.green("●"), node.name, Terminal.green("passed"));
-
-                log({ name: node.name, status: "passed", buffer: buffer2 }, testresultstream);
-            }
-            else
-            {
-                Terminal.write(Terminal.red("●"), node.name, Terminal.red("failed"));
-                log({ name: node.name, status: "failed", buffer: buffer2 }, testresultstream);
-                close();
-
-                if (Arguments.has("ci")) process.exit(1);
-            }
+        if (retry.code === 0)
+        {
+            report.add({ name: node.name, status: "flaky", detail: seconds(start), output: buffer });
+            log({ name: node.name, status: "passed", buffer }, testresultstream);
+        }
+        else
+        {
+            report.add({ name: node.name, status: "failed", detail: seconds(start), output: retry.output });
+            log({ name: node.name, status: "failed", buffer: retry.output }, testresultstream);
         }
     }
 
@@ -157,7 +134,9 @@ function runner(node, extraEnv = {}, extraArgs = []) {
         testresultstream.end();
         Terminal.write(`\ncheck the test-results at: "${testresult_location}"`)
     }
-    process.exit(0);
+
+    const ok = report.finish();
+    process.exit(ok || !Arguments.has("ci") ? 0 : 1);
 }());
 
 function log(note, testresultstream) {

@@ -196,7 +196,8 @@ A root `package.json` with npm workspaces (`packages/**/*`, excluding `asset/` a
 | --- | --- |
 | `analyse` | Every workspace's `analyse` script (`npm run analyse --workspaces --if-present`). |
 | `build` | `npx @papit/build` |
-| `test` | `node bin/test.mjs`, every package's `npm test`. |
+| `test` | `node bin/test.mjs`, every package's `npm test`. With `--ci`, only the new packages. |
+| `publish` | `node bin/publish.mjs`, every version npm doesn't have yet. |
 | `start` | `npx @papit/server --serve --info` |
 | `create` | `npm create @papit -- --package` |
 | `clean` | `node bin/clean.mjs` |
@@ -204,7 +205,7 @@ A root `package.json` with npm workspaces (`packages/**/*`, excluding `asset/` a
 
 devDependencies: `@papit/build`, `@papit/bundle-js`, `@papit/bundle-ts`, `@papit/server`, `@papit/create`, `@papit/version`, `@papit/arguments`, `@papit/terminal`, `@papit/information`, `@papit/analyse`, `@papit/react`, `esbuild` and `typescript`. A project that uses `generate:react` adds `react` and `@types/react` as root devDependencies itself.
 
-Also included: `.gitignore` (ignores `packages/**/lib/`, `packages/**/dist/` and the generated `packages/**/analyse.json`; shipped as `gitignore` because npm never publishes `.gitignore` files), GitHub workflows for pull requests and publishing, `.vscode` settings, `.nvmrc`, `bin/` helpers and an example custom runner in `bin/runners/example-runner/`.
+Also included: `.gitignore` (ignores `packages/**/lib/`, `packages/**/dist/` and the generated `packages/**/analyse.json`; shipped as `gitignore` because npm never publishes `.gitignore` files), GitHub workflows for pull requests, publishing and a shared Playwright cache, `.vscode` settings, `.nvmrc`, `bin/` helpers and an example custom runner in `bin/runners/example-runner/`.
 
 # Template variables
 

@@ -1,11 +1,21 @@
 name: update-playwright-cache
 
 on:
+  push:
+    branches: [main, master]
+    paths:
+      - package-lock.json
+      - .github/workflows/update-playwright-cache.yml
+  schedule:
+    - cron: "0 6 * * 1" # GitHub drops a cache after 7 unused days
   workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  
+
+permissions:
+  contents: read
+
 jobs:
   playwright-cache:
     runs-on: ubuntu-latest
@@ -19,13 +29,20 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
 
+      - name: Install dependencies
+        run: npm install
+
+      - name: Read Playwright version
+        id: playwright
+        run: echo "version=$(node -p "require('./package-lock.json').packages['node_modules/@playwright/test']?.version")" >> "$GITHUB_OUTPUT"
+
       - name: Restore Playwright cache
+        id: cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright
-          restore-keys: |
-            ${{ runner.os }}-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright.outputs.version }}
 
       - name: Install Playwright
+        if: steps.cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
