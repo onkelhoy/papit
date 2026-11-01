@@ -413,3 +413,88 @@ test.describe("signalling through the host", () => {
     });
   }
 });
+
+test.describe("spoof", () => {
+  test("a member's server message isn't passed on through the host's socket", async ({ page }) => {
+    const spoof = await page.evaluate(async () => {
+      const w = window as any;
+      const { nodes } = w.build("star", 3, "a");
+      const server = w.fakeServer();
+      nodes.a.addLink(server.connect("a"));
+
+      nodes.b.send(w.Message.Create({ type: "signal.leave", sender: "b", receiver: w.SERVER }, { network: "n" }));
+      await w.settle();
+      return server.log.spoof;
+    });
+
+    expect(spoof).toBe(0);
+  });
+
+  test("after a reconnect the server fallback goes wrapped under the new socket id", async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const w = window as any;
+      const server = w.fakeServer();
+      const a = new w.Network({ me: "a", topology: "star" });
+      const z = new w.Network({ me: "z", topology: "star" });
+      a.addLink(server.connect("a2"));
+      a.socketId = "a2";
+      z.addLink(server.connect("z"));
+
+      const delivered = w.once(z, "message");
+      a.send(w.Message.Create({ type: "chat", sender: "a", receiver: "z" }, {}));
+      await Promise.race([delivered, w.settle()]);
+      await w.settle();
+      const event = await Promise.race([delivered, null]);
+      return { spoof: server.log.spoof, sender: event?.detail.meta.sender };
+    });
+
+    expect(result).toEqual({ spoof: 0, sender: "a" });
+  });
+});
+
+test.describe("sender check", () => {
+  test("mesh: an app message under another peer's id is dropped", async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const w = window as any;
+      const { nodes, log } = w.build("mesh", 3);
+      const dropped: string[] = [];
+      nodes.c.addEventListener("drop", (event: CustomEvent) => dropped.push(event.detail.meta.sender));
+
+      nodes.b.links.get("c").link.send(w.Message.Create({ type: "chat", sender: "a", receiver: "c" }, {}).toBinary(true));
+      nodes.b.send(w.Message.Create({ type: "chat", sender: "b", receiver: "c" }, {}));
+      await w.settle();
+      return { dropped, received: log.c.message.map((meta: any) => meta.sender) };
+    });
+
+    expect(result).toEqual({ dropped: ["a"], received: ["b"] });
+  });
+
+  test("mesh: a relay can't carry an app message under another peer's id", async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const w = window as any;
+      const { nodes, log } = w.build("mesh", 3);
+      let dropped = 0;
+      nodes.c.addEventListener("drop", () => dropped++);
+
+      const inner = w.Message.Create({ type: "chat", sender: "a", receiver: "c" }, {}).toBinary(true);
+      nodes.b.send(w.Message.Create({ type: w.NetworkType.Relay, sender: "b", receiver: "c" }, { message: btoa(String.fromCharCode(...inner)) }));
+      await w.settle();
+      return { dropped, received: log.c.message.length };
+    });
+
+    expect(result).toEqual({ dropped: 1, received: 0 });
+  });
+
+  test("chord still relays other peers' messages", async ({ page }) => {
+    const delivered = await page.evaluate(async () => {
+      const w = window as any;
+      const { nodes } = w.build("chord", 16);
+      const other = Object.keys(nodes).find(id => id !== "a" && !nodes.a.view.links.includes(id));
+      const got = w.once(nodes[other!], "message");
+      nodes.a.send(w.Message.Create({ type: "chat", sender: "a", receiver: other }, {}));
+      return (await got).detail.meta.sender;
+    });
+
+    expect(delivered).toBe("a");
+  });
+});

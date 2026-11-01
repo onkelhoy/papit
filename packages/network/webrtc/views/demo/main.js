@@ -24,6 +24,7 @@ const PRESETS = {
 
 let client = null;
 let connectedUrl = null;
+let rooms = [];
 
 // ############ storage ############
 function load() {
@@ -598,7 +599,64 @@ function clearTiles() {
     for (const key of [...tiles.keys()]) removeTile(key);
 }
 
+// ############ rooms ############
+function watchRoom(room) {
+    const name = room.network.name;
+    for (const type of ["peer", "peer-left", "members", "host"]) room.addEventListener(type, () => renderRooms());
+    room.addEventListener("message", (event) => log("info", `room ${name}: ${event.detail.type} from ${nameOf(event.detail.sender)}`));
+    room.addEventListener("error", (event) => log("error", `room ${name}: ${event.detail.message}`, event.detail.payload));
+    room.addEventListener("debug", (event) => log("debug", `room ${name}: ${event.detail.type}: ${event.detail.message}`));
+    rooms.push(room);
+    renderRooms();
+}
+
+function renderRooms() {
+    rooms = rooms.filter(room => room.status !== "closed" && room.network);
+    $("rooms").replaceChildren(...rooms.map(room => {
+        const copy = el("button", { type: "button", textContent: "Copy invite" });
+        copy.addEventListener("click", () => {
+            const invite = `${room.network.id} ${room.host}`;
+            navigator.clipboard?.writeText(invite).catch(() => { });
+            $("room-invite").value = invite;
+            log("info", `invite: ${invite}`);
+        });
+        const ping = el("button", { type: "button", textContent: "Ping" });
+        ping.addEventListener("click", () => room.broadcast("ping"));
+        const close = el("button", { type: "button", textContent: "Close", className: "danger" });
+        close.addEventListener("click", () => { room.close(); renderRooms(); });
+
+        return el("li", {}, tag(room.network.name), tag(`${room.members.length} members`), tag(`${room.links.length} links`), copy, ping, close);
+    }));
+}
+
+$("room-open").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try
+    {
+        watchRoom(await client.room({ name: $("room-new").value.trim() || "room" }));
+    }
+    catch (error)
+    {
+        log("error", `room: ${error.message}`);
+    }
+});
+
+$("room-join").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const [id, host] = $("room-invite").value.trim().split(/\s+/);
+    if (!id || !host) return void log("error", "room: an invite is an id and a host");
+    try
+    {
+        watchRoom(await client.joinRoom(id, host));
+    }
+    catch (error)
+    {
+        log("error", `room: ${error.message}`);
+    }
+});
+
 function render() {
+    renderRooms();
     const inRoom = !!client?.network;
     $("lobby").hidden = inRoom;
     $("room").hidden = !inRoom;

@@ -152,7 +152,7 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | Error code | When |
 | --- | --- |
 | `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload |
-| `spoof` | `meta.sender` isn't the socket's id |
+| `spoof` | `meta.sender` isn't the socket's id; the message names the type and the sender |
 | `unsupported` | a non-`signal.*` (or server → client) type sent to the server, or `receiver: "*"` |
 | `forbidden` | update/unregister by a non-host, a wrong password on join, or a `signal.*` message sent to a peer |
 | `rate` | a forwarded message over the `forward_rate` budget; it is dropped, the socket stays open |

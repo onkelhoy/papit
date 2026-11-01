@@ -12,7 +12,7 @@
     "web-push",
     "vapid"
   ],
-  "version": "0.0.5",
+  "version": "0.0.6",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -60,7 +60,7 @@
   },
   "dependencies": {
     "@papit/arguments": "0.0.2",
-    "@papit/peer-message": "0.0.3",
+    "@papit/peer-message": "0.0.4",
     "@papit/terminal": "0.0.3",
     "ws": "8.21.1"
   },
@@ -85,5 +85,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.4"
+  "remoteVersion": "0.0.5"
 }

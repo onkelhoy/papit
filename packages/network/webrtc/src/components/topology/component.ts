@@ -10,6 +10,7 @@ const linked = (view: View, id: string) => view.links.includes(id) ? [id] : [];
 /** Every member links to every other. Messages go straight to the receiver. */
 export const mesh: Topology = {
   name: "mesh",
+  direct: true,
   neighbors: others,
   route(view, meta) {
     if (meta.receiver === BROADCAST) return unvisited(view, meta);

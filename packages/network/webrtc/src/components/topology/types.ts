@@ -14,6 +14,11 @@ export type View = {
  */
 export interface Topology {
   readonly name: string;
+  /**
+   * True when nothing is ever relayed: a peer's message always comes straight from its sender, so an
+   * app message with any other sender is dropped.
+   */
+  readonly direct?: boolean;
   /** The direct links `id` should hold, given `view.members`. */
   neighbors(view: View, id: PeerId): PeerId[];
   /** Next hops for `meta`, drawn from `view.links`. `[]` when there is no peer route. */

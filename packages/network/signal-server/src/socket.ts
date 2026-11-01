@@ -153,7 +153,7 @@ export class SocketServer extends ws.WebSocketServer {
             if (!message) return void this.error(socket, "invalid", "malformed message");
 
             const { meta } = message;
-            if (meta.sender !== socket.id) return void this.error(socket, "spoof", "sender does not match the socket id", meta.id);
+            if (meta.sender !== socket.id) return void this.error(socket, "spoof", `sender does not match the socket id (type ${meta.type}, sender ${meta.sender})`, meta.id);
             if (meta.receiver === SERVER) return void this.handleSignal(socket, message);
             if (meta.type.startsWith("signal.")) return void this.error(socket, "forbidden", "signal messages may only be sent to the server", meta.id);
             if (meta.receiver === BROADCAST) return void this.error(socket, "unsupported", "the server does not broadcast", meta.id);

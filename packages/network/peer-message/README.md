@@ -204,13 +204,14 @@ What every link in a network carries besides its system channel. The host sets i
 | `network.join` | peer ↔ peer | `{ password?, profile? }`, the server forwards it to the entry peer with `sender` = newcomer |
 | `network.welcome` | peer ↔ peer | `{ network: NetworkInfo, members: PeerId[], connect: PeerId[], profiles? }` |
 | `network.reject` | peer ↔ peer | `{ reason }` |
-| `network.members` | peer ↔ peer | `{ members: PeerId[], host?, profiles? }`, `profiles` maps member id → `Profile` |
+| `network.members` | peer ↔ peer | `{ members: PeerId[], host?, profiles?, serverId? }`, `profiles` maps member id → `Profile`, `serverId` is the id the server knows the network by when it differs from `network.id` |
 | `network.leave` | peer ↔ peer | `{ peer }` |
 | `network.profile` | member → host | `{ profile }`, the sender changed its own profile |
 | `network.media` | host → peers | `{ media: MediaPlan }`, the plan changed mid-session |
 | `network.relay` | member → host | `{ message }`, base64 bytes of a signalling message from a member without a socket, for the host to send through its own |
-| `handshake.offer` | peer ↔ peer | `{ description: { type, sdp? }, streams? }`, `streams` maps transceiver `mid` → stream name |
-| `handshake.answer` | peer ↔ peer | `{ description: { type, sdp? } }` |
+| `network.room` | peer ↔ peer | `{ room, message }`, base64 bytes of a message of a network opened over this one, for the receiver's `room` |
+| `handshake.offer` | peer ↔ peer | `{ description: { type, sdp? }, streams?, session? }`, `streams` maps transceiver `mid` → stream name, `session` names the sender's connection |
+| `handshake.answer` | peer ↔ peer | `{ description: { type, sdp? }, session? }` |
 | `handshake.candidate` | peer ↔ peer | `{ candidate: { candidate?, sdpMid?, sdpMLineIndex?, usernameFragment? } }` |
 
 Peer ↔ peer messages travel over any link: the signalling socket while there is no data channel yet, peer data channels after.
