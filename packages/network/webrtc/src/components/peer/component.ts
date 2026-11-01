@@ -18,6 +18,8 @@ export class PeerLink extends Emitter implements Link {
   public readonly connection: RTCPeerConnection;
   public readonly channel: RTCDataChannel;
   public readonly handshake: Handshake;
+  /** When this link was created, from `performance.now()`. */
+  public readonly opened = performance.now();
   private closed = false;
 
   constructor(

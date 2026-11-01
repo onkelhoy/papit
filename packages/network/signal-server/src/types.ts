@@ -25,6 +25,8 @@ export type Socket = ws.WebSocket & {
     tokens: number;
     refilled_at: number;
     networks: Set<string>;
+    // closing on purpose: nothing is forwarded to it any more
+    draining: boolean;
 }
 
 /** A registered network. The host is a member; `size` is derived from `members`. */

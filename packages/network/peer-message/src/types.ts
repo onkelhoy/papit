@@ -26,6 +26,8 @@ export enum SignalType {
     List = "signal.list",
     Join = "signal.join",
     Leave = "signal.leave",
+    Merge = "signal.merge",
+    Drain = "signal.drain",
 
     // server → client  (meta.receiver = socket id)
     Welcome = "signal.welcome",
@@ -33,6 +35,7 @@ export enum SignalType {
     Updated = "signal.updated",
     Networks = "signal.networks",
     Host = "signal.host",
+    Drained = "signal.drained",
     Unreachable = "signal.unreachable",
     Error = "signal.error",
 }
@@ -48,6 +51,11 @@ export enum NetworkType {
     Profile = "network.profile",
     Relay = "network.relay",
     Room = "network.room",
+    Merge = "network.merge",
+    MergeAccept = "network.merge-accept",
+    MergeList = "network.merge-list",
+    MergeView = "network.merge-view",
+    Prune = "network.prune",
 }
 
 // peer ↔ peer, over any link
@@ -120,6 +128,15 @@ export type PayloadMap = {
     [SignalType.List]: {};
     [SignalType.Join]: { network: string; password?: string; profile?: Profile };
     [SignalType.Leave]: { network: string };
+    /**
+     * Asks the host of `network` to merge with `from`, the network the sender hosts. `size` is the real
+     * member count, the server's only counts sockets. `peer` is the sender's peer id, when it isn't its socket id.
+     */
+    [SignalType.Merge]: { network: string; from: string; size: number; password?: string; peer?: PeerId };
+    /** Before closing a socket on purpose: with `draining` the server stops forwarding to it, without it the socket stays after all. */
+    [SignalType.Drain]: { draining: boolean };
+    /** Nothing more is on its way to this socket, so closing it loses nothing. */
+    [SignalType.Drained]: {};
     [SignalType.Welcome]: { id: PeerId };
     [SignalType.Registered]: { network: NetworkInfo };
     [SignalType.Updated]: { network: NetworkInfo };
@@ -139,10 +156,20 @@ export type PayloadMap = {
     [NetworkType.Relay]: { message: string };
     /** A message (base64 of its bytes) of a network opened over this one, for the receiver's `room`. */
     [NetworkType.Room]: { room: string; message: string };
+    /** A host asks to merge, passed on by the server. The receiving host checks `password` and answers with `network.merge-accept` or `network.reject`. */
+    [NetworkType.Merge]: { network: NetworkInfo; size: number; password?: string; peer?: PeerId };
+    /** `peer` and `socket` are the accepting host's ids, the requester links to it through the server. */
+    [NetworkType.MergeAccept]: { peer: PeerId; socket: PeerId; size: number };
+    /** A host's network, sent to the other host over their link. `password` is what the staying network keeps. */
+    [NetworkType.MergeList]: { network: NetworkInfo; members: PeerId[]; profiles?: Record<PeerId, Profile>; serverId?: string; password?: string };
+    /** Everyone's new network: `network.host` is the host, `members` is both groups. Sent by a member's current host. */
+    [NetworkType.MergeView]: { network: NetworkInfo; members: PeerId[]; profiles?: Record<PeerId, Profile>; serverId?: string; password?: string };
     /**
      * `streams` maps transceiver `mid` → media plan stream name, for the streams the offer carries.
      * `session` names the sender's connection: a new one means its end of the old link is gone.
      */
+    /** Asks a linked peer to close a link neither side wants any more. Neither side is leaving. */
+    [NetworkType.Prune]: {};
     [HandshakeType.Offer]: { description: SessionDescription; streams?: Record<string, string>; session?: string };
     [HandshakeType.Answer]: { description: SessionDescription; session?: string };
     [HandshakeType.Candidate]: { candidate: IceCandidate };

@@ -41,6 +41,7 @@
                             <option value="mesh">mesh</option>
                             <option value="star">star</option>
                             <option value="chord">chord</option>
+                            <option value="ring">ring</option>
                             <option value="multicast">multicast</option>
                         </select>
                     </label>
@@ -69,6 +70,12 @@
         <!-- in a network -->
         <div id="room" class="columns" hidden>
             <section class="card" id="room-info">
+                <div id="merge-row" class="row">
+                    <input id="merge-id" placeholder="network id to merge with" spellcheck="false" />
+                    <input id="merge-password" type="password" placeholder="its password, if any" />
+                    <button id="merge-button">Merge</button>
+                    <label><input id="allow-merge" type="checkbox" /> allow merges</label>
+                </div>
                 <div class="row between">
                     <h2 id="room-title">network</h2>
                     <div class="row">

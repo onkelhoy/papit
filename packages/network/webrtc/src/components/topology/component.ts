@@ -1,5 +1,6 @@
 import { BROADCAST, type Meta, type TopologyConfig } from "@papit/peer-message";
 import { chord } from "./chord";
+import { ring } from "./ring";
 import { multicastTopology } from "./multicast";
 import type { Topology, TopologyFactory, View } from "./types";
 
@@ -43,6 +44,7 @@ export const topologies: Record<string, TopologyFactory> = {
   mesh: () => mesh,
   star: () => star,
   chord: () => chord,
+  ring: () => ring,
   multicast: config => multicastTopology({ fanout: config.fanout as number | undefined }),
 };
 

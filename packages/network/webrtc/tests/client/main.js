@@ -1,4 +1,4 @@
-import { Client, Handshake, SocketLink } from '@papit/webrtc';
+import { Client, Handshake, SocketLink, chord, ring } from '@papit/webrtc';
 import { Message, SignalType } from '@papit/peer-message';
 
 /** Resolves once the event fires on target, with its detail. */
@@ -37,6 +37,26 @@ async function pair(url, options = {}, before = () => { }) {
   return { a, b, log, network };
 }
 
+/** A network of `size` clients. The first is the host; everyone's links are up on return. */
+async function group(url, size, options = {}, name = "test", create = {}) {
+  const make = () => new Client({ url, wake: false, acceptMerge: () => true, ...options });
+  const clients = Array.from({ length: size }, make);
+  await Promise.all(clients.map(client => client.ready));
+  const [host, ...rest] = clients;
+  const network = await host.create({ name, ...create });
+  for (const client of rest)
+  {
+    await client.join(network.id, create.password);
+    await settled(clients.slice(0, clients.indexOf(client) + 1));
+  }
+  return { clients, host, network };
+}
+
+/** Resolves once every client holds every link its topology wants and no link is opening. */
+function settled(clients, timeout = 15_000) {
+  return until(() => clients.every(client => client.router.desired().length === 0 && client.pending.size === 0), timeout);
+}
+
 /** Handshake over a stand-in connection, so a test sets its states by hand. */
 function fakeHandshake(ice, timeout) {
   const connection = Object.assign(new EventTarget(), {
@@ -52,5 +72,5 @@ function fakeHandshake(ice, timeout) {
   return { handshake: new Handshake("a", "b", connection, channel, network, undefined, timeout), channel };
 }
 
-Object.assign(window, { Client, Handshake, SocketLink, pair, fakeHandshake, Message, SignalType, once, until });
+Object.assign(window, { Client, Handshake, SocketLink, chord, ring, pair, group, settled, fakeHandshake, Message, SignalType, once, until });
 window.ready = true;

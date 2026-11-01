@@ -419,7 +419,104 @@ describe("join", { timeout: 5000 }, () => {
     });
 });
 
+describe("merge", { timeout: 5000 }, () => {
+
+    it("forwards network.merge to the target's host with the sender's network", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+        const mine = await a.register({ name: "mine" });
+        const theirs = await b.register({ name: "theirs", password: "pw" });
+
+        a.send(SignalType.Merge, { network: theirs.id, from: mine.id, size: 7, password: "pw" });
+        const merge = await b.next(NetworkType.Merge);
+        assert.strictEqual(merge.meta.sender, a.id);
+        assert.strictEqual(merge.meta.network, theirs.id);
+        assert.strictEqual(merge.payload.network.id, mine.id);
+        assert.strictEqual(merge.payload.size, 7);
+        assert.strictEqual(merge.payload.password, "pw");
+    });
+
+    it("only takes a network the sender hosts", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+        const c = await t.connect();
+        const mine = await a.register();
+        const theirs = await b.register();
+
+        const { meta } = c.send(SignalType.Merge, { network: theirs.id, from: mine.id, size: 1 });
+        const error = await c.next(SignalType.Error);
+        assert.strictEqual(error.payload.code, "forbidden");
+        assert.strictEqual(error.payload.ref, meta.id);
+    });
+
+    it("answers not-found for an unknown network and invalid for its own", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const mine = await a.register();
+
+        a.send(SignalType.Merge, { network: "nope", from: mine.id, size: 1 });
+        assert.strictEqual((await a.next(SignalType.Error)).payload.code, "not-found");
+
+        a.send(SignalType.Merge, { network: mine.id, from: mine.id, size: 1 });
+        assert.strictEqual((await a.next(SignalType.Error)).payload.code, "invalid");
+    });
+});
+
+describe("drain", { timeout: 5000 }, () => {
+
+    it("stops forwarding to a draining socket and answers unreachable", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+
+        b.send(SignalType.Drain, { draining: true });
+        await b.next(SignalType.Drained);
+
+        const { meta } = a.send("chat", {}, { receiver: b.id });
+        const unreachable = await a.next(SignalType.Unreachable);
+        assert.strictEqual(unreachable.payload.ref, meta.id);
+    });
+
+    it("forwards again once the socket stays after all", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+
+        b.send(SignalType.Drain, { draining: true });
+        await b.next(SignalType.Drained);
+        b.send(SignalType.Drain, { draining: false });
+        await new Promise(resolve => setTimeout(resolve, 20));
+
+        a.send("chat", {}, { receiver: b.id });
+        assert.strictEqual((await b.next("chat")).meta.sender, a.id);
+    });
+
+    it("doesn't pick a draining entry for a join", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+        const network = await a.register();
+
+        a.send(SignalType.Drain, { draining: true });
+        await a.next(SignalType.Drained);
+
+        const { meta } = b.send(SignalType.Join, { network: network.id });
+        assert.strictEqual((await b.next(SignalType.Unreachable)).payload.ref, meta.id);
+    });
+});
+
 describe("forwarding", { timeout: 5000 }, () => {
+
+    it("refuses a network.join a client sends itself", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+
+        b.send(NetworkType.Join, {}, { receiver: a.id });
+        assert.strictEqual((await b.next(SignalType.Error)).payload.code, "forbidden");
+    });
 
     it("forwards a message from peer to peer", async () => {
         const t = await setup();

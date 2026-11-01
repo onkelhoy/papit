@@ -88,6 +88,7 @@ export class SocketServer extends ws.WebSocketServer {
         socket.tokens = this.options.forward_rate ?? 200;
         socket.refilled_at = performance.now();
         socket.networks = new Set();
+        socket.draining = false;
 
         const existing = this.sockets.get(socket.id);
         if (existing)
@@ -157,11 +158,13 @@ export class SocketServer extends ws.WebSocketServer {
             if (meta.receiver === SERVER) return void this.handleSignal(socket, message);
             if (meta.type.startsWith("signal.")) return void this.error(socket, "forbidden", "signal messages may only be sent to the server", meta.id);
             if (meta.receiver === BROADCAST) return void this.error(socket, "unsupported", "the server does not broadcast", meta.id);
+            // a join only counts when it comes from here, after the password check
+            if (meta.type === NetworkType.Join) return void this.error(socket, "forbidden", "join through signal.join", meta.id);
 
             if (relay(meta, SERVER) !== "forward") return;
 
             const target = this.sockets.get(meta.receiver);
-            if (!target || target.readyState !== ws.WebSocket.OPEN)
+            if (!target || target.draining || target.readyState !== ws.WebSocket.OPEN)
             {
                 this.send(socket, SignalType.Unreachable, { receiver: meta.receiver, ref: meta.id });
                 return;
@@ -187,6 +190,8 @@ export class SocketServer extends ws.WebSocketServer {
             case SignalType.List: return this.send(socket, SignalType.Networks, { networks: this.list() });
             case SignalType.Join: return this.join(socket, payload, meta.id);
             case SignalType.Leave: return this.leave(socket, payload.network);
+            case SignalType.Merge: return this.merge(socket, payload, meta.id);
+            case SignalType.Drain: return this.drain(socket, payload);
             default: return this.error(socket, "unsupported", `unsupported message: ${meta.type}`, meta.id);
         }
     }
@@ -255,7 +260,7 @@ export class SocketServer extends ws.WebSocketServer {
             : undefined;
 
         const target = entry === undefined ? undefined : this.sockets.get(entry);
-        if (!entry || !target)
+        if (!entry || !target || target.draining)
         {
             return void this.send(socket, SignalType.Unreachable, { receiver: entry ?? "", ref });
         }
@@ -284,6 +289,29 @@ export class SocketServer extends ws.WebSocketServer {
             for (const member of network.members) this.sockets.get(member)?.networks.delete(id);
             this.networks.delete(id);
         }
+    }
+
+    // everything forwarded so far is ahead of this answer on the socket, so the client can close without losing any
+    private drain(socket: Socket, payload: PayloadMap[SignalType.Drain]) {
+        socket.draining = payload.draining;
+        if (payload.draining) this.send(socket, SignalType.Drained, {});
+    }
+
+    private merge(socket: Socket, payload: PayloadMap[SignalType.Merge], ref: string) {
+        const from = this.hosted(socket, payload.from, ref);
+        if (!from) return;
+
+        const network = this.networks.get(payload.network);
+        if (!network) return void this.error(socket, "not-found", "no such network", ref);
+        if (network === from) return void this.error(socket, "invalid", "a network can't merge with itself", ref);
+
+        const target = this.sockets.get(network.host);
+        if (!target || target.draining) return void this.send(socket, SignalType.Unreachable, { receiver: network.host, ref });
+
+        // the host checks the password: any client can send it a network.* directly, so the server can't vouch for this one
+        const { size, password, peer } = payload;
+        const merge = Message.Create({ type: NetworkType.Merge, sender: socket.id, receiver: network.host, network: network.id }, { network: this.info(from), size, ...(password ? { password } : {}), ...(peer ? { peer } : {}) });
+        target.send(merge.toBinary());
     }
 
     // helpers
