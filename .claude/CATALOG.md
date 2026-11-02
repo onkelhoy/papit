@@ -77,6 +77,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `data-structure`: classic structures (graph, priority queue and more)
 - `deep-merge`: recursive object merge
 - `vector`, `matrix`: fast math for games and graphics
+- `quaternion`: 3D rotations that compose and blend without gimbal lock
 
 ## network
 - `meta-json`: binary container of JSON metadata plus payload
