@@ -21,7 +21,7 @@ const EDGES = ["dependencies", "peerDependencies", "devDependencies"];
 
     const order = Information.getPriorityBatches(Arguments.instance, p => names.has(p.name)).flat();
     const flags = Arguments.has("ci") ? "--ci" : "";
-    const report = new Report("build", order.length);
+    const report = new Report("build", order.length, { flat: true });
 
     for (const node of order)
     {

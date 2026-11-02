@@ -9,6 +9,7 @@ const ACTIONS = !!process.env.GITHUB_ACTIONS;
 const MAX_LOG = 20_000; // a step summary is limited to 1MB
 const ICONS = { passed: "✓", flaky: "!", skipped: "-", failed: "✗" };
 const COLORS = { passed: "green", flaky: "yellow", skipped: "blue", failed: "red" };
+const WORDS = { passed: "success", failed: "error" };
 
 /** Where the publish build leaves the packages that failed, for publish to leave out. */
 export const BUILD_FAILED = path.join(os.tmpdir(), "papit-build-failed.json");
@@ -37,13 +38,15 @@ export function seconds(start) {
 /**
  * One line per package, its logs folded away on GitHub, and a table in the run's summary at the end.
  * A failure stays unfolded, with an annotation on the PR.
+ * With `flat` a package is a single `<index>/<size> <name> - <status>` line, and only a failure gets folded logs.
  */
 export class Report {
     rows = [];
 
-    constructor(title, total) {
+    constructor(title, total, { flat = false } = {}) {
         this.title = title;
         this.total = total;
+        this.flat = flat;
     }
 
     /** `status` is `passed`, `flaky`, `skipped` or `failed`. */
@@ -55,7 +58,15 @@ export class Report {
 
         if (status === "failed" && ACTIONS) console.log(`::error title=${this.title} failed::${name}`);
 
-        if (status === "failed")
+        if (this.flat)
+        {
+            Terminal.write(Terminal[COLORS[status]](`${ICONS[status]} ${this.rows.length}/${this.total} ${name} - ${WORDS[status] ?? status}`));
+
+            if (status !== "failed" || !text) return;
+            if (ACTIONS) console.log(`::group::view logs\n${text.slice(-MAX_LOG)}\n::endgroup::`);
+            else Terminal.write(text.slice(-MAX_LOG));
+        }
+        else if (status === "failed")
         {
             Terminal.write(Terminal.red(line));
             if (text) Terminal.write(text.slice(-MAX_LOG));
