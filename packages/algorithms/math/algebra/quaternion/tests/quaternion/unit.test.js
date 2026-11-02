@@ -68,6 +68,11 @@ describe("@papit/quaternion", () => {
             }
         });
 
+        it("turns around the plane's normal for opposite directions in that plane", () => {
+            const q = Quaternion.fromTo([1, 1, 0], [-1, -1, 0]);
+            assert.ok(Math.abs(Math.abs(q[2]) - 1) < 1e-6, `[${[...q]}] should turn around Z`);
+        });
+
         it("gives the identity for a zero vector", () => {
             close(Quaternion.fromTo([0, 0, 0], X), Quaternion.identity);
             close(Quaternion.fromTo(X, [0, 0, 0]), Quaternion.identity);

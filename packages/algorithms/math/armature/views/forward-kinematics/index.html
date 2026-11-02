@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armature | forward kinematics</title>
+    <link rel="stylesheet" href="../shared/style.css" />
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <canvas>Your browser does not support HTML canvas</canvas>
+    <div class="panel">
+        <label>shoulder <input name="shoulder" type="range" min="-3.14" max="3.14" step=".01" value="-.6"></label>
+        <label>elbow <input name="elbow" type="range" min="-3.14" max="3.14" step=".01" value=".8"></label>
+        <label>wrist <input name="wrist" type="range" min="-3.14" max="3.14" step=".01" value="-.4"></label>
+        <label>forearm length <input name="length" type="range" min="40" max="200" step="1" value="120"></label>
+        <label><input name="mirror" type="checkbox"> mirror, <code>scale.x = -1</code> on the GameObject</label>
+    </div>
+</body>
+
+</html>

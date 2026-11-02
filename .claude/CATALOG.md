@@ -78,6 +78,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `deep-merge`: recursive object merge
 - `vector`, `matrix`: fast math for games and graphics
 - `quaternion`: 3D rotations that compose and blend without gimbal lock
+- `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
 
 ## network
 - `meta-json`: binary container of JSON metadata plus payload
