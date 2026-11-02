@@ -7,7 +7,7 @@
     "typescript",
     "shape"
   ],
-  "version": "0.0.1",
+  "version": "0.0.4",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -76,5 +76,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.3"
 }
