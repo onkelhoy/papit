@@ -58,7 +58,7 @@
   },
   "devDependencies": {
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.1",
+    "@papit/game-shape": "0.0.4",
     "@papit/polygon": "0.0.1",
     "@papit/polygon-intersection": "0.0.1",
     "@papit/theme": "*",
@@ -80,5 +80,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.1"
 }

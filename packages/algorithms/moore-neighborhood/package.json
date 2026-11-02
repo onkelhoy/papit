@@ -59,7 +59,7 @@
   },
   "devDependencies": {
     "@papit/codeblock": "*",
-    "@papit/game-shape": "0.0.1",
+    "@papit/game-shape": "0.0.4",
     "@papit/theme": "*",
     "@papit/translator": "*",
     "@playwright/test": "1.64.1",
@@ -83,5 +83,6 @@
         "htmlprefix": "pap"
       }
     }
-  }
+  },
+  "remoteVersion": "0.0.1"
 }
