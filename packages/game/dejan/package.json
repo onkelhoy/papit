@@ -58,7 +58,7 @@
     "@papit/button": "0.1.10",
     "@papit/confetti": "0.0.2",
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.1",
+    "@papit/game-shape": "0.0.4",
     "@papit/icon": "0.1.13",
     "@papit/input": "0.0.10",
     "@papit/moore-neighborhood": "0.0.1",
