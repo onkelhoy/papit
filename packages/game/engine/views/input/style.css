@@ -1,0 +1,32 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: var(--text, #080808);
+    margin: 0;
+}
+
+canvas {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    touch-action: none;
+}
+
+dl {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 4px 16px;
+    margin: 0;
+    pointer-events: none;
+}
+
+dd {
+    margin: 0;
+}

@@ -1,13 +1,20 @@
-export type SettingCallback = (delta: number) => void;
+import type { Layer2D } from "./engine/layer-2d";
+import type { Layer3D } from "./engine/layer-3d";
+
+export type SettingCallback = (deltaTimeInMilliseconds: number, deltaTimeInSeconds: number) => void;
+
+export type Theme = "light" | "dark";
 
 export type BaseSetting = {
+    /** Case-insensitive, `main` or `default` makes this the default layer. */
+    name: string;
     query: string;
-    state: "running" | "paused";
+    global: boolean;
     width: number;
     height: number;
-    timer: null | number;
-    previous: null | number;
     callbacks: SettingCallback[];
+    /** Follows the light and dark theme of the page. One layer with this on is enough. */
+    theme: boolean;
     documentElement: Document | HTMLElement | ShadowRoot;
 }
 export type StandardSetting = BaseSetting & {
@@ -29,26 +36,17 @@ export type WebGL2Setting = BaseSetting & {
 
 export type Setting = StandardSetting | WebGLSetting | WebGL2Setting; // |BitmapSetting;
 
-// info types 
-type BaseInfo = {
-    type: "standard" | "webgl";
-    setting: Setting;
-    element: HTMLCanvasElement;
-}
-export type StandardInfo = BaseInfo & {
-    type: "standard";
-    context: CanvasRenderingContext2D;
-}
-
-type GLInfo = BaseInfo & {
-    type: "webgl";
-    context: WebGLRenderingContext | WebGL2RenderingContext;
-    programs: Map<string, WebGLProgram>;
-}
-
-export type InfoType = StandardInfo | GLInfo;
-
 // web GL types 
 export type ShaderSource = string | {
     url: string;
 }
+
+// layers
+export type LayerSelector = Partial<Setting> | string;
+
+type LayerName<S> = S extends { name: infer Name extends string } ? Lowercase<Name> : never;
+type LayerOf<S> = S extends { type: "webgl" | "webgl2" } ? Layer3D : Layer2D;
+
+export type EngineLayers<T extends readonly LayerSelector[]> =
+    { [S in T[number]as LayerName<S>]: LayerOf<S> }
+    & { [position: `layer${number}`]: Layer2D | Layer3D };

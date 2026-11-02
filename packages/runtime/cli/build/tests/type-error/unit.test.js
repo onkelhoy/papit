@@ -66,4 +66,66 @@ describe("@papit/build --error with a TypeScript error", () => {
     it("exits non-zero", () => {
         assert.notStrictEqual(result.status, 0);
     });
+
+    it("fails again on the next run, without --error", () => {
+        const env = { ...process.env, PWD: pkg };
+        delete env.npm_config_local_prefix;
+
+        const again = spawnSync(process.execPath, [bin, "--ci"], { cwd: pkg, env, encoding: "utf-8" });
+
+        assert.notStrictEqual(again.status, 0);
+        assert.doesNotMatch(again.stdout, /skipped/);
+    });
+});
+
+describe("@papit/build with a stale declaration", () => {
+    let root;
+    let pkg;
+
+    before(() => {
+        root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), "papit-")));
+        pkg = path.join(root, "packages", "stale");
+
+        write(path.join(root, "package.json"), { name: "@fixture/root", private: true, workspaces: ["packages/*"] });
+        write(path.join(pkg, "package.json"), {
+            name: "@fixture/stale",
+            version: "0.0.0",
+            type: "module",
+            exports: { ".": { import: "./lib/bundle.js", types: "./lib/bundle.d.ts" } },
+            papit: { type: "node" },
+        });
+        write(path.join(pkg, "tsconfig.json"), {
+            compilerOptions: {
+                target: "es2022",
+                module: "esnext",
+                moduleResolution: "bundler",
+                noEmitOnError: true,
+                skipLibCheck: true,
+                strict: true,
+                outDir: "lib",
+                rootDir: "src",
+                declaration: true,
+            },
+            include: ["src"],
+        });
+        write(path.join(pkg, "src", "index.ts"), "export * from \"./utils\";\n");
+        write(path.join(pkg, "src", "utils", "index.ts"), "export const fresh = 1;\n");
+        write(path.join(pkg, ".temp", "ts-bundle", "utils.d.ts"), "export declare const old: number;\n");
+
+        const env = { ...process.env, PWD: pkg };
+        delete env.npm_config_local_prefix;
+
+        spawnSync(process.execPath, [bin, "--error", "--ci"], { cwd: pkg, env, encoding: "utf-8" });
+    });
+
+    after(() => {
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it("ignores a declaration whose source is gone", () => {
+        const content = fs.readFileSync(path.join(pkg, "lib", "bundle.d.ts"), { encoding: "utf-8" });
+
+        assert.match(content, /fresh/);
+        assert.doesNotMatch(content, /old/);
+    });
 });

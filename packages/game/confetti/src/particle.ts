@@ -187,7 +187,8 @@ export class ParticleSystem {
             // Remove dead particles or ones that fall off screen
             if (p.life <= 0 || p.y > canvasHeight + 50 || p.x < -50 || p.x > canvasHeight + 50)
             {
-                this.particles.splice(i, 1);
+                this.particles[i] = this.particles[this.particles.length - 1];
+                this.particles.pop();
             }
         }
 
@@ -212,8 +213,8 @@ export class ParticleSystem {
             ctx.strokeStyle = p.color;
 
             // Add slight shadow for depth
-            ctx.shadowColor = 'rgba(0,0,0,0.1)';
-            ctx.shadowBlur = 2;
+            // ctx.shadowColor = 'rgba(0,0,0,0.1)';
+            // ctx.shadowBlur = 2;
 
             if (p.shape === 'rect')
             {

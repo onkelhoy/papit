@@ -2,7 +2,7 @@
 // system 
 import { bind, CustomElement, html, property } from "@papit/web-component";
 
-import { Engine } from "@papit/game-engine";
+import { GameEngine } from "@papit/game-engine";
 
 // local 
 import sheet from "./style.css" with { type: "css" };
@@ -17,7 +17,7 @@ type Placement =
 export class Confetti extends CustomElement {
     static sheet = sheet;
 
-    private engine!: Engine;
+    private engine!: GameEngine;
     private particleSystem!: ParticleSystem;
     private isLooping = false;
 
@@ -84,7 +84,7 @@ export class Confetti extends CustomElement {
             speedMin: 2,
             speedMax: 6,
             sizeMin: 4,
-            sizeMax: 10,
+            sizeMax: 15,
             spread: Math.PI * 1.0,
             upwardBias: 0.8,
             canvasWidth: width,
@@ -104,12 +104,10 @@ export class Confetti extends CustomElement {
     firstRender(): void {
         super.firstRender();
 
-        this.engine = new Engine({
+        this.engine = new GameEngine({
             query: "canvas",
             documentElement: this.shadowRoot!,
         });
-
-        this.engine.resizeCanvasToDisplaySize();
     }
 
     private getPosition(): { x: number, y: number } {
@@ -162,43 +160,62 @@ export class Confetti extends CustomElement {
         return positions[placement] || positions['bottom'];
     }
 
-    start({
+    play({
         amount = 100,
         sound = true,
         placement,
+        x,
+        y,
+        clear = false,
     }: Partial<{
         amount: number,
-        sound: boolean,
+        sound: boolean | Partial<{ pop: boolean, yay: boolean, horn: boolean }>,
         placement: Placement,
+        x: number,
+        y: number,
+        clear: boolean,
     }> = {}) {
         if (placement)
         {
             this.placement = placement;
         }
+        if (x !== undefined && y !== undefined)
+        {
+            this.x = x;
+            this.y = y;
+        }
 
         // Play sounds
         if (sound)
         {
-            Confetti.popSound.pause();
-            Confetti.popSound.currentTime = 0;
-            Confetti.popSound.volume = 0.3;
-            Confetti.popSound.play();
+            if (sound === true || sound.pop)
+            {
+                Confetti.popSound.pause();
+                Confetti.popSound.currentTime = 0;
+                Confetti.popSound.volume = 0.3;
+                Confetti.popSound.play();
+            }
 
-            Confetti.yaySound.pause();
-            Confetti.yaySound.currentTime = 0;
-            Confetti.yaySound.volume = 0.23;
-            Confetti.yaySound.play();
+            if (sound === true || sound.yay)
+            {
+                Confetti.yaySound.pause();
+                Confetti.yaySound.currentTime = 0;
+                Confetti.yaySound.volume = 0.23;
+                Confetti.yaySound.play();
+            }
 
-            setTimeout(() => {
-                Confetti.hornSound.pause();
-                Confetti.hornSound.currentTime = 0;
-                Confetti.hornSound.volume = 0.08;
-                Confetti.hornSound.play();
-            }, 100);
+            if (sound === true || sound.horn)
+            {
+                setTimeout(() => {
+                    Confetti.hornSound.pause();
+                    Confetti.hornSound.currentTime = 0;
+                    Confetti.hornSound.volume = 0.08;
+                    Confetti.hornSound.play();
+                }, 100);
+            }
         }
 
-        this.engine.resizeCanvasToDisplaySize();
-        this.particleSystem.clear();
+        if (clear) this.particleSystem.clear();
 
         this.particleSystem.config.canvasWidth = this.engine.width;
         this.particleSystem.config.canvasHeight = this.engine.height;
@@ -254,12 +271,12 @@ export class Confetti extends CustomElement {
         this.x = Math.max(0, Math.min(canvas.width, x));
         this.y = Math.max(0, Math.min(canvas.height, y));
 
-        this.start();
+        this.play();
     }
 
     @bind
     private handleControlClick() {
-        this.start();
+        this.play();
     }
 
     render() {

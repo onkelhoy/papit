@@ -62,26 +62,51 @@ export class Vector extends Float32Array {
     add(...values: number[]): this;
     add(value: Value): this;
     public add(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v + value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value + coerced[index % coerced.length]);
     }
     subtract(...values: number[]): this;
     subtract(value: Value): this;
     public subtract(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v - value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value - coerced[index % coerced.length]);
     }
     multiply(...values: number[]): this;
     multiply(value: Value): this;
     public multiply(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v * value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value * coerced[index % coerced.length]);
     }
     divide(...values: number[]): this;
     divide(value: Value): this;
     public divide(value: Value, ...rest: number[]): this {
+        if (typeof value === 'number' && rest.length === 0)
+        {
+            return this.mapThis(v => v / value);
+        }
         const coerced = Vector.coerce(value, ...rest);
         return this.mapThis((value, index) => value / coerced[index % coerced.length]);
+    }
+    /** Moves this vector towards `value`: 0 stays, 1 lands on it. */
+    public lerp(value: Value, t: number): this {
+        const coerced = Vector.coerce(value);
+        for (let i = 0; i < this.length; i++)
+        {
+            this[i] += (coerced[i % coerced.length] - this[i]) * t;
+        }
+        return this;
     }
     public normalize(): this {
         const mag = this.magnitude;
@@ -109,8 +134,14 @@ export class Vector extends Float32Array {
 
         return data;
     }
-    // public assign(vector: Value, ...rest: number[]) {
 
+    // public assign(vector: Value): void;
+    // public assign(...values: number[]): void;
+    // public assign(vector: Value, ...rest: number[]) {
+    //     if (typeof vector === "number")
+    //     {
+
+    //     }
     // }
 
     public override map(callbackfn: (value: number, index: number, array: this) => number): this {
@@ -128,14 +159,20 @@ export class Vector extends Float32Array {
     static distance(a: Value, b: Value) {
         return this.subtract(a, b).magnitude;
     }
+    // static coerce(value: Value, ...rest: number[]) {
+    //     return toArray(value, ...(typeof value === "number" ? [value] : rest))
+    // }
     static coerce(value: Value, ...rest: number[]) {
-        return toArray(value, ...(typeof value === "number" ? [value] : rest))
+        return toArray(value, ...rest)
     }
     static dot(a: Value, b: Value) {
         return new this(a).dot(b);
     }
 
     // vector returns 
+    static lerp<T extends typeof Vector>(this: T, a: Value, b: Value, t: number): InstanceType<T> {
+        return new this(a).lerp(b, t) as InstanceType<T>;
+    }
     static create<T extends typeof Vector>(this: T, value: Value): InstanceType<T> {
         return new this(value) as InstanceType<T>;
     }
@@ -162,6 +199,19 @@ export class Vector2 extends Vector {
         const mag = this.magnitude;
         this.x = Math.cos(value) * mag;
         this.y = Math.sin(value) * mag;
+    }
+
+    /**
+     * Returns a new Vector2 perpendicular to this one.
+     * Defaults to (-y, x) — a 90° counter-clockwise rotation.
+     * Pass `true` for clockwise: (y, -x).
+     */
+    public perpendicular(clockwise: boolean = false): Vector2 {
+        if (clockwise)
+        {
+            return new Vector2(this.y, -this.x);
+        }
+        return new Vector2(-this.y, this.x);
     }
 
     static perpendicular(a: Value, b: Value, windingorder: "clockwise" | "counter-clockwise" = "clockwise") {

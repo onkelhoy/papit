@@ -67,8 +67,10 @@ export class Graph {
                 dependants.forEach(dep => {
                     const dnode = this.get(dep);
                     if (!dnode) return;
-                    // Add edge in the graph
-                    this.graph.addEdge(node.name, dnode.name, "dependencies");
+                    // Add edge in the graph, with the type it was declared as
+                    const type = ["dependencies", "peerDependencies", "devDependencies"]
+                        .find(type => (dnode.packageJSON as any)[type]?.[node.name]) ?? "dependencies";
+                    this.graph.addEdge(node.name, dnode.name, type);
                 });
             });
         } catch (error)
@@ -176,7 +178,16 @@ export class Graph {
         {
             const allIncluded = new Set(batches.flatMap(b => b.map(n => n.name)));
             const missing = packages.filter(p => !allIncluded.has(p.name) && filterCallback(p));
-            if (missing.length > 0)
+            if (missing.length > 0 && sortFilter.includes("devDependencies"))
+            {
+                // a devDependency cycle leaves everything after it unsorted, what they need to run still has an order
+                batches.push(...this.getOrder({
+                    packages: missing,
+                    sortFilter: ["dependencies", "peerDependencies"],
+                    filterCallback,
+                }));
+            }
+            else if (missing.length > 0)
             {
                 batches.push(missing);
             }

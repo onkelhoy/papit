@@ -90,6 +90,8 @@ export async function tsBundle(
 
     // lets clear the output folder
     fs.rmSync(path.join(location, "lib", "ts-output"), { recursive: true, force: true });
+    // a declaration left by a deleted source would otherwise win over the new one, utils.d.ts over utils/index.d.ts
+    fs.rmSync(tempOutDir, { recursive: true, force: true });
 
     // if (!fs.existsSync(path.join(location, "reports"))) {
     //     fs.mkdirSync(path.join(location, "reports"), { recursive: true });
@@ -201,12 +203,18 @@ export async function tsBundle(
             return true;
         };
 
-        Extractor.invoke(extractorConfig, {
-            localBuild: true,
-            showVerboseMessages: false,
-        });
+        try
+        {
+            Extractor.invoke(extractorConfig, {
+                localBuild: true,
+                showVerboseMessages: false,
+            });
+        }
+        finally
+        {
+            process.stdout.write = originalWrite;
+        }
 
-        process.stdout.write = originalWrite;
         keepAugmentations(tempEntry, entry.output);
         // logs.forEach(log => originalWrite(log));
         if (logs.length > 0)

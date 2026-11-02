@@ -1,6 +1,6 @@
 {
   "name": "@papit/confetti",
-  "description": "a simple to use confetti",
+  "description": "A confetti web component that fires canvas particles, for celebrations on a page.",
   "keywords": [
     "papit",
     "web-component",
@@ -59,6 +59,7 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@papit/game-engine": "0.2.0",
     "@papit/web-component": "0.0.14"
   },
   "peerDependencies": {
