@@ -150,14 +150,20 @@ export class Quaternion extends Vector {
         return out;
     }
 
-    /** A half turn around any axis perpendicular to `x, y, z`. */
+    /**
+     * A half turn around the axis `x, y, z` leans on the least, made perpendicular to `x, y, z`.
+     * For a direction in a plane that's the plane's normal, so 2D stays 2D.
+     */
     private setHalfTurn(x: number, y: number, z: number): this {
-        const smallest = Math.min(Math.abs(x), Math.abs(y), Math.abs(z));
+        const ax = Math.abs(x), ay = Math.abs(y), az = Math.abs(z);
+        const projected = (az <= ax && az <= ay ? z : ay <= ax ? y : x) / (x * x + y * y + z * z);
 
-        // the cross product with the axis `x, y, z` points least along
-        if (smallest === Math.abs(x)) return this.setAxisAngle(0, -z, y, Math.PI);
-        if (smallest === Math.abs(y)) return this.setAxisAngle(z, 0, -x, Math.PI);
-        return this.setAxisAngle(-y, x, 0, Math.PI);
+        return this.setAxisAngle(
+            (az > ax && ay > ax ? 1 : 0) - x * projected,
+            (ay <= ax && ay < az ? 1 : 0) - y * projected,
+            (az <= ax && az <= ay ? 1 : 0) - z * projected,
+            Math.PI,
+        );
     }
 
     /** Writes the Hamilton product `a * b`, which applies `b` first and then `a`. `out` can be `a` or `b`. */
