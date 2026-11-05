@@ -96,6 +96,14 @@ function createWorld({ seed = 1 } = {}) {
       for (const network of networks) if (network.me === id) network.bootstrap.close();
     },
 
+    /** Goes silent the way a closed tab does before ICE fails: links stay open but carry nothing, timers stop, the socket goes. */
+    freeze(id) {
+      killed.add(id);
+      for (const [timer, entry] of timers) if (entry.owner === id) timers.delete(timer);
+      for (const { a, b, link } of tracked) if (a === id || b === id) link.send = () => true;
+      for (const network of networks) if (network.me === id) network.bootstrap.close();
+    },
+
     /** Closes every link between the groups and blocks new ones until heal(). */
     split(a, b) {
       groups = [new Set(a), new Set(b)];

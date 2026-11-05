@@ -67,7 +67,7 @@ describe("update and unregister", () => {
 });
 
 describe("join", () => {
-    it("forwards to the lowest anchor with the newcomer as sender, and counts it", () => {
+    it("forwards to the lowest anchor with the newcomer as sender, and counts it once admitted", () => {
         const r = make();
         r.register("a", reg);
         const out = r.join("b", { network: "n1", profile: { name: "b" } }, "m");
@@ -75,7 +75,39 @@ describe("join", () => {
         assert.strictEqual(out.length, 1);
         assert.strictEqual(out[0].to, "a");
         assert.strictEqual(out[0].message.meta.sender, "b");
+        assert.strictEqual(r.list()[0].size, 1);
+
+        r.admitted("a", "n1", "b");
         assert.strictEqual(r.list()[0].size, 2);
+    });
+
+    it("doesn't count a newcomer the entry rejected or never answered", () => {
+        const r = make();
+        r.register("a", reg);
+        r.join("b", { network: "n1" }, "m");
+        r.join("c", { network: "n1" }, "m");
+        r.rejected("a", "n1", "b");
+        r.admitted("a", "n1", "b");
+        assert.strictEqual(r.list()[0].size, 1);
+        assert.deepStrictEqual(r.networks.get("n1").pending, ["c"]);
+
+        r.drop("c");
+        assert.deepStrictEqual(r.networks.get("n1").pending, []);
+    });
+
+    it("only takes an admit from a member", () => {
+        const r = make();
+        r.register("a", reg);
+        r.join("b", { network: "n1" }, "m");
+        r.admitted("x", "n1", "b");
+        assert.strictEqual(r.list()[0].size, 1);
+    });
+
+    it("never picks a pending newcomer as entry", () => {
+        const r = make({ pickEntry: (_, members) => members[members.length - 1] });
+        r.register("a", reg);
+        r.join("b", { network: "n1" }, "m");
+        assert.strictEqual(first(r.join("c", { network: "n1" }, "m"), NetworkType.Join).to, "a");
     });
 
     it("checks the password and the network", () => {
@@ -102,7 +134,9 @@ describe("join", () => {
         const r = make({ pickEntry: (_, members) => members[members.length - 1], reachable: peer => peer !== "c" });
         r.register("a", reg);
         r.join("b", { network: "n1" }, "m");
+        r.admitted("a", "n1", "b");
         assert.strictEqual(first(r.join("c", { network: "n1" }, "m"), NetworkType.Join).to, "b");
+        r.admitted("b", "n1", "c");
         assert.strictEqual(types(r.join("d", { network: "n1" }, "m")).join(), SignalType.Unreachable);
         assert.strictEqual(r.list()[0].size, 3);
     });
@@ -180,6 +214,7 @@ describe("leave, unanchor and drop", () => {
         const r = make();
         r.register("a", reg);
         r.join("b", { network: "n1" }, "m");
+        r.admitted("a", "n1", "b");
         assert.strictEqual(r.leave("b", "n1").length, 0);
         assert.strictEqual(r.list()[0].size, 1);
     });

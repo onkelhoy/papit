@@ -519,6 +519,28 @@ test.describe("chord", () => {
     expect(result.spliced).toBe(true);
   });
 
+  test("a node left alone behind a silent peer takes joins again", async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const w = window as any;
+      const { world, nodes } = await w.build(["a", "h"], { topology: "chord" });
+      await w.until(world, () => w.chordTruth(["a", "h"]).converged(nodes), 30_000);
+
+      // a's tab closes: its link to h still looks open, and the server drops the network with its anchor
+      world.freeze("a");
+      await world.run(5_000);
+      const alone = nodes.h.topology.successors.join() === "h";
+      const { id } = await nodes.h.anchor().then(() => nodes.h.info);
+
+      const n = world.node("n");
+      const joining = n.join(id).then(() => "joined", (error: Error) => error.message);
+      await world.run(20_000);
+      return { alone, joined: await joining };
+    });
+
+    expect(result.alone).toBe(true);
+    expect(result.joined).toBe("joined");
+  });
+
   test("a broadcast reaches all 32 exactly once", async ({ page }) => {
     const counts = await page.evaluate(async (ids) => {
       const w = window as any;

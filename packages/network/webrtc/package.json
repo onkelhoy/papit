@@ -15,7 +15,7 @@
     "dht",
     "merge"
   ],
-  "version": "0.1.1",
+  "version": "0.1.2",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -61,10 +61,10 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/peer-message": "0.1.1"
+    "@papit/peer-message": "0.1.2"
   },
   "devDependencies": {
-    "@papit/signal-server": "0.1.1",
+    "@papit/signal-server": "0.1.2",
     "@playwright/test": "1.64.1",
     "playwright": "1.64.1",
     "typescript": "5.9.3"
@@ -106,5 +106,5 @@
       }
     }
   },
-  "remoteVersion": "0.1.0"
+  "remoteVersion": "0.1.1"
 }

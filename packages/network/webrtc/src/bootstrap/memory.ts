@@ -1,4 +1,4 @@
-import { Registry, read, SignalType, uuid } from "@papit/peer-message";
+import { NetworkType, Registry, read, SignalType, uuid } from "@papit/peer-message";
 import type { Message, NetworkInfo, PayloadMap, PeerId, RegistryOptions, Reply } from "@papit/peer-message";
 
 import type { AnchorResult, Bootstrap, Carrier, JoinRequest, NetworkDraft, NetworkUpdate } from "../types";
@@ -40,6 +40,10 @@ export class MemoryServer {
 
     const targets = this.sockets.get(message.meta.receiver);
     if (!targets) return false;
+
+    const { type, network, sender, receiver } = message.meta;
+    if (network && type === NetworkType.Admit) this.registry.admitted(sender, network, receiver);
+    else if (network && type === NetworkType.Reject) this.registry.rejected(sender, network, receiver);
 
     this.carried++;
     const copy = bytes.slice();

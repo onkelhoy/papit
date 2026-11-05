@@ -6,10 +6,14 @@ import type { NetworkInfo, PayloadMap, PeerId } from "./types";
 /** A message the caller must deliver: `message` goes to `to`. Server messages have `sender: SERVER`. */
 export type Reply = { to: PeerId; message: Message };
 
-/** What the registry keeps per network. `anchors` are the peers keeping a socket, in join order; `members` also holds peers that joined through `join`. */
+/**
+ * What the registry keeps per network. `anchors` are the peers keeping a socket, in join order; `members` also
+ * holds peers an entry admitted. `pending` are newcomers whose join went out but who aren't admitted yet.
+ */
 export type RegisteredNetwork = Omit<NetworkInfo, "size" | "anchors" | "entries"> & {
     anchors: PeerId[];
     members: PeerId[];
+    pending: PeerId[];
     /** Wanted number of anchors, when the creator asked for more than the one that registers. */
     target?: number;
     keyHash?: string;
@@ -42,7 +46,7 @@ export class Registry {
 
     /** The network as clients see it: no hashes, `size` counts members. */
     public info(network: RegisteredNetwork): NetworkInfo {
-        const { anchors, members, target, keyHash, passwordHash, ...info } = network;
+        const { anchors, members, pending, target, keyHash, passwordHash, ...info } = network;
         const result: NetworkInfo = { ...info, size: members.length };
         if (target !== undefined) result.anchors = target;
         return result;
@@ -61,6 +65,7 @@ export class Registry {
             private: !!payload.private,
             anchors: [from],
             members: [from],
+            pending: [],
         };
         if (payload.meta) network.meta = payload.meta;
         if (payload.media) network.media = payload.media;
@@ -97,7 +102,7 @@ export class Registry {
         return [];
     }
 
-    /** Forwards the join to the entry and counts the newcomer as a member. */
+    /** Forwards the join to the entry. The newcomer is pending until the entry's `network.admit` passes (`admitted`). */
     public join(from: PeerId, payload: PayloadMap[SignalType.Join], ref: string): Reply[] {
         const network = this.networks.get(payload.network);
         if (!network) return [failure(from, "not-found", "no such network", ref)];
@@ -119,12 +124,25 @@ export class Registry {
             return [reply(from, SignalType.Unreachable, { receiver: entry ?? "", ref })];
         }
 
-        if (!payload.merge && !network.members.includes(from)) network.members.push(from);
+        if (!payload.merge && !network.members.includes(from) && !network.pending.includes(from)) network.pending.push(from);
 
         // the password was checked here, it is not passed on
         const { profile, merge } = payload;
         const join = Message.Create({ type: NetworkType.Join, sender: from, receiver: entry, network: network.id }, { ...(profile ? { profile } : {}), ...(merge ? { merge } : {}) });
         return [{ to: entry, message: join }];
+    }
+
+    /** `entry`, a member of network `id`, admitted `peer`: a pending newcomer becomes a member. */
+    public admitted(entry: PeerId, id: string, peer: PeerId) {
+        const network = this.networks.get(id);
+        if (!network || !network.members.includes(entry) || !remove(network.pending, peer)) return;
+        network.members.push(peer);
+    }
+
+    /** `entry`, a member of network `id`, rejected `peer`: it is no longer pending. */
+    public rejected(entry: PeerId, id: string, peer: PeerId) {
+        const network = this.networks.get(id);
+        if (network?.members.includes(entry)) remove(network.pending, peer);
     }
 
     /**
@@ -138,7 +156,7 @@ export class Registry {
         if (!network)
         {
             const { size, anchors, entries, ...rest } = info;
-            const created: RegisteredNetwork = { ...rest, anchors: [peer], members: [peer], keyHash };
+            const created: RegisteredNetwork = { ...rest, anchors: [peer], members: [peer], pending: [], keyHash };
             if (anchors !== undefined) created.target = anchors;
             this.networks.set(created.id, created);
             return [reply(from, SignalType.Anchored, { network: created.id, ok: true, existed: false }), ...this.announce(created)];
@@ -153,6 +171,7 @@ export class Registry {
         if (network.anchors.length >= (network.target ?? 1)) return [answer(false)];
 
         network.anchors.push(peer);
+        remove(network.pending, peer);
         if (!network.members.includes(peer)) network.members.push(peer);
         if (network.keyHash === undefined) network.keyHash = keyHash;
         return [answer(true), ...this.announce(network)];
@@ -171,6 +190,7 @@ export class Registry {
         const network = this.networks.get(id);
         if (!network) return [];
 
+        remove(network.pending, from);
         const index = network.members.indexOf(from);
         if (index < 0) return [];
         network.members.splice(index, 1);
@@ -214,6 +234,14 @@ export class Registry {
         if (!network.anchors.includes(from)) return [failure(from, "forbidden", "only an anchor can change a network", ref)];
         return network;
     }
+}
+
+/** Removes `peer` from `list`; true when it was there. */
+function remove(list: PeerId[], peer: PeerId) {
+    const index = list.indexOf(peer);
+    if (index < 0) return false;
+    list.splice(index, 1);
+    return true;
 }
 
 function reply<T extends keyof PayloadMap>(to: PeerId, type: T, payload: PayloadMap[T]): Reply {
