@@ -2,6 +2,7 @@ import { describe, it, afterEach } from "node:test";
 import assert from "node:assert";
 import http from "node:http";
 import { once } from "node:events";
+import { readFileSync } from "node:fs";
 
 import WebSocket from "ws";
 import { Arguments } from "@papit/arguments";
@@ -786,6 +787,23 @@ describe("http", { timeout: 5000 }, () => {
             assert.strictEqual(response.status, 200);
             assert.strictEqual(response.headers.get("access-control-allow-origin"), "*");
             assert.deepStrictEqual(await response.json(), { ok: true });
+        }
+        finally
+        {
+            close();
+        }
+    });
+
+    it("serves GET /version with the package name and version", async () => {
+        Arguments.set("port", "0");
+        const server = start();
+        try
+        {
+            if (!server.listening) await once(server, "listening");
+            const response = await fetch(`http://localhost:${server.address().port}/version`);
+            const pkg = JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
+            assert.strictEqual(response.status, 200);
+            assert.deepStrictEqual(await response.json(), { name: pkg.name, version: pkg.version });
         }
         finally
         {

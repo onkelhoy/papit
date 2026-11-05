@@ -13,7 +13,7 @@
     "registry",
     "anchors"
   ],
-  "version": "0.1.0",
+  "version": "0.1.1",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -74,5 +74,5 @@
     "main": "peer-message",
     "components": {}
   },
-  "remoteVersion": "0.0.4"
+  "remoteVersion": "0.1.0"
 }

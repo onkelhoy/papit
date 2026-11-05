@@ -1,4 +1,4 @@
-import { PeerId, read, SERVER, SignalType } from "@papit/peer-message";
+import { Message, PeerId, read, SERVER, SignalType } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
 import type { Link } from "../link";
@@ -12,17 +12,22 @@ export const MAX_RECONNECT_DELAY = 5000;
  * `Link` to the signalling server over a WebSocket (`id` is `SERVER`). Keeps trying to connect, and to
  * reconnect, with a backoff capped at `MAX_RECONNECT_DELAY`, and queues what is sent meanwhile, in order.
  * `"close"` fires only once it gives up (`attempts`, `timeout`) or `close()` is called.
+ * It keeps one peer id: the first one the server assigned, or `resume`. A new connection gets a new
+ * id, so it sends `signal.resume` first and holds the queue until the server agrees. A server without
+ * resume answers `unsupported`; the socket then talks as the new id, the way it did before resume.
  *
- * @fires welcome - `CustomEvent<PeerId>`, the server assigned this client's id (again after every reconnect)
+ * @fires welcome - `CustomEvent<PeerId>`, ready to talk as `me` (again after every reconnect)
  * @fires open - connected (again)
  * @fires disconnect - the socket dropped, a reconnect is scheduled
  * @fires close - closed for good
- * @fires error - `type: "limit"` when `attempts` or `timeout` ran out
+ * @fires error - `type: "limit"` when `attempts` or `timeout` ran out, `type: "resume"` when the server refused the peer id (the socket closes)
  */
 export class SocketLink extends Emitter implements Link {
   public readonly id = SERVER;
-  /** The id the server assigned, null until `"welcome"`. */
+  /** The id this socket talks as, null until `"welcome"`. */
   public me: PeerId | null = null;
+  /** The welcome token that proves the peer id, null when the server sends none. */
+  public token: string | null = null;
 
   private ws: WebSocket | null = null;
   private attempts = 0;
@@ -30,6 +35,9 @@ export class SocketLink extends Emitter implements Link {
   private deadline: ReturnType<typeof setTimeout> | null = null;
   private offline: Uint8Array[] = [];
   private welcomed = false;
+  private peer: PeerId | null = null;
+  // the resume under way: its message id and the id the server assigned this connection
+  private resuming: { ref: string; id: PeerId } | null = null;
   private closed = false;
   private readonly maxAttempts: number;
 
@@ -39,6 +47,8 @@ export class SocketLink extends Emitter implements Link {
   ) {
     super();
     this.maxAttempts = options.attempts ?? Infinity;
+    this.peer = options.resume?.peer ?? null;
+    this.token = options.resume?.token ?? null;
     this.startDeadline();
     this.connect();
   }
@@ -108,6 +118,7 @@ export class SocketLink extends Emitter implements Link {
     if (!ws) return null;
 
     this.welcomed = false;
+    this.resuming = null;
     ws.removeEventListener("message", this.handleMessage);
     ws.removeEventListener("error", this.handleError);
     ws.removeEventListener("open", this.handleOpen);
@@ -140,16 +151,48 @@ export class SocketLink extends Emitter implements Link {
 
     const bytes = new Uint8Array(event.data);
     const message = read(bytes);
-    if (message?.meta.type === SignalType.Welcome && message.meta.sender === SERVER)
-    {
-      const previous = this.me;
-      this.me = message.payload.id;
-      this.welcomed = true;
-      this.flush(previous);
-      this.emit("welcome", this.me);
-    }
+    if (message?.meta.sender === SERVER) this.handleServer(message);
 
     this.emit("message", bytes);
+  }
+
+  private handleServer(message: Message) {
+    const { type } = message.meta;
+    if (type === SignalType.Welcome)
+    {
+      const { id, token } = message.payload as { id: PeerId; token?: string };
+      if (this.peer === null || this.peer === id)
+      {
+        this.peer = id;
+        if (token) this.token = token;
+        return this.ready(id);
+      }
+
+      const resume = Message.Create({ type: SignalType.Resume, sender: id, receiver: SERVER }, this.token ? { peer: this.peer, token: this.token } : { peer: this.peer });
+      this.resuming = { ref: resume.meta.id, id };
+      this.ws!.send(resume.toBinary(true));
+      return;
+    }
+
+    if (type === SignalType.Resumed && this.resuming) return this.ready(this.peer!);
+
+    const resuming = this.resuming;
+    if (type !== SignalType.Error || !resuming) return;
+    const { code, message: reason, ref } = message.payload as { code: string; message: string; ref?: string };
+    if (ref !== resuming.ref) return;
+
+    if (code === "unsupported") return this.ready(resuming.id);
+    this.error("resume", `the server refused the peer id ${this.peer}: ${reason}`, { peer: this.peer, code });
+    this.close();
+  }
+
+  private ready(id: PeerId) {
+    const previous = this.me;
+    this.me = id;
+    this.resuming = null;
+    this.welcomed = true;
+    this.flush(previous);
+    this.emit("welcome", this.me);
   }
 
   private handleError = (event: Event) => {

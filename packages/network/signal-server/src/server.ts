@@ -1,4 +1,5 @@
 import http, { OutgoingHttpHeaders } from "node:http";
+import { readFileSync } from "node:fs";
 
 import { Arguments } from "@papit/arguments";
 import { Terminal } from "@papit/terminal";
@@ -20,6 +21,7 @@ const baseHeaders: OutgoingHttpHeaders = {
 };
 
 let server: http.Server | undefined;
+let about: string | undefined;
 let wss: SocketServer | undefined;
 let pushRoutes: ReturnType<typeof createPushRoutes> | undefined;
 
@@ -58,9 +60,16 @@ function pushConfig(): PushConfig | undefined {
     return { keys: generateVapidKeys(), subject, persistent: false, ...options };
 }
 
+/** `{ name, version }` from the package.json shipped next to `lib/`, read once. */
+function version() {
+    if (about) return about;
+    const { name, version } = JSON.parse(readFileSync(new URL("../package.json", import.meta.url), "utf8"));
+    return about = JSON.stringify({ name, version });
+}
+
 /**
  * Starts an HTTP + WebSocket signalling server configured from CLI flags (see README).
- * Besides the socket it serves `GET /networks` (the public network list as JSON), `GET /health`
+ * Besides the socket it serves `GET /networks` (the public network list as JSON), `GET /health`, `GET /version`
  * and, unless `--no-push`, the push routes.
  * The port is `--port`, else `process.env.PORT`, else 3000.
  */
@@ -80,6 +89,7 @@ export function start() {
         heartbeat_interval: Arguments.number("heartbeat-interval") ?? 2000,
         forward_rate: Arguments.number("forward-rate") ?? 200,
         maxPayload: Arguments.number("max-payload") ?? MAX_MESSAGE_BYTES,
+        secret: process.env.SIGNAL_SECRET,
     });
 
     httpserver.on("request", (req: http.IncomingMessage, res: http.ServerResponse) => {
@@ -96,6 +106,13 @@ export function start() {
         {
             res.writeHead(200, headers);
             res.end(JSON.stringify({ ok: true }));
+            return;
+        }
+
+        if (req.method === "GET" && pathname === "/version")
+        {
+            res.writeHead(200, headers);
+            res.end(version());
             return;
         }
 

@@ -110,6 +110,7 @@ Everything from `ws.ServerOptions`, plus:
 | `spam_duration` | `200` | See CLI flags. |
 | `spam_reset` | `1500` | See CLI flags. |
 | `strikes` | `5` | See CLI flags (the CLI defaults to `3`). |
+| `secret` | random per process | Signs the resume tokens in `signal.welcome`. The CLI reads it from the `SIGNAL_SECRET` env. Set it to keep tokens valid across restarts. |
 
 ## start / close
 
@@ -125,6 +126,7 @@ function close(): void;
 | WebSocket upgrade | the signalling socket |
 | `GET /networks` | `200`, `NetworkInfo[]` as JSON |
 | `GET /health` | `200`, `{ "ok": true }`, for health checks and for waking a sleeping server |
+| `GET /version` | `200`, `{ "name", "version" }` of the running package, to check a deploy |
 | `/push/*` | see [Web push](#web-push) |
 | `OPTIONS *` | `204` with CORS headers |
 | anything else | `405` |
@@ -146,7 +148,13 @@ The server keeps no host and no member list a client can see. It keeps **anchors
 
 **Key hash.** The creator sends `keyHash`, the SHA-256 of the network key. The server never sees the key itself. A `signal.anchor` must carry the same `keyHash`, else it's `forbidden`. A `signal.join` with a `merge` for the same network id and a matching `keyHash` heals a split and skips the password.
 
-**Aliases.** A client keeps one peer id across reconnects, but a new socket may get a new id. `signal.anchor` with a `peer` other than the socket id registers that peer id as an alias of the socket. Messages to the peer id go to that socket, and closing the socket drops the alias's anchorships too. A peer id that already belongs to another open socket is `forbidden`.
+**Resume and aliases.** A client keeps one peer id across reconnects, but every new socket gets a new id. The welcome carries a `token`, an HMAC of the id with the server's secret. A new socket sends `signal.resume { peer, token }` first and from then on talks as `peer`: it registers, joins and anchors as `peer`, sends with `sender` = `peer`, and messages to `peer` reach it.
+
+- A free peer id is first come, a token isn't needed. That keeps resuming working after a restart, when the server knows no ids and no tokens.
+- A peer id that another socket still holds (a stale one the heartbeat hasn't caught yet) needs its token. The stale socket is then closed, and what the id anchors and belongs to stays.
+- A socket takes one peer id at most. Anything else is `forbidden`.
+
+`signal.anchor` with a `peer` other than the socket id claims it the same way, without a token, for clients that don't resume. Closing the socket drops the peer id's anchorships.
 
 # Protocol
 
@@ -154,7 +162,8 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 
 | Type | Direction | Payload | Reply |
 | --- | --- | --- | --- |
-| `signal.welcome` | server → client | `{ id }` | sent on connect |
+| `signal.welcome` | server → client | `{ id, token }` | sent on connect |
+| `signal.resume` | client → server | `{ peer, token? }` | `signal.resumed { peer }`, or `forbidden`. See [resume](#anchors) |
 | `signal.register` | client → server | `{ name, topology, private?, password?, meta?, media?, anchors?, keyHash? }` | `signal.registered { network }` and `signal.anchors`; the sender is the first anchor |
 | `signal.update` | client → server | `{ network, name?, private?, password?, meta?, media? }` | `signal.updated { network }`, anchors only; `password: ""` removes it, a given `media` replaces the plan |
 | `signal.unregister` | client → server | `{ network }` | none, anchors only |
@@ -172,9 +181,9 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | Error code | When |
 | --- | --- |
 | `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload |
-| `spoof` | `meta.sender` isn't the socket's id; the message names the type and the sender |
+| `spoof` | `meta.sender` is neither the socket's id nor an alias the socket anchored under; the message names the type and the sender |
 | `unsupported` | a non-`signal.*` (or server → client) type sent to the server, or `receiver: "*"` |
-| `forbidden` | update/unregister by a non-anchor, a wrong password on join, a wrong `keyHash` on anchor, a peer id taken by another socket, a `signal.*` message sent to a peer, or a client sending `network.join` itself |
+| `forbidden` | update/unregister by a non-anchor, a wrong password on join, a wrong `keyHash` on anchor, a peer id taken by another socket (without its token), a second peer id for one socket, a `signal.*` message sent to a peer, or a client sending `network.join` itself |
 | `rate` | a forwarded message over the `forward_rate` budget; it is dropped, the socket stays open |
 | `not-found` | unknown network |
 
@@ -186,14 +195,15 @@ A message with any other `receiver` is passed to that socket:
 2. `relay(meta, "server")` from peer-message: `"server"` is added to `hops` and one `ttl` is spent. A spent `ttl` drops the message.
 3. The receiver's socket (its own, or the socket its alias points to) is open and not draining → it gets the re-encoded message. Otherwise the sender gets `signal.unreachable`.
 
-The server never rewrites `sender`, so receivers can trust it, and only the server sends `signal.*` messages to clients.
+The server never rewrites `sender`, so receivers can trust it: it is the socket's id or the peer id it resumed or anchored under. A free peer id is first come, so a peer id is only proven while its socket lives, or with the token from the same server. Only the server sends `signal.*` messages to clients.
 
 Limits are split by traffic: messages to the server (and undecodable frames) go through the spam check, which closes the socket after too many strikes. Forwarded messages spend a per-socket token bucket instead (`forward_rate`, refilled on each message), so a burst of ICE candidates is fine.
 
 # Lifecycle
 
 ```
-connect ──▶ signal.welcome {id}
+connect ──▶ signal.welcome {id, token}
+  ├─ new socket of a known peer:  signal.resume {peer, token} ──▶ signal.resumed, talks as peer from here
   ├─ creator:  signal.register ──▶ signal.registered + signal.anchors (first anchor)
   └─ joiner:   signal.join ──▶ password or keyHash checked ──▶ network.join to the entry peer
                joined peer closes its socket, unless it becomes an anchor (signal.anchor)
@@ -325,6 +335,7 @@ These notes follow Render's usual setup for a Node web service. Check Render's o
 4. Set the **health check path** to `/health`.
 5. Connect clients to `wss://<app>.onrender.com`. Render terminates TLS, so the client uses `wss://` while the server itself speaks plain `ws`.
 6. For web push, set `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and `VAPID_SUBJECT` under **Environment**, and add `--trust-proxy <hops>` to the start command. Check `x-forwarded-for` on a real request to find the hop count, it depends on Render's current setup.
+7. Set `SIGNAL_SECRET` (any long random string) under **Environment**, so resume tokens survive a restart. Check the deployed version with `GET /version`.
 
 On the free tier, Render spins an idle service down, and the first request after that waits for a cold start, which can take tens of seconds. `@papit/webrtc`'s `Client` deals with it: it keeps retrying the socket, pings `https://<app>.onrender.com/health` to start the boot, and reports `client.status === "waking"` meanwhile. A sleeping server loses all networks, since they live only in memory. Push tokens survive it: a `/push/send` wakes the server, so it answers after the cold start.
 

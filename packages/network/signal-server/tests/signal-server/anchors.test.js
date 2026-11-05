@@ -22,7 +22,7 @@ class Client {
     }
 
     next(type, ms = 2000) {
-        const match = (message) => message.meta.type === type;
+        const match = (message) => [type].flat().includes(message.meta.type);
         const index = this.queue.findIndex(match);
         if (index >= 0) return Promise.resolve(this.queue.splice(index, 1)[0]);
         return new Promise((resolve, reject) => {
@@ -48,6 +48,14 @@ class Client {
         return network;
     }
 
+    /** Sends `signal.resume` from the socket id; on `resumed` the client talks as `peer`. */
+    async resume(peer, token) {
+        this.send(SignalType.Resume, token ? { peer, token } : { peer }, { sender: this.socketId });
+        const answer = await this.next([SignalType.Resumed, SignalType.Error]);
+        if (answer.meta.type === SignalType.Resumed) this.id = peer;
+        return answer.meta.type === SignalType.Resumed ? "resumed" : answer.payload.code;
+    }
+
     anchor(network, peer = this.id, keyHash = "key") {
         return this.request(SignalType.Anchor, { network, keyHash, peer }, SignalType.Anchored);
     }
@@ -66,11 +74,13 @@ async function setup() {
         async connect() {
             const client = new Client(new WebSocket(`ws://localhost:${server.address().port}`));
             clients.push(client);
-            client.id = (await client.next(SignalType.Welcome)).payload.id;
+            const { id, token } = (await client.next(SignalType.Welcome)).payload;
+            client.id = client.socketId = id;
+            client.token = token;
             return client;
         },
         async gone(client) {
-            const socket = wss.sockets.get(client.id);
+            const socket = wss.sockets.get(client.socketId);
             client.socket.close();
             await once(socket, "close");
         },
@@ -168,6 +178,19 @@ describe("aliases", { timeout: 5000 }, () => {
         assert.strictEqual(t.wss.aliases.get("peer-b"), b.id);
     });
 
+    it("lets a socket send as the alias it holds, and no other", async () => {
+        const t = await setup();
+        const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
+        const network = await a.register({ anchors: 2, keyHash: "key" });
+        await b.anchor(network, "peer-b");
+
+        b.send("chat", { hi: 1 }, { sender: "peer-b", receiver: a.id });
+        assert.strictEqual((await a.next("chat")).meta.sender, "peer-b");
+
+        c.send("chat", { hi: 2 }, { sender: "peer-b", receiver: a.id });
+        assert.strictEqual((await c.next(SignalType.Error)).payload.code, "spoof");
+    });
+
     it("hands a joiner the alias as entry and removes it on close", async () => {
         const t = await setup();
         const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
@@ -188,5 +211,67 @@ describe("aliases", { timeout: 5000 }, () => {
         b.send(SignalType.Anchor, { network, keyHash: "key", peer: a.id });
         assert.strictEqual((await b.next(SignalType.Error)).payload.code, "forbidden");
         assert.strictEqual(t.wss.aliases.size, 0);
+    });
+});
+
+describe("resume", { timeout: 5000 }, () => {
+    it("takes a free peer id without a token, and talks and is reached as it", async () => {
+        const t = await setup();
+        const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
+        const old = a.id;
+        await t.gone(a);
+
+        assert.strictEqual(await b.resume(old), "resumed");
+        c.send("chat", { hi: 1 }, { receiver: old });
+        assert.strictEqual((await b.next("chat")).meta.receiver, old);
+        b.send("chat", { hi: 2 }, { receiver: c.id });
+        assert.strictEqual((await c.next("chat")).meta.sender, old);
+    });
+
+    it("refuses a taken peer id without its token, or with a wrong one", async () => {
+        const t = await setup();
+        const [a, b] = [await t.connect(), await t.connect()];
+
+        assert.strictEqual(await b.resume(a.id), "forbidden");
+        assert.strictEqual(await b.resume(a.id, b.token), "forbidden");
+        assert.strictEqual(t.wss.aliases.size, 0);
+    });
+
+    it("takes a taken peer id over with its token and keeps what it anchors", async () => {
+        const t = await setup();
+        const [a, b] = [await t.connect(), await t.connect()];
+        const network = await a.register({ keyHash: "key" });
+        const closed = once(a.socket, "close");
+
+        assert.strictEqual(await b.resume(a.id, a.token), "resumed");
+        await closed;
+        assert.deepStrictEqual(t.wss.networks.get(network.id).anchors, [a.id]);
+        assert.strictEqual(t.wss.aliases.get(a.id), b.socketId);
+    });
+
+    it("joins, registers and anchors as the resumed peer id", async () => {
+        const t = await setup();
+        const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
+        const network = await a.register({ anchors: 2, keyHash: "key" });
+        const old = c.id;
+        await t.gone(c);
+        assert.strictEqual(await b.resume(old), "resumed");
+
+        b.send(SignalType.Join, { network: network.id });
+        assert.strictEqual((await a.next("network.join")).meta.sender, old);
+        assert.strictEqual((await b.anchor(network)).ok, true);
+        const own = await b.register({ keyHash: "key" });
+        assert.deepStrictEqual(t.wss.networks.get(own.id).anchors, [old]);
+    });
+
+    it("lets a socket take only one peer id", async () => {
+        const t = await setup();
+        const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
+        const [x, y] = [a.id, b.id];
+        await t.gone(a);
+        await t.gone(b);
+
+        assert.strictEqual(await c.resume(x), "resumed");
+        assert.strictEqual(await c.resume(y), "forbidden");
     });
 });

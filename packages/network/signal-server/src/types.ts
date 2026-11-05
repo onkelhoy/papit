@@ -15,6 +15,8 @@ export interface ServerOptions extends ws.ServerOptions {
     spam_duration?: number;
     spam_reset?: number;
     strikes?: number;
+    /** Signs the resume tokens in `signal.welcome`. Random per process by default, so tokens stop working on restart. */
+    secret?: string;
 }
 
 export type Socket = ws.WebSocket & {
@@ -26,6 +28,8 @@ export type Socket = ws.WebSocket & {
     refilled_at: number;
     // closing on purpose: nothing is forwarded to it any more
     draining: boolean;
+    // the peer id it resumed or anchored under, when that isn't its own id
+    peer: PeerId | null;
 }
 
 /** A registered network, see `Registry`. */
