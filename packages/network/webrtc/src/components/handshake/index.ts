@@ -1,3 +1,3 @@
 // exports
 export * from "./component";
-export type { HandshakeHooks } from "./types";
+export type { HandshakeHooks, Signaller } from "./types";

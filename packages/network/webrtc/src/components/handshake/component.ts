@@ -1,8 +1,7 @@
 import { HandshakeType, Message as PeerMessage, PayloadMap } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
-import type { Network } from "../network";
-import type { HandshakeHooks, Message } from "./types";
+import type { HandshakeHooks, Message, Signaller } from "./types";
 
 /** A received `handshake.offer` payload. */
 export type Offer = { description: RTCSessionDescriptionInit; streams?: PayloadMap[HandshakeType.Offer]["streams"]; session?: string };
@@ -43,7 +42,7 @@ export class Handshake extends Emitter {
     public readonly target: string,
     public readonly connection: RTCPeerConnection,
     public readonly channel: RTCDataChannel,
-    public readonly network: Network,
+    public readonly network: Signaller,
     public readonly polite = me < target,
     private readonly timeout = HANDSHAKE_TIMEOUT,
   ) {

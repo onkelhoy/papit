@@ -56,7 +56,7 @@ Keep them simple and add depth later. UI gets a smoke test (role, main interacti
 ## Area rules
 - **algorithms:** pure and deterministic, no DOM or I/O. Handle degenerate input explicitly. READMEs state complexity.
 - **game:** no allocations or closures per frame, `delta`-based motion, respect `prefers-reduced-motion`. Generic math belongs in `algorithms`.
-- **network:** message shapes live only in `peer-message`, so change it first, then both sides in one branch. Every socket, timer and listener is released on `close()`. Validate wire input, never throw from a network callback. Webrtc gets light tests plus a `views/` demo for live testing.
+- **network:** shapes shared by server and client live in `peer-message`, so change it first, then both sides in one branch. A topology's own `topology.*` shapes live and are validated in its file. Every socket, timer and listener is released on `close()`. Validate wire input, never throw from a network callback. Webrtc gets light tests plus a `views/` demo for live testing.
 - **runtime:** the repo builds itself with pinned published versions, so keep root `npm run build` passing on every commit. CLI flags are public API. Output via `@papit/terminal`, options via `@papit/arguments`. `create` templates define the repo standard.
 - **web:** load `papit-design-system` for components and `papit-web-component` for the engine.
 

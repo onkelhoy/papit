@@ -8,33 +8,44 @@ import {
     MAX_MESSAGE_BYTES,
     Message,
     NetworkType,
+    Registry,
     SERVER,
     SignalType,
     read,
     relay,
 } from "@papit/peer-message";
-import type { Meta, NetworkInfo, PayloadMap } from "@papit/peer-message";
+import type { Meta, NetworkInfo, PayloadMap, PeerId, Reply } from "@papit/peer-message";
 
-import type { Network, ServerOptions, Socket } from "./types";
+import type { ServerOptions, Socket } from "./types";
 
 const hash = (password: string) => createHash("sha256").update(password).digest("hex");
 
 /**
  * WebSocket signalling server for @papit/peer-message.
- * Keeps a network registry, forwards peer messages by `receiver`.
- * Drops a network when its host leaves. Only binary frames are accepted.
+ * Keeps a network `Registry`, forwards peer messages by `receiver`.
+ * Drops a network when its last anchor leaves. Only binary frames are accepted.
  */
 export class SocketServer extends ws.WebSocketServer {
     private heartbeat_timer: NodeJS.Timeout;
 
     public sockets!: Map<string, Socket>;
-    public networks!: Map<string, Network>;
+    public registry!: Registry;
+    // peer id → socket id, for anchors whose peer id isn't the id of the socket they talk through
+    public aliases!: Map<PeerId, string>;
     declare public options: ServerOptions;
 
     constructor(options: ServerOptions = {}, callback?: () => void) {
         super({ maxPayload: MAX_MESSAGE_BYTES, ...options }, callback);
         this.sockets = new Map();
-        this.networks = new Map();
+        this.aliases = new Map();
+        this.registry = new Registry({
+            hash,
+            pickEntry: this.options.pickEntry,
+            reachable: peer => {
+                const target = this.socketOf(peer);
+                return !!target && !target.draining;
+            },
+        });
 
         this.on("connection", (socket: Socket, request: http.IncomingMessage) => this.handleConnection(socket, request));
         this.on("error", (error) => this.printerror(error.message));
@@ -56,11 +67,14 @@ export class SocketServer extends ws.WebSocketServer {
         }, this.options.heartbeat_interval ?? 2000);
     }
 
+    /** The registered networks, by id. */
+    public get networks() {
+        return this.registry.networks;
+    }
+
     /** Public networks as clients see them: no password hash, no member list. */
     public list(): NetworkInfo[] {
-        return Array.from(this.networks.values())
-            .filter(network => !network.private)
-            .map(network => this.info(network));
+        return this.registry.list();
     }
 
     /** Sends a server message (`sender: SERVER`) to `socket`. Ignored when the socket is not open. */
@@ -87,14 +101,12 @@ export class SocketServer extends ws.WebSocketServer {
         socket.lastmessage = 0;
         socket.tokens = this.options.forward_rate ?? 200;
         socket.refilled_at = performance.now();
-        socket.networks = new Set();
         socket.draining = false;
 
         const existing = this.sockets.get(socket.id);
         if (existing)
         {
-            // same id reconnecting: the new socket takes over its memberships
-            socket.networks = existing.networks;
+            // same id reconnecting: the registry keeps its memberships, they belong to the id
             existing.terminate();
         }
         this.sockets.set(socket.id, socket);
@@ -114,10 +126,14 @@ export class SocketServer extends ws.WebSocketServer {
         if (this.sockets.get(socket.id) !== socket) return;
 
         this.sockets.delete(socket.id);
-        for (const id of Array.from(socket.networks))
+        const gone = [socket.id];
+        for (const [alias, id] of this.aliases)
         {
-            this.leave(socket, id);
+            if (id !== socket.id) continue;
+            this.aliases.delete(alias);
+            gone.push(alias);
         }
+        for (const peer of gone) this.deliver(this.registry.drop(peer));
     }
 
     private handleMessage(socket: Socket, data: ws.RawData, isBinary: boolean) {
@@ -163,7 +179,7 @@ export class SocketServer extends ws.WebSocketServer {
 
             if (relay(meta, SERVER) !== "forward") return;
 
-            const target = this.sockets.get(meta.receiver);
+            const target = this.socketOf(meta.receiver);
             if (!target || target.draining || target.readyState !== ws.WebSocket.OPEN)
             {
                 this.send(socket, SignalType.Unreachable, { receiver: meta.receiver, ref: meta.id });
@@ -184,111 +200,29 @@ export class SocketServer extends ws.WebSocketServer {
 
         switch (meta.type)
         {
-            case SignalType.Register: return this.register(socket, payload);
-            case SignalType.Update: return this.update(socket, payload, meta.id);
-            case SignalType.Unregister: return this.unregister(socket, payload, meta.id);
+            case SignalType.Register: return this.deliver(this.registry.register(socket.id, payload));
+            case SignalType.Update: return this.deliver(this.registry.update(socket.id, payload, meta.id));
+            case SignalType.Unregister: return this.deliver(this.registry.unregister(socket.id, payload, meta.id));
             case SignalType.List: return this.send(socket, SignalType.Networks, { networks: this.list() });
-            case SignalType.Join: return this.join(socket, payload, meta.id);
-            case SignalType.Leave: return this.leave(socket, payload.network);
-            case SignalType.Merge: return this.merge(socket, payload, meta.id);
+            case SignalType.Join: return this.deliver(this.registry.join(socket.id, payload, meta.id));
+            case SignalType.Leave: return this.deliver([socket.id, this.peerOf(socket)].flatMap(peer => this.registry.leave(peer, payload.network)));
+            case SignalType.Anchor: return this.anchor(socket, payload, meta.id);
+            case SignalType.Unanchor: return this.deliver(this.registry.unanchor(this.peerOf(socket), payload));
             case SignalType.Drain: return this.drain(socket, payload);
             default: return this.error(socket, "unsupported", `unsupported message: ${meta.type}`, meta.id);
         }
     }
 
     // signal handlers
-    private register(socket: Socket, payload: PayloadMap[SignalType.Register]) {
-        const network: Network = {
-            id: randomUUID(),
-            name: payload.name,
-            host: socket.id,
-            topology: payload.topology,
-            private: !!payload.private,
-            size: 1,
-            members: [socket.id],
-        };
-        if (payload.meta) network.meta = payload.meta;
-        if (payload.media) network.media = payload.media;
-        if (payload.password) network.passwordHash = hash(payload.password);
-
-        this.networks.set(network.id, network);
-        socket.networks.add(network.id);
-        this.send(socket, SignalType.Registered, { network: this.info(network) });
-    }
-
-    private update(socket: Socket, payload: PayloadMap[SignalType.Update], ref: string) {
-        const network = this.hosted(socket, payload.network, ref);
-        if (!network) return;
-
-        if (payload.name !== undefined) network.name = payload.name;
-        if (payload.private !== undefined) network.private = payload.private;
-        if (payload.meta !== undefined) network.meta = payload.meta;
-        if (payload.media !== undefined) network.media = payload.media;
-        if (payload.password !== undefined)
+    private anchor(socket: Socket, payload: PayloadMap[SignalType.Anchor], ref: string) {
+        const { peer } = payload;
+        if (peer !== socket.id)
         {
-            // an empty password opens the network
-            if (payload.password) network.passwordHash = hash(payload.password);
-            else delete network.passwordHash;
+            const taken = this.sockets.has(peer) || (this.aliases.has(peer) && this.sockets.has(this.aliases.get(peer)!) && this.aliases.get(peer) !== socket.id);
+            if (taken) return void this.error(socket, "forbidden", "that peer id belongs to another socket", ref);
+            this.aliases.set(peer, socket.id);
         }
-
-        this.send(socket, SignalType.Updated, { network: this.info(network) });
-    }
-
-    private unregister(socket: Socket, payload: PayloadMap[SignalType.Unregister], ref: string) {
-        const network = this.hosted(socket, payload.network, ref);
-        if (!network) return;
-
-        this.networks.delete(network.id);
-        for (const member of network.members)
-        {
-            this.sockets.get(member)?.networks.delete(network.id);
-        }
-    }
-
-    private join(socket: Socket, payload: PayloadMap[SignalType.Join], ref: string) {
-        const network = this.networks.get(payload.network);
-        if (!network) return void this.error(socket, "not-found", "no such network", ref);
-
-        if (network.passwordHash && (!payload.password || hash(payload.password) !== network.passwordHash))
-        {
-            return void this.error(socket, "forbidden", "wrong password", ref);
-        }
-
-        const members = network.members.filter(member => member !== socket.id);
-        const entry = members.length
-            ? this.options.pickEntry?.(this.info(network), [...members], socket.id) ?? network.host
-            : undefined;
-
-        const target = entry === undefined ? undefined : this.sockets.get(entry);
-        if (!entry || !target || target.draining)
-        {
-            return void this.send(socket, SignalType.Unreachable, { receiver: entry ?? "", ref });
-        }
-
-        if (!network.members.includes(socket.id)) network.members.push(socket.id);
-        socket.networks.add(network.id);
-
-        // the password was checked here, it is not passed on
-        const join = Message.Create({ type: NetworkType.Join, sender: socket.id, receiver: entry, network: network.id }, payload.profile ? { profile: payload.profile } : {});
-        target.send(join.toBinary());
-    }
-
-    private leave(socket: Socket, id: string) {
-        socket.networks.delete(id);
-
-        const network = this.networks.get(id);
-        if (!network) return;
-
-        const index = network.members.indexOf(socket.id);
-        if (index < 0) return;
-        network.members.splice(index, 1);
-
-        // the network goes with its host; the members pick a new host among themselves and it registers again
-        if (network.members.length === 0 || network.host === socket.id)
-        {
-            for (const member of network.members) this.sockets.get(member)?.networks.delete(id);
-            this.networks.delete(id);
-        }
+        this.deliver(this.registry.anchor(socket.id, payload, ref));
     }
 
     // everything forwarded so far is ahead of this answer on the socket, so the client can close without losing any
@@ -297,42 +231,24 @@ export class SocketServer extends ws.WebSocketServer {
         if (payload.draining) this.send(socket, SignalType.Drained, {});
     }
 
-    private merge(socket: Socket, payload: PayloadMap[SignalType.Merge], ref: string) {
-        const from = this.hosted(socket, payload.from, ref);
-        if (!from) return;
-
-        const network = this.networks.get(payload.network);
-        if (!network) return void this.error(socket, "not-found", "no such network", ref);
-        if (network === from) return void this.error(socket, "invalid", "a network can't merge with itself", ref);
-
-        const target = this.sockets.get(network.host);
-        if (!target || target.draining) return void this.send(socket, SignalType.Unreachable, { receiver: network.host, ref });
-
-        // the host checks the password: any client can send it a network.* directly, so the server can't vouch for this one
-        const { size, password, peer } = payload;
-        const merge = Message.Create({ type: NetworkType.Merge, sender: socket.id, receiver: network.host, network: network.id }, { network: this.info(from), size, ...(password ? { password } : {}), ...(peer ? { peer } : {}) });
-        target.send(merge.toBinary());
-    }
-
     // helpers
-    private hosted(socket: Socket, id: string, ref: string) {
-        const network = this.networks.get(id);
-        if (!network)
-        {
-            this.error(socket, "not-found", "no such network", ref);
-            return null;
-        }
-        if (network.host !== socket.id)
-        {
-            this.error(socket, "forbidden", "only the host can change a network", ref);
-            return null;
-        }
-        return network;
+    /** The socket a peer id talks through: its own, or the one it is an alias of. */
+    private socketOf(peer: PeerId) {
+        return this.sockets.get(peer) ?? this.sockets.get(this.aliases.get(peer) ?? "");
     }
 
-    private info(network: Network): NetworkInfo {
-        const { passwordHash, members, ...info } = network;
-        return { ...info, size: members.length };
+    /** The id a socket anchors under: an alias it holds, else its own. */
+    private peerOf(socket: Socket) {
+        for (const [alias, id] of this.aliases) if (id === socket.id) return alias;
+        return socket.id;
+    }
+
+    private deliver(replies: Reply[]) {
+        for (const { to, message } of replies)
+        {
+            const target = this.socketOf(to);
+            if (target?.readyState === ws.WebSocket.OPEN) target.send(message.toBinary());
+        }
     }
 
     private error(socket: Socket, code: string, message: string, ref?: string) {

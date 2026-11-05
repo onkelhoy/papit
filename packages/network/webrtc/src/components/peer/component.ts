@@ -1,9 +1,8 @@
 import type { PeerId } from "@papit/peer-message";
 
 import { Emitter } from "../../emitter";
-import { Handshake, type Offer } from "../handshake";
+import { Handshake, type Offer, type Signaller } from "../handshake";
 import type { Link } from "../link";
-import type { Network } from "../network";
 import type { PeerOptions } from "./types";
 
 /** Label of the negotiated data channel (id 0) that carries every system and `Client.send` message. */
@@ -25,7 +24,7 @@ export class PeerLink extends Emitter implements Link {
   constructor(
     public readonly me: PeerId,
     public readonly id: PeerId,
-    network: Network,
+    network: Signaller,
     options: PeerOptions = {},
   ) {
     super();

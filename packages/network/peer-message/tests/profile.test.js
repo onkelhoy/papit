@@ -3,7 +3,6 @@ import assert from "node:assert";
 
 import { isProfile, isPayload, SignalType, NetworkType, MAX_PROFILE_BYTES } from "@papit/peer-message";
 
-const network = { id: "n1", name: "lobby", host: "a", topology: "mesh", private: false, size: 2 };
 
 describe("isProfile", () => {
     it("accepts JSON objects up to 1 KB", () => {
@@ -30,21 +29,5 @@ describe("profiles in payloads", () => {
         assert.strictEqual(isPayload(SignalType.Join, { network: "n1", profile: "a" }), false);
         assert.strictEqual(isPayload(NetworkType.Join, { profile: { name: "a" } }), true);
         assert.strictEqual(isPayload(NetworkType.Join, { profile: [] }), false);
-    });
-
-    it("network.welcome and network.members take an optional profiles map", () => {
-        const profiles = { a: { name: "A" }, b: {} };
-        assert.strictEqual(isPayload(NetworkType.Welcome, { network, members: ["a", "b"], connect: ["a"], profiles }), true);
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a", "b"], profiles }), true);
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a"], profiles: { a: "A" } }), false);
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a"], profiles: { ["x".repeat(65)]: {} } }), false);
-        assert.strictEqual(isPayload(NetworkType.Welcome, { network, members: [], connect: [], profiles: [] }), false);
-    });
-
-    it("network.profile carries one profile", () => {
-        assert.strictEqual(NetworkType.Profile, "network.profile");
-        assert.strictEqual(isPayload(NetworkType.Profile, { profile: { name: "a" } }), true);
-        assert.strictEqual(isPayload(NetworkType.Profile, {}), false);
-        assert.strictEqual(isPayload(NetworkType.Profile, { profile: { name: "x".repeat(2000) } }), false);
     });
 });

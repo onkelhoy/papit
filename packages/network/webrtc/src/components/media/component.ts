@@ -265,7 +265,7 @@ export class Media extends Emitter {
   }
 
   /**
-   * Re-applies streams on every link after the view changed (members, host): a relay's source may have moved.
+   * Re-applies streams on every link after the topology changed (links, parent): a relay's source may have moved.
    * @internal
    */
   refresh() {
@@ -405,18 +405,17 @@ export class Media extends Emitter {
 
   private allowed(peer: PeerId) {
     const names = Object.keys(this._plan.streams ?? {});
-    const view = this.context.view();
     const topology = this.context.topology();
-    if (!view || !topology?.media) return new Set(names);
+    if (!topology?.media) return new Set(names);
 
     try
     {
-      const narrowed = topology.media(view, peer, this._plan).streams ?? {};
+      const narrowed = topology.media(peer, this._plan).streams ?? {};
       return new Set(names.filter(name => name in narrowed));
     }
     catch (error)
     {
-      this.error("topology", `${topology.name}.media failed`, error);
+      this.error("topology", "topology.media failed", error);
       return new Set(names);
     }
   }
@@ -431,18 +430,17 @@ export class Media extends Emitter {
     const capture = this.captures.get(name);
     if (capture) return capture.track;
 
-    const view = this.context.view();
     const topology = this.context.topology();
-    if (!view || !topology?.relay) return null;
+    if (!topology?.relay) return null;
 
     let from: PeerId | null;
     try
     {
-      from = topology.relay(view, name);
+      from = topology.relay(name);
     }
     catch (error)
     {
-      this.error("topology", `${topology.name}.relay failed`, error);
+      this.error("topology", "topology.relay failed", error);
       return null;
     }
     // never send a relayed track back where it came from

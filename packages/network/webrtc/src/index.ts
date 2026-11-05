@@ -1,11 +1,23 @@
 // exports
 export * from "./types";
 export * from "./emitter";
+export * from "./clock";
+export * from "./hash";
+export * from "./base64";
+export * from "./registry";
+export * from "./network";
+export * from "./connector";
+export * from "./client";
+export * from "./bootstrap/memory";
+export * from "./bootstrap/socket";
+export * from "./bootstrap/parent";
+export * from "./topologies/mesh";
+export * from "./topologies/star";
+export * from "./topologies/tree";
+export * from "./topologies/chord";
+export * as chordRing from "./topologies/chord/ring";
 export * from "./components/link";
-export * from "./components/topology";
-export * from "./components/network";
 export * from "./components/socket";
 export * from "./components/handshake";
 export * from "./components/peer";
 export * from "./components/media";
-export * from "./client";

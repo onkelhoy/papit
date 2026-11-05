@@ -3,7 +3,7 @@ import assert from "node:assert";
 
 import { isTopology, isPayload, SignalType, NetworkType, MAX_TOPOLOGY_BYTES } from "@papit/peer-message";
 
-const network = (topology) => ({ id: "n1", name: "lobby", host: "a", topology, private: false, size: 2 });
+const network = (topology) => ({ id: "n1", name: "lobby", topology, private: false, size: 2 });
 
 describe("isTopology", () => {
     it("accepts an id-shaped name", () => {
@@ -45,9 +45,9 @@ describe("topology in payloads", () => {
     });
 
     it("network info carries a name or a config", () => {
-        const welcome = (topology) => ({ network: network(topology), members: ["a"], connect: [] });
-        assert.strictEqual(isPayload(NetworkType.Welcome, welcome("mesh")), true);
-        assert.strictEqual(isPayload(NetworkType.Welcome, welcome({ name: "multicast", fanout: 5 })), true);
-        assert.strictEqual(isPayload(NetworkType.Welcome, welcome(5)), false);
+        const admit = (topology) => ({ network: network(topology), key: "k", merge: false });
+        assert.strictEqual(isPayload(NetworkType.Admit, admit("mesh")), true);
+        assert.strictEqual(isPayload(NetworkType.Admit, admit({ name: "multicast", fanout: 5 })), true);
+        assert.strictEqual(isPayload(NetworkType.Admit, admit(5)), false);
     });
 });
