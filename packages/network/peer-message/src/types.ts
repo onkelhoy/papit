@@ -13,6 +13,10 @@ export type Meta<Type extends string = string> = {
     timestamp: number;
     ttl: number;
     hops: PeerId[];
+    /** Per-hop routing hint a topology sets and reads, e.g. the chord broadcast limit. */
+    hint?: string;
+    /** Waypoints: the message goes to `via[0]` first, which removes itself and continues. At most `MAX_VIA`. */
+    via?: PeerId[];
 }
 
 /** What a node does with a message it received, see `relay`. */
@@ -26,16 +30,18 @@ export enum SignalType {
     List = "signal.list",
     Join = "signal.join",
     Leave = "signal.leave",
-    Merge = "signal.merge",
     Drain = "signal.drain",
+    Anchor = "signal.anchor",
+    Unanchor = "signal.unanchor",
 
     // server → client  (meta.receiver = socket id)
     Welcome = "signal.welcome",
     Registered = "signal.registered",
     Updated = "signal.updated",
     Networks = "signal.networks",
-    Host = "signal.host",
     Drained = "signal.drained",
+    Anchored = "signal.anchored",
+    Anchors = "signal.anchors",
     Unreachable = "signal.unreachable",
     Error = "signal.error",
 }
@@ -43,19 +49,17 @@ export enum SignalType {
 // peer ↔ peer, over any link
 export enum NetworkType {
     Join = "network.join",
-    Welcome = "network.welcome",
     Reject = "network.reject",
-    Members = "network.members",
     Leave = "network.leave",
     Media = "network.media",
-    Profile = "network.profile",
-    Relay = "network.relay",
     Room = "network.room",
-    Merge = "network.merge",
-    MergeAccept = "network.merge-accept",
-    MergeList = "network.merge-list",
-    MergeView = "network.merge-view",
     Prune = "network.prune",
+    Admit = "network.admit",
+    Adopt = "network.adopt",
+    Anchor = "network.anchor",
+    Beacon = "network.beacon",
+    Ping = "network.ping",
+    Pong = "network.pong",
 }
 
 // peer ↔ peer, over any link
@@ -70,10 +74,15 @@ export type ReservedType = SignalType | NetworkType | HandshakeType;
 export type NetworkInfo = {
     id: string;
     name: string;
-    host: PeerId;
     topology: string | TopologyConfig;
     private: boolean;
     size: number;
+    /** How many peers keep a socket to the registry. */
+    anchors?: number;
+    /** ms between anchor beacons, 0 = off. */
+    beacon?: number;
+    /** Peers a joiner may enter through. */
+    entries?: PeerId[];
     meta?: Record<string, unknown>;
     media?: MediaPlan;
 }
@@ -122,54 +131,54 @@ export type IceCandidate = {
 
 /** Payload shape per reserved `meta.type`. */
 export type PayloadMap = {
-    [SignalType.Register]: { name: string; topology: string | TopologyConfig; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan };
+    [SignalType.Register]: { name: string; topology: string | TopologyConfig; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan; anchors?: number; keyHash?: string };
     [SignalType.Update]: { network: string; name?: string; private?: boolean; password?: string; meta?: Record<string, unknown>; media?: MediaPlan };
     [SignalType.Unregister]: { network: string };
     [SignalType.List]: {};
-    [SignalType.Join]: { network: string; password?: string; profile?: Profile };
+    /** `merge`: the sender's network merges into this one; a `keyHash` that matches heals a split without the password. */
+    [SignalType.Join]: { network: string; password?: string; profile?: Profile; merge?: { network: NetworkInfo; topology: string | TopologyConfig; keyHash?: string } };
     [SignalType.Leave]: { network: string };
-    /**
-     * Asks the host of `network` to merge with `from`, the network the sender hosts. `size` is the real
-     * member count, the server's only counts sockets. `peer` is the sender's peer id, when it isn't its socket id.
-     */
-    [SignalType.Merge]: { network: string; from: string; size: number; password?: string; peer?: PeerId };
     /** Before closing a socket on purpose: with `draining` the server stops forwarding to it, without it the socket stays after all. */
     [SignalType.Drain]: { draining: boolean };
     /** Nothing more is on its way to this socket, so closing it loses nothing. */
     [SignalType.Drained]: {};
+    /** Become an anchor of `network`, or have the registry re-create it when it forgot it. `keyHash` proves membership. */
+    [SignalType.Anchor]: { network: NetworkInfo; keyHash: string; peer: PeerId };
+    /** `existed` with `entry` (the lowest anchor) means the caller should merge through `entry`. */
+    [SignalType.Anchored]: { network: string; ok: boolean; existed: boolean; entry?: PeerId };
+    [SignalType.Unanchor]: { network: string };
+    /** Registry → anchors, on each change of the anchor set. */
+    [SignalType.Anchors]: { network: string; anchors: PeerId[]; target: number };
     [SignalType.Welcome]: { id: PeerId };
     [SignalType.Registered]: { network: NetworkInfo };
     [SignalType.Updated]: { network: NetworkInfo };
     [SignalType.Networks]: { networks: NetworkInfo[] };
-    [SignalType.Host]: { network: NetworkInfo };
     [SignalType.Unreachable]: { receiver: PeerId; ref: string };
     [SignalType.Error]: { code: string; message: string; ref?: string };
-    [NetworkType.Join]: { password?: string; profile?: Profile };
-    [NetworkType.Welcome]: { network: NetworkInfo; members: PeerId[]; connect: PeerId[]; profiles?: Record<PeerId, Profile> };
+    /** `merge` makes the join a merge: the sender's network asks to be folded into the receiver's. */
+    [NetworkType.Join]: { password?: string; profile?: Profile; merge?: { network: NetworkInfo; topology: string | TopologyConfig; keyHash?: string } };
     [NetworkType.Reject]: { reason: string };
-    /** `serverId` is the id the server knows the network by, when the host registered it again. */
-    [NetworkType.Members]: { members: PeerId[]; host?: PeerId; profiles?: Record<PeerId, Profile>; serverId?: string };
     [NetworkType.Leave]: { peer: PeerId };
     [NetworkType.Media]: { media: MediaPlan };
-    [NetworkType.Profile]: { profile: Profile };
-    /** A signalling message (base64 of its bytes) for the host to pass on through its socket. */
-    [NetworkType.Relay]: { message: string };
     /** A message (base64 of its bytes) of a network opened over this one, for the receiver's `room`. */
     [NetworkType.Room]: { room: string; message: string };
-    /** A host asks to merge, passed on by the server. The receiving host checks `password` and answers with `network.merge-accept` or `network.reject`. */
-    [NetworkType.Merge]: { network: NetworkInfo; size: number; password?: string; peer?: PeerId };
-    /** `peer` and `socket` are the accepting host's ids, the requester links to it through the server. */
-    [NetworkType.MergeAccept]: { peer: PeerId; socket: PeerId; size: number };
-    /** A host's network, sent to the other host over their link. `password` is what the staying network keeps. */
-    [NetworkType.MergeList]: { network: NetworkInfo; members: PeerId[]; profiles?: Record<PeerId, Profile>; serverId?: string; password?: string };
-    /** Everyone's new network: `network.host` is the host, `members` is both groups. Sent by a member's current host. */
-    [NetworkType.MergeView]: { network: NetworkInfo; members: PeerId[]; profiles?: Record<PeerId, Profile>; serverId?: string; password?: string };
+    /** Asks a linked peer to close a link neither side wants any more. Neither side is leaving. */
+    [NetworkType.Prune]: {};
+    /** A join was admitted. `key` is the network key, `merge` tells the join was a merge. */
+    [NetworkType.Admit]: { network: NetworkInfo; key: string; merge: boolean };
+    /** Broadcast after a merge: switch to this network's identity. */
+    [NetworkType.Adopt]: { network: NetworkInfo; key: string };
+    /** An anchor recruits a linked peer to become an anchor too. */
+    [NetworkType.Anchor]: {};
+    /** The lowest anchor's heartbeat. */
+    [NetworkType.Beacon]: { anchors: number };
+    /** Round-trip measurement, link level only. */
+    [NetworkType.Ping]: { n: number };
+    [NetworkType.Pong]: { n: number };
     /**
      * `streams` maps transceiver `mid` → media plan stream name, for the streams the offer carries.
      * `session` names the sender's connection: a new one means its end of the old link is gone.
      */
-    /** Asks a linked peer to close a link neither side wants any more. Neither side is leaving. */
-    [NetworkType.Prune]: {};
     [HandshakeType.Offer]: { description: SessionDescription; streams?: Record<string, string>; session?: string };
     [HandshakeType.Answer]: { description: SessionDescription; session?: string };
     [HandshakeType.Candidate]: { candidate: IceCandidate };

@@ -1,3 +1,5 @@
+import type { Message as PeerMessage } from "@papit/peer-message";
+
 // internal to handshake system
 export type Message =
   | AnswerMessage
@@ -28,4 +30,9 @@ export type HandshakeHooks = {
   offer?(streams: Record<string, string>): void;
   /** The remote offer is applied; adjust transceivers before the answer is created. */
   answer?(): void;
+}
+
+/** What a handshake signals through: `send` passes a message on, `"message"` events bring the replies. The old `Network` is one. */
+export interface Signaller extends EventTarget {
+  send(message: PeerMessage, options?: { preferServer?: boolean }): unknown;
 }

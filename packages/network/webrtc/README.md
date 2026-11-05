@@ -1,6 +1,6 @@
 # @papit/webrtc
 
-Peer-to-peer networking in the browser with a pluggable topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord, ring, multicast tree or your own topology, with plan-driven data channels and media streams.
+Peer-to-peer networking in the browser with a pluggable, self-managing topology. Reach for it to route messages between peers over WebRTC or any transport, in a mesh, star, chord, ring, multicast tree or your own topology, with merging, split healing, data channels and media streams.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -18,41 +18,46 @@ Peer-to-peer networking in the browser with a pluggable topology. Reach for it t
 npm install @papit/webrtc
 ```
 
-It needs a running [`@papit/signal-server`](https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server) to find peers. After that, messages travel peer to peer over WebRTC data channels. The messages are [`@papit/peer-message`](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message) messages.
+A [`@papit/signal-server`](https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server) finds networks and carries first contact. After that, messages ([`@papit/peer-message`](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message)) travel peer to peer over WebRTC data channels, and most peers close their socket.
 
 # Usage
 
-Host a network:
+Create a network:
 
 ```js
 import { Client } from "@papit/webrtc";
 
-const client = new Client({ url: "ws://localhost:3000", topology: "mesh" });
-const network = await client.create({ name: "lobby" });
-
-client.addEventListener("message", ({ detail }) => console.log(detail.sender, detail.payload));
-```
-
-Join it from another tab or machine:
-
-```js
 const client = new Client({ url: "ws://localhost:3000" });
-const [lobby] = await client.list();
-await client.join(lobby.id);
+const network = await client.create({ name: "lobby", topology: "mesh" });
 
-client.broadcast("chat", { text: "hej" });
-client.send(someone, "chat", { text: "just you" });
+network.on("message", ({ detail }) => console.log(detail.meta.sender, detail.parse()));
+console.log(network.info.id); // share this
 ```
 
-Password, admission and STUN:
+Join it from another tab or machine, then talk:
 
 ```js
-const client = new Client({
-    url: "wss://signal.example.com",
-    rtc: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
-    accept: (newcomer, network) => network.size < 8,   // runs on the entry peer
-});
-await client.create({ name: "private room", private: true, password: "secret" });
+const network = await client.join(networkId);
+
+network.broadcast("chat", { text: "hej" });
+network.send(peerId, "chat", { text: "hallå" });
+network.leave();
+```
+
+A chord ring, with messages addressed to a key instead of a peer:
+
+```js
+const dht = await client.create({ name: "dht", topology: { name: "chord", successors: 4 } });
+
+dht.sendKey("room:42", "put", { value: 1 });   // reaches whoever owns hash("room:42")
+dht.on("range", ({ detail }) => rebalance(detail.from, detail.to));
+```
+
+A password, more anchors and a beacon for split healing:
+
+```js
+const network = await client.create({ name: "team", topology: "star", password: "secret", anchors: 3, beacon: 10_000 });
+const joined = await client.join(network.info.id, { password: "secret", profile: { name: "Ada" } });
 ```
 
 # API
@@ -60,485 +65,374 @@ await client.create({ name: "private room", private: true, password: "secret" })
 ## Client
 
 ```ts
-class Client extends EventTarget {
-    constructor(options: ClientOptions);
-    readonly ready: Promise<PeerId>;
-    id: PeerId | null;
-    network: NetworkInfo | null;
-    readonly members: readonly PeerId[];
-    readonly links: readonly PeerId[];
-    readonly host: PeerId | null;
-    readonly status: "connecting" | "waking" | "connected" | "reconnecting" | "closed";
-    readonly profiles: Record<PeerId, Profile>;
-    profile(peer?: PeerId): Profile | undefined;
-    setProfile(profile: Profile): boolean;
-    readonly serverId: string | null;
-    readonly socket: SocketLink | null;
-    router: Network | null;
-
-    readonly media: Media;
-
-    create(options: { name: string; private?: boolean; password?: string; meta?: object; media?: MediaPlan }): Promise<NetworkInfo>;
-    update(options: { name?: string; private?: boolean; password?: string; meta?: object; media?: MediaPlan }): Promise<NetworkInfo>;
-    list(): Promise<NetworkInfo[]>;
-    join(networkId: string, password?: string): Promise<NetworkInfo>;
-    merge(network: string, password?: string): Promise<NetworkInfo>;
-    reregister(): Promise<string>;
-    room(options: RoomOptions): Promise<Client>;
-    joinRoom(id: string, host: PeerId, password?: string): Promise<Client>;
-    send(receiver: PeerId, type: string, payload?: unknown): boolean;
-    broadcast(type: string, payload?: unknown): boolean;
-    leave(): void;
-    close(): void;
-}
+new Client(options: ClientOptions)
+client.create(draft: NetworkDraft, setup?: NetworkSetup): Promise<Network>
+client.join(network: string | NetworkInfo, request?: JoinRequest, setup?: NetworkSetup): Promise<Network>
+client.close(): void
 ```
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `url` | `string \| URL` | - | the signal server |
-| `protocols` | `string \| string[]` | - | WebSocket sub-protocols |
-| `rtc` | `RTCConfiguration` | - | passed to every `RTCPeerConnection`, e.g. `iceServers` |
-| `topology` | `string \| TopologyConfig` | `"mesh"` | for networks you `create`, e.g. `{ name: "multicast", fanout: 5 }`, see [Topology config](#topology-config). A joined network uses the one it was created with |
-| `recreate` | `boolean` | `true` | a new host without a socket opens one and registers the network again |
-| `keepSocket` | `boolean \| "host"` | `"host"` | `"host"`: only the host keeps its socket, the others close theirs once linked and their handshakes with newcomers go through the host (wrapped in `network.relay`, so the server is unchanged). `false` closes it everywhere, `true` keeps it everywhere |
-| `accept` | `(newcomer, info) => boolean` | accept all | runs on the entry peer; `false` sends `network.reject` |
-| `acceptMerge` | `(network, size) => boolean` | refuse all | runs on the host when another network asks to [merge](#merging-networks), with its real size |
-| `timeout` | `number` | `15000` | ms before `create`, `list` and `join` reject |
-| `linkTimeout` | `number` | `15000` | ms a link may take to open. It gets a second round when ICE connected in time |
-| `connectTimeout` | `number` | none | ms without a server connection before giving up for good; `ready` rejects and `status` becomes `closed` |
-| `wake` | `boolean` | `true` | while not connected, `GET <http url>/health` every 4 s so a sleeping host boots (`ws:` → `http:`, `wss:` → `https:`); errors are ignored |
-| `profile` | `Profile` | `{}` | what you say about yourself, e.g. `{ name }`, at most 1 KB as JSON |
+One identity and one signalling socket for any number of networks. The socket opens when a network needs it (create, join, becoming an anchor) and closes `SOCKET_GRACE` (1 s) after none does. The peer id is the first id the server assigned and stays the same across reconnects.
 
-| Method | Purpose |
-| --- | --- |
-| `create` | Registers a network, optionally with a [media plan](#media). You become its host. Resolves on `signal.registered`. |
-| `update` | Host only. Sends `signal.update`. A new `media` plan is also sent to every member as `network.media` and applied to every link. |
-| `list` | Public networks on the server. |
-| `join` | Resolves on `network.welcome`. Rejects on `signal.error`, `network.reject`, `signal.unreachable` for this request, or a timeout. |
-| `merge` | Host only. [Merges](#merging-networks) with another network. Resolves with the merged network, rejects on a refusal, a timeout or a lost host. |
-| `reregister` | Host only. Registers the network again under a new server id and tells the members. A new host does this by itself, with retries, so call it after an `error` of type `host`. Resolves with the new `serverId`. |
-| `room` / `joinRoom` | Opens or joins a network over the peers you already have, see [Rooms](#rooms). |
-| `send` / `broadcast` | App messages. A reserved type (`signal.*`, `network.*`, `handshake.*`) emits `error` instead and returns false. |
-| `setProfile` | Changes your profile. In a network it goes to the host as `network.profile`, and the host shares it in `network.members`. False, plus an `error`, for anything but a JSON object of up to 1 KB. |
-| `profile` / `profiles` | One member's profile (yours without an id), or all known profiles by id. Profiles of members who left are dropped. |
-| `leave` | Sends `signal.leave`, broadcasts `network.leave`, closes every peer link. |
-| `close` | Closes your rooms, then `leave`, closes the socket and rejects pending requests. |
+| Option | Type | Description |
+| --- | --- | --- |
+| `url` | `string \| URL` | The signal server. |
+| `protocols` | `string \| string[]` | WebSocket subprotocols. |
+| `rtc` | `RTCConfiguration` | Passed to every `RTCPeerConnection`, e.g. `iceServers`. |
+| `handshakeTimeout` | `number` | ms before a handshake fails (15 000). |
+| `connectTimeout` | `number` | ms without a server connection before the socket gives up. |
 
-| Event | Detail |
-| --- | --- |
-| `message` | `{ type, sender, payload, meta }`, with `payload` parsed from JSON |
-| `peer` / `peer-left` | `PeerId`, a direct link opened / closed |
-| `members` | `{ members, profiles }`: sorted ids, you included, and the profiles by id |
-| `status` | the new `status` |
-| `host` | `PeerId` |
-| `unreachable` | `{ receiver, ref }`, `ref` is the message id |
-| `drop` | `Message`, dropped by relay rules or a topology filter |
-| `merged` | `NetworkInfo`, this peer's network merged and this is the result. Fires in both groups, `network.id` changes in the one that moved |
-| `server-id` | `string`, the new `serverId`. The host tells the members in `network.members`, so it fires on them too |
-| `error` / `debug` | `{ type, message, payload }` |
+`setup` is per network: `bootstrap` (carry it over something other than the server, see [Carrying a network](#carrying-a-network-over-any-medium)), `accept(peer, profile)` (admission, default everyone), `acceptMerge(info)` (default refuse) and `topology` (a local `Topology` function instead of a registered name).
 
-`serverId` is the id the server knows the network by, and the one to put in an invite. `network.id` never changes, so after a new host registers the network the two differ.
+`client.id`, `client.online`, `client.networks`. Events: `network` (`CustomEvent<Network>`), `error`, `debug`.
 
-## Merging networks
+### NetworkDraft
 
-```ts
-// on the other network's host
-new Client({ url, acceptMerge: (network, size) => size < 50 });
-
-// on this network's host, with the other network's serverId
-const merged = await client.merge(serverId, password);
-```
-
-The larger network stays and a tie keeps the lower host id. Both need the same topology and config. The moving group takes on the staying network's id, name, meta, password and media plan.
-
-Only the two hosts use the server, once, to find each other. Everyone else moves over peer links, keeps the links the topology still wants, and closes the rest last. See [the merge flow](#protocol).
-
-## Rooms
-
-A room is a network opened on top of one you are already in. It has no socket and nothing on the server, so it works with the server asleep or down. It is a `Client` of its own, with its own `RTCPeerConnection`s, so a call doesn't go when the lobby's links change.
-
-```ts
-// host: opening it takes no server call
-const room = await lobby.room({ name: "call", password: "optional" });
-lobby.send(friend, "invite", { id: room.network.id, host: room.host });
-
-// guest
-const room = await lobby.joinRoom(invite.id, invite.host);
-room.addEventListener("message", ({ detail }) => console.log(detail.payload));
-```
-
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `name` | `string` | - | the room's name |
-| `password` | `string` | - | checked by the room's host. It travels over lobby peers, which can read it |
-| `meta` | `object` | - | stored on the room's `network` |
-| `media` | `MediaPlan` | - | the room's [media plan](#media) |
-| `topology` | `string \| TopologyConfig` | `"mesh"` | the parent's topology isn't inherited |
-| `accept` | `(newcomer, info) => boolean` | accept all | runs on the room's host |
-| `profile` | `Profile` | the parent's | what you say about yourself in this room |
-
-A room is used like any client, except that `create`, `join`, `list` and `reregister` reject, because they need the server. `update` changes the room locally. `room.close()` or `room.leave()` leaves it. A room survives `leave()` on its parent and closes with `close()`.
-
-Rooms have no list and their invites go stale: `joinRoom` only works through the current `room.host`, and needs both of you in the parent network.
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | Shown in listings. |
+| `topology` | `string \| TopologyConfig` | A registered name, or `{ name, ...options }`. Every peer gets the same config. |
+| `password` | `string` | Checked by the registry, or by the entry when the bootstrap doesn't check. |
+| `private` | `boolean` | Left out of listings. |
+| `meta` | `object` | App data on `NetworkInfo`. |
+| `media` | `MediaPlan` | Channels and streams every link carries, see [Media](#media). |
+| `anchors` | `number` | How many peers keep a socket to the registry (1). |
+| `beacon` | `number` | ms between beacons, 0 = no split healing (10 000). |
 
 ## Network
 
-The transport-agnostic router under `Client`. Use it on its own with your own links, e.g. `MemoryLink` in tests.
+One network on one node. It moves bytes and opens links; the topology decides everything else.
 
-```ts
-class Network extends EventTarget {
-    constructor(options: { me: PeerId; info?: NetworkInfo; topology?: Topology | string | TopologyConfig });
-    readonly me: PeerId;
-    info?: NetworkInfo;
-    topology: Topology;
-    readonly view: View;
-    addLink(link: Link): void;
-    removeLink(id: PeerId): void;
-    setMembers(members: Iterable<PeerId>, host?: PeerId): void;
-    desired(): PeerId[];
-    send(message: Message, options?: { preferServer?: boolean }): boolean;
-    close(): void;
-}
-```
-
-| Method | Purpose |
+| Member | Description |
 | --- | --- |
-| `addLink` | Attaches a link. One with id `SERVER` becomes the server link. Replaces and closes an existing link with the same id. |
-| `removeLink` | Detaches the link, removes its listeners and closes it. A link that closes itself is removed the same way. |
-| `setMembers` | Replaces the member list (`me` is always kept) and optionally the host. |
-| `desired` | Members the topology wants `me` linked to that aren't linked yet. |
-| `send` | Fills in an empty `sender` with `me` and a missing `network` with `info.id`, then routes (see [Routing](#routing)). |
-| `close` | Closes and removes every link and forgets the members. |
+| `send(peer, type, data)` | An app message to `peer`. Throws a `RangeError` for a reserved type (`network.*`, `topology.*`, …). |
+| `broadcast(type, data)` | An app message to everyone. |
+| `sendKey(key, type, data)` | To whoever owns `hash(key)`. Needs a topology with `owner`. |
+| `invite()` | The `NetworkInfo` plus `entries` a joiner can come in through. |
+| `known()` | What this node's topology knows. Never "the network". |
+| `update(changes)` | Anchors only: name, `private`, `meta`, `password` (empty opens it), `media`. Every member gets it. |
+| `merge(target, password?)` | Anchors only: merge this network into `target`, see [Merge](#merge-and-split-healing). |
+| `anchor()` | Become an anchor through the bootstrap. The `Client` does this when asked. |
+| `leave()` / `close()` | Graceful (the topology says goodbye) / immediate. Both release every link, timer and listener. |
+| `carry(room, peer, bytes)` / `inbox(room, take)` | Carry another network's bytes, for a `Bootstrap` built on this one. |
+| `info`, `me`, `ready`, `linked`, `anchored`, `closed` | State. `linked` is the set of open direct links. |
+| `topology` | The topology's `api`, e.g. `network.topology.successors` in chord. |
+| `media` | The [Media](#media) of this network's links. |
 
-Events: `message`, `drop` and `unreachable` (detail `Message`), `link` / `unlink` (detail `PeerId`), `error`, `debug`.
-
-## Links
-
-```ts
-interface Link extends EventTarget {
-    readonly id: PeerId;   // the remote node, SERVER for the signalling socket
-    readonly open: boolean;
-    send(bytes: Uint8Array): boolean;
-    close(): void;
-}
-```
-
-Every link fires `open`, `close` and `message` (`CustomEvent<Uint8Array>`). Any transport with this shape can carry a network.
-
-| Class | What it is |
+| Event | Detail |
 | --- | --- |
-| `SocketLink(url, { protocols?, attempts?, timeout? })` | WebSocket to the signal server. It keeps connecting and reconnecting with a backoff of 0.7 s, 1.4 s, … capped at 5 s, with no limit unless `attempts` or `timeout` (ms without a connection) is set; running out emits `error` with type `limit`. It queues sends in order meanwhile and fires `welcome` (detail: id) on every welcome. `close` fires only once it gives up or `close()` is called. |
-| `PeerLink(me, id, network, { rtc?, timeout? })` | One `RTCPeerConnection` with the negotiated system channel (`SYSTEM_CHANNEL` = `"_system"`, id 0) that carries every system message and `Client.send` / `broadcast`, plus its `Handshake`. `open` while the channel is open. Closes on channel close or connection `failed` / `closed`. |
-| `MemoryLink.pair(aId, bId)` | Both ends of an in-memory link. The first end belongs to `aId`, so its `id` is `bId`. Async (one microtask per message), in order, and copies the bytes. Closing one end closes both. |
+| `message` | `Message`: `detail.meta.sender`, `detail.parse()` |
+| `link` | `{ peer, open, left }`, where `left` means the peer said goodbye first |
+| `merged` | `{ bridge, network }` |
+| `update` | `NetworkInfo` after an anchor's `update` |
+| `anchored` | `boolean` |
+| `anchor-request` | `{ from }`: an anchor asks this node to become one |
+| `close`, `error`, `debug` | |
+| topology events | `leader` (star, multicast), `range` (chord), or your own through `ctx.emit` |
 
-`Handshake` negotiates a `PeerLink` for its whole life using perfect negotiation: on glare the lower id is polite and rolls back. `start()` resolves once, when the system channel opens, and fails after `HANDSHAKE_TIMEOUT` (15 s). After that the handshake keeps renegotiating on `negotiationneeded` (new channels, stream slots, direction changes) until the link closes.
+## Built-in topologies
 
-## Topology
+| Name | Shape | Config | `network.topology` | Events |
+| --- | --- | --- | --- | --- |
+| `mesh` | Everyone links to everyone. App messages must come straight from their sender. | | | |
+| `star` | One hub relays for all. The lowest other member is a standby with links to everyone, so it takes over without new links. | | `hub`, `members` | `leader` `{ hub }` |
+| `multicast` | A tree with at most `fanout` children. Links to parent, children and grandparent. Streams flow down. | `fanout` (3, 1–64) | `parent`, `children`, `root` | `leader` `{ root }` |
+| `chord` | Chord ring with O(log n) lookups. Broadcast reaches each node once. | `successors` (4, 1–16), `fingers` (32, 0–32), `stabilize` (1000 ms), `fixFingers` (250 ms) | `lookup(key)`, `successorsOf(peer)`, `successors`, `predecessor`, `fingers` | `range` `{ from, to }` |
+| `ring` | `chord` with `fingers: 0`. | as chord | as chord | as chord |
+
+All of them merge and have `owner`, so `sendKey` works everywhere. `chordTopology(config, { pickFinger, onStabilized })` takes local hooks. `proximity` is a `pickFinger` that picks the lowest round trip. `chordRing` exports the ring math.
 
 ```ts
-type View = { me: PeerId; host: PeerId; members: readonly PeerId[]; links: readonly PeerId[]; order?: readonly PeerId[] };
-
-interface Topology {
-    readonly name: string;
-    neighbors(view: View, id: PeerId): PeerId[];
-    route(view: View, meta: Meta): PeerId[];
-    stitch?(view: View, id: PeerId): PeerId[];
-    ttl?(view: View): number;
-    filter?(view: View, meta: Meta): RelayAction | undefined;
-    readonly direct?: boolean;
-    media?(view: View, peer: PeerId, plan: MediaPlan): MediaPlan;
-    relay?(view: View, name: string): PeerId | null;
-}
-
-type TopologyFactory = (config: TopologyConfig) => Topology;
-const topologies: Record<string, TopologyFactory>; // { mesh, star, chord, ring, multicast }
-function registerTopology(name: string, factory: TopologyFactory): void;
-function resolveTopology(topology: string | TopologyConfig, onError?: (error: Error) => void): Topology;
+registerTopology(name: string, factory: TopologyFactory): void   // RangeError for a built-in name
+resolveTopology(topology: string | TopologyConfig, onError?): Topology
 ```
 
-`neighbors` gives the direct links `id` should hold. `route` gives next hops drawn from `view.links` (`[]` means no peer route). `view.members` is sorted, `view.order` is the same list in the host's order. `stitch` names the links opened first after a merge, the ones routing can't do without. `ttl` raises the `ttl` of messages this node sends, for a topology where crossing takes more than 16 hops. `filter` runs on every received message before `relay`: `"drop"` or `"deliver"` replace relay's decision, while `"forward"` and `"both"` still go through relay's loop and `ttl` checks. `media` narrows the plan per direct link, see [Media](#media). `relay` names the peer whose incoming stream `name` this node forwards when it has no capture of its own (`null` or omitted: nothing is relayed), see [Relaying streams](#relaying-streams). `direct` says nothing is ever relayed, so an app message whose sender isn't the link's peer is dropped. `mesh` sets it.
+Only the config goes over the wire, never code, so every peer registers the same factory under the same name. An unknown name, or a factory that throws on the config, falls back to `mesh` on every peer alike.
 
-## Topology config
+# The engine rules
 
-A network's topology is a name or a config, `string | { name, ...options }` (`TopologyConfig` from peer-message, at most 1 KB as JSON). It's stored in `NetworkInfo.topology`, so joiners get it with the network. Only the config is shared, never code: each peer builds the topology from its own `topologies` registry.
+The contract between the engine and a topology:
+
+1. **The engine reports facts and obeys commands.** Facts: a link opened or closed, a message arrived, a join or merge was admitted. Commands: `connect`, `disconnect`, `send`, `forward`.
+2. **Wants, not links.** `connect(p)` means "I want a link to p". After `disconnect(p)` the engine sends `network.prune`, and the link closes once neither side wants it.
+3. **One link per pair.** When both sides connect at once, the outbound attempt of the lower id wins.
+4. **The engine never retries.** A failed or closed link becomes `link(p, false)`, and the topology decides what to do.
+5. **Unicast send order:** waypoints (`via`) first, then a direct link, then the back path (the link the target's last message came in on, under 30 s old), then `route(meta)`, then the entry link while joining, then the bootstrap. If none of these works, the message is dropped. Broadcast uses `route(meta)` only.
+6. **Scoped resources.** Every timer, link and listener belongs to one `Network` and goes on `close()`. All time goes through an injectable `Clock`.
+7. **No throwing from network callbacks.** Bad input is dropped with a `debug` event. A topology handler that throws is reported as `error` and its message is dropped.
+
+# Writing a topology
+
+A topology is a function of a `TopologyContext` that returns a `TopologyNode`. It runs on every node and manages itself.
+
+| Context | Description |
+| --- | --- |
+| `me`, `config`, `links` | My id, the shared config, my open links (live). |
+| `connect(peer, { via? })` / `disconnect(peer)` / `wants(peer)` | Wants (rule 2). `via` signals through waypoints. |
+| `send(peer \| BROADCAST, type, payload, { hint?, via? })` | Sends `topology.<type>`. `hint` is read by the next hop. |
+| `forward(peer, meta, options?)` | Passes a received message on, keeping its sender. |
+| `rtt(peer)` | Round trip in ms over the direct link. |
+| `every(ms, fn)` / `after(ms, fn)` | Timers that stop on close. Each returns a cancel function. |
+| `emit(type, detail)`, `random()`, `now()` | An event on the `Network`, seeded random, the clock. |
+
+| Node | Required | Description |
+| --- | --- | --- |
+| `start(entry)` | yes | `entry` is `null` when I created the network. Resolve once joined. |
+| `message(from, type, payload, meta)` | yes | `from` is the original sender. **Validate `payload` here.** |
+| `route(meta)` | yes | Next hops from the open links, as `peer` or `[peer, hint]`. |
+| `join(peer, profile)` | | On the entry, once the newcomer's link opened. |
+| `link(peer, open, left)` | | A link opened or closed. |
+| `merge(bridge)` | | Absorb the network behind `bridge`. Leave it out to refuse every merge. |
+| `owner(key)` | | Who owns `hash(key)`. This enables `sendKey`. |
+| `known()`, `entries()`, `api`, `direct`, `ttl()`, `filter(meta)`, `media(peer, plan)`, `relay(name)`, `leave()`, `close()` | | See `TopologyNode` in `src/types.ts`. |
+
+Rules of thumb:
+
+- **The newcomer initiates.** In `start` or `join`, tell the newcomer whom to connect to; don't connect from the old side. A message from the newcomer to the old side has a route through its entry link. The old side has no route back yet, only the back path.
+- **Back paths answer strangers.** A reply to a message that was forwarded to you reaches the sender, even before any topology knows it.
+- **Across a bridge, use `via`.** During a merge, `connect(peer, { via: [bridge] })` signals through the bridge (at most `MAX_VIA`, 8, waypoints).
+- **`merge` must be idempotent.** Merging with your own network (a false alarm from split detection) must change nothing.
+- **`owner` must agree on every node**, or `sendKey` messages bounce.
+
+An example: a bus, a line in join order. The tail takes each newcomer. Every node knows the one before its `prev`, so a gap closes on its own. It has no `merge`, so it refuses merges with `"topology can't merge"`.
 
 ```js
-new Client({ url, topology: "mesh" });
-new Client({ url, topology: { name: "multicast", fanout: 5 } });
+import { registerTopology } from "@papit/webrtc";
+
+const bus = (ctx) => {
+  let prev = null;
+  let next = null;
+  let before = null;
+  let joined = null;
+  const wanted = new Set();
+  const isId = (x) => typeof x === "string" && x.length > 0 && x.length <= 64;
+
+  const sync = () => {
+    const want = new Set([prev, next].filter(Boolean));
+    for (const peer of want) ctx.connect(peer);
+    for (const peer of wanted) if (!want.has(peer)) ctx.disconnect(peer);
+    wanted.clear();
+    for (const peer of want) wanted.add(peer);
+  };
+
+  const linked = () => {
+    ctx.send(prev, "bus.next", {});
+    joined?.();
+    joined = null;
+  };
+
+  return {
+    api: { get prev() { return prev; }, get next() { return next; } },
+    start(entry) {
+      if (!entry) return;
+      return new Promise(resolve => {
+        joined = resolve;
+        ctx.send(entry, "bus.tail", {});
+      });
+    },
+    message(from, type, payload, meta) {
+      if (type === "bus.tail")
+      {
+        if (next) ctx.forward(next, meta);
+        else ctx.send(meta.sender, "bus.prev", { before: prev });
+      }
+      if (type === "bus.prev" && (payload.before === null || isId(payload.before)))
+      {
+        if (prev && prev !== from) return;
+        const fresh = prev !== from;
+        prev = from;
+        before = payload.before;
+        sync();
+        if (fresh && ctx.links.has(prev)) linked();
+      }
+      if (type === "bus.next")
+      {
+        next = from;
+        sync();
+        ctx.send(from, "bus.prev", { before: prev });
+      }
+      if (type === "bus.before" && from === prev && (payload.before === null || isId(payload.before))) before = payload.before;
+    },
+    link(peer, open) {
+      if (open)
+      {
+        if (peer === prev) linked();
+        return;
+      }
+      if (peer === next) next = null;
+      if (peer === prev)
+      {
+        // the gap closes from behind: link to the one before, and tell my next about it
+        prev = before;
+        before = null;
+        if (next) ctx.send(next, "bus.before", { before: prev });
+      }
+      sync();
+    },
+    route(meta) {
+      if (ctx.links.has(meta.receiver)) return [meta.receiver];
+      // a missing neighbour sits behind the gap: let the bootstrap reach it
+      if (meta.receiver === prev || meta.receiver === next) return [];
+      return [prev, next].filter(peer => peer && ctx.links.has(peer) && !meta.hops.includes(peer));
+    },
+    known() {
+      return [prev, next].filter(Boolean);
+    },
+  };
+};
+
+registerTopology("bus", () => bus);
+const line = await client.create({ name: "line", topology: "bus" });
 ```
 
-`resolveTopology` looks the name up in `topologies` and calls its factory with the config. An unregistered name, or a factory that throws on the config (`fanout: -1`, say), falls back to `mesh`, and `Client` emits `error` with type `topology`. The check is deterministic, so every peer falls back the same way.
+The `tail` request walks down the line with `forward`, and the tail's answer finds the newcomer on the back path. The newcomer then connects to its `prev`. `sync` keeps the wants equal to `{ prev, next }`, so old links get pruned. The test harness runs this exact code (`tests/core/main.js`).
 
-**Breaking:** the `topology` option no longer takes a `Topology` object, since an object can't be shared. Register it with `registerTopology` and pass its name.
+# Anchors and beacons
 
-## registerTopology
+An **anchor** is a peer that keeps a socket to the registry, so the network can still be found and joined. The creator is the first one. While a network has fewer than `anchors`, its lowest anchor asks one linked peer at a time to become one (`anchor-request`, which the `Client` answers on its own). Every other peer closes its socket once it has joined.
 
-Adds a custom topology factory. Built-in names (`mesh`, `star`, `chord`, `ring`, `multicast`) throw `RangeError`. Every peer must register the same factory under the same name before it creates or joins:
+The first anchor broadcasts a **beacon** every `beacon` ms. A node that misses three beacons waits a random part of one interval, then re-anchors:
+
+- the registry forgot the network: this part carries it on, with that node as its first anchor
+- the network still exists elsewhere: this part [heals](#merge-and-split-healing) into it
+
+A bootstrap without `anchor` (`ParentBootstrap`) has no anchors, so it has no split healing either.
+
+# Merge and split healing
 
 ```js
-import { Client, registerTopology, resolveTopology } from "@papit/webrtc";
-
-registerTopology("quiet", (config) => ({
-    ...resolveTopology("mesh"),
-    name: "quiet",
-    filter: (view, meta) => config.drop?.includes(meta.type) ? "drop" : undefined,
-}));
-const client = new Client({ url: "ws://localhost:3000", topology: { name: "quiet", drop: ["spam"] } });
+// on b, an anchor of network B
+const a = await client.create({ name: "a", topology: "chord" }, { acceptMerge: info => info.name === "b" });
+await b.merge(a.info.id, "password-of-a");
 ```
 
-## multicastTopology
+The engine brings a bridge link into place, checks that both sides run the same topology config, and moves B's members to A's identity (a broadcast `network.adopt`). Then it calls `topology.merge(bridge)` on both ends, and the topology does the rest:
 
-```ts
-function multicastTopology(options?: MulticastOptions): Topology; // named "multicast"
-const multicast: Topology;                                         // multicastTopology() with fanout 3
+- `mesh` connects everyone across the bridge
+- `star` and `multicast` fold under the lower-id leader
+- `chord` joins the two rings into one
+
+A merge is refused for a topology mismatch, a topology without `merge`, a wrong password, or an `acceptMerge` that says no (the default).
+
+**Split healing** is a merge into your own network id that proves membership with the key hash, so it skips the password and `acceptMerge`.
+
+# Carrying a network over any medium
+
+webrtc has no notion of rooms. A `Bootstrap` decides how a network is found and first reached, and `ParentBootstrap` carries a network over another one, with no server involved:
+
+```js
+import { ParentBootstrap } from "@papit/webrtc";
+
+// in the lobby, create a sub-network carried by it
+const room = await client.create({ name: "room", topology: "mesh" }, { bootstrap: new ParentBootstrap(lobby, crypto.randomUUID()) });
+lobby.send(friend, "invite", room.invite());
+
+// the friend joins through the invite's entries
+const invite = message.parse();
+const joined = await client.join(invite, {}, { bootstrap: new ParentBootstrap(lobby, invite.id) });
 ```
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `fanout` | `number` | `3` | children per node. Throws `RangeError` unless an integer >= 1 |
+A carried network is private and is joined by invite only. Each entry gets `ENTRY_TIMEOUT` (5 s) before the next one is tried. When the parent closes, the bootstrap dispatches `lost` and the carried network closes.
+
+To carry a network over something else (a BroadcastChannel, a game server, your own rendezvous), implement `Bootstrap`:
+
+| Member | Description |
+| --- | --- |
+| `me` | My peer id. |
+| `create(draft, keyHash)` | Register, resolve with the `NetworkInfo`. Only `keyHash` (SHA-256 of the network key) is ever shown to a registry. |
+| `join(network, request)` | Send `network.join` to an entry. Reject when it can't be found or reached. |
+| `signal(peer, bytes)` | First contact. Return `false` when `peer` can't be reached this way. |
+| `anchor?`, `unanchor?`, `update?` | Optional. Without them there are no anchors and no split healing. |
+| `checksPassword?` | `true` when your registry already checked join passwords. |
+| `close()` | |
+| events | Dispatch `message` (`{ message, carrier }`) for anything that arrives, `anchors` (`{ network, anchors, target }`), and `lost`. |
+
+`Registry` from `@papit/peer-message` is the bookkeeping the signal server uses, ready for your own rendezvous. `MemoryServer` / `MemoryBootstrap` and `MemoryConnector` / `MemoryLink` run whole networks in one page, which is how the tests run.
 
 # Media
 
-The network's media plan lives in `NetworkInfo.media` ([shape and rules](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#media-plan)). The host sets it with `create` / `update`, and everyone works with it through `client.media`.
+The media plan lives in `NetworkInfo.media` ([shape and rules](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#media-plan)). Set it in `create` or `update`, and use it through `network.media`:
 
 ```js
-const client = new Client({ url: "ws://localhost:3000" });
-await client.create({
+const call = await client.create({
     name: "call",
+    topology: "mesh",
     media: {
         channels: { chat: { ordered: true }, state: { ordered: false, maxRetransmits: 0 } },
         streams: { camera: { kind: "video" }, mic: { kind: "audio" }, screen: { kind: "video" } },
     },
 });
 
-const camera = await client.media.start("camera");               // getUserMedia({ video: true })
-await client.media.start("screen");                              // getDisplayMedia, because of the name
-await client.media.start("mic", { audio: { echoCancellation: true } });
+await call.media.start("camera");                                // getUserMedia({ video: true })
+await call.media.start("screen");                                // getDisplayMedia, because of the name
+await call.media.start("mic", { audio: { echoCancellation: true } });
 
-client.media.addEventListener("stream", ({ detail }) => show(detail.peer, detail.name, detail.stream));
-client.media.addEventListener("stream-ended", ({ detail }) => hide(detail.peer, detail.name));
+call.media.addEventListener("stream", ({ detail }) => show(detail.peer, detail.name, detail.stream));
+call.media.addEventListener("stream-ended", ({ detail }) => hide(detail.peer, detail.name));
 
-const state = client.media.channel("state");
+const state = call.media.channel("state");
 state.addEventListener("message", ({ detail }) => apply(detail.peer, detail.data));
 state.broadcast(JSON.stringify({ x: 1 }));
 ```
-
-## Lazy slots
-
-Each `PeerLink` gets the plan before its first offer, so the first negotiation already carries it:
-
-- **Channels:** one negotiated data channel per plan channel, in sorted label order, with ids 1, 2, … (0 is `_system`).
-- **Streams:** an empty transceiver per stream, in sorted name order. Nothing is captured and nothing is sent, so there's no permission prompt until `start()`.
-- **Owner:** the lower id of a link creates its transceivers. Every offer carries `streams`, a map from transceiver `mid` to stream name, and the other side adopts the transceivers by `mid`. This mapping holds up against glare and against slots added mid-session; mapping by order doesn't.
-
-`start(name)` puts the capture's track into that stream's slot on every link with `replaceTrack` and sets the slot to `sendrecv`. `stop(name)` sets the slot back to `recvonly`, removes the track and stops it. Direction changes renegotiate through the handshake. A remote stream appears as `stream` when its track unmutes, and goes away as `stream-ended` when it mutes or the link closes.
-
-## Media API
 
 ```ts
 class Media extends EventTarget {
     readonly plan: MediaPlan;
     start(name: string, source?: MediaStream | (MediaStreamConstraints & { display?: boolean })): Promise<MediaStream>;
     stop(name: string): void;
-    streams(peer?: PeerId): Map<string, MediaStream>;   // remote streams from peer, or your captures
+    streams(peer?: PeerId): Map<string, MediaStream>;     // remote streams from peer, or your captures
     channel(label: string): Channel;
-    close(): void;
 }
 
 class Channel extends EventTarget {
-    readonly label: string;
-    readonly peers: PeerId[];                           // peers with this channel open
+    readonly peers: PeerId[];                             // peers with this channel open
     send(peer: PeerId, data: string | Blob | ArrayBuffer | ArrayBufferView): boolean;
-    broadcast(data): number;                            // how many peers it went to
-    bufferedAmount(peer: PeerId): number;               // bytes queued, not sent yet
-    drain(peer: PeerId, below?: number): Promise<boolean>; // waits until at most `below` (1 MiB) is queued; false if the channel closes
+    broadcast(data): number;                              // how many peers it went to
+    bufferedAmount(peer: PeerId): number;
+    drain(peer: PeerId, below?: number): Promise<boolean>; // until at most `below` (1 MiB) is queued; false if it closes
 }
 ```
-
-`start` without a source asks for the plan's kind with `getUserMedia`. It uses `getDisplayMedia` instead when `display: true` is given or the stream is named `screen`. When the user ends a screen share from the browser, the capture stops by itself.
 
 | Event | Detail |
 | --- | --- |
 | `stream` / `stream-ended` | `{ peer, name, stream }` / `{ peer, name }`, remote |
-| `capture` / `capture-ended` | `{ name, stream }` / `{ name }`, local |
+| `capture` / `capture-ended` | `{ name, stream }` / `{ name }`, local (also when the user ends a screen share) |
 | `channel-open` / `channel-close` | `{ peer, label }` |
-| `message` (on a `Channel`) | `{ peer, data }`, raw: no peer-message framing |
+| `message` (on a `Channel`) | `{ peer, data }`, raw, without peer-message framing |
 
-Channels are direct only. A `Channel` reaches the peers you have a link to, and nothing is relayed. Messages that arrive before `channel(label)` was first called are dropped. Labels starting with `_` are reserved: they're rejected in a plan, and `channel("_system")` throws.
-
-## Per-link narrowing
-
-A topology can narrow what goes over one link:
-
-```js
-registerTopology("stage", () => ({
-    ...star,
-    name: "stage",
-    media: (view, peer, plan) => view.me === view.host ? plan : { ...plan, streams: {} }, // only the hub sends
-}));
-```
-
-Only `streams` are narrowed. Channels always follow the full plan, because both ends have to agree on the channel ids. A stream left out for a link isn't sent on it: its slot stays `recvonly`, or ends up inactive if both sides leave it out.
-
-## Relaying streams
-
-When a topology has `relay`, a node with no capture of its own for stream `name` forwards the remote `name` it receives from `relay(view, name)` on every link that [per-link narrowing](#per-link-narrowing) allows. A relayed track is never sent back to the peer it came from. Relays are re-applied whenever the upstream stream starts or ends, a link closes, or the members or host change. `multicast` relays from the parent, so the host's capture flows down the tree:
-
-```js
-const client = new Client({ url: "ws://localhost:3000", topology: "multicast" });
-await client.create({ name: "stage", media: { streams: { camera: { kind: "video" } } } });
-await client.media.start("camera"); // every member receives it, through at most log_k(n) relays
-```
-
-Limits:
-
-- **One source.** The tree is rooted at the host, so only the host's captures reach everyone. A member that captures the same stream sends its own to its subtree instead of relaying.
-- **Re-encoding.** Every hop decodes and re-encodes the track, so latency grows and quality drops a little with depth.
-- **Streams only.** Plan channels stay direct; nothing on a `Channel` is relayed.
-- **Churn.** Members are ordered by sorted id, so a join or leave can move nodes in the tree and swap their parents and links.
-
-## Mid-session changes
-
-`client.update({ media })` stores the new plan on the server and sends `network.media` to every member. Only `network.media` from the current host is accepted. Each peer applies it to its existing links:
-
-- New channels open on the lowest free ids.
-- Removed channels close.
-- New streams get slots (the owner adds them and renegotiates).
-- Removed streams go inactive, and their local captures stop.
-
-# Topologies
-
-| Topology | Links per node | `route` | Broadcast |
-| --- | --- | --- | --- |
-| `mesh` | every other member | the receiver if linked | every link not in `hops` |
-| `star` | hub (`host`): everyone. Leaf: the hub | leaf: the hub. Hub: the receiver if linked | leaf: the hub. Hub: every link not in `hops` |
-| `chord` | predecessor, successor, and `successor(hash + 2^i)` for i = 0..31 | the receiver if linked, else the closest preceding link on the ring, else the successor | every link not in `hops` |
-| `ring` | the previous and next member in `view.order` | the receiver if linked, else the short way round | previous and next, not in `hops` |
-| `multicast` | a `fanout`-ary tree rooted at the host: its parent and children | the receiver if linked, else the child above it in the tree, else the parent | parent and children not in `hops` |
-
-Chord hashes ids with FNV-1a onto a 2^32 ring (`fnv1a` is exported), so lookups take O(log n) hops.
-
-A ring is the cheapest to hold and the slowest to cross. Newcomers go at the end of the list, so a join moves one link and a merge moves only the two seams. It tops out around 500 members, because `ttl` stops at 255.
-
-Multicast orders the host first, then the other members by sorted id. Node `i > 0` has parent `⌊(i - 1) / k⌋` and children `k·i + 1 .. k·i + k`. Streams go to children only, and each node relays its parent's streams, so no node uploads more than `fanout` copies. For another fanout, create with `{ name: "multicast", fanout }`.
-
-For your own topology, see [registerTopology](#registertopology).
-
-# Routing
-
-Outgoing, in order:
-
-1. A direct link to the receiver (`SERVER` uses the server link).
-2. With `preferServer` (handshakes and welcomes): the server link.
-3. `topology.route`.
-4. The server link, for this node's own unicast messages only. The server doesn't relay broadcasts or other senders' messages.
-5. In a room: the parent network, in a `network.room` envelope. Then the room's host, over the room's links.
-6. `unreachable`.
-
-A message for `SERVER` is never sent over peers: without a server link, or with another sender, it emits `drop`. A broadcast goes to the `route` result and is marked seen.
-
-Incoming bytes go through peer-message's `read` (malformed → `error`). In a topology with `direct`, an app message whose sender isn't the link's peer emits `drop`, also when it comes wrapped in `network.relay`. A broadcast already seen is dropped quietly. Then come `topology.filter` and `relay(meta, me)`: `deliver` / `both` emit `message`, `forward` / `both` re-route without re-stamping, and `drop` emits `drop`.
-
-# Protocol
-
-The message types and payloads are listed in [peer-message's protocol table](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#protocol). On top of them, webrtc runs these flows:
-
-| Flow | What happens |
-| --- | --- |
-| join | The server forwards `network.join` to the entry peer (the host by default). The entry checks `accept`, adds the newcomer and sends `network.welcome { network, members, connect }` via the server, where `connect = topology.neighbors(view, newcomer)`. It then sends `network.members { members, host }` to the existing members. The entry reconciles, and so does the newcomer for everyone in `connect`, with the initiator rule below. |
-| reconcile | On `network.members`, a lost link or `network.leave`, each peer opens links for `desired()`. Exactly one side of a pair initiates: the lower id, unless the other side's `neighbors` don't include us (chord fingers are one-way). Peers with a pending handshake are skipped. One initiator matters, because rolling back a first offer discards its data channels. |
-| retry | A link that fails before it opens is tried again by the side that opened it: 3 times, 2 s apart and growing. On a timeout with ICE connected the handshake first waits another round. |
-| lost link | When an open link drops without `network.leave`, the member stays for `linkTimeout` plus 2 s while the link is retried. A member with no socket and no route to the host opens its socket for this and makes the offer itself. A closed tab with no `network.leave` therefore shows as gone that much later. |
-| stale link | Every offer and answer names its connection in `session`. An offer with a new `session` means the peer's end is gone, so it replaces the old link. When two fresh offers cross, the lower id's stands. |
-| room | `network.join`, `network.welcome` and handshakes travel between peers in `network.room { room, message }`, routed over the parent network like any peer message. The receiver hands it to that room, and only if its sender is the envelope's sender. |
-| merge | `signal.merge` makes the server pass `network.merge` to the target's host, which checks `acceptMerge`, the password and the topology, then answers `network.merge-accept` or `network.reject`. The hosts link through the server and swap `network.merge-list` over that link. Each sends its group `network.merge-view` with the combined list, and the moving host unregisters. From here on nothing coordinates: each peer opens what `neighbors` wants, `stitch` links first, a few at a time, after a random wait that grows with the size. Handshakes with the other group go through the hosts, over peer links. |
-| prune | A few seconds after every wanted link is up, also after any member change, a peer sends `network.prune` on each link neither side wants. The other side closes it once it's done linking up itself. Neither peer counts as gone. |
-| closing a socket | Before `keepSocket` closes a socket, `signal.drain` makes the server stop forwarding to it, and `signal.drained` says nothing more is on its way. An offer sent after that gets `signal.unreachable` and goes through the host, so none is lost in the close. |
-| media | `network.media { media }` from the host replaces the plan on every peer, which applies it to its links (see [Mid-session changes](#mid-session-changes)). |
-| host change | When the host leaves, the server sends `signal.host` to the next host. It sends `network.members { members, host: me }` to every member, through the server if it has no route yet, and reconciles. A host also sends the members to every peer whose link opens. |
-| leave | `signal.leave` to the server and `network.leave { peer }` broadcast. Peers drop the member and its profile, then reconcile. |
-| profiles | The newcomer's `profile` travels in `signal.join` and the forwarded `network.join`. The host keeps every profile and sends them as `profiles` in `network.welcome` and `network.members`. A member that changes its profile sends `network.profile` to the host, which only accepts it about the sender itself, then sends the members again. A new host already has the profiles from the last `network.members`. |
-
-Only the current host, or a sender naming itself as host, can change the member list.
-
-# Lifecycle
-
-```
-connect ──▶ signal.welcome {id} ──▶ create ──▶ signal.registered (host)
-                                 └─▶ join ──▶ network.welcome {members, connect}
-                                                  │
-              handshake.offer / answer / candidate (via the server)
-                                                  │
-                         data channel open ──▶ peer, network.members, reconcile
-                                                  │
-                          leave: signal.leave + network.leave ──▶ close
-```
-
-If the socket drops, it reconnects with backoff and sends what was queued once the server has welcomed it. What was queued under the old socket id is dropped with a `debug` line, because the server would refuse it as a spoof. A new socket can come with a new id from the server. Inside a network, the peer id stays the same and only the socket id changes: messages through the server go wrapped in `network.relay` under the socket id. A host with a new socket id registers the network again. Outside a network (and on `leave()`), the client takes the new id. Peer links keep working.
-
-If the host leaves, every member picks the same successor, the lowest remaining id. When that peer has no socket (`keepSocket: "host"` dropped it), it opens one first. The signal server drops a network as soon as its host leaves, so the new host always registers it again (`recreate`, default true), with the password it was created or joined with (kept in memory). Joins under the new server id are welcomed into the same network.
-
-# Status and cold starts
-
-`client.status` follows the signalling socket:
-
-| Status | When |
-| --- | --- |
-| `connecting` | the first connection attempt is running |
-| `waking` | the first connection has been failing for more than 3 s (`WAKING_AFTER`), e.g. a free host is booting |
-| `connected` | the server welcomed us |
-| `reconnecting` | a connection dropped, and it's retrying |
-| `closed` | `close()`, `connectTimeout`, or `keepSocket` dropped the socket |
-
-While not connected, `wake` pings `/health` so a sleeping host such as Render's free tier starts booting. See [Deploy on Render](https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server#deploy-on-render). `ready` rejects only on `connectTimeout` or `close()`.
+- **Lazy slots.** Each link gets the plan before its first offer: one negotiated data channel per plan channel (ids 1, 2, … in label order, 0 is `_system`) and an empty transceiver per stream. Nothing is captured until `start()`, so no permission prompt shows before then. Offers map transceiver `mid` to stream name, which holds up against glare.
+- **Channels are direct.** A `Channel` reaches linked peers only. Messages that arrive before the first `channel(label)` call are dropped. Labels starting with `_` are reserved.
+- **Per-link narrowing.** A topology's `media(peer, plan)` can drop `streams` for one link. Channels always follow the full plan, because both ends have to agree on channel ids.
+- **Relaying.** With `relay(name)`, a node without its own capture of `name` forwards the remote one from `relay(name)` on every link that narrowing allows. `multicast` relays from the parent, so the root's capture reaches every member. Every hop decodes and re-encodes the stream.
+- **Mid-session changes.** `network.update({ media })` reaches every member. New channels open on the lowest free ids, removed ones close. New streams get slots, removed ones go inactive and their captures stop.
 
 # Live testing with the demo
 
-`views/demo` is a plain-DOM showcase of everything above.
-
 ```bash
-# terminal 1, from the repo root or any package
+# terminal 1
 npx papit-signal-server --port 3000
 
 # terminal 2, in packages/network/webrtc
 npm start
 ```
 
-Start the signal server first. `npm start` also tries port 3000 and moves on to the next free one. Then open `/views/demo/` on the port it prints, in two or more tabs or browsers.
+Open `/views/demo/` in two or more tabs. Each network gets a panel:
 
-- **Connection:** the server URL (`wss://<app>.onrender.com` for a deployed one), your display name (your profile), and the STUN toggle, which is on by default and needed across networks. A live badge shows *connecting*, *waking up server…*, *connected* or *reconnecting*.
-- **Create:** the name, password, private flag and topology (with a fanout for multicast), plus a media plan editor.
-  - Channel rows have a label, ordered, and reliable, `maxRetransmits` or `maxPacketLifeTime`. The `_` rule is checked as you type.
-  - Stream rows have a name, a kind, and *screen*, which captures with `getDisplayMedia`.
-  - Presets: *Chat*, *Video call*, *Game* and *Screen share*.
-- **Join:** public networks with topology, size, a lock and a media summary. Join with a password, or paste the id of a private network.
-- **In a network:**
-  - members by name, with *you*, *host* and direct-link badges, and a rename box
-  - a tab per channel (`_system` messages first) with its own log and a send box, to everyone or one member by name
-  - start/stop per stream, and a video grid labelled "<name> · <stream>"
-  - for the host only, **Edit media plan**, which updates everyone
-  - **Leave**
-- **Merge**, as two hosts: tick "allow merges" on one, paste its network id in the other and merge. Try chord and ring, and watch the links in the log.
-- **Rooms**, in a network: open one, copy its invite, paste it in another tab and ping. Stop the signal server to check that rooms don't need it.
-- **Event log**, with a *debug* toggle for handshake and ICE detail.
+- **Create or join:** on the server, with a topology, anchors, beacon and password.
+- **Send:** to everyone or to one peer.
+- **Invite:** copy an invite to paste in another tab.
+- **Carry a network over this one:** a network carried by `ParentBootstrap`.
+- **Merge into:** another network id (anchors only).
 
-The URL, name, topology and last plan are remembered in `localStorage`. The demo records which streams are screen captures, and whether the network has a password, in the network's `meta` (`screens`, `locked`), because `NetworkInfo` has no fields for them.
+`?url=` and `?join=<id>` prefill the form.
 
 # Known limits
 
-- Plan channels are direct only. Streams are relayed only by a topology with `relay` (`multicast`): in a star, leaves see only the hub's streams, and in a chord you see only your fingers.
-- A link created while a `network.media` update is still in flight can end up with different channel ids on its two ends. Leave and rejoin to fix it.
+- Peers trust each other. In a topology that relays, any member can send under another's id; `mesh` (`direct`) drops those app messages.
+- The `multicast` tree floods unicast, so a sibling link plus a back path can deliver a second copy. Only broadcasts are deduplicated.
+- `media.refresh()` runs when a link opens or closes. A relay source that moves without a link change waits for the next link event.
+- A link created while a media update is still in flight can end up with different channel ids on its two ends. Leave and rejoin to fix it.
 - Remote streams are detected by track mute and unmute, so browsers that fire these late show streams late.
-- A merge sends every handshake between the two groups through the two hosts, so they carry the load of a large one.
-- If a host crashes after the groups got the combined list but before any link crossed, the groups go on apart. A chord member with no link to its old host doesn't notice, and waits out its failed links. It only recovers once the new host sends the members.
-- A merged network must fit `MAX_MESSAGE_BYTES` (256 KB) in `network.merge-view` and `network.members`: about 250 members with 1 KB profiles.
-- Invites to the network that moved stop working, the server answers `not-found`.
-- `keepSocket: false` drops the host's socket too, so nobody can join any more. Use `"host"` (the default).
-- `status` and `wake` only cover the signalling socket. Peer links come and go on their own (`peer`, `peer-left`).
-- Profiles are kept by the host and trusted as sent.
-- Peers trust each other: the host controls the member list, and in a topology that relays (`chord`, `star`, `multicast`) any member can send an app message under another's id. A `mesh` drops those, but only app messages.
-- A member that reconnected under a new socket id can't reach a mesh peer through the server, because that peer can't check the sender. Its peer links keep working.
-- A mesh member with no socket and no link to anyone can only come back through the host: with the host gone too, it waits out the lost link and drops the members.
+- Carried networks (`ParentBootstrap`) don't heal splits, and their invites stop working once every listed entry is gone.
 
 # License
 
@@ -561,4 +455,4 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 - [@papit/peer-message](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message)
   The message format, relay rules and protocol.
 - [@papit/signal-server](https://github.com/onkelhoy/papit/tree/main/packages/network/signal-server)
-  The signalling server.
+  The signalling server and its registry.

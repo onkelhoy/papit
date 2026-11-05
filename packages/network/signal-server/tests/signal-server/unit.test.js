@@ -158,7 +158,7 @@ describe("connection", { timeout: 5000 }, () => {
 
 describe("networks", { timeout: 5000 }, () => {
 
-    it("registers a network with the sender as host", async () => {
+    it("registers a network with the sender as its anchor", async () => {
         const t = await setup();
         const a = await t.connect();
         const network = await a.register({ name: "lobby", topology: "star", meta: { game: "x" } });
@@ -167,7 +167,6 @@ describe("networks", { timeout: 5000 }, () => {
         assert.deepStrictEqual(network, {
             id: network.id,
             name: "lobby",
-            host: a.id,
             topology: "star",
             private: false,
             size: 1,
@@ -419,51 +418,6 @@ describe("join", { timeout: 5000 }, () => {
     });
 });
 
-describe("merge", { timeout: 5000 }, () => {
-
-    it("forwards network.merge to the target's host with the sender's network", async () => {
-        const t = await setup();
-        const a = await t.connect();
-        const b = await t.connect();
-        const mine = await a.register({ name: "mine" });
-        const theirs = await b.register({ name: "theirs", password: "pw" });
-
-        a.send(SignalType.Merge, { network: theirs.id, from: mine.id, size: 7, password: "pw" });
-        const merge = await b.next(NetworkType.Merge);
-        assert.strictEqual(merge.meta.sender, a.id);
-        assert.strictEqual(merge.meta.network, theirs.id);
-        assert.strictEqual(merge.payload.network.id, mine.id);
-        assert.strictEqual(merge.payload.size, 7);
-        assert.strictEqual(merge.payload.password, "pw");
-    });
-
-    it("only takes a network the sender hosts", async () => {
-        const t = await setup();
-        const a = await t.connect();
-        const b = await t.connect();
-        const c = await t.connect();
-        const mine = await a.register();
-        const theirs = await b.register();
-
-        const { meta } = c.send(SignalType.Merge, { network: theirs.id, from: mine.id, size: 1 });
-        const error = await c.next(SignalType.Error);
-        assert.strictEqual(error.payload.code, "forbidden");
-        assert.strictEqual(error.payload.ref, meta.id);
-    });
-
-    it("answers not-found for an unknown network and invalid for its own", async () => {
-        const t = await setup();
-        const a = await t.connect();
-        const mine = await a.register();
-
-        a.send(SignalType.Merge, { network: "nope", from: mine.id, size: 1 });
-        assert.strictEqual((await a.next(SignalType.Error)).payload.code, "not-found");
-
-        a.send(SignalType.Merge, { network: mine.id, from: mine.id, size: 1 });
-        assert.strictEqual((await a.next(SignalType.Error)).payload.code, "invalid");
-    });
-});
-
 describe("drain", { timeout: 5000 }, () => {
 
     it("stops forwarding to a draining socket and answers unreachable", async () => {
@@ -539,9 +493,9 @@ describe("forwarding", { timeout: 5000 }, () => {
         const b = await t.connect();
         const network = await a.register();
 
-        const payload = { network, members: [a.id], connect: [a.id] };
-        a.send(NetworkType.Welcome, payload, { receiver: b.id });
-        assert.deepStrictEqual((await b.next(NetworkType.Welcome)).payload, payload);
+        const payload = { network, key: "k", merge: false };
+        a.send(NetworkType.Admit, payload, { receiver: b.id });
+        assert.deepStrictEqual((await b.next(NetworkType.Admit)).payload, payload);
     });
 
     it("drops a message whose ttl is spent", async () => {
@@ -606,7 +560,7 @@ describe("untrusted input", { timeout: 5000 }, () => {
         const b = await t.connect();
         const network = await a.register();
 
-        const sent = a.send(SignalType.Host, { network }, { receiver: b.id });
+        const sent = a.send(SignalType.Registered, { network }, { receiver: b.id });
         const error = await a.next(SignalType.Error);
         assert.strictEqual(error.payload.code, "forbidden");
         assert.strictEqual(error.payload.ref, sent.meta.id);
@@ -768,7 +722,7 @@ describe("heartbeat", { timeout: 5000 }, () => {
         assert.strictEqual(live.socket.readyState, WebSocket.OPEN);
     });
 
-    it("frees the network when the host stops answering, a new peer can take over", async () => {
+    it("frees the network when its anchor stops answering, a new peer can take over", async () => {
         const t = await setup({ heartbeat_interval: 100 });
         const host = await t.connect({ autoPong: false });
         const member = await t.connect();
@@ -783,11 +737,11 @@ describe("heartbeat", { timeout: 5000 }, () => {
 
         const newcomer = await t.connect();
         const replacement = await newcomer.register();
-        assert.strictEqual(replacement.host, newcomer.id);
+        assert.notStrictEqual(replacement.id, network.id);
         assert.strictEqual(replacement.name, network.name);
     });
 
-    it("leaves the host alone when a member stops answering", async () => {
+    it("leaves the anchor alone when a member stops answering", async () => {
         const t = await setup({ heartbeat_interval: 100 });
         const host = await t.connect();
         const member = await t.connect({ autoPong: false });
@@ -799,7 +753,7 @@ describe("heartbeat", { timeout: 5000 }, () => {
         await member.closed;
         const { networks } = await host.request(SignalType.List, {}, SignalType.Networks);
         assert.strictEqual(networks.length, 1);
-        assert.strictEqual(networks[0].host, host.id);
+        assert.strictEqual(networks[0].id, network.id);
         assert.strictEqual(networks[0].size, 1);
     });
 });

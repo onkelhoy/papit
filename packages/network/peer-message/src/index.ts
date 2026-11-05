@@ -5,3 +5,4 @@ export * from "./component";
 export * from "./relay";
 export * from "./seen";
 export * from "./guards";
+export * from "./registry";

@@ -1,6 +1,6 @@
 # @papit/signal-server
 
-WebSocket signalling server for @papit/webrtc with built-in web push. Reach for it to register and list networks, admit peers, forward their handshake messages until they connect directly, and wake offline users without storing anything.
+WebSocket signalling server for @papit/webrtc with built-in web push. Reach for it to register and find networks, keep track of their anchors, forward first contact until peers connect directly, and wake offline users without storing anything.
 
 ![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
@@ -77,8 +77,10 @@ close();
 ```ts
 class SocketServer extends ws.WebSocketServer {
     constructor(options?: ServerOptions, callback?: () => void);
-    sockets: Map<PeerId, Socket>;
-    networks: Map<string, Network>;
+    sockets: Map<string, Socket>;
+    registry: Registry;
+    aliases: Map<PeerId, string>;
+    readonly networks: Map<string, Network>;
     list(): NetworkInfo[];
     send(socket: Socket, type, payload, meta?): void;
     close(callback?): void;
@@ -87,7 +89,10 @@ class SocketServer extends ws.WebSocketServer {
 
 | Member | Purpose |
 | --- | --- |
-| `list()` | Public networks without password hash or member list. Same as `GET /networks`. |
+| `registry` | The [`Registry`](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#registry) that keeps networks and anchors. The server only routes its replies to sockets. |
+| `networks` | `registry.networks`, by id. |
+| `aliases` | Peer id → socket id, for anchors that talk through a socket with another id (see [Anchors](#anchors)). |
+| `list()` | Public networks without hashes or members. Same as `GET /networks`. |
 | `send(socket, type, payload, meta?)` | Send a server message (`sender: SERVER`, `receiver: socket.id`). Ignored when the socket isn't open. |
 | `close()` | Terminate every client, stop the heartbeat, close the server. |
 
@@ -97,8 +102,8 @@ Everything from `ws.ServerOptions`, plus:
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `setClientID(request)` | `crypto.randomUUID()` | Id for a new socket. A reused id terminates the older socket, and the new one takes over its networks. |
-| `pickEntry(network, members, newcomer)` | the host | Peer that receives a newcomer's `network.join`. `members` excludes the newcomer. |
+| `setClientID(request)` | `crypto.randomUUID()` | Id for a new socket. A reused id terminates the older socket. Memberships belong to the id, so the new socket keeps them. |
+| `pickEntry(network, members, newcomer)` | the first anchor | Peer that receives a newcomer's `network.join`. `members` excludes the newcomer. |
 | `maxPayload` | `MAX_MESSAGE_BYTES` | Passed to `ws`, and used as the `read` limit. |
 | `forward_rate` | `200` | See CLI flags. |
 | `heartbeat_interval` | `2000` | See CLI flags. |
@@ -119,7 +124,7 @@ function close(): void;
 | --- | --- |
 | WebSocket upgrade | the signalling socket |
 | `GET /networks` | `200`, `NetworkInfo[]` as JSON |
-| `GET /health` | `200`, `{ "ok": true }`, for health checks and for waking a sleeping host |
+| `GET /health` | `200`, `{ "ok": true }`, for health checks and for waking a sleeping server |
 | `/push/*` | see [Web push](#web-push) |
 | `OPTIONS *` | `204` with CORS headers |
 | anything else | `405` |
@@ -128,7 +133,20 @@ function close(): void;
 
 ## Types
 
-`Socket` is a `ws.WebSocket` with `id`, `is_alive`, `strike`, `lastmessage` and `networks: Set<string>`. `Network` is a `NetworkInfo` plus `members: PeerId[]` (host included, oldest first) and an optional `passwordHash` (sha-256). Protocol types come from [@papit/peer-message](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message).
+`Socket` is a `ws.WebSocket` with `id`, `is_alive`, `strike`, `lastmessage`, the forward budget (`tokens`, `refilled_at`) and `draining`. `Network` is peer-message's `RegisteredNetwork`: a `NetworkInfo` plus `anchors` and `members` (join order), the anchor `target`, `keyHash` and `passwordHash` (sha-256). Protocol types come from [@papit/peer-message](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message).
+
+# Anchors
+
+The server keeps no host and no member list a client can see. It keeps **anchors**: the peers of a network that hold a socket open so the network can still be found and joined. Every other peer closes its socket once it has joined.
+
+- **Register.** The sender of `signal.register` is the first anchor. `anchors` sets how many the network wants.
+- **Anchor.** `signal.anchor` adds an anchor until the target is met (`ok: false` after that). It also re-creates a network the server forgot, for example after a restart. Then the caller's part carries on with it as first anchor (`existed: false`).
+- **Announce.** Every change of the set goes to all anchors as `signal.anchors { network, anchors, target }`. The first anchor beacons and recruits; the clients do that, not the server.
+- **Leave.** A network is deleted when its last anchor leaves or its socket closes. Members without a socket don't keep it alive.
+
+**Key hash.** The creator sends `keyHash`, the SHA-256 of the network key. The server never sees the key itself. A `signal.anchor` must carry the same `keyHash`, else it's `forbidden`. A `signal.join` with a `merge` for the same network id and a matching `keyHash` heals a split and skips the password.
+
+**Aliases.** A client keeps one peer id across reconnects, but a new socket may get a new id. `signal.anchor` with a `peer` other than the socket id registers that peer id as an alias of the socket. Messages to the peer id go to that socket, and closing the socket drops the alias's anchorships too. A peer id that already belongs to another open socket is `forbidden`.
 
 # Protocol
 
@@ -137,26 +155,26 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | Type | Direction | Payload | Reply |
 | --- | --- | --- | --- |
 | `signal.welcome` | server → client | `{ id }` | sent on connect |
-| `signal.register` | client → server | `{ name, topology, private?, password?, meta?, media? }` | `signal.registered { network }`, sender becomes host |
-| `signal.update` | client → server | `{ network, name?, private?, password?, meta?, media? }` | `signal.updated { network }`, host only; `password: ""` removes it, a given `media` replaces the plan |
-| `signal.unregister` | client → server | `{ network }` | none, host only |
+| `signal.register` | client → server | `{ name, topology, private?, password?, meta?, media?, anchors?, keyHash? }` | `signal.registered { network }` and `signal.anchors`; the sender is the first anchor |
+| `signal.update` | client → server | `{ network, name?, private?, password?, meta?, media? }` | `signal.updated { network }`, anchors only; `password: ""` removes it, a given `media` replaces the plan |
+| `signal.unregister` | client → server | `{ network }` | none, anchors only |
 | `signal.list` | client → server | `{}` | `signal.networks { networks }`, public only |
-| `signal.join` | client → server | `{ network, password?, profile? }` | `network.join { profile? }` to the entry peer, `sender` = newcomer; the password is not passed on |
-| `signal.leave` | client → server | `{ network }` | none; the network is deleted when the host leaves |
-| `signal.merge` | client → server | `{ network, from, size, password?, peer? }` | `network.merge { network, size, password?, peer? }` to the host of `network`, `sender` = requester. The requester must host `from`. The receiving host checks the password, which is why it's passed on here |
+| `signal.join` | client → server | `{ network, password?, profile?, merge? }` | `network.join { profile?, merge? }` to the entry peer, `sender` = newcomer; the password is not passed on. A plain join counts the sender as a member |
+| `signal.leave` | client → server | `{ network }` | `signal.anchors` when an anchor left |
+| `signal.anchor` | client → server | `{ network: NetworkInfo, keyHash, peer }` | `signal.anchored { network, ok, existed, entry? }`, plus `signal.anchors` on a change |
+| `signal.unanchor` | client → server | `{ network }` | `signal.anchors` to the rest |
 | `signal.drain` | client → server | `{ draining }` | `signal.drained {}` when `draining`. Until `draining: false` or the socket closes, whatever is sent to it gets `signal.unreachable` |
-| `signal.host` | server → client | `{ network }` | you are now host |
 | `signal.unreachable` | server → client | `{ receiver, ref }` | the message `ref` couldn't be delivered |
 | `signal.error` | server → client | `{ code, message, ref? }` | see below |
 
-`media` is the network's [media plan](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#media-plan). The server validates and stores it, but doesn't interpret it. It goes out in `network` in `signal.registered`, `signal.updated`, `signal.networks` and `signal.host`, and is omitted when none was set. Peers learn about mid-session changes from the host through `network.media`, which the server forwards like any peer message.
+`media` is the network's [media plan](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message#media-plan). The server validates and stores it, but doesn't interpret it. It goes out in `network` in `signal.registered`, `signal.updated` and `signal.networks`, and is left out when none was set.
 
 | Error code | When |
 | --- | --- |
-| `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload, or a network merging with itself |
+| `invalid` | text frame (the socket is then closed), undecodable message, bad meta or bad reserved payload |
 | `spoof` | `meta.sender` isn't the socket's id; the message names the type and the sender |
 | `unsupported` | a non-`signal.*` (or server → client) type sent to the server, or `receiver: "*"` |
-| `forbidden` | update/unregister/merge by a non-host, a wrong password on join, a `signal.*` message sent to a peer, or a client sending `network.join` itself |
+| `forbidden` | update/unregister by a non-anchor, a wrong password on join, a wrong `keyHash` on anchor, a peer id taken by another socket, a `signal.*` message sent to a peer, or a client sending `network.join` itself |
 | `rate` | a forwarded message over the `forward_rate` budget; it is dropped, the socket stays open |
 | `not-found` | unknown network |
 
@@ -166,7 +184,7 @@ A message with any other `receiver` is passed to that socket:
 
 1. `receiver === "server"` → handled as above. A `signal.*` type to anyone else → `forbidden`. `receiver === "*"` → `unsupported`, the server doesn't fan out.
 2. `relay(meta, "server")` from peer-message: `"server"` is added to `hops` and one `ttl` is spent. A spent `ttl` drops the message.
-3. The receiver's socket exists → it gets the re-encoded message. Otherwise the sender gets `signal.unreachable`.
+3. The receiver's socket (its own, or the socket its alias points to) is open and not draining → it gets the re-encoded message. Otherwise the sender gets `signal.unreachable`.
 
 The server never rewrites `sender`, so receivers can trust it, and only the server sends `signal.*` messages to clients.
 
@@ -176,12 +194,12 @@ Limits are split by traffic: messages to the server (and undecodable frames) go 
 
 ```
 connect ──▶ signal.welcome {id}
-  ├─ host:    signal.register ──▶ signal.registered
-  └─ joiner:  signal.list ──▶ signal.networks
-              signal.join ──▶ server checks password, adds member ──▶ network.join to entry peer
-forward:    network.* / handshake.* / app messages, peer → server → peer
-close:      socket closes or sends signal.leave
-              └─ host left, or no members remain ──▶ network deleted (the peers pick a new host, which registers again)
+  ├─ creator:  signal.register ──▶ signal.registered + signal.anchors (first anchor)
+  └─ joiner:   signal.join ──▶ password or keyHash checked ──▶ network.join to the entry peer
+               joined peer closes its socket, unless it becomes an anchor (signal.anchor)
+forward:    network.* / handshake.* / topology.* / app messages, peer → server → peer
+close:      socket closes, or signal.leave / signal.unanchor
+              └─ last anchor gone ──▶ network deleted (a part that still runs re-creates it with signal.anchor)
 heartbeat:  ping every interval; no pong by the next one ──▶ terminated, same as close
 spam:       too many strikes on server traffic ──▶ closed (1008)
 rate:       forwarded traffic over forward_rate ──▶ dropped, signal.error {code: "rate"}

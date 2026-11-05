@@ -28,7 +28,6 @@ const meta = (over = {}) => ({
 const network = {
     id: "n1",
     name: "lobby",
-    host: "a",
     topology: "mesh",
     private: false,
     size: 2,
@@ -52,7 +51,7 @@ describe("type enums", () => {
     it("use the namespaced wire values", () => {
         assert.strictEqual(SignalType.Register, "signal.register");
         assert.strictEqual(SignalType.Unreachable, "signal.unreachable");
-        assert.strictEqual(NetworkType.Welcome, "network.welcome");
+        assert.strictEqual(NetworkType.Admit, "network.admit");
         assert.strictEqual(HandshakeType.Candidate, "handshake.candidate");
     });
 });
@@ -118,7 +117,6 @@ describe("isPayload", () => {
         [SignalType.Unregister]: { network: "n1" },
         [SignalType.List]: {},
         [SignalType.Join]: { network: "n1", password: "pw" },
-        [SignalType.Merge]: { network: "n1", from: "n2", size: 3, password: "pw" },
         [SignalType.Drain]: { draining: true },
         [SignalType.Drained]: {},
         [SignalType.Leave]: { network: "n1" },
@@ -126,18 +124,12 @@ describe("isPayload", () => {
         [SignalType.Registered]: { network },
         [SignalType.Updated]: { network: { ...network, meta: { a: 1 } } },
         [SignalType.Networks]: { networks: [network, network] },
-        [SignalType.Host]: { network },
         [SignalType.Unreachable]: { receiver: "b", ref: "m1" },
         [SignalType.Error]: { code: "not-found", message: "no such network", ref: "m1" },
         [NetworkType.Join]: {},
-        [NetworkType.Merge]: { network, size: 3 },
         [NetworkType.Prune]: {},
-        [NetworkType.MergeAccept]: { peer: "a", socket: "s", size: 3 },
-        [NetworkType.MergeList]: { network, members: ["a"], profiles: { a: { name: "a" } } },
-        [NetworkType.MergeView]: { network, members: ["a", "b"], serverId: "s1" },
-        [NetworkType.Welcome]: { network, members: ["a", "b"], connect: ["a"] },
+        [NetworkType.Admit]: { network, key: "k", merge: false },
         [NetworkType.Reject]: { reason: "full" },
-        [NetworkType.Members]: { members: ["a"] },
         [NetworkType.Leave]: { peer: "a" },
         [HandshakeType.Offer]: { description: { type: "offer", sdp: "v=0" } },
         [HandshakeType.Answer]: { description: { type: "answer", sdp: "v=0" } },
@@ -150,24 +142,17 @@ describe("isPayload", () => {
         [SignalType.Unregister]: {},
         [SignalType.List]: null,
         [SignalType.Join]: { network: "n1", password: 1 },
-        [SignalType.Merge]: { network: "n1", from: "n2", size: -1 },
         [SignalType.Drain]: {},
         [SignalType.Leave]: { network: 1 },
         [SignalType.Welcome]: {},
         [SignalType.Registered]: { network: { ...network, size: "2" } },
         [SignalType.Updated]: { network: { ...network, private: "no" } },
         [SignalType.Networks]: { networks: [network, { id: "n2" }] },
-        [SignalType.Host]: {},
         [SignalType.Unreachable]: { receiver: "b" },
         [SignalType.Error]: { code: "x" },
         [NetworkType.Join]: { password: 5 },
-        [NetworkType.Merge]: { network: "n1", size: 3 },
-        [NetworkType.MergeAccept]: { peer: "a", socket: "s", size: 1.5 },
-        [NetworkType.MergeList]: { network, members: "a" },
-        [NetworkType.MergeView]: { network, members: [1] },
-        [NetworkType.Welcome]: { network, members: ["a", 1], connect: [] },
+        [NetworkType.Admit]: { network, key: "k" },
         [NetworkType.Reject]: {},
-        [NetworkType.Members]: { members: "a" },
         [NetworkType.Leave]: {},
         [HandshakeType.Offer]: { description: "v=0" },
         [HandshakeType.Answer]: {},
@@ -182,10 +167,11 @@ describe("isPayload", () => {
         });
     }
 
-    it("checks the optional host on network.members", () => {
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a", "b"], host: "b" }), true);
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a"], host: 1 }), false);
-        assert.strictEqual(isPayload(NetworkType.Members, { members: ["a"], host: "" }), false);
+    it("knows none of the removed types", () => {
+        for (const type of ["network.welcome", "network.members", "network.profile", "network.relay", "network.merge", "network.merge-accept", "network.merge-list", "network.merge-view", "signal.merge", "signal.host"])
+        {
+            assert.strictEqual(isPayload(type, {}), false, type);
+        }
     });
 
     it("rejects unknown reserved types", () => {

@@ -28,7 +28,6 @@ const plan = {
 const network = {
     id: "n1",
     name: "lobby",
-    host: "a",
     topology: "mesh",
     private: false,
     size: 2,
@@ -110,9 +109,9 @@ describe("media in payloads", () => {
         assert.strictEqual(isPayload(SignalType.Registered, { network: { ...network, media: plan } }), true);
         assert.strictEqual(isPayload(SignalType.Updated, { network: { ...network, media: plan } }), true);
         assert.strictEqual(isPayload(SignalType.Networks, { networks: [network, { ...network, media: plan }] }), true);
-        assert.strictEqual(isPayload(NetworkType.Welcome, { network: { ...network, media: plan }, members: ["a"], connect: [] }), true);
+        assert.strictEqual(isPayload(NetworkType.Admit, { network: { ...network, media: plan }, key: "k", merge: false }), true);
         assert.strictEqual(isPayload(SignalType.Registered, { network: { ...network, media: [] } }), false);
-        assert.strictEqual(isPayload(SignalType.Host, { network: { ...network, media: { channels: { _x: {} } } } }), false);
+        assert.strictEqual(isPayload(NetworkType.Adopt, { network: { ...network, media: { channels: { _x: {} } } }, key: "k" }), false);
     });
 
     it("network.media carries a plan", () => {

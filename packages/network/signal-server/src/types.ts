@@ -1,13 +1,13 @@
 import type http from "node:http";
 import type * as ws from "ws";
-import type { NetworkInfo, PeerId } from "@papit/peer-message";
+import type { NetworkInfo, PeerId, RegisteredNetwork } from "@papit/peer-message";
 
 import type { HostLookup } from "./push/validate";
 
 export interface ServerOptions extends ws.ServerOptions {
     /** Id for a new socket. Defaults to `crypto.randomUUID()`. */
     setClientID?(request: http.IncomingMessage): string;
-    /** Peer a `network.join` is forwarded to. `members` excludes the newcomer. Defaults to the host. */
+    /** Peer a `network.join` is forwarded to. `members` excludes the newcomer. Defaults to the first anchor (join order). */
     pickEntry?(network: NetworkInfo, members: PeerId[], newcomer: PeerId): PeerId;
     /** Forwarded (peer → peer) messages per second, with bursts up to the same amount. Default 200. */
     forward_rate?: number;
@@ -24,16 +24,12 @@ export type Socket = ws.WebSocket & {
     lastmessage: number;
     tokens: number;
     refilled_at: number;
-    networks: Set<string>;
     // closing on purpose: nothing is forwarded to it any more
     draining: boolean;
 }
 
-/** A registered network. The host is a member; `size` is derived from `members`. */
-export type Network = NetworkInfo & {
-    passwordHash?: string;
-    members: PeerId[];
-}
+/** A registered network, see `Registry`. */
+export type Network = RegisteredNetwork;
 
 /** VAPID key pair, both base64url: the raw public point and the raw private value. */
 export type VapidKeys = {

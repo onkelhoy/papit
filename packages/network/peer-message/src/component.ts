@@ -4,7 +4,7 @@ import { DEFAULT_TTL, SERVER } from "./constants";
 import type { Meta } from "./types";
 
 let counter = 0;
-function uuid(): string {
+export function uuid(): string {
     const id = (globalThis as any).crypto?.randomUUID?.();
     if (typeof id === "string") return id;
 

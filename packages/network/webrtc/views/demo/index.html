@@ -5,179 +5,106 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>webrtc demo</title>
-
-    <link rel="stylesheet" href="style.css" />
-    <script defer type="module" src="main.js"></script>
+    <style>
+        [hidden] { display: none !important; }
+        body { font: 14px/1.4 system-ui, sans-serif; margin: 1rem; max-width: 64rem; }
+        fieldset { margin: 0 0 1rem; display: flex; flex-wrap: wrap; gap: .5rem; align-items: end; }
+        label { display: grid; gap: .2rem; }
+        input[type=text], input:not([type]) { min-width: 12rem; }
+        input[type=number] { width: 5rem; }
+        textarea { width: 100%; font: 11px monospace; }
+        code { background: #8882; padding: 0 .3rem; }
+        section.network { border: 1px solid #8886; border-radius: .4rem; padding: .5rem 1rem; margin: 0 0 1rem; }
+        section.network h2 { font-size: 1rem; margin: .2rem 0 .5rem; }
+        section.network fieldset { border-style: dashed; }
+        #log { height: 18rem; overflow: auto; background: #8881; padding: .5rem; font: 12px monospace; white-space: pre-wrap; }
+        .error { color: #c33; }
+        .debug { color: #888; }
+    </style>
+    <script type="module" src="main.js"></script>
 </head>
 
 <body>
-    <header>
-        <h1>@papit/webrtc</h1>
-        <span id="status" class="badge" data-state="offline">offline</span>
-        <span id="whoami" class="muted"></span>
-    </header>
+    <h1>webrtc</h1>
 
-    <main>
-        <!-- not in a network -->
-        <div id="lobby" class="columns">
-            <section id="connection" class="card">
-                <h2>Connection</h2>
-                <label>Server URL <input id="url" value="ws://localhost:3000" spellcheck="false" /></label>
-                <label>Display name <input id="display-name" maxlength="40" placeholder="how others see you" /></label>
-                <label class="inline"><input id="stun" type="checkbox" checked /> public STUN server (needed across networks)</label>
-                <div class="row">
-                    <button id="connect" class="primary">Connect</button>
-                    <button id="disconnect">Disconnect</button>
-                </div>
-                <p class="hint">A server on a free host may sleep. The badge shows "waking up server…" while it boots.</p>
-            </section>
+    <fieldset>
+        <legend>Server</legend>
+        <label>URL <input id="url" value="ws://localhost:3000" spellcheck="false"></label>
+        <label><span><input id="stun" type="checkbox" checked> public STUN</span></label>
+        <label><span><input id="verbose" type="checkbox"> debug log</span></label>
+        <span>me <code id="me">not connected</code> · socket <b id="online">closed</b></span>
+    </fieldset>
 
-            <section id="create" class="card">
-                <h2>Create a network</h2>
-                <div class="grid2">
-                    <label>Name <input id="network-name" value="lobby" maxlength="64" /></label>
-                    <label>Topology
-                        <select id="topology">
-                            <option value="mesh">mesh</option>
-                            <option value="star">star</option>
-                            <option value="chord">chord</option>
-                            <option value="ring">ring</option>
-                            <option value="multicast">multicast</option>
-                        </select>
-                    </label>
-                    <label id="fanout-field" hidden>Fanout <input id="fanout" type="number" min="1" step="1" value="3" /></label>
-                    <label>Password <input id="create-password" type="password" placeholder="optional" /></label>
-                    <label class="inline end"><input id="private" type="checkbox" /> private (hidden from the list)</label>
-                </div>
-                <div id="create-plan"></div>
-                <button id="create-button" class="primary">Create</button>
-            </section>
+    <fieldset id="start">
+        <legend>New network on the server</legend>
+        <label>Name <input id="name" value="lobby"></label>
+        <label>Topology
+            <select id="topology">
+                <option>mesh</option>
+                <option>star</option>
+                <option>multicast</option>
+                <option>chord</option>
+            </select>
+        </label>
+        <label>Anchors <input id="anchors" type="number" min="1" value="1"></label>
+        <label>Beacon ms <input id="beacon" type="number" min="0" step="1000" value="10000"></label>
+        <label>Password <input id="password" placeholder="optional"></label>
+        <button id="create">Create</button>
+        <label>Network id <input id="network" placeholder="paste an id"></label>
+        <button id="join">Join</button>
+    </fieldset>
 
-            <section id="join" class="card">
-                <h2>Join a network</h2>
-                <div class="row">
-                    <button id="refresh">Refresh list</button>
-                    <input id="join-password" type="password" placeholder="password, if needed" />
-                </div>
-                <ul id="networks" class="list"><li class="empty">connect and refresh to see public networks</li></ul>
-                <div class="row">
-                    <input id="network-id" placeholder="or paste a network id (private networks)" spellcheck="false" />
-                    <button id="join-id">Join</button>
-                </div>
-            </section>
-        </div>
+    <div id="networks"></div>
 
-        <!-- in a network -->
-        <div id="room" class="columns" hidden>
-            <section class="card" id="room-info">
-                <div id="merge-row" class="row">
-                    <input id="merge-id" placeholder="network id to merge with" spellcheck="false" />
-                    <input id="merge-password" type="password" placeholder="its password, if any" />
-                    <button id="merge-button">Merge</button>
-                    <label><input id="allow-merge" type="checkbox" /> allow merges</label>
-                </div>
-                <div class="row between">
-                    <h2 id="room-title">network</h2>
-                    <div class="row">
-                        <button id="edit-plan" hidden>Edit media plan</button>
-                        <button id="leave" class="danger">Leave</button>
-                    </div>
-                </div>
-                <p id="room-meta" class="muted"></p>
-                <form id="rename" class="row">
-                    <input id="room-name" maxlength="40" placeholder="your display name" />
-                    <button>Rename</button>
-                </form>
-                <h3>Members</h3>
-                <ul id="members" class="list"></ul>
-            </section>
-
-            <section class="card" id="rooms-card">
-                <h2>Rooms</h2>
-                <p class="hint">Opened over this network's peers, with no socket and nothing on the server. Stop the signal server to try it.</p>
-                <form id="room-open" class="row">
-                    <input id="room-new" value="call" maxlength="64" placeholder="room name" />
-                    <button class="primary">Open room</button>
-                </form>
-                <form id="room-join" class="row">
-                    <input id="room-invite" placeholder="paste an invite" spellcheck="false" />
-                    <button>Join</button>
-                </form>
-                <ul id="rooms" class="list"></ul>
-            </section>
-
-            <section class="card wide" id="streams">
-                <h2>Streams</h2>
-                <div id="stream-controls" class="row"></div>
-                <div id="grid"></div>
-            </section>
-
-            <section class="card wide" id="channels">
-                <h2>Channels</h2>
-                <nav id="tabs" role="tablist"></nav>
-                <div id="tab-panel">
-                    <ol id="tab-log" class="log"></ol>
-                    <form id="tab-send" class="row">
-                        <select id="tab-target"></select>
-                        <input id="tab-text" placeholder="message" autocomplete="off" />
-                        <button class="primary">Send</button>
-                    </form>
-                    <p id="tab-hint" class="hint"></p>
-                </div>
-            </section>
-        </div>
-
-        <section id="events" class="card">
-            <div class="row between">
-                <h2>Event log</h2>
-                <div class="row">
-                    <label class="inline"><input id="verbose" type="checkbox" /> debug</label>
-                    <button id="clear">Clear</button>
-                </div>
+    <template id="panel">
+        <section class="network">
+            <h2><span data-name></span> <code data-id></code> · <span data-topology></span></h2>
+            <div>
+                anchor <b data-anchored></b> · <span data-over></span> ·
+                <a data-link target="_blank">open a joining tab</a><br>
+                links <span data-links></span><br>
+                known <span data-known></span>
             </div>
-            <ol id="log" class="log"></ol>
+
+            <fieldset>
+                <legend>Send</legend>
+                <label>To <select data-to></select></label>
+                <label>Text <input data-text value="hej"></label>
+                <button data-send>Send</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>Carry a network over this one</legend>
+                <label>Name <input data-carry-name value="game"></label>
+                <label>Topology
+                    <select data-carry-topology>
+                        <option>mesh</option>
+                        <option>star</option>
+                        <option>multicast</option>
+                        <option>chord</option>
+                    </select>
+                </label>
+                <button data-carry-create>Create over this network</button>
+                <label>Invite (JSON) <input data-carry-invite placeholder="paste an invite"></label>
+                <button data-carry-join>Join over this network</button>
+            </fieldset>
+
+            <fieldset>
+                <legend>Invite</legend>
+                <textarea data-invite rows="2" readonly></textarea>
+            </fieldset>
+
+            <fieldset>
+                <legend>Merge (anchors only)</legend>
+                <label>Into network id <input data-merge-id></label>
+                <label>Password <input data-merge-password placeholder="optional"></label>
+                <button data-merge>Merge into</button>
+                <button data-leave>Leave</button>
+            </fieldset>
         </section>
-    </main>
-
-    <dialog id="plan-dialog">
-        <form method="dialog">
-            <h2>Edit media plan</h2>
-            <div id="edit-plan-editor"></div>
-            <div class="row end">
-                <button value="cancel">Cancel</button>
-                <button id="save-plan" value="save" class="primary">Update everyone</button>
-            </div>
-        </form>
-    </dialog>
-
-    <template id="plan-editor">
-        <div class="plan">
-            <div class="row presets">
-                <span class="muted">Presets:</span>
-                <button type="button" data-preset="chat">Chat</button>
-                <button type="button" data-preset="call">Video call</button>
-                <button type="button" data-preset="game">Game</button>
-                <button type="button" data-preset="screen">Screen share</button>
-                <button type="button" data-preset="none">Empty</button>
-            </div>
-
-            <h3>Channels <small class="muted">labels can't start with "_"; that's reserved, e.g. for <code>_system</code></small></h3>
-            <table class="rows channels">
-                <thead><tr><th>label</th><th>ordered</th><th>reliability</th><th></th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <button type="button" class="add-channel">+ channel</button>
-
-            <h3>Streams</h3>
-            <table class="rows streams">
-                <thead><tr><th>name</th><th>kind</th><th>screen</th><th></th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <button type="button" class="add-stream">+ stream</button>
-
-            <p class="plan-error error" hidden></p>
-        </div>
     </template>
+
+    <div id="log"></div>
 </body>
 
 </html>
