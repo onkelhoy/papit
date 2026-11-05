@@ -248,7 +248,9 @@ What every link in a network carries besides its system channel. An anchor sets 
 | `signal.anchor` | client → server | `{ network: NetworkInfo, keyHash, peer }`: become an anchor, or re-create a network the registry forgot. `peer` is the sender's peer id when it isn't its socket id |
 | `signal.unanchor` | anchor → server | `{ network }` |
 | `signal.drain` | client → server | `{ draining }`, sent before closing a socket on purpose. While `draining` the server stops forwarding to it |
-| `signal.welcome` | server → client | `{ id }` |
+| `signal.welcome` | server → client | `{ id, token? }`. `token` proves `id` on a later `signal.resume` to the same server |
+| `signal.resume` | client → server | `{ peer, token? }`, sent first on a new socket to keep the earlier peer id. A valid `token` takes it over from a stale socket, without one `peer` must be free |
+| `signal.resumed` | server → client | `{ peer }`, the socket now sends and receives as `peer` |
 | `signal.registered` | server → client | `{ network: NetworkInfo }` |
 | `signal.updated` | server → client | `{ network: NetworkInfo }` |
 | `signal.networks` | server → client | `{ networks: NetworkInfo[] }` |

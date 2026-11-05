@@ -33,9 +33,11 @@ export enum SignalType {
     Drain = "signal.drain",
     Anchor = "signal.anchor",
     Unanchor = "signal.unanchor",
+    Resume = "signal.resume",
 
     // server → client  (meta.receiver = socket id)
     Welcome = "signal.welcome",
+    Resumed = "signal.resumed",
     Registered = "signal.registered",
     Updated = "signal.updated",
     Networks = "signal.networks",
@@ -149,7 +151,11 @@ export type PayloadMap = {
     [SignalType.Unanchor]: { network: string };
     /** Registry → anchors, on each change of the anchor set. */
     [SignalType.Anchors]: { network: string; anchors: PeerId[]; target: number };
-    [SignalType.Welcome]: { id: PeerId };
+    /** `token` proves the id on a later `signal.resume`, it is only valid on the server that issued it. */
+    [SignalType.Welcome]: { id: PeerId; token?: string };
+    /** A new socket keeps an earlier peer id. With its `token` it takes the id over from a stale socket, without one the id must be free. */
+    [SignalType.Resume]: { peer: PeerId; token?: string };
+    [SignalType.Resumed]: { peer: PeerId };
     [SignalType.Registered]: { network: NetworkInfo };
     [SignalType.Updated]: { network: NetworkInfo };
     [SignalType.Networks]: { networks: NetworkInfo[] };

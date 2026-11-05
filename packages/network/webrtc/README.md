@@ -71,7 +71,7 @@ client.join(network: string | NetworkInfo, request?: JoinRequest, setup?: Networ
 client.close(): void
 ```
 
-One identity and one signalling socket for any number of networks. The socket opens when a network needs it (create, join, becoming an anchor) and closes `SOCKET_GRACE` (1 s) after none does. The peer id is the first id the server assigned and stays the same across reconnects.
+One identity and one signalling socket for any number of networks. The socket opens when a network needs it (create, join, becoming an anchor) and closes `SOCKET_GRACE` (1 s) after none does. The peer id is the first id the server assigned and stays the same across reconnects: every later socket gets a new id from the server and sends `signal.resume` with the welcome token first, so it talks as the peer id again. Against a server without resume it falls back to the new id, and only anchors keep their peer id (through `signal.anchor`).
 
 | Option | Type | Description |
 | --- | --- | --- |
@@ -288,7 +288,7 @@ The `tail` request walks down the line with `forward`, and the tail's answer fin
 
 # Anchors and beacons
 
-An **anchor** is a peer that keeps a socket to the registry, so the network can still be found and joined. The creator is the first one. While a network has fewer than `anchors`, its lowest anchor asks one linked peer at a time to become one (`anchor-request`, which the `Client` answers on its own). Every other peer closes its socket once it has joined.
+An **anchor** is a peer that keeps a socket to the registry, so the network can still be found and joined. The creator is the first one. While a network has fewer than `anchors`, its lowest anchor asks one linked peer at a time to become one (`anchor-request`, which the `Client` answers on its own). Every other peer closes its socket once it has joined. Becoming an anchor later (asked, re-anchoring, or `network.anchor()`) opens a socket again, which resumes the peer id. After a reconnect or a server restart, anchors re-anchor on their own.
 
 The first anchor broadcasts a **beacon** every `beacon` ms. A node that misses three beacons waits a random part of one interval, then re-anchors:
 

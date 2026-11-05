@@ -4,6 +4,9 @@ import type { NetworkInfo, PayloadMap, PeerId } from "@papit/peer-message";
 import type { SocketLink } from "../components/socket";
 import type { AnchorResult, Bootstrap, Carrier, JoinRequest, NetworkDraft, NetworkUpdate } from "../types";
 
+/** Opens (or reuses) the socket for an anchor and keeps it open until `release`. */
+export type SocketHold = { hold(): Promise<SocketLink>; release(): void };
+
 type Waiting = { type: SignalType; network?: string; resolve: (payload: any) => void; reject: (error: Error) => void };
 
 /**
@@ -11,8 +14,9 @@ type Waiting = { type: SignalType; network?: string; resolve: (payload: any) => 
  * over a welcomed `SocketLink`; the server forwards `signal()` bytes by receiver id (or alias).
  * `me` is the peer's identity, by default the socket's id. The socket can be swapped (`use`) or
  * dropped (`use(null)`): without one, `signal` is false and requests reject. After a reconnect the
- * socket id differs from `me`; the server then only reaches `me` through the alias `anchor` sets,
- * and `signal` stays false, since the server only forwards a socket's own id.
+ * socket id differs from `me`; `anchor` then has the server alias `me` to the socket, and from then
+ * on the socket may send as `me`. Before that, `signal` is false.
+ * `hold` lets the owner of the socket open one for `anchor` and keep it while the request runs.
  */
 export class SocketBootstrap extends EventTarget implements Bootstrap {
   public readonly checksPassword = true;
@@ -21,10 +25,12 @@ export class SocketBootstrap extends EventTarget implements Bootstrap {
   private readonly joins = new Set<string>();
   private closed = false;
   private socket: SocketLink | null = null;
+  // the socket the server aliased `me` to
+  private aliased: SocketLink | null = null;
   public readonly me: PeerId;
 
   /** @throws {Error} without `me` and a welcomed socket */
-  constructor(socket: SocketLink | null, me?: PeerId) {
+  constructor(socket: SocketLink | null, me?: PeerId, private readonly holder?: SocketHold) {
     super();
     const id = me ?? socket?.me;
     if (!id) throw new Error("the socket has no id yet, wait for its welcome");
@@ -70,12 +76,25 @@ export class SocketBootstrap extends EventTarget implements Bootstrap {
   }
 
   signal(peer: PeerId, bytes: Uint8Array) {
-    return !this.closed && this.sender === this.me && !!this.socket?.send(bytes);
+    const speaks = this.sender === this.me || (!!this.socket && this.aliased === this.socket);
+    return !this.closed && speaks && !!this.socket?.send(bytes);
   }
 
-  anchor(info: NetworkInfo, keyHash: string): Promise<AnchorResult> {
-    return this.request(SignalType.Anchor, { network: info, keyHash, peer: this.me }, SignalType.Anchored, info.id)
-      .then(({ ok, existed, entry }: PayloadMap[SignalType.Anchored]) => entry ? { ok, existed, entry } : { ok, existed });
+  /** With a holder, the socket is opened (or kept) through it for the request. */
+  async anchor(info: NetworkInfo, keyHash: string): Promise<AnchorResult> {
+    const holder = this.closed ? undefined : this.holder;
+    if (holder) this.use(await holder.hold());
+    try
+    {
+      const socket = this.socket;
+      const { ok, existed, entry }: PayloadMap[SignalType.Anchored] = await this.request(SignalType.Anchor, { network: info, keyHash, peer: this.me }, SignalType.Anchored, info.id);
+      if (socket === this.socket) this.aliased = socket;
+      return entry ? { ok, existed, entry } : { ok, existed };
+    }
+    finally
+    {
+      holder?.release();
+    }
   }
 
   update(network: string, changes: NetworkUpdate): Promise<NetworkInfo> {

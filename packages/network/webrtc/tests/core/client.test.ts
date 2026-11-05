@@ -158,4 +158,85 @@ test.describe("client", () => {
     expect(result.text).toBe("hej");
     expect(result.updated).toEqual({ channels: { chat: { ordered: true }, files: { ordered: false } } });
   });
+
+  test("a peer without a socket re-anchors when the anchor dies, and answers joins as its peer id", async ({ page }) => {
+    const result = await page.evaluate(async ({ url, waitFor }) => {
+      const w = window as any;
+      const until = eval(waitFor);
+      const [a, b, c] = [0, 1, 2].map(() => new w.core.Client({ url }));
+
+      const lobby = await a.create({ name: "lonely", topology: "mesh", beacon: 100 });
+      const nb = await b.join(lobby.info.id);
+      await until(() => !b.online, 5000);
+
+      a.close();
+      await until(() => nb.anchored, 5000);
+      const socket = b.socket.me;
+
+      const nc = await c.join(lobby.info.id);
+      await until(() => nc.linked.size === 1);
+      const out = { online: b.online, resumed: socket === b.id, linked: [...nc.linked] };
+      b.close(); c.close();
+      return { ...out, b: b.id };
+    }, { url, waitFor });
+
+    expect(result.online).toBe(true);
+    expect(result.resumed).toBe(true);
+    expect(result.linked).toEqual([result.b]);
+  });
+
+  test("an anchor whose socket reconnects with a new id still answers joins", async ({ page }) => {
+    await page.evaluate(async ({ url, waitFor }) => {
+      const w = window as any;
+      const until = eval(waitFor);
+      w.clients = [0, 1, 2].map(() => new w.core.Client({ url }));
+      const [a, b] = w.clients;
+      w.lobby = await a.create({ name: "pair", topology: "mesh", anchors: 2 });
+      w.nb = await b.join(w.lobby.info.id);
+      await until(() => w.nb.anchored);
+    }, { url, waitFor });
+
+    const peer = await page.evaluate(() => (window as any).clients[1].id);
+    for (const client of socketserver.clients) if ((client as any).id === peer) client.terminate();
+    await expect.poll(() => socketserver.aliases.get(peer)).toBeTruthy();
+
+    const result = await page.evaluate(async ({ waitFor }) => {
+      const w = window as any;
+      const until = eval(waitFor);
+      const [a, b, c] = w.clients;
+      a.close();
+      const nc = await c.join(w.lobby.info.id);
+      await until(() => nc.linked.size === 1);
+      const out = { linked: [...nc.linked], b: b.id };
+      b.close(); c.close();
+      return out;
+    }, { waitFor });
+
+    expect(result.linked).toEqual([result.b]);
+  });
+
+  test("a peer that dropped its socket joins and creates again under its peer id", async ({ page }) => {
+    const result = await page.evaluate(async ({ url, waitFor }) => {
+      const w = window as any;
+      const until = eval(waitFor);
+      const [a, b, c] = [0, 1, 2].map(() => new w.core.Client({ url }));
+      const one = await a.create({ name: "one", topology: "mesh" });
+      const two = await a.create({ name: "two", topology: "mesh" });
+      await b.join(one.info.id);
+      await until(() => !b.online, 5000);
+
+      const joined = await b.join(two.info.id);
+      await until(() => joined.linked.size === 1);
+      const own = await b.create({ name: "three", topology: "mesh" });
+      const nc = await c.join(own.info.id);
+      await until(() => nc.linked.size === 1);
+
+      const out = { joined: [...joined.linked], own: [...nc.linked], a: a.id, b: b.id };
+      [a, b, c].forEach((client: any) => client.close());
+      return out;
+    }, { url, waitFor });
+
+    expect(result.joined).toEqual([result.a]);
+    expect(result.own).toEqual([result.b]);
+  });
 });

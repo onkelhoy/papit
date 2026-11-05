@@ -28,7 +28,7 @@ export type NetworkSetup = { bootstrap?: Bootstrap } & Pick<NetworkOptions, "acc
 /**
  * One identity and one signalling socket for any number of networks. The socket opens when a
  * network needs it (create, join, becoming an anchor) and closes once none does.
- * The peer id is the first socket id the server assigned; it stays across reconnects.
+ * The peer id is the first socket id the server assigned; every later socket resumes it (`signal.resume`).
  *
  * @fires network - `CustomEvent<Network>`, a network was created or joined
  * @fires error - `CustomEvent<EmitterEvent>`
@@ -40,6 +40,8 @@ export class Client extends Emitter {
   public readonly networks = new Set<Network>();
 
   private socket: SocketLink | null = null;
+  private token: string | null = null;
+  private readonly welcomed = new WeakSet<SocketLink>();
   private opening: Promise<SocketLink> | null = null;
   private readonly bootstraps = new Map<Network, SocketBootstrap>();
   private busy = 0;
@@ -89,7 +91,7 @@ export class Client extends Emitter {
       if (!bootstrap)
       {
         const socket = await this.open();
-        bootstrap = new SocketBootstrap(socket, this.id!);
+        bootstrap = new SocketBootstrap(socket, this.id!, { hold: this.hold, release: this.release });
       }
 
       network = new Network({
@@ -141,7 +143,8 @@ export class Client extends Emitter {
     if (this.opening) return this.opening;
 
     this.opening = new Promise<SocketLink>((resolve, reject) => {
-      const socket = new SocketLink(this.options.url, { protocols: this.options.protocols, timeout: this.options.connectTimeout });
+      const resume = this.id ? { peer: this.id, ...(this.token ? { token: this.token } : {}) } : undefined;
+      const socket = new SocketLink(this.options.url, { protocols: this.options.protocols, timeout: this.options.connectTimeout, resume });
       const handleFirstClose = () => {
         this.opening = null;
         if (this.socket === socket) this.socket = null;
@@ -153,6 +156,7 @@ export class Client extends Emitter {
         socket.addEventListener("close", () => this.handleSocketClose(socket), { once: true });
         this.opening = null;
         this.id ??= socket.me;
+        this.token ??= socket.token;
         for (const bootstrap of this.bootstraps.values()) bootstrap.use(socket);
         resolve(socket);
       }, { once: true });
@@ -188,35 +192,42 @@ export class Client extends Emitter {
     this.drop = null;
   }
 
-  // event handlers
-  private async handleAnchorRequest(network: Network) {
-    const bootstrap = this.bootstraps.get(network);
-    if (!bootstrap || this.closed) return;
+  // an anchor attempt keeps the socket, opening one when a non-anchor already dropped it
+  private hold = async () => {
+    if (this.closed) throw new Error("the client is closed");
 
     this.busy++;
     this.clearDrop();
     try
     {
-      bootstrap.use(await this.open());
-      await network.anchor();
+      return await this.open();
     }
     catch (error)
     {
-      this.debug("anchor", "couldn't become an anchor", { error });
-    }
-    finally
-    {
-      this.busy--;
-      this.settle();
+      this.release();
+      throw error;
     }
   }
 
-  // a reconnect brings a new socket id: anchors re-anchor, so the server aliases the peer id to it
+  private release = () => {
+    this.busy--;
+    this.settle();
+  }
+
+  // event handlers
+  private handleAnchorRequest(network: Network) {
+    if (!this.bootstraps.has(network) || this.closed) return;
+    network.anchor().catch(error => this.debug("anchor", "couldn't become an anchor", { error }));
+  }
+
+  // a reconnect lost the anchorships (or the server restarted and lost the networks): anchors re-anchor
   private handleWelcome = (event: Event) => {
     const socket = event.target as SocketLink;
-    if (socket !== this.socket || socket.me === this.id) return;
+    const again = this.welcomed.has(socket);
+    this.welcomed.add(socket);
+    if (socket !== this.socket || !again) return;
 
-    this.debug("socket", `the server knows this peer as ${socket.me} now, re-anchoring as ${this.id}`, { socket: socket.me, id: this.id });
+    this.debug("socket", `reconnected as ${socket.me}, re-anchoring as ${this.id}`, { socket: socket.me, id: this.id });
     for (const network of this.bootstraps.keys())
     {
       if (network.anchored) network.anchor().catch(error => this.debug("anchor", "re-anchoring failed", { error }));
