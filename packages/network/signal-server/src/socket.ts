@@ -191,6 +191,7 @@ export class SocketServer extends ws.WebSocketServer {
             }
 
             target.send(message.toBinary(true));
+            this.settleJoin(meta);
         }
         catch (error)
         {
@@ -242,7 +243,8 @@ export class SocketServer extends ws.WebSocketServer {
     // helpers
     /**
      * Lets `socket` talk as `peer`. A free id is first come. A taken one needs the `token` its welcome
-     * carried; the stale socket holding it is then closed without dropping what the id belongs to.
+     * carried; the stale socket holding it is then closed and what the id belonged to is dropped, as a
+     * close would. The client re-anchors what it still has, so a network it forgot isn't left behind.
      * Returns why it was refused, or null.
      */
     private claim(socket: Socket, peer: PeerId, token?: string): string | null {
@@ -253,10 +255,11 @@ export class SocketServer extends ws.WebSocketServer {
         if (holder && holder !== socket)
         {
             if (!token || !this.verify(peer, token)) return "that peer id belongs to another socket";
-            // out of the map first, so its close drops nothing
+            // out of the map first, so its close doesn't drop it a second time, after the re-anchor
             if (holder.id === peer) this.sockets.delete(peer);
             holder.peer = null;
             holder.terminate();
+            this.deliver(this.registry.drop(peer));
         }
         socket.peer = peer;
         this.aliases.set(peer, socket.id);
@@ -286,6 +289,13 @@ export class SocketServer extends ws.WebSocketServer {
     /** The id a socket talks as: the peer id it took, else its own. */
     private peerOf(socket: Socket) {
         return socket.peer ?? socket.id;
+    }
+
+    /** An entry's answer to a newcomer passes here: the registry counts it as a member, or stops waiting for it. */
+    private settleJoin(meta: Meta) {
+        if (!meta.network) return;
+        if (meta.type === NetworkType.Admit) this.registry.admitted(meta.sender, meta.network, meta.receiver);
+        else if (meta.type === NetworkType.Reject) this.registry.rejected(meta.sender, meta.network, meta.receiver);
     }
 
     private deliver(replies: Reply[]) {

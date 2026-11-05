@@ -237,7 +237,7 @@ describe("resume", { timeout: 5000 }, () => {
         assert.strictEqual(t.wss.aliases.size, 0);
     });
 
-    it("takes a taken peer id over with its token and keeps what it anchors", async () => {
+    it("takes a taken peer id over with its token and drops what it anchored", async () => {
         const t = await setup();
         const [a, b] = [await t.connect(), await t.connect()];
         const network = await a.register({ keyHash: "key" });
@@ -245,8 +245,50 @@ describe("resume", { timeout: 5000 }, () => {
 
         assert.strictEqual(await b.resume(a.id, a.token), "resumed");
         await closed;
-        assert.deepStrictEqual(t.wss.networks.get(network.id).anchors, [a.id]);
+        assert.strictEqual(t.wss.networks.has(network.id), false);
         assert.strictEqual(t.wss.aliases.get(a.id), b.socketId);
+    });
+
+    it("keeps a network the resumed peer re-anchors, under its old id", async () => {
+        const t = await setup();
+        const [a, b] = [await t.connect(), await t.connect()];
+        const network = await a.register({ keyHash: "key" });
+
+        assert.strictEqual(await b.resume(a.id, a.token), "resumed");
+        const answer = await b.anchor(network);
+        assert.strictEqual(answer.ok, true);
+        assert.deepStrictEqual(t.wss.networks.get(network.id).anchors, [a.id]);
+
+        // the old socket's close comes after and must not drop it again
+        await new Promise(resolve => setTimeout(resolve, 50));
+        assert.strictEqual(t.wss.networks.has(network.id), true);
+    });
+
+    it("leaves no network behind when a client that forgot it registers again", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        await a.register();
+        let socket = a;
+        for (let blip = 0; blip < 3; blip++)
+        {
+            socket = await t.connect();
+            assert.strictEqual(await socket.resume(a.id, a.token), "resumed");
+            await socket.register();
+        }
+        assert.strictEqual(t.wss.list().length, 1);
+    });
+
+    it("tells the other anchors when a takeover drops the peer", async () => {
+        const t = await setup();
+        const [a, b, c] = [await t.connect(), await t.connect(), await t.connect()];
+        const network = await a.register({ keyHash: "key", anchors: 2 });
+        await b.anchor(network);
+        await a.next(SignalType.Anchors);
+        await b.next(SignalType.Anchors);
+
+        assert.strictEqual(await c.resume(a.id, a.token), "resumed");
+        const { anchors } = (await b.next(SignalType.Anchors)).payload;
+        assert.deepStrictEqual(anchors, [b.id]);
     });
 
     it("joins, registers and anchors as the resumed peer id", async () => {

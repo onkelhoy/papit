@@ -118,7 +118,9 @@ class Registry {
     register(from, payload): Reply[];
     update(from, payload, ref): Reply[];   // anchors only
     unregister(from, payload, ref): Reply[]; // anchors only
-    join(from, payload, ref): Reply[];
+    join(from, payload, ref): Reply[];   // the newcomer is pending until admitted
+    admitted(entry, network, peer): void; // the entry's network.admit passed: peer is a member
+    rejected(entry, network, peer): void; // the entry's network.reject passed: peer is no longer pending
     anchor(from, payload, ref): Reply[];
     unanchor(from, payload): Reply[];
     leave(from, network): Reply[];
@@ -132,7 +134,7 @@ Pure bookkeeping of networks and their **anchors** (the peers keeping a connecti
 | Option | Default | Description |
 | --- | --- | --- |
 | `hash(secret)` | identity | Hashes passwords before they're stored. Pass a real hash when networks have passwords. |
-| `pickEntry(network, members, newcomer)` | the first anchor | Who gets a newcomer's `network.join`. |
+| `pickEntry(network, members, newcomer)` | the first anchor | Who gets a newcomer's `network.join`. `members` holds admitted peers only. |
 | `reachable(peer)` | always true | False for a peer that can't be sent to; the joiner gets `signal.unreachable`. |
 | `id()` | random uuid | Ids for new networks. |
 

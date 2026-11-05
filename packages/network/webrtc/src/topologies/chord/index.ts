@@ -5,6 +5,8 @@ import type { Hop, SendOptions, Topology, TopologyContext, TopologyNode } from "
 import { between, distance, fingerStart, fnv1a, keyHash, RING, upTo } from "./ring";
 
 const LOOKUP_TIMEOUT = 5_000;
+/** Stabilize rounds a successor may leave unanswered before it counts as gone, while its link still looks open. */
+const MISSED_ROUNDS = 3;
 /** Most ids one chord message may list. */
 const MAX_LIST = 64;
 
@@ -105,6 +107,9 @@ export function chordTopology(config: Partial<TopologyConfig> = {}, hooks: Chord
     const states = new Map<PeerId, Array<(list: PeerId[]) => void>>();
     const unified = new Set<string>();
     const wanted = new Set<PeerId>();
+    // the successor asked last round that hasn't answered yet, and for how many rounds
+    let asked: PeerId | null = null;
+    let missed = 0;
 
     const alone = () => succ[0] === me;
 
@@ -202,8 +207,34 @@ export function chordTopology(config: Partial<TopologyConfig> = {}, hooks: Chord
 
     const keyOf = (receiver: string) => parseInt(receiver.slice(KEY_PREFIX.length), 16);
 
+    /** `peer` is gone: out of pred, successors and fingers. */
+    const forget = (peer: PeerId) => {
+      if (peer === pred) setPred(null);
+      if (succ.includes(peer))
+      {
+        const rest = succ.filter(x => x !== peer);
+        const live = finger.find(f => f && f !== peer && ctx.links.has(f));
+        setSuccessors(rest.length ? rest : live ? [live] : []);
+      }
+      for (let i = 0; i < finger.length; i++) if (finger[i] === peer) finger[i] = null;
+      heard.delete(peer);
+      sync();
+    };
+
     const handleStabilize = () => {
-      if (!alone()) return void ctx.send(succ[0], "chord.ask", {});
+      // a tab that died keeps its link open until ICE fails, so a linked successor's silence counts as gone sooner
+      if (!alone() && asked === succ[0] && ctx.links.has(asked) && ++missed >= MISSED_ROUNDS)
+      {
+        forget(asked);
+        asked = null;
+      }
+      if (!alone())
+      {
+        if (asked !== succ[0]) missed = 0;
+        asked = succ[0];
+        return void ctx.send(succ[0], "chord.ask", {});
+      }
+      asked = null;
       if (pred && pred !== me)
       {
         setSuccessors([pred]);
@@ -241,6 +272,7 @@ export function chordTopology(config: Partial<TopologyConfig> = {}, hooks: Chord
 
     const handleState = (from: PeerId, payload: unknown) => {
       if (!isObject(payload) || !(payload.pred === null || isId(payload.pred)) || !isIds(payload.succ)) return;
+      if (from === asked) asked = null;
       const waiting = states.get(from);
       states.delete(from);
       for (const resolve of waiting ?? []) resolve(payload.succ);
@@ -382,16 +414,7 @@ export function chordTopology(config: Partial<TopologyConfig> = {}, hooks: Chord
           return;
         }
 
-        if (peer === pred) setPred(null);
-        if (succ.includes(peer))
-        {
-          const rest = succ.filter(x => x !== peer);
-          const live = finger.find(f => f && f !== peer && ctx.links.has(f));
-          setSuccessors(rest.length ? rest : live ? [live] : []);
-        }
-        for (let i = 0; i < finger.length; i++) if (finger[i] === peer) finger[i] = null;
-        heard.delete(peer);
-        sync();
+        forget(peer);
       },
 
       route(meta: Meta) {

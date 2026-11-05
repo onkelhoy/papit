@@ -136,7 +136,7 @@ One network on one node. It moves bytes and opens links; the topology decides ev
 | `mesh` | Everyone links to everyone. App messages must come straight from their sender. | | | |
 | `star` | One hub relays for all. The lowest other member is a standby with links to everyone, so it takes over without new links. | | `hub`, `members` | `leader` `{ hub }` |
 | `multicast` | A tree with at most `fanout` children. Links to parent, children and grandparent. Streams flow down. | `fanout` (3, 1–64) | `parent`, `children`, `root` | `leader` `{ root }` |
-| `chord` | Chord ring with O(log n) lookups. Broadcast reaches each node once. | `successors` (4, 1–16), `fingers` (32, 0–32), `stabilize` (1000 ms), `fixFingers` (250 ms) | `lookup(key)`, `successorsOf(peer)`, `successors`, `predecessor`, `fingers` | `range` `{ from, to }` |
+| `chord` | Chord ring with O(log n) lookups. Broadcast reaches each node once. A linked successor that misses 3 stabilize rounds is dropped, so a closed tab doesn't hold up lookups until its link fails. | `successors` (4, 1–16), `fingers` (32, 0–32), `stabilize` (1000 ms), `fixFingers` (250 ms) | `lookup(key)`, `successorsOf(peer)`, `successors`, `predecessor`, `fingers` | `range` `{ from, to }` |
 | `ring` | `chord` with `fingers: 0`. | as chord | as chord | as chord |
 
 All of them merge and have `owner`, so `sendKey` works everywhere. `chordTopology(config, { pickFinger, onStabilized })` takes local hooks. `proximity` is a `pickFinger` that picks the lowest round trip. `chordRing` exports the ring math.

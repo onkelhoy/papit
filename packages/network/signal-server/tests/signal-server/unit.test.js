@@ -365,8 +365,30 @@ describe("join", { timeout: 5000 }, () => {
         assert.strictEqual(join.meta.network, network.id);
         assert.deepStrictEqual(join.payload, {});
 
+        const before = await b.request(SignalType.List, {}, SignalType.Networks);
+        assert.strictEqual(before.networks[0].size, 1);
+
+        // the entry's admit passes the server: from then on b counts
+        a.send(NetworkType.Admit, { network, key: "k", merge: false }, { receiver: b.id, network: network.id });
+        await b.next(NetworkType.Admit);
+        const after = await b.request(SignalType.List, {}, SignalType.Networks);
+        assert.strictEqual(after.networks[0].size, 2);
+    });
+
+    it("doesn't count a newcomer the entry rejects", async () => {
+        const t = await setup();
+        const a = await t.connect();
+        const b = await t.connect();
+        const network = await a.register();
+
+        b.send(SignalType.Join, { network: network.id });
+        await a.next(NetworkType.Join);
+        a.send(NetworkType.Reject, { reason: "no" }, { receiver: b.id, network: network.id });
+        await b.next(NetworkType.Reject);
+
+        assert.deepStrictEqual(t.wss.networks.get(network.id).pending, []);
         const { networks } = await b.request(SignalType.List, {}, SignalType.Networks);
-        assert.strictEqual(networks[0].size, 2);
+        assert.strictEqual(networks[0].size, 1);
     });
 
     it("rejects a wrong or missing password", async () => {
@@ -406,6 +428,8 @@ describe("join", { timeout: 5000 }, () => {
 
         b.send(SignalType.Join, { network: network.id });
         assert.strictEqual((await a.next(NetworkType.Join)).meta.sender, b.id);
+        a.send(NetworkType.Admit, { network, key: "k", merge: false }, { receiver: b.id, network: network.id });
+        await b.next(NetworkType.Admit);
 
         c.send(SignalType.Join, { network: network.id });
         const join = await b.next(NetworkType.Join);

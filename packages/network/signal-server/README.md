@@ -135,7 +135,7 @@ function close(): void;
 
 ## Types
 
-`Socket` is a `ws.WebSocket` with `id`, `is_alive`, `strike`, `lastmessage`, the forward budget (`tokens`, `refilled_at`) and `draining`. `Network` is peer-message's `RegisteredNetwork`: a `NetworkInfo` plus `anchors` and `members` (join order), the anchor `target`, `keyHash` and `passwordHash` (sha-256). Protocol types come from [@papit/peer-message](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message).
+`Socket` is a `ws.WebSocket` with `id`, `is_alive`, `strike`, `lastmessage`, the forward budget (`tokens`, `refilled_at`) and `draining`. `Network` is peer-message's `RegisteredNetwork`: a `NetworkInfo` plus `anchors`, `members` (join order) and `pending` (newcomers not admitted yet), the anchor `target`, `keyHash` and `passwordHash` (sha-256). Protocol types come from [@papit/peer-message](https://github.com/onkelhoy/papit/tree/main/packages/network/peer-message).
 
 # Anchors
 
@@ -151,7 +151,7 @@ The server keeps no host and no member list a client can see. It keeps **anchors
 **Resume and aliases.** A client keeps one peer id across reconnects, but every new socket gets a new id. The welcome carries a `token`, an HMAC of the id with the server's secret. A new socket sends `signal.resume { peer, token }` first and from then on talks as `peer`: it registers, joins and anchors as `peer`, sends with `sender` = `peer`, and messages to `peer` reach it.
 
 - A free peer id is first come, a token isn't needed. That keeps resuming working after a restart, when the server knows no ids and no tokens.
-- A peer id that another socket still holds (a stale one the heartbeat hasn't caught yet) needs its token. The stale socket is then closed, and what the id anchors and belongs to stays.
+- A peer id that another socket still holds (a stale one the heartbeat hasn't caught yet) needs its token. The stale socket is then closed and what the id anchors and belongs to is dropped, as a close would. The client re-anchors the networks it still has (`signal.anchor` re-creates one under its old id and key), so a network it forgot isn't left listed with nobody answering.
 - A socket takes one peer id at most. Anything else is `forbidden`.
 
 `signal.anchor` with a `peer` other than the socket id claims it the same way, without a token, for clients that don't resume. Closing the socket drops the peer id's anchorships.
@@ -168,7 +168,7 @@ Only binary frames carrying a `@papit/peer-message` are accepted. The server's o
 | `signal.update` | client → server | `{ network, name?, private?, password?, meta?, media? }` | `signal.updated { network }`, anchors only; `password: ""` removes it, a given `media` replaces the plan |
 | `signal.unregister` | client → server | `{ network }` | none, anchors only |
 | `signal.list` | client → server | `{}` | `signal.networks { networks }`, public only |
-| `signal.join` | client → server | `{ network, password?, profile?, merge? }` | `network.join { profile?, merge? }` to the entry peer, `sender` = newcomer; the password is not passed on. A plain join counts the sender as a member |
+| `signal.join` | client → server | `{ network, password?, profile?, merge? }` | `network.join { profile?, merge? }` to the entry peer, `sender` = newcomer; the password is not passed on. A plain join leaves the sender pending: it counts as a member once the entry's `network.admit` passes through the server, and a `network.reject` or its socket closing forgets it |
 | `signal.leave` | client → server | `{ network }` | `signal.anchors` when an anchor left |
 | `signal.anchor` | client → server | `{ network: NetworkInfo, keyHash, peer }` | `signal.anchored { network, ok, existed, entry? }`, plus `signal.anchors` on a change |
 | `signal.unanchor` | client → server | `{ network }` | `signal.anchors` to the rest |
