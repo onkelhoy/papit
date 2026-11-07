@@ -75,17 +75,23 @@ Outside a papit workspace, it always runs the project runner.
 | `--package[=<template>]` | all | Run the package runner. With a value, it's the template too (`browser`, `game`, `node`, `theme`, `web-component` or a custom one). |
 | `--component` | all | Run the component runner. |
 | `--project` | all | Run the project runner. |
-| `--showcase` | all | Run the showcase runner (experimental, see below). |
+| `--showcase` | all | Run the showcase runner: writes the showcase site folder (see below). |
 | `--<custom>` | all | Run a custom runner from `bin/runners/<custom>/`. |
 | `--type=<template>` | package, component | Template to use, when `--package` has no value. |
 | `--name=<name>` | package, component, project | Name. Spaces and `-` separate words: `my button` becomes `my-button` / `MyButton`. |
 | `--description=<text>` | package, project | Description for `package.json` and the README. |
-| `--html-prefix=<prefix>` | package, component, showcase | Tag prefix for web components (`pap` gives `pap-<name>`). Falls back to the package's then the root's `papit.htmlprefix`, otherwise prompts. |
+| `--html-prefix=<prefix>` | package, component | Tag prefix for web components (`pap` gives `pap-<name>`). Falls back to the package's then the root's `papit.htmlprefix`, otherwise prompts. |
 | `--agree` | package, component | Yes to everything: folder creation, git commit and `npm install`. |
 | `--commit` | package, component | Commit the result without asking. |
 | `--install` | package | Run `npm install` without asking. |
 | `--yes` / `--no` | package | Answer the commit and install questions. |
 | `--destination=<path>` | package, project | Package: folder the package goes in (`<path>/<name>`), created if missing, no menu. Project: the project folder itself; no confirms, and it fails if the folder isn't empty. Relative to the current directory. |
+| `--output=<path>` | showcase | Site folder, emptied first. Default `showcase` at the workspace root. |
+| `--type=<types>` | showcase | Only packages of these `papit.type`s, comma separated (`--type=web-component,theme`). |
+| `--views-only` | showcase | Skip packages without a `views/` folder. |
+| `--include=<globs>` / `--exclude=<globs>` | showcase | Path globs relative to `packages/`, comma separated or repeated. `*` stays in one folder, `**` spans folders, a plain folder keeps everything in it. |
+| `--view-filter=<views>` | showcase | Only these views, in this order. Default: every view, `showcase` first. |
+| `--no-analyse` | showcase | Don't run each package's `analyse` script first. |
 | `--location=<path>` | project | Where to create the project. Default: prompted, then `<path>/<name>`. |
 | `--repository=<url>` | project | Repository for the root `package.json` and the README logo. Default `https://github.com/$USER/<name>`. |
 | `--license=<id>` | project | License for the generated `package.json`s. Default `MIT`. |
@@ -121,7 +127,18 @@ Creates a new papit monorepo from the [project template](#project-template): pro
 
 ## showcase
 
-Experimental. For every `web-component`, `game` and `theme` package in the workspace whose first view isn't `views/showcase`, it generates one from `asset/showcase-templates/individual`, with a tab per existing view (`--view-filter`, default `showcase`, `raw`, `experiment`).
+Writes a static site that browses the workspace, rendered by [`<pap-showcase>`](https://github.com/onkelhoy/papit/tree/main/packages/web/design-system/pages/showcase):
+
+1. Select packages in the `@<scope>` (filters above; `papit.skip` packages are left out).
+2. Run `npm run analyse` in each package that has the script (a failure is a warning), unless `--no-analyse`.
+3. Empty `--output`, copy `asset/showcase-templates/global` into it and the root README.
+4. Per package, copy `views/` → `packages/<path>/view/`, `asset/` → `packages/<path>/files/`, `README.md` and `analyse.json`. `views` and `asset` are renamed because `@papit/static` skips folders with those names.
+5. Write `manifest.json`: name, version, repository, licence, the folder tree and one entry per package (views, assets, translations, workspace dependencies).
+
+```bash
+npm create @papit -- --showcase --type=web-component        # only UI components
+npx @papit/static --target=showcase --output=dist/showcase --base=/papit/ --skip-errors
+```
 
 ## Custom runners
 
