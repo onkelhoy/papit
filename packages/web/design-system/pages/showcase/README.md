@@ -22,15 +22,15 @@ npm install @papit/showcase
 
 # Usage
 
-Generate the site, then publish it:
+From the workspace root:
 
 ```bash
-npm run showcase           # npm create @papit -- --showcase → ./showcase
-npm run showcase:static    # @papit/static → ./dist/showcase, served from /
-npm run showcase:preview   # both, then python3 -m http.server 8000 in dist/showcase
+npm run showcase                  # generate + publish → ./showcase (about 30 s, analyses every package)
+npm run showcase -- --no-analyse  # about 2 s, reuses existing analyse.json files
+cd showcase && python3 -m http.server 8000
 ```
 
-GitHub Pages runs `showcase:static -- --base=/<repo>/` (`.github/workflows/pages.yml`).
+Generate flags (`--type`, `--include`, `--docs`, …) go to `@papit/create`, `--base` goes to `@papit/static`. GitHub Pages runs `npm run showcase -- --base=/<repo>/` (`.github/workflows/pages.yml`).
 
 The generated `index.html` is all it takes:
 

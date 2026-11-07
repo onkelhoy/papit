@@ -139,8 +139,10 @@ Writes a static site that browses the workspace, rendered by [`<pap-showcase>`](
 
 ```bash
 npm create @papit -- --showcase --type=web-component        # only UI components
-npx @papit/static --target=showcase --output=dist/showcase --skip-errors   # add --base=/<repo>/ for a GitHub project page
+npx @papit/static --target=showcase --output=dist --skip-errors   # add --base=/<repo>/ for a GitHub project page
 ```
+
+In the papit repo, `npm run showcase` runs both steps (`bin/showcase.mjs`) and writes the site to `./showcase`.
 
 ## Custom runners
 
