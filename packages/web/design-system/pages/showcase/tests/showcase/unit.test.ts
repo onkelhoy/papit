@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("@papit/showcase sidebar", () => {
     test("renders the manifest tree as a navigation tree", async ({ page }) => {
-        const tree = page.locator("pap-showcase").getByRole("tree");
+        const tree = page.locator("pap-showcase pap-treeview[part=packages]");
         await expect(tree).toBeVisible();
         // folders start collapsed, so only the top level is exposed
         await expect(tree.getByRole("treeitem")).toHaveCount(2);
@@ -140,5 +140,16 @@ test.describe("@papit/showcase translations", () => {
         }));
         expect(result.flat).toEqual({ "a.b": "c", d: "2" });
         expect(result.csv).toBe('"a","say ""hi"""\r\n"b","x,y"\r\n');
+    });
+});
+
+test.describe("@papit/showcase docs", () => {
+    test("docs get their own sidebar section and render as markdown", async ({ page }) => {
+        const docs = page.locator("pap-showcase pap-treeview[part=docs]");
+        await docs.getByRole("treeitem", { name: "guides" }).click();
+        await docs.getByRole("link", { name: "start" }).click();
+
+        await expect(page).toHaveURL(/#\/docs\/guides\/start$/);
+        await expect(page.locator("pap-showcase main pap-markdown h1")).toHaveText("Getting started");
     });
 });

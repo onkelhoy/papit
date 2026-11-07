@@ -3,7 +3,7 @@ export type ShowcaseTreeNode = {
     name: string;
     /** Path relative to `packages/`, also the route. */
     path: string;
-    /** Package name, only on leaves. */
+    /** Package name on package leaves; the markdown file on doc leaves. */
     package?: string;
     children: ShowcaseTreeNode[];
 };
@@ -33,6 +33,8 @@ export type ShowcaseManifest = {
     repository?: string;
     license?: string;
     readme: boolean;
+    /** The docs folder's markdown files as a tree; leaf `package` is the file. */
+    docs?: ShowcaseTreeNode[];
     tree: ShowcaseTreeNode[];
     packages: ShowcaseEntry[];
 };
@@ -43,6 +45,8 @@ export type ShowcaseRoute = {
     entry?: ShowcaseEntry;
     /** View folder or auto page name; absent means the package README. */
     page?: string;
+    /** A documentation file (relative to `docs/`) when the hash is `#/docs/<path>`. */
+    doc?: string;
     /** The hash path that didn't match any package. */
     unknown?: string;
 };

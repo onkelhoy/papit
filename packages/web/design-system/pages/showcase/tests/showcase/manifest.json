@@ -2,6 +2,11 @@
     "name": "papit",
     "version": "1.0.0",
     "readme": true,
+    "docs": [
+        { "name": "guides", "path": "guides", "children": [
+            { "name": "start.md", "path": "guides/start", "package": "guides/start.md", "children": [] }
+        ] }
+    ],
     "tree": [
         { "name": "runtime", "path": "runtime", "children": [
             { "name": "lexer", "path": "runtime/lexer", "package": "@papit/lexer", "children": [] }

@@ -25,9 +25,12 @@ npm install @papit/showcase
 Generate the site, then publish it:
 
 ```bash
-npm run showcase          # npm create @papit -- --showcase → ./showcase
-npm run showcase:static   # @papit/static → ./dist/showcase, for GitHub Pages under /papit/
+npm run showcase           # npm create @papit -- --showcase → ./showcase
+npm run showcase:static    # @papit/static → ./dist/showcase, served from /
+npm run showcase:preview   # both, then python3 -m http.server 8000 in dist/showcase
 ```
+
+GitHub Pages runs `showcase:static -- --base=/<repo>/` (`.github/workflows/pages.yml`).
 
 The generated `index.html` is all it takes:
 
@@ -52,6 +55,7 @@ Routing is hash based, so any static host works.
 | Hash | Page |
 | --- | --- |
 | `#/` | the root README |
+| `#/docs/<path>` | a markdown file from the docs folder, listed in its own sidebar section |
 | `#/<path>` | the package's README, e.g. `#/web/design-system/atoms/switch` |
 | `#/<path>/<view>` | one of its `views/` folders, loaded by `pap-router` |
 | `#/<path>/api` | playground and API tables from `analyse.json` |
@@ -83,7 +87,7 @@ The longest package path wins, so nested packages resolve correctly.
 | `language` | replaces the language picker in the pill |
 | `footer` | replaces the default footer (version, repository, licence) |
 
-CSS parts: `sidebar`, `home`, `header`, `pill`, `bar`, `current`, `pages`, `separator`, `main`, `readme`, `package`, `package-meta`, `tag`, `view`, `not-found`, `footer`.
+CSS parts: `sidebar`, `home`, `section-title`, `docs`, `packages`, `header`, `pill`, `bar`, `current`, `pages`, `separator`, `main`, `readme`, `package`, `package-meta`, `tag`, `view`, `not-found`, `footer`.
 
 ## Pill menu
 

@@ -32,6 +32,20 @@ pap-sidebar {
     a[aria-current="page"] {
         font-weight: 600;
     }
+
+    [part="section-title"] {
+        margin: var(--space-4, 1rem) 0 var(--space-1, 0.25rem);
+        font-size: 0.75em;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary, inherit);
+    }
+
+    [part="docs"] {
+        padding-bottom: var(--space-3, 0.75rem);
+        border-bottom: 1px solid var(--shade-1, color-mix(in srgb, currentColor 12%, transparent));
+    }
 }
 
 header {

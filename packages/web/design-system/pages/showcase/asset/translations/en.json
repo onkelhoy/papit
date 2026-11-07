@@ -39,7 +39,8 @@
     },
     "notfound": "Nothing here:",
     "sidebar": {
-        "label": "Packages"
+        "label": "Packages",
+        "docs": "Documentation"
     },
     "pill": {
         "label": "Site",

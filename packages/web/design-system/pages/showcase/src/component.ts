@@ -18,7 +18,7 @@ import { translate, useTranslator } from "@papit/translator";
 
 // local
 import sheet from "./style.css" with { type: "css" };
-import { AUTO_PAGES, href, pagesOf, resolveRoute } from "./route";
+import { AUTO_PAGES, DOCS, href, pagesOf, resolveRoute } from "./route";
 import "./components";
 import type { ShowcaseManifest, ShowcaseRoute, ShowcaseTreeNode } from "./types";
 
@@ -101,7 +101,7 @@ export class Showcase extends CustomElement {
     @bind
     private handlehashchange() {
         const route = resolveRoute(window.location.hash, this.data);
-        if (route.entry === this.route.entry && route.page === this.route.page && route.unknown === this.route.unknown) return;
+        if (route.entry === this.route.entry && route.page === this.route.page && route.unknown === this.route.unknown && route.doc === this.route.doc) return;
 
         this.route = route;
         this.pillopen = false;
@@ -159,26 +159,32 @@ export class Showcase extends CustomElement {
     }
 
     // render helpers
-    private isopen(node: ShowcaseTreeNode) {
-        const current = this.route.entry?.path;
-        return !!current && current.startsWith(node.path + "/");
+    /** The sidebar path of the current route: `docs/<path>` for docs, the package path otherwise. */
+    private get currentpath() {
+        if (this.route.doc) return DOCS + "/" + this.route.doc.replace(/\.md$/, "");
+        return this.route.entry?.path;
     }
-    private renderTree(nodes: ShowcaseTreeNode[]): any {
+    private isopen(node: ShowcaseTreeNode, prefix: string) {
+        const current = this.currentpath;
+        return !!current && current.startsWith(prefix + node.path + "/");
+    }
+    /** Tree items for packages (`prefix` "") or docs (`prefix` "docs/"). */
+    private renderTree(nodes: ShowcaseTreeNode[], prefix = ""): any {
         return nodes.map(node => {
             if (node.package)
             {
-                const selected = this.route.entry?.path === node.path;
+                const selected = this.currentpath === prefix + node.path;
                 return html`
                     <pap-treeitem @enter="${this.handleenter}" aria-selected="${selected ? "true" : ""}">
-                        <a tabindex="-1" href="${href(node.path)}" aria-current="${selected ? "page" : ""}">${node.name}</a>
+                        <a tabindex="-1" href="${href(prefix + node.path)}" aria-current="${selected ? "page" : ""}">${node.name.replace(/\.md$/, "")}</a>
                     </pap-treeitem>
                 `;
             }
 
             return html`
-                <pap-treeitem aria-expanded="${this.isopen(node) ? "true" : "false"}">
+                <pap-treeitem aria-expanded="${this.isopen(node, prefix) ? "true" : "false"}">
                     ${node.name}
-                    ${this.renderTree(node.children)}
+                    ${this.renderTree(node.children, prefix)}
                 </pap-treeitem>
             `;
         });
@@ -188,6 +194,7 @@ export class Showcase extends CustomElement {
 
         if (unknown) return html`<p part="not-found">${this.t("notfound")} <code>${unknown}</code></p>`;
         if (!this.data) return null;
+        if (this.route.doc) return html`<pap-markdown part="readme doc" src="${new URL(`${DOCS}/${this.route.doc}`, this.base).href}"></pap-markdown>`;
         if (!entry)
         {
             if (!this.data.readme) return html`<h1>${this.data.name}</h1>`;
@@ -277,7 +284,14 @@ export class Showcase extends CustomElement {
                     <pap-icon name="logo"></pap-icon>
                     <strong>${this.data?.name ?? ""}</strong>
                 </a>
-                <pap-treeview aria-label="${this.t("sidebar.label")}">
+                ${this.data?.docs?.length ? html`
+                    <h2 part="section-title" id="docs-title">${this.t("sidebar.docs")}</h2>
+                    <pap-treeview part="docs" aria-labelledby="docs-title">
+                        ${this.renderTree(this.data.docs, DOCS + "/")}
+                    </pap-treeview>
+                    <h2 part="section-title" id="packages-title">${this.t("sidebar.label")}</h2>
+                ` : ""}
+                <pap-treeview part="packages" aria-label="${this.t("sidebar.label")}">
                     ${this.renderTree(this.data?.tree ?? [])}
                 </pap-treeview>
             </pap-sidebar>

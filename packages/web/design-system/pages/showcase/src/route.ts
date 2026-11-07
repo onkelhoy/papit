@@ -1,4 +1,17 @@
-import type { ShowcaseEntry, ShowcaseManifest, ShowcaseRoute } from "./types";
+import type { ShowcaseEntry, ShowcaseManifest, ShowcaseRoute, ShowcaseTreeNode } from "./types";
+
+/** Hash prefix of documentation pages: `#/docs/<path>`. */
+export const DOCS = "docs";
+
+/** The leaf at `path` in a tree, its `package` value (the file for docs). */
+function findLeaf(nodes: ShowcaseTreeNode[], path: string): string | undefined {
+    for (const node of nodes)
+    {
+        if (node.path === path && node.package) return node.package;
+        if (path.startsWith(node.path + "/")) return findLeaf(node.children, path);
+    }
+    return undefined;
+}
 
 /** The path in a showcase hash, without `#`, leading or trailing slashes: `#/web/router/` → `web/router`. */
 export function hashPath(hash: string) {
@@ -17,6 +30,12 @@ export function href(path: string, page?: string) {
 export function resolveRoute(hash: string, manifest?: ShowcaseManifest): ShowcaseRoute {
     const path = hashPath(hash);
     if (!path || !manifest) return {};
+
+    if (path.startsWith(DOCS + "/") && manifest.docs)
+    {
+        const doc = findLeaf(manifest.docs, path.slice(DOCS.length + 1));
+        if (doc) return { doc };
+    }
 
     let best: ShowcaseRoute | null = null;
     for (const entry of manifest.packages)
