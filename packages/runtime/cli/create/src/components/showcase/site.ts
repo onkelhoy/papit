@@ -10,6 +10,9 @@ export type SiteOptions = {
     /** Root package name and version, shown in the shell. */
     name: string;
     version: string;
+    /** Repository web URL and licence, shown in the footer. */
+    repository?: string;
+    license?: string;
     /** Selected packages and their manifest entries, same order. */
     sources: ShowcaseSource[];
     entries: ShowcaseEntry[];
@@ -65,6 +68,8 @@ export function writeSite(options: SiteOptions): ShowcaseManifest {
     const manifest: ShowcaseManifest = {
         name: options.name,
         version: options.version,
+        repository: options.repository,
+        license: options.license,
         readme: fs.existsSync(readme),
         tree: buildTree(options.entries),
         packages: options.entries,

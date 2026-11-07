@@ -59,6 +59,9 @@ export type ShowcaseEntry = {
 export type ShowcaseManifest = {
     name: string;
     version: string;
+    /** Repository web URL, e.g. `https://github.com/acc/repo`. */
+    repository?: string;
+    license?: string;
     readme: boolean;
     tree: TreeNode[];
     packages: ShowcaseEntry[];

@@ -15,6 +15,15 @@ function list(key: string) {
     return (Arguments.get(key) ?? []).flatMap(value => value.split(",")).map(value => value.trim()).filter(Boolean);
 }
 
+/** `git+https://github.com/acc/repo.git` or `git@github.com:acc/repo.git` → `https://github.com/acc/repo`. */
+function repositoryURL(url?: string) {
+    if (!url) return undefined;
+    return url
+        .replace(/^git\+/, "")
+        .replace(/^git@([^:]+):/, "https://$1/")
+        .replace(/\.git$/, "");
+}
+
 export async function showcaseRunner(createPackageLocation: string) {
     const root = Information.root.location;
     const output = path.resolve(root, Arguments.string("output") ?? "showcase");
@@ -43,6 +52,8 @@ export async function showcaseRunner(createPackageLocation: string) {
         root,
         name: Information.scope.replace(/^@/, ""),
         version: Information.root.packageJSON.version,
+        repository: repositoryURL(Information.root.packageJSON.repository?.url),
+        license: Information.root.packageJSON.license,
         sources: selected,
         entries,
         template: path.join(createPackageLocation, "asset", "showcase-templates", "global"),
