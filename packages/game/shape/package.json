@@ -7,7 +7,7 @@
     "typescript",
     "shape"
   ],
-  "version": "0.0.4",
+  "version": "0.0.5",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -53,7 +53,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/polygon": "0.0.1",
+    "@papit/polygon": "0.0.2",
     "@papit/vector": "0.0.2"
   },
   "devDependencies": {
@@ -77,5 +77,5 @@
       }
     }
   },
-  "remoteVersion": "0.0.3"
+  "remoteVersion": "0.0.4"
 }

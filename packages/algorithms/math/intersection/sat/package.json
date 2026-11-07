@@ -7,7 +7,7 @@
     "typescript",
     "sat"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -53,14 +53,14 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/box-intersection": "0.0.1",
+    "@papit/box-intersection": "0.0.2",
     "@papit/vector": "0.0.2"
   },
   "devDependencies": {
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.4",
-    "@papit/polygon": "0.0.1",
-    "@papit/polygon-intersection": "0.0.1",
+    "@papit/game-shape": "0.0.5",
+    "@papit/polygon": "0.0.2",
+    "@papit/polygon-intersection": "0.0.2",
     "@papit/theme": "*",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

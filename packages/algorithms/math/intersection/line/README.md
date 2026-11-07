@@ -1,135 +1,96 @@
 # @papit/line-intersection
 
-Line and segment intersection in 2D, returning the crossing point.
+Line and segment intersection in 2D, closest points between segments and ray vs plane in 3D. Reach for it for line-of-sight, picking and capsule tests.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-intersection-orange)
+![Type](https://img.shields.io/badge/Type-math:intersection-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/line-intersection.svg?logo=npm)](https://www.npmjs.com/package/@papit/line-intersection)
 
 ---
 
-## Features
-
-- **Line intersection** – finds the intersection point of two infinite lines.
-- **Segment intersection** – restricts the intersection to finite line segments.
-- **Works with any `VectorValue`** – accepts plain objects `{x,y}`, arrays, or `Vector2` instances from `@papit/vector`.
-- **Returns intersection coordinates and parametric values (t, u)** – useful for further calculations.
-- **Zero dependencies** – only uses `@papit/vector` for vector math (but you can pass plain objects).
-
----
-
-## Installation
+# Installation
 
 ```bash
 npm install @papit/line-intersection
 ```
 
----
+# Usage
 
-## Usage
+```ts
+import { SegmentIntersection, closestSegmentPoints, rayPlane } from "@papit/line-intersection";
 
-### Basic Example
+SegmentIntersection({ x: 0, y: 0 }, { x: 10, y: 10 }, { x: 0, y: 10 }, { x: 10, y: 0 });
+// { x: 5, y: 5, t: 0.5, u: 0.5 }
 
-```typescript
-import {
-  LineIntersection,
-  SegmentIntersection,
-} from "@papit/line-intersection";
+// two skew segments in 3D
+closestSegmentPoints({ x: 0, y: 0, z: 0 }, { x: 2, y: 0, z: 0 }, { x: 1, y: -1, z: 1 }, { x: 1, y: 1, z: 1 });
+// { s: 0.5, t: 0.5, a: Vector3(1, 0, 0), b: Vector3(1, 0, 1), distance: 1 }
 
-// Define two lines using plain objects
-const p1 = { x: 0, y: 0 };
-const p2 = { x: 10, y: 0 };
-const p3 = { x: 5, y: -5 };
-const p4 = { x: 5, y: 5 };
-
-// Intersection of infinite lines
-const lineResult = LineIntersection(p1, p2, p3, p4);
-if (lineResult) {
-  console.log(`Lines intersect at (${lineResult.x}, ${lineResult.y})`);
-  console.log(`t = ${lineResult.t}, u = ${lineResult.u}`);
-}
-// Output: Lines intersect at (5, 0), t = 0.5, u = 0.5
-
-// Intersection of finite segments
-const segResult = SegmentIntersection(p1, p2, p3, p4);
-if (segResult) {
-  console.log(`Segments intersect at (${segResult.x}, ${segResult.y})`);
-} else {
-  console.log("Segments do not intersect.");
-}
-// Output: Segments intersect at (5, 0)
+rayPlane({ x: 0, y: 5, z: 0 }, { x: 0, y: -1, z: 0 }, { normal: { x: 0, y: 1, z: 0 }, d: 0 });
+// { t: 5, point: Vector3(0, 0, 0) }
 ```
 
-### Using `@papit/vector` Instances
+# API
 
-```typescript
-import { Vector2 } from "@papit/vector";
+All functions are O(1).
 
-const v1 = new Vector2(0, 0);
-const v2 = new Vector2(10, 0);
-const v3 = new Vector2(5, -5);
-const v4 = new Vector2(5, 5);
+### LineIntersection
 
-const result = SegmentIntersection(v1, v2, v3, v4);
-// Works the same way
+```ts
+LineIntersection(p1, p2, p3, p4): { x, y, t, u } | false
 ```
 
----
+Where infinite line `p1`–`p2` crosses line `p3`–`p4` (2D). `t` and `u` are the positions along each, `false` when parallel.
 
-## API Reference
+### SegmentIntersection
 
-### `LineIntersection(p1, p2, p3, p4): false | { x: number, y: number, t: number, u: number }`
-
-Computes the intersection point of two infinite lines defined by points `p1→p2` and `p3→p4`.
-
-- **Parameters**: Four `VectorValue` objects (each with `x` and `y`).
-- **Returns**:
-  - An object with `x`, `y` (coordinates of the intersection), and `t`, `u` (parametric values along the first and second line respectively).
-  - `false` if the lines are parallel or coincident (denominator = 0).
-
----
-
-### `SegmentIntersection(p1, p2, p3, p4): false | { x: number, y: number, t: number, u: number }`
-
-Determines if two **finite line segments** intersect. Internally calls `LineIntersection` and checks whether `0 ≤ t ≤ 1` and `0 ≤ u ≤ 1`.
-
-- **Parameters**: Four `VectorValue` objects defining the segment endpoints.
-- **Returns**: The same intersection object as `LineIntersection` if the intersection lies within both segments, otherwise `false`.
-
----
-
-### Type `VectorValue`
-
-Imported from `@papit/vector`. Any object with numeric `x` and `y` properties, e.g.:
-
-```typescript
-type VectorValue = { x: number; y: number } | Vector2 | [number, number];
+```ts
+SegmentIntersection(p1, p2, p3, p4): { x, y, t, u } | false
 ```
 
----
+Same, but only when the crossing lies on both segments (`t` and `u` in [0, 1]).
 
-## Contributing
+### closestPointOnSegment
 
-Contributions are welcome! Please follow these steps:
+```ts
+closestPointOnSegment(p: Point, a: Point, b: Point): { t, point, distance }
+```
 
-1. Fork the repository and clone it locally.
-2. Install dependencies: `npm install`
-3. Make your changes and add tests (we use `node:test`).
-4. Run tests: `npm test`
-5. Ensure the code is properly formatted and linted.
-6. Submit a pull request with a clear description of your changes.
+Closest point to `p` on `a`–`b`, 2D or 3D. A zero-length segment returns `a`.
 
----
+### closestSegmentPoints
 
-## License
+```ts
+closestSegmentPoints(p1: Point, q1: Point, p2: Point, q2: Point): { s, t, a, b, distance }
+```
 
-Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelhoy).
+Closest points between two segments (Ericson 5.1.9), 2D or 3D. `s`, `t` in [0, 1] along each, `a`, `b` the points, `distance` 0 when they cross. Handles parallel and zero-length segments.
 
-**Key points:**
+### rayPlane
+
+```ts
+rayPlane(origin: Point, direction: Point, plane: Plane): { t, point } | false
+```
+
+`false` when the ray is parallel (off the plane) or the plane is behind it. A ray lying in the plane hits at `t = 0`.
+
+## Types
+
+```ts
+type Point = { x: number; y: number; z?: number }                        // Vector2 / Vector3 fit
+type Plane = { normal: Point; d: number } | { normal: Point; point: Point } // normal need not be unit
+```
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -140,6 +101,7 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ---
 
-## Support
+# Related
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit) or open an issue in the [issue tracker](https://github.com/onkelhoy/papit/issues).
+- [`@papit/triangle-intersection`](https://www.npmjs.com/package/@papit/triangle-intersection): ray vs triangle
+- [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk): capsules against any convex shape

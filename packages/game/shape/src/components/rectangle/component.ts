@@ -84,8 +84,13 @@ export class Rectangle extends Shape implements RectangleObject {
     get boundary() {
         return this;
     }
+    /** The corner furthest along `direction`. */
     supportFunction(direction: VectorValue) {
-        return Vector.create({ x: this.x, y: this.y });
+        const d = new Vector2(direction);
+        return new Vector2(
+            d.x < 0 ? this.x : this.x + this.w,
+            d.y < 0 ? this.y : this.y + this.h,
+        );
     }
 
     draw(ctx: CanvasRenderingContext2D, strokecolor = "black", fillcolor = "rgba(0,0,0,0.1)") {

@@ -1,13 +1,19 @@
 {
   "name": "@papit/triangle-intersection",
-  "description": "Point-in-triangle check in 2D.",
+  "description": "Triangle tests: point-in-triangle in 2D, closest point on a triangle and ray vs triangle in 3D. Reach for it for mesh picking and point-to-mesh distance.",
   "keywords": [
     "papit",
     "node",
     "typescript",
-    "triangle-intersection"
+    "triangle-intersection",
+    "triangle",
+    "ray",
+    "closest-point",
+    "moller-trumbore",
+    "3d",
+    "collision"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -57,7 +63,7 @@
   },
   "devDependencies": {
     "@papit/game-engine": "0.2.0",
-    "@papit/sat": "0.0.1",
+    "@papit/sat": "0.0.2",
     "@papit/theme": "*",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

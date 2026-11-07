@@ -1,9 +1,8 @@
 import { Vector2, VectorValue } from "@papit/vector";
 
 /**
- * 
- * @param {VectorValue} p 
- * @param {VectorValue[]} triangle 
+ * Whether `p` lies inside the 2D triangle (edges included).
+ * @throws when not given exactly three corners
  */
 export function isPointInTriangle(p: VectorValue, ...triangle: VectorValue[]) {
     if (triangle.length !== 3) throw new Error(`${triangle} is not a triangle`);

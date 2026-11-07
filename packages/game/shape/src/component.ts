@@ -1,4 +1,4 @@
-import { Vector3, VectorValue } from "@papit/vector";
+import { Vector, Vector3, VectorValue } from "@papit/vector";
 import { RectangleObject } from "components/rectangle";
 
 export abstract class Shape extends Vector3 {
@@ -9,7 +9,12 @@ export abstract class Shape extends Vector3 {
     /**
      * function used by GJK algorithm to determine furthest point
      * @param {VectorValue} direction 
-     * @returns {VectorValue} support-point
+     * @returns {Vector} support-point
      */
-    abstract supportFunction(direction: VectorValue): VectorValue;
+    abstract supportFunction(direction: VectorValue): Vector;
+
+    /** Same as `supportFunction`, so every shape is a `Convex` for `@papit/gjk`. */
+    support(direction: VectorValue): Vector {
+        return this.supportFunction(direction);
+    }
 }

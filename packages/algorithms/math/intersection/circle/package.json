@@ -1,13 +1,18 @@
 {
   "name": "@papit/circle-intersection",
-  "description": "Circle intersection: where two circles cross, and whether a point is inside one.",
+  "description": "Circle and sphere intersection in 2D and 3D: where two circles cross, overlap with normal and depth, point inside and ray vs circle. Reach for it for round colliders and picking.",
   "keywords": [
     "papit",
     "node",
     "typescript",
-    "circle-intersection"
+    "circle-intersection",
+    "circle",
+    "sphere",
+    "ray",
+    "3d",
+    "collision"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -57,7 +62,7 @@
   },
   "devDependencies": {
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.4",
+    "@papit/game-shape": "0.0.5",
     "@papit/theme": "*",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

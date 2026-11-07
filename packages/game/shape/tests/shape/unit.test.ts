@@ -29,6 +29,24 @@ test.describe("shapes, run in node", () => {
     expect([rectangle.width, rectangle.height]).toEqual([30, 40]);
   });
 
+  test('the support function of a rectangle picks the corner along the direction', () => {
+    const rectangle = new Rectangle(10, 20, 30, 40);
+    const corner = (x: number, y: number) => {
+      const p = rectangle.supportFunction({ x, y });
+      return [p.x, p.y];
+    };
+    expect(corner(1, 1)).toEqual([40, 60]);
+    expect(corner(-1, -1)).toEqual([10, 20]);
+    expect(corner(1, -1)).toEqual([40, 20]);
+    expect(corner(-1, 1)).toEqual([10, 60]);
+  });
+
+  test('support is the same as supportFunction', () => {
+    const circle = new Circle({ x: 0, y: 0 }, 2);
+    expect(circle.support({ x: 0, y: 1 }).y).toBeCloseTo(2, 4);
+    expect(new Rectangle(0, 0, 1, 1).support([1, 1])[0]).toBe(1);
+  });
+
   test('a line keeps both its ends', () => {
     const line = new Line({ x: 1, y: 2 }, { x: 4, y: 6 });
     expect([line.a.x, line.b.x, line.b.y]).toEqual([1, 4, 6]);

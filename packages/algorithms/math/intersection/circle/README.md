@@ -1,161 +1,107 @@
 # @papit/circle-intersection
 
-Circle intersection: where two circles cross, and whether a point is inside one.
+Circle and sphere intersection in 2D and 3D: where two circles cross, overlap with normal and depth, point inside and ray vs circle. Reach for it for round colliders and picking.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-intersection-orange)
+![Type](https://img.shields.io/badge/Type-math:intersection-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/circle-intersection.svg?logo=npm)](https://www.npmjs.com/package/@papit/circle-intersection)
 
 ---
 
-## Features
-
-- **Circle‑circle intersection** – finds the intersection points of two circles.
-- **Point‑in‑circle test** – checks whether a point lies inside or on a circle.
-- **Flexible circle definition** – works with both `{ x, y, r }` and `{ x, y, radius }` objects.
-- **Returns detailed intersection data** – including the intersection points, the chord midpoint, and geometric parameters.
-- **Zero dependencies** – only uses `@papit/vector` for vector math (but you can pass plain objects).
-- **Fully typed** – written in TypeScript.
-
----
-
-## Installation
+# Installation
 
 ```bash
 npm install @papit/circle-intersection
 ```
 
----
+# Usage
 
-## Usage
+```ts
+import { CircleIntersection, CircleOverlap, isPointInCircle } from "@papit/circle-intersection";
 
-### Basic Example
+CircleIntersection({ x: 0, y: 0, r: 5 }, { x: 6, y: 0, r: 5 });
+// va (3, -4), vb (3, 4), chord midpoint vc (3, 0), a: 3, h: 4
 
-```typescript
-import {
-  CircleIntersection,
-  isPointInCircle,
-} from "@papit/circle-intersection";
+CircleOverlap({ x: 0, y: 0, r: 5 }, { x: 6, y: 0, r: 5 });
+// { normal: Vector2(1, 0), depth: 4 }
 
-// Define two circles
-const circleA = { x: 0, y: 0, r: 5 };
-const circleB = { x: 6, y: 0, r: 5 };
-
-const result = CircleIntersection(circleA, circleB);
-if (result) {
-  console.log(
-    `Intersection points: (${result.va.x}, ${result.va.y}) and (${result.vb.x}, ${result.vb.y})`
-  );
-  console.log(`Chord midpoint: (${result.vc.x}, ${result.vc.y})`);
-  console.log(`Half chord length: ${result.h}`);
-} else {
-  console.log("Circles do not overlap.");
-}
-// Output: Intersection points: (3,4) and (3,-4)
-// etc.
-
-// Point‑in‑circle
-const point = { x: 3, y: 4 };
-console.log(isPointInCircle(point, circleA)); // true
+isPointInCircle({ x: 3, y: 4 }, { x: 0, y: 0, radius: 5 }); // true
 ```
 
-### Using `radius` Instead of `r`
+Add `z` to make it a sphere:
 
-```typescript
-const circleC = { x: 0, y: 0, radius: 5 };
-const circleD = { x: 6, y: 0, radius: 5 };
-const result2 = CircleIntersection(circleC, circleD); // same result
+```ts
+import { CircleOverlap, rayCircle } from "@papit/circle-intersection";
+import { Vector3 } from "@papit/vector";
+
+const sphere = { x: 0, y: 0, z: 0, r: 1 };
+CircleOverlap(sphere, { x: 0, y: 0, z: 1.5, r: 1 });
+// { normal: Vector3(0, 0, 1), depth: 0.5 }
+
+rayCircle(new Vector3(0, 0, -5), new Vector3(0, 0, 1), sphere);
+// { t: 4, point: Vector3(0, 0, -1), normal: Vector3(0, 0, -1) }
 ```
 
-### Using `@papit/vector` Instances
+# API
 
-```typescript
-import { Vector2 } from "@papit/vector";
+All functions are O(1).
 
-const center1 = new Vector2(0, 0);
-const center2 = new Vector2(6, 0);
-// The function expects plain objects or VectorValue; you can pass Vector2 as they have x/y.
-const result3 = CircleIntersection(
-  { x: center1.x, y: center1.y, r: 5 },
-  { x: center2.x, y: center2.y, r: 5 }
-);
-// or directly use the vector's x/y properties.
+### CircleIntersection
+
+```ts
+CircleIntersection(a: Circle, b: Circle): { va, vb, vc, a, h } | false
 ```
 
----
+The two crossing points of two 2D circles (radical-line method). `false` when apart, concentric or one contains the other.
 
-## API Reference
+| Field | Description |
+| --- | --- |
+| `va`, `vb` | the crossing points, equal when tangent |
+| `vc` | midpoint of the chord, on the center-to-center line |
+| `a` | distance from `a`'s center to `vc` |
+| `h` | half the chord length |
 
-### `CircleIntersection(a: Circle, b: Circle): false | IntersectionResult`
+### CircleOverlap
 
-Computes the intersection points of two circles, via the radical-line method: the line through both intersection points crosses the line connecting the two centres at a single point, a known distance from circle `a`'s centre; stepping perpendicular from there lands on the two intersection points.
-
-- **Parameters**: Two `Circle` objects (must have `x`, `y`, and either `r` or `radius`).
-- **Returns**:
-  - `false` if the circles are disjoint, concentric, or one fully contains the other without touching.
-  - An object containing:
-    - `va`, `vb` – the two intersection points as `{ x, y }` objects. Equal to each other when the circles are tangent.
-    - `vc` – the midpoint of the chord `va`–`vb`, where it crosses the centre-to-centre line.
-    - `a` – distance from circle `a`'s centre to `vc`, along the centre-to-centre line.
-    - `h` – half the chord length, i.e. the distance from `vc` to `va` (or `vb`).
-
-**Note**: Earlier versions returned an object with `NaN` coordinates when one circle fully contained the other. That case now returns `false` like any other non-intersecting pair — check the return value with a simple truthiness/`false` check rather than inspecting `h` for `NaN`.
-
----
-
-### `isPointInCircle(p: VectorValue, circle: Circle): boolean`
-
-Determines whether a point lies inside or on the circumference of a circle.
-
-- **Parameters**:
-  - `p` – the point to test (object with `x` and `y`).
-  - `circle` – a `Circle` object.
-- **Returns**: `true` if the point is inside or on the circle, `false` otherwise.
-
----
-
-### Type `Circle`
-
-```typescript
-type Circle =
-  | {
-      x: number;
-      y: number;
-      r: number;
-    }
-  | {
-      x: number;
-      y: number;
-      radius: number;
-    };
+```ts
+CircleOverlap(a: Circle, b: Circle): { normal, depth } | false
 ```
 
-The library normalises the radius internally. A `Circle` with neither `r` nor `radius` set will throw.
+Overlap of two circles or spheres (3D when either has a `z`). `normal` is the unit vector from `a` towards `b` (`+x` when concentric), `depth` how far they overlap. Touching gives depth 0.
 
----
+### isPointInCircle
 
-## Contributing
+```ts
+isPointInCircle(point: Point | VectorValue, circle: Circle): boolean
+```
 
-Contributions are welcome! Please follow these steps:
+Inside or on the boundary. 3D when the circle has a `z`.
 
-1. Fork the repository and clone it locally.
-2. Install dependencies: `npm install`
-3. Make your changes and add tests (we use `node:test`).
-4. Run tests: `npm test`
-5. Ensure the code is properly formatted and linted.
-6. Submit a pull request with a clear description of your changes.
+### rayCircle
 
----
+```ts
+rayCircle(origin: Point, direction: Point, circle: Circle): { t, point, normal } | false
+```
 
-## License
+First hit on the surface, `point = origin + t * direction`, `normal` outward. A ray starting inside hits at `t = 0` with a zero normal.
 
-Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelhoy).
+## Types
 
-**Key points:**
+```ts
+type Circle = { x, y, r } | { x, y, radius }   // plus optional z
+type Point = { x: number; y: number; z?: number }
+```
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -166,6 +112,7 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ---
 
-## Support
+# Related
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit) or open an issue in the [issue tracker](https://github.com/onkelhoy/papit/issues).
+- [`@papit/box-intersection`](https://www.npmjs.com/package/@papit/box-intersection): boxes
+- [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk): spheres against any convex shape

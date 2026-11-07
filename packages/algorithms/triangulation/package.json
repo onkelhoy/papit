@@ -7,7 +7,7 @@
     "typescript",
     "triangulation"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -52,11 +52,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/triangle-intersection": "0.0.1",
+    "@papit/triangle-intersection": "0.0.2",
     "@papit/vector": "0.0.2"
   },
   "devDependencies": {
-    "@papit/polygon": "0.0.1",
+    "@papit/polygon": "0.0.2",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"
   },

@@ -1,12 +1,8 @@
 import { Vector2, VectorValue } from "@papit/vector";
 
 /**
- * 
- * @param {VectorValue} p1 
- * @param {VectorValue} p2 
- * @param {VectorValue} p3 
- * @param {VectorValue} p4 
- * @returns false|Vector
+ * Where infinite line `p1`–`p2` crosses line `p3`–`p4` (2D).
+ * @returns the crossing `x, y` with `t`, `u` along each line, or `false` when parallel
  */
 export function LineIntersection(p1: VectorValue, p2: VectorValue, p3: VectorValue, p4: VectorValue) {
     const D1 = Vector2.subtract(p2, p1);
@@ -26,14 +22,7 @@ export function LineIntersection(p1: VectorValue, p2: VectorValue, p3: VectorVal
         u,
     };
 }
-/**
- * 
- * @param {VectorValue} p1 
- * @param {VectorValue} p2 
- * @param {VectorValue} p3 
- * @param {VectorValue} p4 
- * @returns false|Vector
- */
+/** Like `LineIntersection`, but only when the crossing lies on both segments (`t`, `u` in [0, 1]). */
 export function SegmentIntersection(p1: VectorValue, p2: VectorValue, p3: VectorValue, p4: VectorValue) {
 
     const i = LineIntersection(p1, p2, p3, p4);
