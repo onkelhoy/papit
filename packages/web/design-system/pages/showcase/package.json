@@ -59,7 +59,11 @@
     "node": ">=18"
   },
   "dependencies": {
+    "@papit/button": "0.1.10",
+    "@papit/checkbox": "0.0.9",
     "@papit/icon": "0.1.13",
+    "@papit/input": "0.0.10",
+    "@papit/language-picker": "0.0.1",
     "@papit/markdown": "0.0.9",
     "@papit/router": "0.1.10",
     "@papit/server": "1.0.15",

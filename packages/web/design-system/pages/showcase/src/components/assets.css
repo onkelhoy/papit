@@ -1,0 +1,54 @@
+:host {
+    display: block;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3, 0.75rem);
+}
+
+ul[part="image"] {
+    grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+}
+
+figure {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    padding: var(--space-3, 0.75rem);
+    border: 1px solid var(--shade-1, currentColor);
+    border-radius: var(--radius-medium, 8px);
+}
+
+img {
+    width: 100%;
+    height: 5rem;
+    object-fit: contain;
+}
+
+figcaption {
+    font-size: 0.8em;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+a {
+    color: inherit;
+}
+
+ul[part="audio"] li,
+ul[part="video"] li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-3, 0.75rem);
+}
+
+video {
+    max-width: 100%;
+}

@@ -1,4 +1,4 @@
-import type { ShowcaseManifest, ShowcaseRoute } from "./types";
+import type { ShowcaseEntry, ShowcaseManifest, ShowcaseRoute } from "./types";
 
 /** The path in a showcase hash, without `#`, leading or trailing slashes: `#/web/router/` → `web/router`. */
 export function hashPath(hash: string) {
@@ -30,4 +30,22 @@ export function resolveRoute(hash: string, manifest?: ShowcaseManifest): Showcas
     }
 
     return best ?? { unknown: path };
+}
+
+/** Auto pages the showcase renders itself, in menu order. */
+export const AUTO_PAGES = ["api", "assets", "translations"] as const;
+export type AutoPage = typeof AUTO_PAGES[number];
+
+/** Asset files that are previewed (translations have their own page). */
+export function previewAssets(entry: ShowcaseEntry) {
+    return entry.assets.filter(file => !file.startsWith("translations/"));
+}
+
+/** Every page of a package: its views, then the auto pages it has data for. */
+export function pagesOf(entry: ShowcaseEntry): string[] {
+    const auto: string[] = [];
+    if (entry.analyse) auto.push("api");
+    if (previewAssets(entry).length > 0) auto.push("assets");
+    if (entry.translations.length > 0) auto.push("translations");
+    return [...entry.views, ...auto];
 }

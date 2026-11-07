@@ -36,9 +36,111 @@ pap-sidebar {
 
 header {
     grid-area: header;
+    position: sticky;
+    top: var(--space-3, 0.75rem);
+    z-index: 10;
     display: flex;
-    justify-content: flex-end;
-    padding: var(--space-4, 1rem);
+    justify-content: center;
+    padding: var(--space-3, 0.75rem) var(--space-4, 1rem) 0;
+    pointer-events: none;
+}
+
+/* the floating pill: one row, opens downward on hover, focus or the toggle */
+nav[part="pill"] {
+    pointer-events: auto;
+    display: grid;
+    grid-template-rows: auto 0fr;
+    max-width: min(100%, 48rem);
+    border: 1px solid var(--shade-1, color-mix(in srgb, var(--text, currentColor) 15%, transparent));
+    border-radius: calc(var(--space-6, 1.5rem) + var(--space-2, 0.5rem));
+    background-color: color-mix(in srgb, var(--background, Canvas) 85%, transparent);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 var(--space-2, 0.5rem) var(--space-6, 1.5rem) color-mix(in srgb, black 12%, transparent);
+    transition: grid-template-rows 200ms ease, border-radius 200ms ease;
+
+    &:has([part="pages"]):is(:hover, :focus-within, .open) {
+        grid-template-rows: auto 1fr;
+        border-radius: var(--radius-large, 16px);
+    }
+}
+
+[part="bar"] {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem) var(--space-1, 0.25rem) var(--space-4, 1rem);
+    white-space: nowrap;
+
+    a,
+    button {
+        color: inherit;
+        font: inherit;
+        text-decoration: none;
+    }
+
+    a[part="pill-home"] {
+        font-weight: 700;
+    }
+
+    button[part="current"] {
+        border: none;
+        background: none;
+        padding: var(--space-1, 0.25rem) var(--space-2, 0.5rem);
+        border-radius: var(--radius-full, 999px);
+        cursor: pointer;
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--text, currentColor) 8%, transparent);
+        }
+
+        small {
+            color: var(--text-secondary, inherit);
+        }
+    }
+}
+
+[part="separator"] {
+    color: var(--text-secondary, currentColor);
+    opacity: 0.5;
+}
+
+[part="pages"] {
+    overflow: hidden;
+    min-height: 0;
+    list-style: none;
+    margin: 0;
+    padding: 0 var(--space-3, 0.75rem);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1, 0.25rem);
+
+    nav:is(:hover, :focus-within, .open) & {
+        padding-block: var(--space-2, 0.5rem) var(--space-3, 0.75rem);
+        border-top: 1px solid var(--shade-1, color-mix(in srgb, var(--text, currentColor) 10%, transparent));
+    }
+
+    a {
+        display: inline-block;
+        padding: var(--space-1, 0.25rem) var(--space-3, 0.75rem);
+        border-radius: var(--radius-full, 999px);
+        color: inherit;
+        text-decoration: none;
+
+        &:hover {
+            background-color: color-mix(in srgb, var(--text, currentColor) 8%, transparent);
+        }
+
+        &[aria-current="page"] {
+            background-color: var(--primary, CanvasText);
+            color: var(--text-inverse, Canvas);
+        }
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    nav[part="pill"] {
+        transition: none;
+    }
 }
 
 main {
@@ -49,7 +151,16 @@ main {
 
 footer {
     grid-area: footer;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2, 0.5rem) var(--space-6, 1.5rem);
     padding: var(--space-4, 1rem) var(--space-8, 2rem);
+    color: var(--text-secondary, inherit);
+    font-size: 0.875em;
+
+    a {
+        color: inherit;
+    }
 }
 
 [part="package-meta"] {

@@ -4,6 +4,7 @@ import { Showcase } from './component.js';
 export * from "./component";
 export * from "./route";
 export * from "./types";
+export * from "./components";
 
 // Register the element with the browser
 

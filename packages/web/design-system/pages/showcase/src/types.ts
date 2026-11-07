@@ -29,6 +29,9 @@ export type ShowcaseEntry = {
 export type ShowcaseManifest = {
     name: string;
     version: string;
+    /** Repository web URL, shown in the footer. */
+    repository?: string;
+    license?: string;
     readme: boolean;
     tree: ShowcaseTreeNode[];
     packages: ShowcaseEntry[];

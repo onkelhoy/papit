@@ -1,11 +1,56 @@
 {
     "meta": {
         "region": "GB",
-        "language": "en-UK"
+        "language": "en"
     },
-    "showcase": "showcase",
+    "showcase": {
+        "api": {
+            "controls": "Controls",
+            "properties": "Properties",
+            "events": "Events",
+            "slots": "Slots",
+            "parts": "CSS parts",
+            "states": "States",
+            "variables": "CSS variables",
+            "name": "Name",
+            "attribute": "Attribute",
+            "type": "Type",
+            "default": "Default",
+            "kind": "Kind",
+            "description": "Description",
+            "error": "Could not load the API:"
+        },
+        "assets": {
+            "image": "Images",
+            "audio": "Audio",
+            "video": "Video",
+            "file": "Other files"
+        },
+        "translations": {
+            "mode": "Show",
+            "focus": "This package",
+            "dependencies": "With dependencies",
+            "language": "Add language",
+            "add": "Add",
+            "export": "Export CSV",
+            "package": "Package",
+            "key": "Key"
+        }
+    },
     "notfound": "Nothing here:",
     "sidebar": {
         "label": "Packages"
+    },
+    "pill": {
+        "label": "Site",
+        "pages": "Pages of {name}",
+        "readme": "readme",
+        "api": "api",
+        "assets": "assets",
+        "translations": "translations"
+    },
+    "footer": {
+        "repository": "Repository",
+        "license": "Licence"
     }
 }

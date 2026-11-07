@@ -6,6 +6,7 @@ import "@papit/icon";
 import "@papit/treeview";
 
 // molecules
+import "@papit/language-picker";
 import "@papit/markdown";
 import "@papit/theme-picker";
 import "@papit/sidebar";
@@ -17,7 +18,8 @@ import { translate, useTranslator } from "@papit/translator";
 
 // local
 import sheet from "./style.css" with { type: "css" };
-import { href, resolveRoute } from "./route";
+import { AUTO_PAGES, href, pagesOf, resolveRoute } from "./route";
+import "./components";
 import type { ShowcaseManifest, ShowcaseRoute, ShowcaseTreeNode } from "./types";
 
 /**
@@ -64,6 +66,9 @@ export class Showcase extends CustomElement {
     /** The route the hash resolves to. */
     @property({ type: Object, attribute: false, rerender: true }) route: ShowcaseRoute = {};
 
+    /** The pill menu is pinned open (toggle button); hover and focus open it too. */
+    @property({ type: Boolean, attribute: false, rerender: true }) pillopen = false;
+
     /** Base URL of the site, the folder holding the manifest. */
     get base() {
         return new URL(".", new URL(this.manifest, document.baseURI)).href;
@@ -99,9 +104,23 @@ export class Showcase extends CustomElement {
         if (route.entry === this.route.entry && route.page === this.route.page && route.unknown === this.route.unknown) return;
 
         this.route = route;
+        this.pillopen = false;
         this.syncRouter();
         this.dispatchEvent(new CustomEvent("route", { detail: route }));
     }
+    /** Renders, then hands the current package to the auto page (the template has no property bindings). */
+    update() {
+        super.update();
+        const entry = this.route.entry;
+        const page = this.shadowRoot?.querySelector<HTMLElement & { entry?: unknown; packages?: unknown }>("pap-showcase-api, pap-showcase-assets, pap-showcase-translations");
+        if (page && entry)
+        {
+            if (page.localName === "pap-showcase-translations") page.packages = this.data?.packages ?? [];
+            if (page.entry !== entry) page.entry = entry;
+        }
+        return undefined;
+    }
+
     /** The route is a view folder of its package, shown by the router. */
     private get isview() {
         const { entry, page } = this.route;
@@ -176,15 +195,29 @@ export class Showcase extends CustomElement {
         }
 
         if (this.isview) return null;
-        if (page) return html`<p part="not-found">${this.t("notfound")} <code>${entry.path}/${page}</code></p>`;
+        if (page && !pagesOf(entry).includes(page)) return html`<p part="not-found">${this.t("notfound")} <code>${entry.path}/${page}</code></p>`;
+
+        const heading = html`
+            <p part="package-meta">
+                <code>${entry.name}</code>
+                <span>v${entry.version}</span>
+                ${entry.type.map(type => html`<span part="tag">${type}</span>`)}
+            </p>
+        `;
+
+        if (page === "api") return html`
+            <section part="package" aria-label="${entry.name}">${heading}<pap-showcase-api base="${this.base}"></pap-showcase-api></section>
+        `;
+        if (page === "assets") return html`
+            <section part="package" aria-label="${entry.name}">${heading}<pap-showcase-assets base="${this.base}"></pap-showcase-assets></section>
+        `;
+        if (page === "translations") return html`
+            <section part="package" aria-label="${entry.name}">${heading}<pap-showcase-translations base="${this.base}"></pap-showcase-translations></section>
+        `;
 
         return html`
             <section part="package" aria-label="${entry.name}">
-                <p part="package-meta">
-                    <code>${entry.name}</code>
-                    <span>v${entry.version}</span>
-                    ${entry.type.map(type => html`<span part="tag">${type}</span>`)}
-                </p>
+                ${heading}
                 ${entry.readme
                     ? html`<pap-markdown part="readme" src="${new URL(`packages/${entry.path}/README.md`, this.base).href}"></pap-markdown>`
                     : html`<h1>${entry.name}</h1><p>${entry.description}</p>`}
@@ -192,7 +225,52 @@ export class Showcase extends CustomElement {
         `;
     }
 
+    /** Pill menu links: the README, then every view and auto page of the current package. */
+    private renderPages() {
+        const entry = this.route.entry;
+        if (!entry) return null;
+
+        const link = (page: string | undefined, label: string) => html`
+            <li><a href="${href(entry.path, page)}" aria-current="${this.route.page === page ? "page" : ""}">${label}</a></li>
+        `;
+
+        return html`
+            <ul id="pages" part="pages" aria-label="${this.t("pill.pages", { name: entry.name })}">
+                ${link(undefined, this.t("pill.readme"))}
+                ${pagesOf(entry).map(page => link(page, AUTO_PAGES.includes(page as never) ? this.t(`pill.${page}`) : page))}
+            </ul>
+        `;
+    }
+
+    private renderFooter() {
+        const data = this.data;
+        if (!data) return null;
+        return html`
+            <span>${data.name} v${data.version}</span>
+            ${data.repository ? html`<a href="${data.repository}" rel="noopener noreferrer" target="_blank">${this.t("footer.repository")}</a>` : ""}
+            ${data.license ? html`<span>${this.t("footer.license")} ${data.license.replace(/^LicenseRef-/, "")}</span>` : ""}
+        `;
+    }
+
+    @bind
+    private handlepillkeydown(e: KeyboardEvent) {
+        if (e.key !== "Escape") return;
+        this.pillopen = false;
+        // close the hover/focus expansion too: hand focus back to the toggle
+        (this.shadowRoot?.querySelector("[part='current']") as HTMLElement | null)?.blur();
+    }
+    @bind
+    private handlepilltoggle() {
+        this.pillopen = !this.pillopen;
+    }
+    @bind
+    private handlepillnavigate(e: Event) {
+        if ((e.target as Element).closest?.("a")) this.pillopen = false;
+    }
+
     render() {
+        const entry = this.route.entry;
+
         return html`
             <pap-sidebar part="sidebar" open>
                 <a slot="header" part="home" href="#/">
@@ -204,16 +282,43 @@ export class Showcase extends CustomElement {
                 </pap-treeview>
             </pap-sidebar>
             <header part="header">
-                <slot name="header">
-                    <pap-theme-picker></pap-theme-picker>
-                </slot>
+                <nav
+                    part="pill"
+                    class="${this.pillopen ? "open" : ""}"
+                    aria-label="${this.t("pill.label")}"
+                    @keydown="${this.handlepillkeydown}"
+                    @click="${this.handlepillnavigate}"
+                >
+                    <div part="bar">
+                        <a part="pill-home" href="#/">${this.data?.name ?? ""}</a>
+                        <span part="separator" aria-hidden="true">|</span>
+                        ${entry
+                            ? html`<button
+                                    part="current"
+                                    type="button"
+                                    aria-expanded="${this.pillopen ? "true" : "false"}"
+                                    aria-controls="pages"
+                                    @click="${this.handlepilltoggle}"
+                                >${entry.name.replace(/^@[^/]+\//, "")}${this.route.page ? html` <small>/ ${this.route.page}</small>` : ""}</button>
+                                <span part="separator" aria-hidden="true">|</span>`
+                            : ""}
+                        <slot name="header">
+                            <pap-theme-picker></pap-theme-picker>
+                        </slot>
+                        <span part="separator" aria-hidden="true">|</span>
+                        <slot name="language">
+                            <pap-language-picker></pap-language-picker>
+                        </slot>
+                    </div>
+                    ${this.renderPages()}
+                </nav>
             </header>
             <main part="main">
                 ${this.renderMain()}
                 <pap-router part="view" update-url="false" update-title="false" hidden="${this.isview ? "" : "true"}"></pap-router>
             </main>
             <footer part="footer">
-                <slot name="footer"></slot>
+                <slot name="footer">${this.renderFooter()}</slot>
             </footer>
         `
     }

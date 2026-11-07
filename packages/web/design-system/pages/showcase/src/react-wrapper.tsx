@@ -3,7 +3,7 @@
 // Regenerate with `npx @papit/react`. Delete the line above to take this file over by hand.
 import { useCallback, useEffect, useRef } from "react";
 import type { HTMLAttributes, ReactElement, ReactNode, Ref } from "react";
-import type { Showcase as ShowcaseElement } from "@papit/showcase";
+import type { Showcase as ShowcaseElement, ShowcaseApi as ShowcaseApiElement, ShowcaseAssets as ShowcaseAssetsElement, ShowcaseTranslations as ShowcaseTranslationsElement } from "@papit/showcase";
 
 // the package defines its elements on import and needs the DOM, so it only loads in the browser
 if (typeof window !== "undefined")
@@ -11,13 +11,15 @@ if (typeof window !== "undefined")
     void import("@papit/showcase");
 }
 
-export interface ShowcaseProps extends Omit<HTMLAttributes<ShowcaseElement>, "manifest" | "data" | "route" | "onLoad" | "onRoute"> {
+export interface ShowcaseProps extends Omit<HTMLAttributes<ShowcaseElement>, "manifest" | "data" | "route" | "pillopen" | "onLoad" | "onRoute"> {
     /** URL of the manifest; package files resolve against it. */
     manifest?: ShowcaseElement["manifest"];
     /** The loaded manifest, can also be set directly. */
     data?: ShowcaseElement["data"];
     /** The route the hash resolves to. */
     route?: ShowcaseElement["route"];
+    /** The pill menu is pinned open (toggle button); hover and focus open it too. */
+    pillopen?: ShowcaseElement["pillopen"];
     /** when the manifest has loaded */
     onLoad?: (event: Event) => void;
     /** when the hash resolves to a new route; `detail` is the route */
@@ -27,7 +29,7 @@ export interface ShowcaseProps extends Omit<HTMLAttributes<ShowcaseElement>, "ma
 }
 
 /** React wrapper for the `pap-showcase` element. */
-export function Showcase({ ref, onLoad, onRoute, data, route, ...props }: ShowcaseProps): ReactElement {
+export function Showcase({ ref, onLoad, onRoute, data, route, pillopen, ...props }: ShowcaseProps): ReactElement {
     const element = useRef<ShowcaseElement | null>(null);
 
     const setRef = useCallback((node: ShowcaseElement | null) => {
@@ -69,19 +71,172 @@ export function Showcase({ ref, onLoad, onRoute, data, route, ...props }: Showca
             if (!current) return;
             if (data !== undefined) node.data = data;
             if (route !== undefined) node.route = route;
+            if (pillopen !== undefined) node.pillopen = pillopen;
         });
         return () => {
             current = false;
         };
-    }, [data, route]);
+    }, [data, route, pillopen]);
 
     return <pap-showcase suppressHydrationWarning {...props} ref={setRef} />;
+}
+
+export interface ShowcaseApiProps extends Omit<HTMLAttributes<ShowcaseApiElement>, "entry" | "base" | "elements" | "error"> {
+    /** The package to describe. */
+    entry?: ShowcaseApiElement["entry"];
+    /** Site base URL the package files resolve against. */
+    base?: ShowcaseApiElement["base"];
+    elements?: ShowcaseApiElement["elements"];
+    error?: ShowcaseApiElement["error"];
+    ref?: Ref<ShowcaseApiElement>;
+    children?: ReactNode;
+}
+
+/** React wrapper for the `pap-showcase-api` element. */
+export function ShowcaseApi({ ref, entry, elements, error, ...props }: ShowcaseApiProps): ReactElement {
+    const element = useRef<ShowcaseApiElement | null>(null);
+
+    const setRef = useCallback((node: ShowcaseApiElement | null) => {
+        element.current = node;
+        let cleanup: void | (() => void) = undefined;
+        if (typeof ref === "function") cleanup = ref(node);
+        else if (ref) ref.current = node;
+
+        return () => {
+            element.current = null;
+            if (typeof cleanup === "function") cleanup();
+            else if (typeof ref === "function") ref(null);
+            else if (ref) ref.current = null;
+        };
+    }, [ref]);
+
+    // objects, and props without an attribute, are set once <pap-showcase-api> is defined:
+    // as JSX props, React would first write them as attributes the element doesn't read
+    useEffect(() => {
+        const node = element.current;
+        if (!node) return;
+        let current = true;
+        void customElements.whenDefined("pap-showcase-api").then(() => {
+            if (!current) return;
+            if (entry !== undefined) node.entry = entry;
+            if (elements !== undefined) node.elements = elements;
+            if (error !== undefined) node.error = error;
+        });
+        return () => {
+            current = false;
+        };
+    }, [entry, elements, error]);
+
+    return <pap-showcase-api suppressHydrationWarning {...props} ref={setRef} />;
+}
+
+export interface ShowcaseAssetsProps extends Omit<HTMLAttributes<ShowcaseAssetsElement>, "entry" | "base"> {
+    /** The package whose assets are shown. */
+    entry?: ShowcaseAssetsElement["entry"];
+    /** Site base URL the package files resolve against. */
+    base?: ShowcaseAssetsElement["base"];
+    ref?: Ref<ShowcaseAssetsElement>;
+    children?: ReactNode;
+}
+
+/** React wrapper for the `pap-showcase-assets` element. */
+export function ShowcaseAssets({ ref, entry, ...props }: ShowcaseAssetsProps): ReactElement {
+    const element = useRef<ShowcaseAssetsElement | null>(null);
+
+    const setRef = useCallback((node: ShowcaseAssetsElement | null) => {
+        element.current = node;
+        let cleanup: void | (() => void) = undefined;
+        if (typeof ref === "function") cleanup = ref(node);
+        else if (ref) ref.current = node;
+
+        return () => {
+            element.current = null;
+            if (typeof cleanup === "function") cleanup();
+            else if (typeof ref === "function") ref(null);
+            else if (ref) ref.current = null;
+        };
+    }, [ref]);
+
+    // objects, and props without an attribute, are set once <pap-showcase-assets> is defined:
+    // as JSX props, React would first write them as attributes the element doesn't read
+    useEffect(() => {
+        const node = element.current;
+        if (!node) return;
+        let current = true;
+        void customElements.whenDefined("pap-showcase-assets").then(() => {
+            if (!current) return;
+            if (entry !== undefined) node.entry = entry;
+        });
+        return () => {
+            current = false;
+        };
+    }, [entry]);
+
+    return <pap-showcase-assets suppressHydrationWarning {...props} ref={setRef} />;
+}
+
+export interface ShowcaseTranslationsProps extends Omit<HTMLAttributes<ShowcaseTranslationsElement>, "entry" | "packages" | "base" | "mode" | "rows" | "added"> {
+    /** The package whose translations are shown. */
+    entry?: ShowcaseTranslationsElement["entry"];
+    /** Every package in the manifest, used to follow dependencies. */
+    packages?: ShowcaseTranslationsElement["packages"];
+    /** Site base URL the package files resolve against. */
+    base?: ShowcaseTranslationsElement["base"];
+    /** `focus`: this package only. `dependencies`: also every package it depends on. */
+    mode?: ShowcaseTranslationsElement["mode"];
+    rows?: ShowcaseTranslationsElement["rows"];
+    /** Language columns added in the table, editable. */
+    added?: ShowcaseTranslationsElement["added"];
+    ref?: Ref<ShowcaseTranslationsElement>;
+    children?: ReactNode;
+}
+
+/** React wrapper for the `pap-showcase-translations` element. */
+export function ShowcaseTranslations({ ref, entry, packages, rows, added, ...props }: ShowcaseTranslationsProps): ReactElement {
+    const element = useRef<ShowcaseTranslationsElement | null>(null);
+
+    const setRef = useCallback((node: ShowcaseTranslationsElement | null) => {
+        element.current = node;
+        let cleanup: void | (() => void) = undefined;
+        if (typeof ref === "function") cleanup = ref(node);
+        else if (ref) ref.current = node;
+
+        return () => {
+            element.current = null;
+            if (typeof cleanup === "function") cleanup();
+            else if (typeof ref === "function") ref(null);
+            else if (ref) ref.current = null;
+        };
+    }, [ref]);
+
+    // objects, and props without an attribute, are set once <pap-showcase-translations> is defined:
+    // as JSX props, React would first write them as attributes the element doesn't read
+    useEffect(() => {
+        const node = element.current;
+        if (!node) return;
+        let current = true;
+        void customElements.whenDefined("pap-showcase-translations").then(() => {
+            if (!current) return;
+            if (entry !== undefined) node.entry = entry;
+            if (packages !== undefined) node.packages = packages;
+            if (rows !== undefined) node.rows = rows;
+            if (added !== undefined) node.added = added;
+        });
+        return () => {
+            current = false;
+        };
+    }, [entry, packages, rows, added]);
+
+    return <pap-showcase-translations suppressHydrationWarning {...props} ref={setRef} />;
 }
 
 declare module "react" {
     namespace JSX {
         interface IntrinsicElements {
-            "pap-showcase": Omit<ShowcaseProps, "onLoad" | "onRoute" | "data" | "route">;
+            "pap-showcase": Omit<ShowcaseProps, "onLoad" | "onRoute" | "data" | "route" | "pillopen">;
+            "pap-showcase-api": Omit<ShowcaseApiProps, "entry" | "elements" | "error">;
+            "pap-showcase-assets": Omit<ShowcaseAssetsProps, "entry">;
+            "pap-showcase-translations": Omit<ShowcaseTranslationsProps, "entry" | "packages" | "rows" | "added">;
         }
     }
 }
