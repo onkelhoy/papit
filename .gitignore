@@ -25,3 +25,6 @@ Thumbs.db
 .claude/plan.md
 
 *-FINDINGS.md
+
+# showcase site output (npm run showcase)
+/showcase/
