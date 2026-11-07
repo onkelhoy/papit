@@ -5,7 +5,10 @@
     "papit",
     "web-component",
     "typescript",
-    "language-picker"
+    "language",
+    "i18n",
+    "translator",
+    "flag"
   ],
   "version": "0.0.1",
   "scripts": {
