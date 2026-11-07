@@ -268,6 +268,11 @@ async function compile(file: string, node: PackageNode, externals: string[]) {
     const esoptions = getESOptions(Arguments.instance, node.location, { packageJSON: node.packageJSON, externals });
     if (esoptions.tsconfig && !fs.existsSync(esoptions.tsconfig)) delete esoptions.tsconfig;
 
+    // a folder without a tsconfig (e.g. the workspace root) bundles with esbuild's defaults
+    let tsconfig: PackageNode["tsconfig"];
+    try { tsconfig = node.tsconfig }
+    catch { tsconfig = { options: { baseUrl: path.dirname(file) }, fileNames: [], errors: [] } as unknown as PackageNode["tsconfig"] }
+
     // the call @papit/server's bundler makes, with the minifying build options
     let content: string | undefined;
     await jsBundle(
@@ -275,7 +280,7 @@ async function compile(file: string, node: PackageNode, externals: string[]) {
         node.location,
         {
             entryPointArray: [{ input: file, output: undefined }],
-            tsconfig: node.tsconfig,
+            tsconfig,
             externals,
             packageJSON: node.packageJSON,
             esoptions: { ...esoptions, write: false },
