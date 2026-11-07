@@ -8,10 +8,12 @@ import type { ShowcaseSource } from "./types";
  */
 export async function runAnalyse(sources: ShowcaseSource[], log = true) {
     const failed: string[] = [];
+    const targets = sources.filter(source => source.packageJSON.scripts?.analyse);
 
-    for (const source of sources)
+    for (let i = 0; i < targets.length; i++)
     {
-        if (!source.packageJSON.scripts?.analyse) continue;
+        const source = targets[i];
+        if (log) Terminal.write(Terminal.dim(`analyse ${i + 1}/${targets.length}`), source.name);
 
         try
         {
