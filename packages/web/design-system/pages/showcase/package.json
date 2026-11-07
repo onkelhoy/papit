@@ -1,11 +1,13 @@
 {
   "name": "@papit/showcase",
-  "description": "a showcase component helping with individual helper components and also generative",
+  "description": "Storybook-like site shell for a papit workspace: a package tree, a floating pill menu, README pages, each package's own views, and generated API, assets and translations pages, all driven by one manifest.json.",
   "keywords": [
     "papit",
     "web-component",
     "typescript",
-    "showcase"
+    "showcase",
+    "documentation",
+    "storybook"
   ],
   "version": "0.0.1",
   "scripts": {
