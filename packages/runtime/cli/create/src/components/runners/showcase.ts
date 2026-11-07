@@ -56,6 +56,7 @@ export async function showcaseRunner(createPackageLocation: string) {
         license: Information.root.packageJSON.license,
         sources: selected,
         entries,
+        docs: Arguments.has("no-docs") ? undefined : path.resolve(root, Arguments.string("docs") ?? "docs"),
         template: path.join(createPackageLocation, "asset", "showcase-templates", "global"),
         output,
     });

@@ -92,6 +92,7 @@ Outside a papit workspace, it always runs the project runner.
 | `--include=<globs>` / `--exclude=<globs>` | showcase | Path globs relative to `packages/`, comma separated or repeated. `*` stays in one folder, `**` spans folders, a plain folder keeps everything in it. |
 | `--view-filter=<views>` | showcase | Only these views, in this order. Default: every view, `showcase` first. |
 | `--no-analyse` | showcase | Don't run each package's `analyse` script first. |
+| `--docs=<folder>` / `--no-docs` | showcase | Markdown documentation shown in its own sidebar section. Default `docs` at the workspace root, when it exists. |
 | `--location=<path>` | project | Where to create the project. Default: prompted, then `<path>/<name>`. |
 | `--repository=<url>` | project | Repository for the root `package.json` and the README logo. Default `https://github.com/$USER/<name>`. |
 | `--license=<id>` | project | License for the generated `package.json`s. Default `MIT`. |
@@ -133,11 +134,12 @@ Writes a static site that browses the workspace, rendered by [`<pap-showcase>`](
 2. Run `npm run analyse` in each package that has the script (a failure is a warning), unless `--no-analyse`.
 3. Empty `--output`, copy `asset/showcase-templates/global` into it and the root README.
 4. Per package, copy `views/` → `packages/<path>/view/`, `asset/` → `packages/<path>/files/`, `README.md` and `analyse.json`. `views` and `asset` are renamed because `@papit/static` skips folders with those names.
-5. Write `manifest.json`: name, version, repository, licence, the folder tree and one entry per package (views, assets, translations, workspace dependencies).
+5. Copy the docs folder to `docs/`.
+6. Write `manifest.json`: name, version, repository, licence, the docs tree, the package tree and one entry per package (views, assets, translations, workspace dependencies).
 
 ```bash
 npm create @papit -- --showcase --type=web-component        # only UI components
-npx @papit/static --target=showcase --output=dist/showcase --base=/papit/ --skip-errors
+npx @papit/static --target=showcase --output=dist/showcase --skip-errors   # add --base=/<repo>/ for a GitHub project page
 ```
 
 ## Custom runners

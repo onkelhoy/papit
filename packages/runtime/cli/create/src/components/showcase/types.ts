@@ -30,7 +30,7 @@ export type TreeNode = {
     name: string;
     /** Path relative to `packages/`, used as the route. */
     path: string;
-    /** Package name, only on leaves. */
+    /** Package name on package leaves; the markdown file (relative to the docs folder) on doc leaves. */
     package?: string;
     children: TreeNode[];
 };
@@ -63,6 +63,8 @@ export type ShowcaseManifest = {
     repository?: string;
     license?: string;
     readme: boolean;
+    /** Markdown files from the docs folder, as a tree; paths drop `.md`. */
+    docs: TreeNode[];
     tree: TreeNode[];
     packages: ShowcaseEntry[];
 };

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
+import { listFiles } from "./describe";
 import { buildTree } from "./tree";
 import type { ShowcaseEntry, ShowcaseManifest, ShowcaseSource } from "./types";
 
@@ -16,6 +17,8 @@ export type SiteOptions = {
     /** Selected packages and their manifest entries, same order. */
     sources: ShowcaseSource[];
     entries: ShowcaseEntry[];
+    /** Folder of markdown documentation, copied to `docs/` and listed in the manifest. */
+    docs?: string;
     /** Template folder copied as the site shell. */
     template: string;
     /** Site folder, emptied first. */
@@ -65,12 +68,21 @@ export function writeSite(options: SiteOptions): ShowcaseManifest {
         }
     });
 
+    const docs = options.docs && fs.existsSync(options.docs)
+        ? listFiles(options.docs).filter(file => file.endsWith(".md"))
+        : [];
+    if (docs.length > 0)
+    {
+        fs.cpSync(options.docs!, path.join(output, "docs"), { recursive: true, filter: src => !/[\\/](node_modules|\.temp)([\\/]|$)/.test(src) });
+    }
+
     const manifest: ShowcaseManifest = {
         name: options.name,
         version: options.version,
         repository: options.repository,
         license: options.license,
         readme: fs.existsSync(readme),
+        docs: buildTree(docs.map(file => ({ name: file, path: file.replace(/\.md$/, "") }))),
         tree: buildTree(options.entries),
         packages: options.entries,
     };

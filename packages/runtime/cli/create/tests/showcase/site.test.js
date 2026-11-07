@@ -27,6 +27,9 @@ before(() => {
     write(path.join(location, "src", "index.ts"), "export {}");
     source = { name: "@x/button", location, packageJSON: { version: "1.0.0", papit: { type: "web-component" } } };
 
+    write(path.join(root, "docs", "intro.md"), "# intro");
+    write(path.join(root, "docs", "guides", "start.md"), "# start");
+    write(path.join(root, "docs", "guides", "image.png"), "png");
     write(path.join(output, "stale.txt"));
 });
 after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -34,7 +37,7 @@ after(() => fs.rmSync(root, { recursive: true, force: true }));
 describe("writeSite", () => {
     it("writes shell, manifest, readme and package files", () => {
         const entries = [describePackage(root, source, new Set())];
-        const manifest = writeSite({ root, name: "x", version: "2.0.0", sources: [source], entries, template, output });
+        const manifest = writeSite({ root, name: "x", version: "2.0.0", sources: [source], entries, template, output, docs: path.join(root, "docs") });
 
         const read = file => fs.readFileSync(path.join(output, file), "utf-8");
         assert.strictEqual(read("index.html"), "<title>x</title>");
@@ -47,9 +50,14 @@ describe("writeSite", () => {
         assert.ok(!fs.existsSync(path.join(output, "packages/web/button/src")), "sources are not copied");
         assert.ok(!fs.existsSync(path.join(output, "packages/web/button/view/showcase/node_modules")));
 
-        assert.deepStrictEqual(JSON.parse(read("manifest.json")), manifest);
+        assert.deepStrictEqual(JSON.parse(read("manifest.json")), JSON.parse(JSON.stringify(manifest)));
         assert.strictEqual(manifest.readme, true);
         assert.strictEqual(manifest.tree[0].children[0].package, "@x/button");
+
+        assert.strictEqual(read("docs/guides/start.md"), "# start");
+        assert.ok(fs.existsSync(path.join(output, "docs/guides/image.png")), "doc images come along");
+        assert.deepStrictEqual(manifest.docs.map(n => n.path), ["guides", "intro"]);
+        assert.deepStrictEqual(manifest.docs[0].children[0], { name: "start", path: "guides/start", package: "guides/start.md", children: [] });
     });
 
     it("refuses an output that contains the workspace root", () => {
