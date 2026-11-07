@@ -4,7 +4,8 @@
         "language": "en-UK"
     },
     "showcase": "showcase",
+    "notfound": "Nothing here:",
     "sidebar": {
-        "title": "Sidebar title"
+        "label": "Packages"
     }
 }

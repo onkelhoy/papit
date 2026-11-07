@@ -1,0 +1,19 @@
+{
+    "name": "papit",
+    "version": "1.0.0",
+    "readme": true,
+    "tree": [
+        { "name": "runtime", "path": "runtime", "children": [
+            { "name": "lexer", "path": "runtime/lexer", "package": "@papit/lexer", "children": [] }
+        ] },
+        { "name": "web", "path": "web", "children": [
+            { "name": "atoms", "path": "web/atoms", "children": [
+                { "name": "input", "path": "web/atoms/input", "package": "@papit/input", "children": [] }
+            ] }
+        ] }
+    ],
+    "packages": [
+        { "name": "@papit/lexer", "version": "1.0.0", "description": "lexer", "type": ["node"], "path": "runtime/lexer", "views": [], "readme": true, "analyse": false, "assets": [], "translations": [], "dependencies": [] },
+        { "name": "@papit/input", "version": "1.0.0", "description": "text input", "type": ["web-component"], "path": "web/atoms/input", "views": ["showcase"], "readme": true, "analyse": false, "assets": [], "translations": [], "dependencies": [] }
+    ]
+}

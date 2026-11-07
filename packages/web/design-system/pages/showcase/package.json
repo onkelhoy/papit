@@ -65,6 +65,7 @@
     "@papit/sidebar": "0.0.13",
     "@papit/theme-picker": "0.0.15",
     "@papit/translator": "0.1.1",
+    "@papit/treeview": "0.0.14",
     "@papit/web-component": "0.0.14"
   },
   "peerDependencies": {

@@ -1,69 +1,63 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  // Navigate to your test page
-  await page.goto('tests/showcase/');
+    await page.goto('tests/showcase/');
+    await page.waitForFunction(() => !!document.querySelector("pap-showcase")?.data);
 });
 
-declare global {
-  interface Window {
-    EVENT_EMITTED: any;
-  }
-}
+test.describe("@papit/showcase sidebar", () => {
+    test("renders the manifest tree as a navigation tree", async ({ page }) => {
+        const tree = page.locator("pap-showcase").getByRole("tree", { name: "Packages" });
+        await expect(tree).toBeVisible();
+        // folders start collapsed, so only the top level is exposed
+        await expect(tree.getByRole("treeitem")).toHaveCount(2);
+        await tree.getByRole("treeitem", { name: "web" }).click();
+        await expect(tree.getByRole("treeitem", { name: "atoms" })).toBeVisible();
+    });
 
-test.describe("@papit/showcase unit tests", () => {
-  test('available in DOM', async ({ page }) => {
-    // Interact with your component and make assertions
-    const component = await page.$('pap-showcase');
-    expect(component).not.toBeNull();
-  });
+    test("clicking a package sets the hash and resolves the route", async ({ page }) => {
+        await page.locator("pap-showcase").getByRole("treeitem", { name: "runtime" }).click();
+        await page.locator("pap-showcase").getByRole("link", { name: "lexer" }).click();
+
+        await expect(page).toHaveURL(/#\/runtime\/lexer$/);
+        await expect.poll(() => page.evaluate(() => document.querySelector("pap-showcase")!.route.entry?.name)).toBe("@papit/lexer");
+    });
+
+    test("opens the folders of the current package", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input');
+        await page.waitForFunction(() => !!document.querySelector("pap-showcase")?.data);
+
+        const atoms = page.locator("pap-showcase").getByRole("treeitem", { name: "atoms" });
+        await expect(atoms).toHaveAttribute("aria-expanded", "true");
+        await expect(page.locator("pap-showcase").getByRole("link", { name: "input" })).toHaveAttribute("aria-current", "page");
+    });
 });
 
-test.describe.skip("helpers", () => {
-  test("wait for event : enter press", async ({ page }) => {
-    const target = page.getByTestId("base-target");
-    await page.evaluate(() => {
-      window.EVENT_EMITTED = null;
-      const target = document.querySelector<HTMLElement>("*[data-testid='base-target']");
-      if (!target) return;
+test.describe("@papit/showcase route", () => {
+    test("resolves home, package, page and unknown hashes", async ({ page }) => {
+        const routes = await page.evaluate(() => {
+            const el = document.querySelector("pap-showcase")!;
+            const resolve = (hash: string) => {
+                const route = (window as any).resolveRoute(hash, el.data);
+                return { name: route.entry?.name, page: route.page, unknown: route.unknown };
+            };
+            return {
+                home: resolve(""),
+                slash: resolve("#/"),
+                readme: resolve("#/web/atoms/input/"),
+                view: resolve("#/web/atoms/input/showcase"),
+                deep: resolve("#/web/atoms/input/a/b"),
+                folder: resolve("#/web/atoms"),
+                prefix: resolve("#/web/atoms/inputs"),
+            };
+        });
 
-      target.addEventListener("event-name", () => {
-        window.EVENT_EMITTED = true;
-      });
-
-      target.focus();
-      target.dispatchEvent(new KeyboardEvent("up", { key: "Enter" }));
-      // enter is tricky to capture so we make sure to dispatch inside evalute
+        expect(routes.home).toEqual({});
+        expect(routes.slash).toEqual({});
+        expect(routes.readme).toEqual({ name: "@papit/input" });
+        expect(routes.view).toEqual({ name: "@papit/input", page: "showcase" });
+        expect(routes.deep).toEqual({ unknown: "web/atoms/input/a/b" });
+        expect(routes.folder).toEqual({ unknown: "web/atoms" });
+        expect(routes.prefix).toEqual({ unknown: "web/atoms/inputs" });
     });
-
-    await target.focus();
-    await target.press("Enter");
-
-    expect(await page.evaluate(() => window.EVENT_EMITTED)).toBeTruthy();
-  });
-
-  test("should submit a form", async ({ page }) => {
-    // NOTE this requires in main.js you have form.onsubmit = (e) => { e.preventDefault() }
-    // setting this in evaluate did not work.. (maybe with page.evalute)
-
-    await page.getByTestId("a").fill("hello");
-    await page.getByTestId("submit").click();
-
-    const results = await page.evaluate(() => {
-      const form = document.querySelector("form");
-      if (!form) return null;
-
-      const formdata = new FormData(form);
-      return {
-        a: formdata.get("a"),
-        b: formdata.get("b"),
-      }
-    });
-
-    expect(results).not.toBe(null);
-    expect(results).toMatchObject({
-      a: "hello",
-      b: "value",
-    });
-  });
 });
