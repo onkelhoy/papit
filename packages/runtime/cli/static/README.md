@@ -42,10 +42,11 @@ npx @papit/static -- --target hello --output ./dist --base /papit/
 | `--asset` | string (repeatable) | - | extra asset folder names, on top of `asset`, `assets` and `public` |
 | `--include-node` | boolean | `false` | also collect assets from `node` type packages |
 | `--dev` | boolean | `false` | page scripts are not minified and get a source map |
+| `--skip-errors` | boolean | `false` | a page script that fails to compile is reported and left out, instead of failing the build |
 | `--live-template` | string | bundled `asset/templates/static/index.html` | page template each page is merged into |
 | `--silent`, `--error`, `--info`, `--verbose`, `--debug` | boolean | silent | log level from `@papit/arguments`; `--info` prints a summary |
 
-The package is the closest `package.json` from the current folder upward. Only the page folder and its subfolders are published, never `tests/`, other `views/` or its asset folders (those go to `public/`).
+The package is the closest `package.json` from the current folder upward; at the workspace root (no tsconfig) scripts bundle with esbuild's defaults. Page scripts are always written as ES modules. Only the page folder and its subfolders are published, never `tests/`, other `views/` or its asset folders (those go to `public/`).
 
 # Output
 
@@ -94,6 +95,7 @@ What the bin runs. It works on `Information.package`, so the process has to run 
 | `target` | string | - | page folder, as `--target` |
 | `output` | string | `dist` | folder the site is written to |
 | `base` | string | `/` | URL prefix |
+| `skipErrors` | boolean | `false` | as `--skip-errors` |
 
 `StaticResult` holds the page folder, the page paths written, and the number of assets, languages and `lib/` folders.
 
