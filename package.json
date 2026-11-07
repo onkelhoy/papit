@@ -17,9 +17,7 @@
     "check:template": "node bin/check-template.mjs",
     "create": "npm create @papit -- --package --html-prefix=pap",
     "start": "npx @papit/server --info",
-    "showcase": "npm create @papit -- --showcase",
-    "showcase:static": "rm -rf dist/showcase && npx @papit/static --target=showcase --output=dist/showcase --skip-errors --info",
-    "showcase:preview": "npm run showcase && npm run showcase:static && cd dist/showcase && python3 -m http.server 8000",
+    "showcase": "node bin/showcase.mjs",
     "version:reset": "npx @papit/version --reset",
     "version:sync": "npx @papit/version --sync"
   },
