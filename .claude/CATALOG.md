@@ -50,11 +50,12 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `codeblock`: highlight and live preview; lexer, splitter, button, tooltip and more
 - `drawer`: edge panel; dialog
 - `markdown`: renders markdown; lexer
+- `language-picker`: translator language menu with round flags; button, icon, menu, translator
 - `sidebar`: collapsible nav; drawer, treeview, button, tooltip
 - `theme-picker`: light, dark, system; button, menu, tooltip
 
 **pages**
-- `showcase`: demo and docs site; router, sidebar, theme-picker
+- `showcase`: storybook-like site from a manifest (`npm run showcase`); router, sidebar, treeview, markdown, theme-picker, language-picker
 
 ## runtime
 - `information`: workspace packages, dependency graph, build order. The other CLI tools build on it
@@ -79,6 +80,11 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `vector`, `matrix`: fast math for games and graphics
 - `quaternion`: 3D rotations that compose and blend without gimbal lock
 - `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
+- `polygon`, `rectangle`: 2D shapes with bounds and center; polygon triangulates itself
+- `triangulation`: ear clipping plus Hertel-Mehlhorn merge into convex pieces
+- `box-intersection`, `circle-intersection`, `line-intersection`, `polygon-intersection`, `triangle-intersection`: 2D overlap and point-in-shape checks
+- `sat`: Separating Axis Theorem collision with contact normal and overlap
+- `moore-neighborhood`: traces image outlines into polygons (browser; uses pixels)
 
 ## network
 - `meta-json`: binary container of JSON metadata plus payload
@@ -87,8 +93,11 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `webrtc`: browser peer-to-peer with pluggable topology
 
 ## game
-- `engine`: 2D and 3D game engine
+- `game-engine`: 2D and 3D canvas engine, layers, game loop, objects, cameras
+- `game-shape`: drawable 2D shapes, with GJK support functions
+- `2d-spritesheet`: draws spritesheet frames and plays animations
 - `confetti`: confetti web component
+- `dejan`: small platformer web component on game-engine
 
 ## Tests
 Tests exist to catch breakage in dependents when a shared package changes, so anything others depend on needs real coverage.
