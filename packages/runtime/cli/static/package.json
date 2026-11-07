@@ -10,7 +10,7 @@
         "github-pages",
         "import-map"
     ],
-    "version": "0.0.8",
+    "version": "0.0.9",
     "scripts": {
         "build": "npx @papit/build -- --error --ancestors",
         "watch": "tsc -w",
