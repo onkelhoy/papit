@@ -21,12 +21,20 @@ export type SiteOptions = {
     title?: string;
 };
 
-/** Files and folders copied per package, relative to the package folder. */
-const PACKAGE_FILES = ["views", "asset", "README.md", "analyse.json"];
+/**
+ * Files and folders copied per package: source name → name in the site.
+ * `views` and `asset` are renamed because @papit/static skips folders with those names.
+ */
+const PACKAGE_FILES: Record<string, string> = {
+    "views": "view",
+    "asset": "files",
+    "README.md": "README.md",
+    "analyse.json": "analyse.json",
+};
 
 /**
  * Writes the showcase site: the template shell, `manifest.json`, the root README,
- * and per package its views, assets, README and analyse.json under `packages/<path>/`.
+ * and per package its views (`view/`), assets (`files/`), README and analyse.json under `packages/<path>/`.
  */
 export function writeSite(options: SiteOptions): ShowcaseManifest {
     const output = path.resolve(options.output);
@@ -46,11 +54,11 @@ export function writeSite(options: SiteOptions): ShowcaseManifest {
 
     options.sources.forEach((source, index) => {
         const target = path.join(output, "packages", options.entries[index].path);
-        for (const file of PACKAGE_FILES)
+        for (const file in PACKAGE_FILES)
         {
             const from = path.join(source.location, file);
             if (!fs.existsSync(from)) continue;
-            fs.cpSync(from, path.join(target, file), { recursive: true, filter: src => !/[\\/](node_modules|\.temp)([\\/]|$)/.test(src) });
+            fs.cpSync(from, path.join(target, PACKAGE_FILES[file]), { recursive: true, filter: src => !/[\\/](node_modules|\.temp)([\\/]|$)/.test(src) });
         }
     });
 

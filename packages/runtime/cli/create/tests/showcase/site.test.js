@@ -39,13 +39,13 @@ describe("writeSite", () => {
         const read = file => fs.readFileSync(path.join(output, file), "utf-8");
         assert.strictEqual(read("index.html"), "<title>x</title>");
         assert.strictEqual(read("README.md"), "# root");
-        assert.strictEqual(read("packages/web/button/views/showcase/index.html"), "<p>button</p>");
+        assert.strictEqual(read("packages/web/button/view/showcase/index.html"), "<p>button</p>");
         assert.strictEqual(read("packages/web/button/README.md"), "# button");
-        assert.ok(fs.existsSync(path.join(output, "packages/web/button/asset/icons/x.svg")));
+        assert.ok(fs.existsSync(path.join(output, "packages/web/button/files/icons/x.svg")));
 
         assert.ok(!fs.existsSync(path.join(output, "stale.txt")), "output is emptied first");
         assert.ok(!fs.existsSync(path.join(output, "packages/web/button/src")), "sources are not copied");
-        assert.ok(!fs.existsSync(path.join(output, "packages/web/button/views/showcase/node_modules")));
+        assert.ok(!fs.existsSync(path.join(output, "packages/web/button/view/showcase/node_modules")));
 
         assert.deepStrictEqual(JSON.parse(read("manifest.json")), manifest);
         assert.strictEqual(manifest.readme, true);
