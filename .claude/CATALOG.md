@@ -94,6 +94,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 
 ## network
 
+- `game-network`: multiplayer for browser games: lobby, games joined by code, resume after reload
 - `meta-json`: binary container of JSON metadata plus payload
 - `peer-message`: the only home of message shapes and the protocol
 - `signal-server`: WebSocket signalling for webrtc, stateless web push

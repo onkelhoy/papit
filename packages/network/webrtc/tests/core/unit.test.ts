@@ -141,6 +141,51 @@ test.describe("engine", () => {
   });
 });
 
+test.describe("parent bootstrap", () => {
+  test("a carried network outlives its parent and takes newcomers again once carried", async ({ page }) => {
+    const result = await page.evaluate(async () => {
+      const w = window as any;
+      const { world, nodes } = await w.build(["a", "b", "c"]);
+      const room = "room-1";
+      const boot = { a: new w.core.ParentBootstrap(nodes.a, room), b: new w.core.ParentBootstrap(nodes.b, room), c: new w.core.ParentBootstrap(nodes.c, room) };
+      const child = { a: world.node("a", { bootstrap: boot.a }), b: world.node("b", { bootstrap: boot.b }), c: world.node("c", { bootstrap: boot.c }) };
+      const invite = await child.a.create({ name: "room", topology: "tiny" });
+      await child.b.join(invite);
+      await w.flush();
+
+      const events: string[] = [];
+      boot.a.addEventListener("detached", () => events.push("detached"));
+      boot.a.addEventListener("carried", () => events.push("carried"));
+
+      // the lobby goes: the room stays and still carries messages
+      nodes.a.close(); nodes.b.close(); nodes.c.close();
+      await w.flush();
+      child.a.send("b", "chat", { text: "still here" });
+      await w.flush();
+      const afterClose = { open: [!child.a.closed, !child.b.closed], carried: boot.a.carried, got: child.b.log.map((m: any) => m.data.text) };
+      const refused = await child.c.join(invite).then(() => "joined", (error: Error) => error.message);
+
+      // a new lobby carries it: c can come in
+      const lobby = { a: world.node("a"), c: world.node("c") };
+      const info = await lobby.a.create({ name: "lobby2", topology: "tiny" });
+      await lobby.c.join(info.id);
+      await w.flush();
+      const carried = [boot.a.carry(lobby.a), new w.core.ParentBootstrap(lobby.c, room)];
+      const late = world.node("c", { bootstrap: carried[1] });
+      await late.join(invite);
+      await w.flush();
+
+      return { afterClose, refused, events, open: !late.closed, linked: [...late.linked] };
+    });
+
+    expect(result.afterClose).toEqual({ open: [true, true], carried: false, got: ["still here"] });
+    expect(result.refused).toBe("no parent carries it");
+    expect(result.events).toEqual(["detached", "carried"]);
+    expect(result.open).toBe(true);
+    expect(result.linked).toContain("a");
+  });
+});
+
 test.describe("socket bootstrap", () => {
   test("creates, anchors and unanchors through signal messages", async ({ page }) => {
     const result = await page.evaluate(async () => {

@@ -15,7 +15,7 @@
     "dht",
     "merge"
   ],
-  "version": "0.1.2",
+  "version": "0.1.3",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",

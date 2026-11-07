@@ -1310,11 +1310,11 @@ export class Network extends Emitter {
     this.recruit();
   }
 
-  /** The medium under this network is gone (a parent closed). */
   private handleMediaEvent = (event: Event) => {
     this.emit(event.type, (event as CustomEvent).detail);
   }
 
+  /** The bootstrap can't carry this network any more. */
   private handleLost = () => {
     this.close();
   }

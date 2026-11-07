@@ -331,7 +331,7 @@ const invite = message.parse();
 const joined = await client.join(invite, {}, { bootstrap: new ParentBootstrap(lobby, invite.id) });
 ```
 
-A carried network is private and is joined by invite only. Each entry gets `ENTRY_TIMEOUT` (5 s) before the next one is tried. When the parent closes, the bootstrap dispatches `lost` and the carried network closes.
+A carried network is private and is joined by invite only. Each entry gets `ENTRY_TIMEOUT` (5 s) before the next one is tried. When the parent closes, the carried network plays on over its own links and only stops taking newcomers: the bootstrap dispatches `detached`, and `carry(parent)` hands it a new parent (`carried`). `carried` (getter) says whether one carries it now.
 
 To carry a network over something else (a BroadcastChannel, a game server, your own rendezvous), implement `Bootstrap`:
 
@@ -344,7 +344,7 @@ To carry a network over something else (a BroadcastChannel, a game server, your 
 | `anchor?`, `unanchor?`, `update?` | Optional. Without them there are no anchors and no split healing. |
 | `checksPassword?` | `true` when your registry already checked join passwords. |
 | `close()` | |
-| events | Dispatch `message` (`{ message, carrier }`) for anything that arrives, `anchors` (`{ network, anchors, target }`), and `lost`. |
+| events | Dispatch `message` (`{ message, carrier }`) for anything that arrives, `anchors` (`{ network, anchors, target }`), and `lost` (the network closes on it). |
 
 `Registry` from `@papit/peer-message` is the bookkeeping the signal server uses, ready for your own rendezvous. `MemoryServer` / `MemoryBootstrap` and `MemoryConnector` / `MemoryLink` run whole networks in one page, which is how the tests run.
 
