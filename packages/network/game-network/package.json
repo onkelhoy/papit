@@ -1,0 +1,85 @@
+{
+  "name": "@papit/game-network",
+  "description": "Peer-to-peer multiplayer for browser games: lobby, games joined by code, resume after reload.",
+  "keywords": [
+    "papit",
+    "game",
+    "multiplayer",
+    "lobby",
+    "webrtc",
+    "p2p",
+    "peer-to-peer"
+  ],
+  "version": "0.0.1",
+  "scripts": {
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "npx @papit/server --info --live",
+    "test": "npx playwright test -c tests/playwright.config.ts",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component",
+    "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+    "test:chrome": "npm test -- --project=chromium"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/network/game-network",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/network/game-network"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/peer-message": "0.1.2",
+    "@papit/webrtc": "0.1.3"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "playwright": "1.64.1",
+    "typescript": "5.9.3",
+    "@papit/signal-server": "0.1.2"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "browser",
+    "main": "game-network",
+    "htmlprefix": "",
+    "components": {
+      "game-network": {
+        "className": "GameNetwork",
+        "htmlprefix": "pap"
+      }
+    }
+  }
+}
