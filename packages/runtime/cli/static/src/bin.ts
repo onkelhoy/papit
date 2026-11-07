@@ -22,7 +22,7 @@ import { build } from "./components/static";
     try
     {
         const output = Arguments.string("output") ?? "dist";
-        const result = await build({ cwd, target: Arguments.string("target"), output, base: Arguments.string("base") });
+        const result = await build({ cwd, target: Arguments.string("target"), output, base: Arguments.string("base"), skipErrors: Arguments.true("skip-errors") });
 
         if (Arguments.info)
         {

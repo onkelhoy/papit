@@ -147,7 +147,15 @@ export async function build(options: StaticOptions): Promise<StaticResult> {
 
             if (SCRIPT.test(file) && !file.endsWith(".d.ts"))
             {
-                write(target.replace(/\.tsx?$/, ".js"), await compile(file, node, scriptExternals));
+                try
+                {
+                    write(target.replace(/\.tsx?$/, ".js"), await compile(file, node, scriptExternals));
+                }
+                catch (error)
+                {
+                    if (!options.skipErrors) throw error;
+                    Terminal.warn("skipped", path.relative(cwd, file), "-", error instanceof Error ? error.message.split("\n")[0] : String(error));
+                }
             }
             else if (file.endsWith(".html"))
             {
@@ -283,7 +291,8 @@ async function compile(file: string, node: PackageNode, externals: string[]) {
             tsconfig,
             externals,
             packageJSON: node.packageJSON,
-            esoptions: { ...esoptions, write: false },
+            // page scripts run as browser modules, whatever the package's own type
+            esoptions: { ...esoptions, format: "esm", write: false },
         },
         info => {
             if (info.type === "build") content = info.result.outputFiles?.at(0)?.text;

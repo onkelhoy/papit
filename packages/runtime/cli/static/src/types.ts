@@ -8,6 +8,8 @@ export type StaticOptions = {
     output?: string;
     /** URL prefix of every generated URL, e.g. `/papit/` for a GitHub project page. @default "/" */
     base?: string;
+    /** Warn about a script that fails to compile and leave it out, instead of failing the build. @default false */
+    skipErrors?: boolean;
 };
 
 /** What `build` wrote. */
