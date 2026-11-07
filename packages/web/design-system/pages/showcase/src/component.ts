@@ -1,5 +1,5 @@
 // system
-import { CustomElement, html, property, bind } from "@papit/web-component";
+import { CustomElement, html, property, bind, query } from "@papit/web-component";
 
 // foundations
 import "@papit/icon";
@@ -10,6 +10,8 @@ import "@papit/theme-picker";
 import "@papit/sidebar";
 
 // tools
+import "@papit/router";
+import type { Router } from "@papit/router";
 import { translate, useTranslator } from "@papit/translator";
 
 // local
@@ -32,6 +34,14 @@ export class Showcase extends CustomElement {
 
     @translate t = useTranslator();
 
+    @query({
+        selector: "pap-router",
+        load(this: Showcase) {
+            this.syncRouter();
+        }
+    }) private routerElement?: Router;
+    private routed = new Set<string>();
+
     /** URL of the manifest; package files resolve against it. */
     @property({
         rerender: false,
@@ -44,13 +54,14 @@ export class Showcase extends CustomElement {
     @property({
         type: Object,
         attribute: false,
+        rerender: true,
         after(this: Showcase) {
             this.handlehashchange();
         }
     }) data?: ShowcaseManifest;
 
     /** The route the hash resolves to. */
-    @property({ type: Object, attribute: false }) route: ShowcaseRoute = {};
+    @property({ type: Object, attribute: false, rerender: true }) route: ShowcaseRoute = {};
 
     /** Base URL of the site, the folder holding the manifest. */
     get base() {
@@ -87,8 +98,39 @@ export class Showcase extends CustomElement {
         if (route.entry === this.route.entry && route.page === this.route.page && route.unknown === this.route.unknown) return;
 
         this.route = route;
+        this.syncRouter();
         this.dispatchEvent(new CustomEvent("route", { detail: route }));
     }
+    /** The route is a view folder of its package, shown by the router. */
+    private get isview() {
+        const { entry, page } = this.route;
+        return !!entry && !!page && entry.views.includes(page);
+    }
+    /** Registers each package's views route once, then points the router at the current view. */
+    private syncRouter() {
+        const router = this.routerElement;
+        if (!router || !this.data) return;
+
+        for (const entry of this.data.packages)
+        {
+            if (this.routed.has(entry.path) || entry.views.length === 0) continue;
+            this.routed.add(entry.path);
+            // the router joins realpath onto the page path, and only fills `:view` from the url
+            // when the route declares the param
+            router.addRoute({
+                url: entry.path + "/:view",
+                reroute: [`packages/${entry.path}/view/:view`],
+                params: { view: { default: entry.views[0], fallback: [] } },
+            });
+        }
+
+        if (this.isview)
+        {
+            const url = `${this.route.entry!.path}/${this.route.page}`;
+            if (router.url !== url) router.url = url;
+        }
+    }
+
     @bind
     private handleenter(e: Event) {
         if (!(e.target instanceof HTMLElement)) return;
@@ -127,10 +169,12 @@ export class Showcase extends CustomElement {
         if (unknown) return html`<p part="not-found">${this.t("notfound")} <code>${unknown}</code></p>`;
         if (!entry) return html`<h1>${this.data?.name ?? ""}</h1>`;
 
+        if (this.isview) return null;
+        if (page) return html`<p part="not-found">${this.t("notfound")} <code>${entry.path}/${page}</code></p>`;
+
         return html`
             <h1>${entry.name}</h1>
             <p>${entry.description}</p>
-            ${page && html`<p>${page}</p>`}
         `;
     }
 
@@ -152,6 +196,7 @@ export class Showcase extends CustomElement {
             </header>
             <main part="main">
                 ${this.renderMain()}
+                <pap-router part="view" update-url="false" update-title="false" hidden="${this.isview ? "" : "true"}"></pap-router>
             </main>
             <footer part="footer">
                 <slot name="footer"></slot>

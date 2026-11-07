@@ -61,3 +61,25 @@ test.describe("@papit/showcase route", () => {
         expect(routes.prefix).toEqual({ unknown: "web/atoms/inputs" });
     });
 });
+
+test.describe("@papit/showcase views", () => {
+    test("a view route loads the package view through the router", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input/showcase');
+        await expect(page.getByTestId("routed-view")).toHaveText("input showcase view");
+        await expect(page.locator("pap-showcase pap-router")).toBeVisible();
+    });
+
+    test("leaving a view hides the router", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input/showcase');
+        await expect(page.getByTestId("routed-view")).toBeVisible();
+
+        await page.evaluate(() => { window.location.hash = "#/web/atoms/input"; });
+        await expect(page.locator("pap-showcase pap-router")).toBeHidden();
+        await expect(page.locator("pap-showcase main h1")).toHaveText("@papit/input");
+    });
+
+    test("an unknown page shows not found", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input/nope');
+        await expect(page.locator("pap-showcase [part=not-found]")).toContainText("web/atoms/input/nope");
+    });
+});
