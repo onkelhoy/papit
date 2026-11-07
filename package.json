@@ -18,6 +18,7 @@
     "create": "npm create @papit -- --package --html-prefix=pap",
     "start": "npx @papit/server --info",
     "showcase": "npm create @papit -- --showcase",
+    "showcase:static": "npx @papit/static --target=showcase --output=dist/showcase --base=/papit/ --info",
     "version:reset": "npx @papit/version --reset",
     "version:sync": "npx @papit/version --sync"
   },

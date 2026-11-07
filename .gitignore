@@ -28,3 +28,4 @@ Thumbs.db
 
 # showcase site output (npm run showcase)
 /showcase/
+/dist/
