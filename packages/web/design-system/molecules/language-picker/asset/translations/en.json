@@ -1,0 +1,9 @@
+{
+    "meta": {
+        "region": "GB",
+        "language": "en"
+    },
+    "language-picker": {
+        "label": "Language: {language}"
+    }
+}
