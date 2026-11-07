@@ -1,6 +1,7 @@
-name: showcase
+name: pages
 
 # Builds the showcase site (npm run showcase + showcase:static) and deploys it to GitHub Pages.
+# Pages serves the uploaded artifact (dist/showcase), so any folder works, not only docs/.
 # Needs Settings → Pages → Source: "GitHub Actions".
 
 on:
@@ -9,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: showcase
+  group: pages
   cancel-in-progress: true
 
 env:
@@ -54,7 +55,8 @@ jobs:
       - name: Publish as a static site
         env:
           CI: true
-        run: npm run showcase:static
+        # a project page lives under /<repo>/
+        run: npm run showcase:static -- --base=/${{ github.event.repository.name }}/
 
       - uses: actions/upload-pages-artifact@v3
         with:
