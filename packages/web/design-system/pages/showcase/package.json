@@ -60,6 +60,7 @@
   },
   "dependencies": {
     "@papit/icon": "0.1.13",
+    "@papit/markdown": "0.0.9",
     "@papit/router": "0.1.10",
     "@papit/server": "1.0.15",
     "@papit/sidebar": "0.0.13",

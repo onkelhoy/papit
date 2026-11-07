@@ -13,7 +13,7 @@
         ] }
     ],
     "packages": [
-        { "name": "@papit/lexer", "version": "1.0.0", "description": "lexer", "type": ["node"], "path": "runtime/lexer", "views": [], "readme": true, "analyse": false, "assets": [], "translations": [], "dependencies": [] },
+        { "name": "@papit/lexer", "version": "1.0.0", "description": "lexer", "type": ["node"], "path": "runtime/lexer", "views": [], "readme": false, "analyse": false, "assets": [], "translations": [], "dependencies": [] },
         { "name": "@papit/input", "version": "1.0.0", "description": "text input", "type": ["web-component"], "path": "web/atoms/input", "views": ["showcase"], "readme": true, "analyse": false, "assets": [], "translations": [], "dependencies": [] }
     ]
 }

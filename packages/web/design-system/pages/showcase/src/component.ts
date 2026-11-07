@@ -6,6 +6,7 @@ import "@papit/icon";
 import "@papit/treeview";
 
 // molecules
+import "@papit/markdown";
 import "@papit/theme-picker";
 import "@papit/sidebar";
 
@@ -167,14 +168,27 @@ export class Showcase extends CustomElement {
         const { entry, page, unknown } = this.route;
 
         if (unknown) return html`<p part="not-found">${this.t("notfound")} <code>${unknown}</code></p>`;
-        if (!entry) return html`<h1>${this.data?.name ?? ""}</h1>`;
+        if (!this.data) return null;
+        if (!entry)
+        {
+            if (!this.data.readme) return html`<h1>${this.data.name}</h1>`;
+            return html`<pap-markdown part="readme" src="${new URL("README.md", this.base).href}"></pap-markdown>`;
+        }
 
         if (this.isview) return null;
         if (page) return html`<p part="not-found">${this.t("notfound")} <code>${entry.path}/${page}</code></p>`;
 
         return html`
-            <h1>${entry.name}</h1>
-            <p>${entry.description}</p>
+            <section part="package" aria-label="${entry.name}">
+                <p part="package-meta">
+                    <code>${entry.name}</code>
+                    <span>v${entry.version}</span>
+                    ${entry.type.map(type => html`<span part="tag">${type}</span>`)}
+                </p>
+                ${entry.readme
+                    ? html`<pap-markdown part="readme" src="${new URL(`packages/${entry.path}/README.md`, this.base).href}"></pap-markdown>`
+                    : html`<h1>${entry.name}</h1><p>${entry.description}</p>`}
+            </section>
         `;
     }
 

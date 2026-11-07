@@ -51,3 +51,18 @@ footer {
     grid-area: footer;
     padding: var(--space-4, 1rem) var(--space-8, 2rem);
 }
+
+[part="package-meta"] {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2, 0.5rem);
+    color: var(--text-secondary, var(--text));
+}
+
+[part="tag"] {
+    padding-inline: var(--space-2, 0.5rem);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-full, 999px);
+    font-size: 0.875em;
+}

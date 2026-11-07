@@ -7,7 +7,7 @@ test.beforeEach(async ({ page }) => {
 
 test.describe("@papit/showcase sidebar", () => {
     test("renders the manifest tree as a navigation tree", async ({ page }) => {
-        const tree = page.locator("pap-showcase").getByRole("tree", { name: "Packages" });
+        const tree = page.locator("pap-showcase").getByRole("tree");
         await expect(tree).toBeVisible();
         // folders start collapsed, so only the top level is exposed
         await expect(tree.getByRole("treeitem")).toHaveCount(2);
@@ -17,7 +17,7 @@ test.describe("@papit/showcase sidebar", () => {
 
     test("clicking a package sets the hash and resolves the route", async ({ page }) => {
         await page.locator("pap-showcase").getByRole("treeitem", { name: "runtime" }).click();
-        await page.locator("pap-showcase").getByRole("link", { name: "lexer" }).click();
+        await page.locator("pap-showcase pap-sidebar").getByRole("link", { name: "lexer" }).click();
 
         await expect(page).toHaveURL(/#\/runtime\/lexer$/);
         await expect.poll(() => page.evaluate(() => document.querySelector("pap-showcase")!.route.entry?.name)).toBe("@papit/lexer");
@@ -75,11 +75,38 @@ test.describe("@papit/showcase views", () => {
 
         await page.evaluate(() => { window.location.hash = "#/web/atoms/input"; });
         await expect(page.locator("pap-showcase pap-router")).toBeHidden();
-        await expect(page.locator("pap-showcase main h1")).toHaveText("@papit/input");
+        await expect(page.locator("pap-showcase main pap-markdown h1")).toHaveText("@papit/input");
     });
 
     test("an unknown page shows not found", async ({ page }) => {
         await page.goto('tests/showcase/#/web/atoms/input/nope');
         await expect(page.locator("pap-showcase [part=not-found]")).toContainText("web/atoms/input/nope");
+    });
+});
+
+test.describe("@papit/showcase readme pages", () => {
+    test("home renders the root README", async ({ page }) => {
+        await expect(page.locator("pap-showcase main pap-markdown h1")).toHaveText("papit home");
+    });
+
+    test("an in-page README link keeps the route", async ({ page }) => {
+        await page.locator("pap-showcase main pap-markdown").getByRole("link", { name: "lexer" }).click();
+        expect(new URL(page.url()).hash).toBe("");
+        await expect(page.locator("pap-showcase main pap-markdown h1")).toBeVisible();
+    });
+
+    test("a package page shows its meta and README", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input');
+        const section = page.locator("pap-showcase").getByRole("region", { name: "@papit/input" });
+        await expect(section).toContainText("v1.0.0");
+        await expect(section).toContainText("web-component");
+        await expect(section.locator("pap-markdown")).toContainText("Text input readme.");
+    });
+
+    test("a package without README falls back to its description", async ({ page }) => {
+        await page.goto('tests/showcase/#/runtime/lexer');
+        const section = page.locator("pap-showcase").getByRole("region", { name: "@papit/lexer" });
+        await expect(section.getByRole("heading", { level: 1 })).toHaveText("@papit/lexer");
+        await expect(section).toContainText("lexer");
     });
 });
