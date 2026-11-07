@@ -110,3 +110,35 @@ test.describe("@papit/showcase readme pages", () => {
         await expect(section).toContainText("lexer");
     });
 });
+
+test.describe("@papit/showcase pill", () => {
+    test("focusing the toggle opens the package pages, a link navigates", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input');
+        const pill = page.locator("pap-showcase").getByRole("navigation", { name: "Site" });
+        const pages = pill.getByRole("list");
+        await pill.getByRole("button", { name: "input" }).focus();
+        await expect(pages.getByRole("link")).toHaveText(["readme", "showcase", "translations"]);
+
+        await pages.getByRole("link", { name: "translations" }).click();
+        await expect(page).toHaveURL(/#\/web\/atoms\/input\/translations$/);
+    });
+});
+
+test.describe("@papit/showcase translations", () => {
+    test("shows a row per key and a column per language", async ({ page }) => {
+        await page.goto('tests/showcase/#/web/atoms/input/translations');
+        const table = page.locator("pap-showcase-translations").getByRole("table");
+        await expect(table.getByRole("row")).toHaveCount(2);
+        await expect(table).toContainText("input.clear");
+        await expect(table).toContainText("Clear");
+    });
+
+    test("flatten and toCSV", async ({ page }) => {
+        const result = await page.evaluate(() => ({
+            flat: (window as any).flatten({ meta: { x: 1 }, a: { b: "c" }, d: 2 }),
+            csv: (window as any).toCSV([["a", 'say "hi"'], ["b", "x,y"]]),
+        }));
+        expect(result.flat).toEqual({ "a.b": "c", d: "2" });
+        expect(result.csv).toBe('"a","say ""hi"""\r\n"b","x,y"\r\n');
+    });
+});
