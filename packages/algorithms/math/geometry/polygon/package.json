@@ -7,7 +7,7 @@
     "typescript",
     "polygon"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@papit/rectangle": "0.0.1",
-    "@papit/triangulation": "0.0.1",
+    "@papit/triangulation": "0.0.2",
     "@papit/vector": "0.0.2"
   },
   "devDependencies": {

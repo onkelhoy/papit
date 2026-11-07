@@ -7,7 +7,7 @@
     "typescript",
     "moore-neighborhood"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build -- --error --ancestors",
     "watch": "tsc -w",
@@ -54,12 +54,12 @@
   },
   "dependencies": {
     "@papit/pixels": "0.0.1",
-    "@papit/polygon": "0.0.1",
-    "@papit/polygon-intersection": "0.0.1"
+    "@papit/polygon": "0.0.2",
+    "@papit/polygon-intersection": "0.0.2"
   },
   "devDependencies": {
     "@papit/codeblock": "*",
-    "@papit/game-shape": "0.0.4",
+    "@papit/game-shape": "0.0.5",
     "@papit/theme": "*",
     "@papit/translator": "*",
     "@playwright/test": "1.64.1",

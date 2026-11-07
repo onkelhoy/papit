@@ -1,151 +1,97 @@
 # @papit/box-intersection
 
-Axis-aligned box intersection: AABB overlap and point-in-rectangle checks. Reach for it as a fast first collision test.
+Axis-aligned box intersection in 2D and 3D: AABB overlap, point-in-box and ray vs box. Reach for it as a fast first collision test.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-intersection-orange)
+![Type](https://img.shields.io/badge/Type-math:intersection-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/box-intersection.svg?logo=npm)](https://www.npmjs.com/package/@papit/box-intersection)
 
 ---
 
-## Features
-
-- **AABB collision detection** – computes the overlapping rectangle between two axis‑aligned bounding boxes, or returns `false` if they don't intersect.
-- **Point‑in‑rectangle test** – fast and accurate.
-- **Flexible rectangle definitions** – works with properties `w`/`h` or `width`/`height` interchangeably.
-- **Tiny size** – zero dependencies (except `@papit/vector` for the point type, but plain objects are also accepted).
-- **Fully typed** – written in TypeScript with precise types.
-
----
-
-## Installation
+# Installation
 
 ```bash
 npm install @papit/box-intersection
 ```
 
----
+# Usage
 
-## Usage
+```ts
+import { AABB, isPointInRectangle, rayBox } from "@papit/box-intersection";
 
-### Basic Example
+AABB({ x: 0, y: 0, w: 10, h: 10 }, { x: 5, y: 5, w: 10, h: 10 });
+// { x: 5, y: 5, w: 5, h: 5 }
 
-```typescript
-import { AABB, isPointInRectangle } from '@papit/box-intersection';
-
-// Rectangles with 'w' and 'h'
-const rectA = { x: 0, y: 0, w: 10, h: 10 };
-const rectB = { x: 5, y: 5, w: 10, h: 10 };
-
-const overlap = AABB(rectA, rectB);
-if (overlap) {
-  console.log(`Overlap at (${overlap.x}, ${overlap.y}) with size ${overlap.w}×${overlap.h}`);
-} else {
-  console.log('No overlap');
-}
-// Output: Overlap at (5, 5) with size 5×5
-
-// Point test
-const point = { x: 7, y: 7 };
-console.log(isPointInRectangle(point, rectA)); // true
+isPointInRectangle({ x: 7, y: 7 }, { x: 0, y: 0, width: 10, height: 10 }); // true
 ```
 
-### With `width`/`height` Properties
+Add `z` and `d` (or `depth`) and the same calls work in 3D:
 
-```typescript
-const rect = { x: 10, y: 20, width: 30, height: 40 };
-const point = { x: 25, y: 30 };
-console.log(isPointInRectangle(point, rect)); // true
+```ts
+import { AABB, rayBox } from "@papit/box-intersection";
+import { Vector3 } from "@papit/vector";
+
+const a = { x: 0, y: 0, z: 0, w: 10, h: 10, d: 10 };
+const b = { x: 5, y: 5, z: 5, w: 10, h: 10, d: 10 };
+AABB(a, b); // { x: 5, y: 5, w: 5, h: 5, z: 5, d: 5 }
+
+const hit = rayBox(new Vector3(-5, 5, 5), new Vector3(1, 0, 0), a);
+// { t: 5, point: Vector3(0, 5, 5), normal: Vector3(-1, 0, 0) }
 ```
 
-### Using `@papit/vector` (optional)
+# API
 
-```typescript
-import { Vector2 } from '@papit/vector';
-const p = new Vector2(5, 5);
-const rect = { x: 0, y: 0, w: 10, h: 10 };
-console.log(isPointInRectangle(p, rect)); // true
+All functions are O(1).
+
+### AABB
+
+```ts
+AABB(a: Rectangle, b: Rectangle): Overlap | false
 ```
 
----
+The overlapping region as `{ x, y, w, h }` (plus `z, d` when both boxes are 3D), or `false`. Touching faces count as overlap with size 0. The output always uses the short size names.
 
-## API Reference
+### isPointInRectangle
 
-### `AABB(a: Rectangle, b: Rectangle): Rectangle | false`
-
-Computes the intersection rectangle between two AABBs.
-
-- **Parameters**: two objects satisfying the `Rectangle` type.
-- **Returns**: an object `{ x, y, w, h }` describing the overlapping area, or `false` if the boxes do not intersect.
-
-**Note**: The returned rectangle always uses `w` and `h` keys, regardless of the input’s key names.
-
----
-
-### `isPointInRectangle(point: Vector2 | { x: number, y: number }, rect: Rectangle): boolean`
-
-Determines whether a point lies inside (or on the border of) a rectangle.
-
-- **Parameters**:
-  - `point` – an object with `x` and `y` properties (or a `Vector2` instance).
-  - `rect` – a `Rectangle` object.
-- **Returns**: `true` if the point is within or on the edge of the rectangle, `false` otherwise.
-
----
-
-### `dim(rectangle: Rectangle, dim: 'w' | 'h'): number`
-
-Utility to safely extract the width or height from a rectangle, regardless of whether the property is named `w`/`width` or `h`/`height`.
-
-- **Parameters**:
-  - `rectangle` – a `Rectangle` object.
-  - `dim` – `'w'` or `'h'`.
-- **Returns**: the numeric value of the requested dimension.
-
----
-
-### `type Rectangle`
-
-A flexible type that accepts either `{ x, y, w, h }` or `{ x, y, width, height }`. The library normalises both forms internally.
-
-```typescript
-type Rectangle = {
-  x: number;
-  y: number;
-  w: number; 
-  h: number;
-} | {
-  x: number;
-  y: number;
-  width: number; 
-  height: number;
-};
+```ts
+isPointInRectangle(point: Point, box: Rectangle): boolean
 ```
 
----
+Inside or on the edge. `z` is checked only when both the box and the point have one.
 
-## Contributing
+### rayBox
 
-Contributions are welcome! Please follow these steps:
+```ts
+rayBox(origin: Point, direction: Point, box: Rectangle): { t, point, normal } | false
+```
 
-1. Fork the repository and clone it locally.
-2. Install dependencies: `npm install`
-3. Make your changes and add tests (we use `node:test`).
-4. Run tests: `npm test`
-5. Ensure the code is properly formatted and linted.
-6. Submit a pull request with a clear description of your changes.
+Slab test, 3D when the box has a `z`.
 
----
+| Field | Description |
+| --- | --- |
+| `t` | distance in units of `direction`'s length: `point = origin + t * direction` |
+| `point` | first hit, a `Vector2` or `Vector3` |
+| `normal` | outward face normal at the hit |
 
-## License
+A ray starting inside hits at `t = 0` with a zero normal. A zero `direction` only hits from inside.
 
-Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
+## Types
 
-**Key points:**
+```ts
+type Rectangle = { x, y, w, h } | { x, y, width, height }   // plus optional z, d / depth
+type Point = { x: number; y: number; z?: number }           // Vector2 / Vector3 fit
+```
+
+# License
+
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -154,6 +100,10 @@ Licensed under the @Papit License 1.0 - Copyright (c) 2024 Henry Pap (@onkelhoy)
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
-## Support
+---
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit) or open an issue in the [issue tracker](https://github.com/onkelhoy/papit/issues).
+# Related
+
+- [`@papit/circle-intersection`](https://www.npmjs.com/package/@papit/circle-intersection): circles and spheres
+- [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk): rotated boxes and any other convex shape
+- [`@papit/sat`](https://www.npmjs.com/package/@papit/sat): 2D polygons with contact normal

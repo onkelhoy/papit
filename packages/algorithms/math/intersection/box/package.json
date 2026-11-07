@@ -1,13 +1,17 @@
 {
   "name": "@papit/box-intersection",
-  "description": "Axis-aligned box intersection: AABB overlap and point-in-rectangle checks. Reach for it as a fast first collision test.",
+  "description": "Axis-aligned box intersection in 2D and 3D: AABB overlap, point-in-box and ray vs box. Reach for it as a fast first collision test.",
   "keywords": [
     "papit",
     "node",
     "typescript",
-    "box-intersection"
+    "box-intersection",
+    "aabb",
+    "ray",
+    "3d",
+    "collision"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -52,10 +56,12 @@
   "engines": {
     "node": ">=18"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@papit/vector": "0.0.2"
+  },
   "devDependencies": {
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.4",
+    "@papit/game-shape": "0.0.5",
     "@papit/theme": "*",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

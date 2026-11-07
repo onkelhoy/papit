@@ -91,6 +91,14 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `vector`, `matrix`: fast math for games and graphics
 - `quaternion`: 3D rotations that compose and blend without gimbal lock
 - `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
+- intersection (`math/intersection`), cheapest first:
+  - `box-intersection`: AABB overlap, point-in-box, ray vs box, 2D and 3D
+  - `circle-intersection`: circle crossing, circle/sphere overlap, ray vs sphere
+  - `line-intersection`: 2D line/segment crossing, closest points on segments, ray vs plane
+  - `triangle-intersection`: point-in-triangle 2D, closest point and ray vs triangle 3D
+  - `polygon-intersection`: point in polygon, 2D only
+  - `sat`: polygon collision with normal and overlap, 2D only
+  - `gjk`: any convex shape (`{ support }`), overlap, distance and EPA depth, 2D and 3D, compounds as arrays
 
 ## network
 
@@ -103,6 +111,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 ## game
 
 - `engine`: 2D and 3D game engine
+- `game-shape`: circle, rectangle, line, polygon with draw and `support` (fits `@papit/gjk`)
 - `confetti`: confetti web component
 
 ## Tests

@@ -68,6 +68,7 @@ Returns `false` when the polygons don't touch. Otherwise `normal` is a unit vect
 
 ## Design notes
 
+- **2D only:** for 3D, rotated boxes or curved shapes use [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk).
 - **Broad phase first:** bounding boxes are compared before any axis is tested.
 - **Convex pieces:** each piece of A is tested against each piece of B, so the cost grows with pieces A × B × edges.
 
@@ -88,4 +89,5 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 - [`@papit/polygon`](https://www.npmjs.com/package/@papit/polygon): the polygon to pass in
 - [`@papit/box-intersection`](https://www.npmjs.com/package/@papit/box-intersection): the bounding box check
+- [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk): convex collision in 2D and 3D
 - [`@papit/triangulation`](https://www.npmjs.com/package/@papit/triangulation): splits a polygon into convex pieces

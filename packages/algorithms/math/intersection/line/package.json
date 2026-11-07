@@ -1,13 +1,20 @@
 {
   "name": "@papit/line-intersection",
-  "description": "Line and segment intersection in 2D, returning the crossing point.",
+  "description": "Line and segment intersection in 2D, closest points between segments and ray vs plane in 3D. Reach for it for line-of-sight, picking and capsule tests.",
   "keywords": [
     "papit",
     "node",
     "typescript",
-    "line-intersection"
+    "line-intersection",
+    "line",
+    "segment",
+    "closest-point",
+    "ray",
+    "plane",
+    "3d",
+    "collision"
   ],
-  "version": "0.0.1",
+  "version": "0.0.2",
   "scripts": {
     "build": "npx @papit/build --error",
     "watch": "tsc -w",
@@ -56,9 +63,9 @@
     "@papit/vector": "0.0.2"
   },
   "devDependencies": {
-    "@papit/circle-intersection": "0.0.1",
+    "@papit/circle-intersection": "0.0.2",
     "@papit/game-engine": "0.2.0",
-    "@papit/game-shape": "0.0.4",
+    "@papit/game-shape": "0.0.5",
     "@papit/theme": "*",
     "@types/node": "22.10.2",
     "typescript": "5.9.3"

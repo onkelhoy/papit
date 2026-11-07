@@ -1,122 +1,79 @@
 # @papit/triangle-intersection
 
-Point-in-triangle check in 2D.
+Triangle tests: point-in-triangle in 2D, closest point on a triangle and ray vs triangle in 3D. Reach for it for mesh picking and point-to-mesh distance.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
-![Type](https://img.shields.io/badge/Type-intersection-orange)
+![Type](https://img.shields.io/badge/Type-math:intersection-orange)
 [![Tests](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml/badge.svg)](https://github.com/onkelhoy/papit/actions/workflows/pull-request.yml)
 [![NPM version](https://img.shields.io/npm/v/@papit/triangle-intersection.svg?logo=npm)](https://www.npmjs.com/package/@papit/triangle-intersection)
 
 ---
 
-## Features
-
-- **Point‑in‑triangle test** – fast and accurate using the cross‑product method (winding‑based).
-- **Supports any `VectorValue`** – plain objects `{x,y}`, arrays, or `Vector2` instances from `@papit/vector`.
-- **Zero dependencies** – only uses `@papit/vector` for vector math (but you can pass plain objects).
-- **Fully typed** – written in TypeScript.
-
----
-
-## Installation
+# Installation
 
 ```bash
 npm install @papit/triangle-intersection
 ```
 
----
+# Usage
 
-## Usage
+```ts
+import { isPointInTriangle, closestPointOnTriangle, rayTriangle } from "@papit/triangle-intersection";
 
-### Basic Example
+isPointInTriangle({ x: 1, y: 1 }, { x: 0, y: 0 }, { x: 4, y: 0 }, { x: 0, y: 4 }); // true
 
-```typescript
-import { isPointInTriangle } from "@papit/triangle-intersection";
+const a = { x: 0, y: 0, z: 0 }, b = { x: 1, y: 0, z: 0 }, c = { x: 0, y: 1, z: 0 };
 
-// Define a triangle (counter‑clockwise winding)
-const v1 = { x: 0, y: 0 };
-const v2 = { x: 4, y: 0 };
-const v3 = { x: 0, y: 4 };
+closestPointOnTriangle({ x: 0.2, y: 0.2, z: 3 }, a, b, c);
+// { point: Vector3(0.2, 0.2, 0), distance: 3 }
 
-const point = { x: 1, y: 1 };
-
-if (isPointInTriangle(point, v1, v2, v3)) {
-  console.log("Point is inside the triangle");
-} else {
-  console.log("Point is outside");
-}
-// Output: Point is inside the triangle
+rayTriangle({ x: 0.2, y: 0.2, z: 1 }, { x: 0, y: 0, z: -1 }, a, b, c);
+// { t: 1, u: 0.2, v: 0.2, point: Vector3(0.2, 0.2, 0) }
 ```
 
-### Using `Vector2` Instances
+# API
 
-```typescript
-import { Vector2 } from "@papit/vector";
+All functions are O(1).
 
-const v1 = new Vector2(0, 0);
-const v2 = new Vector2(4, 0);
-const v3 = new Vector2(0, 4);
-const p = new Vector2(1, 1);
+### isPointInTriangle
 
-console.log(isPointInTriangle(p, v1, v2, v3)); // true
+```ts
+isPointInTriangle(p: VectorValue, a: VectorValue, b: VectorValue, c: VectorValue): boolean
 ```
 
----
+2D, edges included. Throws when not given exactly three corners.
 
-## Important Note on Winding Order
+### closestPointOnTriangle
 
-The implementation assumes that the triangle vertices are given in **counter‑clockwise (CCW)** order. This is the standard convention in many graphics libraries. If your vertices are given in clockwise order, the function will always return `false` (because all cross products will be negative). If you need to support both winding orders, you can either:
-
-- **Normalise** the winding order before calling the function, or
-- **Modify** the condition to `>= 0` for one winding and `<= 0` for the other (not provided by default for simplicity).
-
----
-
-## API Reference
-
-### `isPointInTriangle(p: VectorValue, ...triangle: VectorValue[]): boolean`
-
-Determines whether a point lies inside a triangle (including on its edges).
-
-- **Parameters**:
-  - `p` – the point to test (an object with `x` and `y` properties).
-  - `...triangle` – the three vertices of the triangle (each a `VectorValue`).
-- **Returns**: `true` if the point is inside or on the edge of the triangle, otherwise `false`.
-- **Throws**: An error if the number of vertices is not exactly 3.
-
----
-
-### Type `VectorValue`
-
-Imported from `@papit/vector`. Any object with numeric `x` and `y` properties, e.g.:
-
-```typescript
-type VectorValue = { x: number; y: number } | Vector2 | [number, number];
+```ts
+closestPointOnTriangle(p: Point, a: Point, b: Point, c: Point): { point, distance }
 ```
 
----
+Ericson 5.1.5: finds which vertex, edge or face region `p` projects into. 2D or 3D. A degenerate (flat) triangle still returns a point on it.
 
-## Contributing
+### rayTriangle
 
-Contributions are welcome! Please follow these steps:
+```ts
+rayTriangle(origin: Point, direction: Point, a: Point, b: Point, c: Point): { t, u, v, point } | false
+```
 
-1. Fork the repository and clone it locally.
-2. Install dependencies: `npm install`
-3. Make your changes and add tests (we use `node:test`).
-4. Run tests: `npm test`
-5. Ensure the code is properly formatted and linted.
-6. Submit a pull request with a clear description of your changes.
+Möller–Trumbore, two-sided. `point = origin + t * direction`, `u`, `v` are the barycentric weights of `b` and `c`. `false` on a miss, a parallel ray or a degenerate triangle.
 
----
+## Types
 
-## License
+```ts
+type Point = { x: number; y: number; z?: number }   // Vector2 / Vector3 fit
+```
 
-Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelhoy).
+# License
 
-**Key points:**
+Licensed under the **@Papit License 1.0**
+Copyright (c) 2024 Henry Pap (@onkelhoy)
+
+**Key points**
 
 - ✅ Free to use in commercial projects
 - ✅ Free to modify and distribute
@@ -127,6 +84,7 @@ See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for 
 
 ---
 
-## Support
+# Related
 
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit) or open an issue in the [issue tracker](https://github.com/onkelhoy/papit/issues).
+- [`@papit/line-intersection`](https://www.npmjs.com/package/@papit/line-intersection): segments and planes
+- [`@papit/polygon-intersection`](https://www.npmjs.com/package/@papit/polygon-intersection): point in polygon

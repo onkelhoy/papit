@@ -2,7 +2,7 @@
 
 Point-in-polygon checks in 2D, by triangles or by ray casting.
 
-![Logo](https://github.com/onkelhoy/papit/blob/main/asset/logo.svg)
+![Logo](https://raw.githubusercontent.com/onkelhoy/papit/refs/heads/main/asset/logo.svg)
 
 ---
 
@@ -11,6 +11,8 @@ Point-in-polygon checks in 2D, by triangles or by ray casting.
 [![NPM version](https://img.shields.io/npm/v/@papit/polygon-intersection.svg?logo=npm)](https://www.npmjs.com/package/@papit/polygon-intersection)
 
 ---
+
+2D only: for 3D or shape-vs-shape collision see [`@papit/gjk`](https://www.npmjs.com/package/@papit/gjk).
 
 ## Installation
 
@@ -93,10 +95,6 @@ console.log(isPointInPolygonRayCasting({ x: 2, y: 8 }, concave)); // true
 
 ---
 
-## Contributing
-
-Contributions are welcome! Please follow the development guidelines above and ensure all tests pass before submitting a pull request.
-
 ## License
 
 Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelhoy)
@@ -110,6 +108,3 @@ Licensed under the @Papit License 1.0 – Copyright (c) 2024 Henry Pap (@onkelho
 
 See the [LICENSE](https://github.com/onkelhoy/papit/blob/main/LICENSE) file for full details.
 
-## Support
-
-For issues, questions, or contributions, please visit the [GitHub repository](https://github.com/onkelhoy/papit).
