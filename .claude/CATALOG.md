@@ -114,6 +114,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `game-shape`: circle, rectangle, line, polygon with draw and `support` (fits `@papit/gjk`)
 - `confetti`: confetti web component
 - `rigidbody`: deterministic 2D/3D physics world: bodies, shapes, contacts, impulse solver, sleeping, raycast/overlap
+- `game-mesh`: typed-array `Mesh`, `MeshBuilder` primitives (flat/smooth), WebGL2 `upload`, glTF 2.0 loader, skins to an `armature` rig, animation sampling
 
 ## Tests
 

@@ -1,0 +1,27 @@
+@import "@papit/theme";
+
+body {
+    background-color: var(--background, light-dark(oklch(96% 0 0), oklch(17% 0 0)));
+    color: var(--text, #080808);
+    margin: 0;
+    background-image: radial-gradient(circle at 50% 50%, var(--foreground-light) 1px, transparent 0);
+    background-size: 20px 20px;
+    width: 100vw;
+    height: 100vh;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+}
+.controls {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    display: grid;
+    gap: .5rem;
+    padding: .75rem 1rem;
+    border-radius: .5rem;
+    background: color-mix(in oklch, var(--background, #fff) 85%, transparent);
+    font: 14px system-ui, sans-serif;
+}
