@@ -54,7 +54,7 @@
   "dependencies": {
     "@papit/line-intersection": "0.0.2",
     "@papit/triangle-intersection": "0.0.2",
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

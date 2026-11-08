@@ -1,5 +1,5 @@
 /** Writes `a * b` into `out` without allocating. `out` can't be `a` or `b`. All are column-major. */
-export function multiplyInto(out: Float32Array, a: Float32Array, b: Float32Array) {
+export function multiplyInto(out: Float64Array, a: ArrayLike<number>, b: ArrayLike<number>) {
     for (let column = 0; column < 4; column++)
     {
         for (let row = 0; row < 4; row++)

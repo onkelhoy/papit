@@ -7,4 +7,4 @@ export type VectorObject = {
 } & {
   [key: string]: number; // numeric keys only for extra stuff
 };
-export type Value = number | number[] | Float32Array | VectorObject;
+export type Value = number | number[] | Float32Array | Float64Array | VectorObject;

@@ -63,3 +63,15 @@ describe("distance", () => {
         assert.strictEqual(distance(cube(0, 0, 0, 1), cube(1, 0, 0, 1)), false);
     });
 });
+
+describe("support helpers answer in reused vectors", () => {
+    it("a 3D shape returns the same Vector3 each call, a 2D one a Vector2", async () => {
+        const { Vector2, Vector3 } = await import("@papit/vector");
+        const s3 = sphereSupport({ x: 0, y: 0, z: 0, r: 1 });
+        const a = s3.support({ x: 1, y: 0, z: 0 });
+        const b = s3.support({ x: 0, y: 1, z: 0 });
+        assert.ok(a instanceof Vector3 && a === b);
+        assert.deepStrictEqual([...b], [0, 1, 0]);
+        assert.ok(boxSupport({ x: 0, y: 0, w: 1, h: 1 }).support({ x: 1, y: 1, z: 0 }) instanceof Vector2);
+    });
+});

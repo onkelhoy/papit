@@ -1,7 +1,7 @@
 import type { Value } from "./types";
 
-export function toArray(a: Value, ...rest: number[]): Float32Array | number[] {
-    if (Array.isArray(a) || a instanceof Float32Array)
+export function toArray(a: Value, ...rest: number[]): Float32Array | Float64Array | number[] {
+    if (Array.isArray(a) || a instanceof Float32Array || a instanceof Float64Array)
     {
         return a;
     }

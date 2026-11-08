@@ -1,10 +1,11 @@
 import { toArray } from "./helper";
 import type { Value, VectorObject } from "./types";
 
-export class Vector extends Float32Array {
+/** A vector of float64 numbers. Use `toFloat32` where WebGL needs float32. */
+export class Vector extends Float64Array {
     constructor(dimension: number);
     constructor(record: VectorObject);
-    constructor(values: number[] | Float32Array);
+    constructor(values: number[] | Float32Array | Float64Array);
     constructor(...rest: number[]);
     constructor(value: Value);
     constructor(a: Value, ...rest: number[]) {
@@ -119,20 +120,31 @@ export class Vector extends Float32Array {
         return new (this.constructor as { new(values: Value): this })(this);
     }
 
-    slice(): Float32Array<ArrayBuffer>;
-    slice(start: number, end: number): Float32Array<ArrayBuffer>;
-    public slice(start?: number, end?: number): Float32Array<ArrayBuffer> {
+    slice(): Float64Array<ArrayBuffer>;
+    slice(start: number, end: number): Float64Array<ArrayBuffer>;
+    public slice(start?: number, end?: number): Float64Array<ArrayBuffer> {
         const s = start || 0;
         const e = end || this.length;
         const diff = e - s;
 
-        const data = new Float32Array(diff);
+        const data = new Float64Array(diff);
         for (let i = 0; i < diff; i++)
         {
             data[i] = this[i + s];
         }
 
         return data;
+    }
+
+    /**
+     * Copies into a float32 array for WebGL, into `out` at `offset` when given (no allocation).
+     * Throws when `out` is too short.
+     */
+    public toFloat32(out?: Float32Array, offset = 0): Float32Array {
+        const target = out ?? new Float32Array(this.length);
+        if (target.length < offset + this.length) throw new RangeError("toFloat32: out is too short");
+        target.set(this, offset);
+        return target;
     }
 
     // public assign(vector: Value): void;

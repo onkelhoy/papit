@@ -79,7 +79,7 @@ export abstract class Layer<Context extends RenderingContext = RenderingContext>
      * Readies this layer for an object to draw on. The first object of a frame also clears it,
      * a layer nothing draws on keeps what was painted by hand.
      */
-    place(matrix: Float32Array, frame: number) {
+    place(matrix: ArrayLike<number>, frame: number) {
         if (this.preparedFrame !== frame)
         {
             this.preparedFrame = frame;

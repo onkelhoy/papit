@@ -66,7 +66,7 @@ const matrix = from.slerp(to, .5).writeMatrix(new Matrix4(), [10, 0, 0]);
 class Quaternion extends Vector
 ```
 
-Stored as x, y, z, w in a `Float32Array`. Everything below is O(1). Instance methods change the quaternion and return it, except `rotate` and `writeMatrix`, which return their target.
+Stored as x, y, z, w in a `Float64Array`. Everything below is O(1). Instance methods change the quaternion and return it, except `rotate` and `writeMatrix`, which return their target.
 
 #### Create
 
@@ -87,6 +87,8 @@ Stored as x, y, z, w in a `Float32Array`. Everything below is O(1). Instance met
 | `conjugate()` | Flips to the inverse, for a unit quaternion. |
 | `normalize()` | Scales to length 1. Do this now and then after many products. |
 | `rotate(point)` | Rotates a 3D point in place. |
+| `unrotate(point)` | Rotates a 3D point in place by the inverse. |
+| `integrate(x, y, z, dt)` | Turns by an angular velocity in rad/s over `dt`, for physics steps. |
 
 #### Blend
 
@@ -100,10 +102,10 @@ Both take the short way round and return a unit quaternion.
 #### Output
 
 ```ts
-writeMatrix(out: Float32Array, position?: ArrayLike<number>)
+writeMatrix(out: Float32Array | Float64Array, position?: ArrayLike<number>)
 ```
 
-Writes the rotation and position into a column-major 4x4 matrix, such as a `Matrix4`.
+Writes the rotation and position into a column-major 4x4 matrix, such as a `Matrix4`, or straight into a `Float32Array` for WebGL.
 
 ### Degenerate input
 

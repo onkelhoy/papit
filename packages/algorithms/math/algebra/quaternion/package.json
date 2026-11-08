@@ -1,81 +1,81 @@
 {
-    "name": "@papit/quaternion",
-    "description": "Quaternion math for 3D rotations that compose and blend without gimbal lock. Reach for it when Euler angles fail in cameras, bones or animation.",
-    "keywords": [
-        "papit",
-        "quaternion",
-        "rotation",
-        "3d",
-        "math",
-        "game"
-    ],
-    "version": "0.0.1",
-    "scripts": {
-        "build": "npx @papit/build -- --error --ancestors",
-        "watch": "tsc -w",
-        "start": "npm run build -- --dev && node ./lib/bundle.js",
-        "test": "node --test tests/**/*.test.js",
-        "test:only": "node --test --test-only tests/**/*.test.js",
-        "preversion": "papit-version",
-        "postversion": "papit-version",
-        "component": "npm create @papit -- --component"
-    },
-    "main": "./lib/bundle.js",
-    "types": "./lib/bundle.d.ts",
-    "type": "module",
-    "files": [
-        "asset/",
-        "lib/"
-    ],
-    "exports": {
-        ".": {
-            "import": "./lib/bundle.js",
-            "types": "./lib/bundle.d.ts"
-        }
-    },
-    "author": "henry",
-    "private": false,
-    "publishConfig": {
-        "access": "public",
-        "registry": "https://registry.npmjs.org/"
-    },
-    "license": "LicenseRef-Papit-1.0",
-    "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/algorithms/math/algebra/quaternion",
-    "bugs": {
-        "url": "https://github.com/onkelhoy/papit/issues"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/onkelhoy/papit.git",
-        "directory": "packages/algorithms/math/algebra/quaternion"
-    },
-    "sideEffects": false,
-    "engines": {
-        "node": ">=18"
-    },
-    "dependencies": {
-        "@papit/vector": "0.0.2"
-    },
-    "devDependencies": {
-        "@papit/matrix": "0.0.2",
-        "@types/node": "22.10.2",
-        "typescript": "5.9.3"
-    },
-    "browserslist": [
-        "defaults",
-        "not IE 11",
-        "not dead"
-    ],
-    "papit": {
-        "publish": true,
-        "type": "node",
-        "main": "quaternion",
-        "components": {
-            "quaternion": {
-                "className": "Quaternion",
-                "htmlprefix": "pap"
-            }
-        }
-    },
-    "remoteVersion": "0.0.1"
+  "name": "@papit/quaternion",
+  "description": "Quaternion math for 3D rotations that compose and blend without gimbal lock. Reach for it when Euler angles fail in cameras, bones or animation.",
+  "keywords": [
+    "papit",
+    "quaternion",
+    "rotation",
+    "3d",
+    "math",
+    "game"
+  ],
+  "version": "0.0.2",
+  "scripts": {
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:only": "node --test --test-only tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/algorithms/math/algebra/quaternion",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/algorithms/math/algebra/quaternion"
+  },
+  "sideEffects": false,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/vector": "0.1.0"
+  },
+  "devDependencies": {
+    "@papit/matrix": "0.0.3",
+    "@types/node": "22.10.2",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "quaternion",
+    "components": {
+      "quaternion": {
+        "className": "Quaternion",
+        "htmlprefix": "pap"
+      }
+    }
+  },
+  "remoteVersion": "0.0.1"
 }

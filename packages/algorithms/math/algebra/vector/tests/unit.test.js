@@ -262,3 +262,36 @@ describe('Vector3 (3D) tests', () => {
         close(v[2], 0);
     });
 });
+describe("float64 storage", () => {
+    it("keeps full number precision", () => {
+        const v = new Vector3(0.1, 1e9 + 0.5, 1 / 3);
+        assert.ok(v instanceof Float64Array);
+        assert.strictEqual(v.x, 0.1);
+        assert.strictEqual(v.y, 1e9 + 0.5);
+        assert.strictEqual(v.z, 1 / 3);
+    });
+
+    it("builds from Float32Array and Float64Array", () => {
+        assert.deepStrictEqual([...new Vector2(new Float64Array([1.5, 2.5]))], [1.5, 2.5]);
+        assert.deepStrictEqual([...new Vector2(new Float32Array([1.5, 2.5]))], [1.5, 2.5]);
+        assert.strictEqual(new Vector2(1, 2).add(new Float64Array([0.1, 0.2])).y, 2.2);
+    });
+
+    it("slice returns a Float64Array", () => {
+        const s = new Vector3(1, 2, 3).slice(1, 3);
+        assert.ok(s instanceof Float64Array);
+        assert.deepStrictEqual([...s], [2, 3]);
+    });
+
+    it("toFloat32 copies into a new or given array", () => {
+        const v = new Vector3(0.1, 2, 3);
+        const fresh = v.toFloat32();
+        assert.ok(fresh instanceof Float32Array);
+        assert.strictEqual(fresh[0], Math.fround(0.1));
+
+        const out = new Float32Array(6);
+        assert.strictEqual(v.toFloat32(out, 3), out, "no allocation");
+        assert.deepStrictEqual([...out], [0, 0, 0, Math.fround(0.1), 2, 3]);
+        assert.throws(() => v.toFloat32(new Float32Array(2)), RangeError);
+    });
+});

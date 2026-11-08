@@ -18,7 +18,7 @@ The library is intentionally **low‑level, allocation‑aware, and predictable*
 
 ## Features
 
-- ✅ **Float32Array-backed vectors** for speed
+- ✅ **Float64Array-backed vectors** (JS numbers, no rounding), `toFloat32` for WebGL
 - ✅ General **N‑dimensional vectors** via `Vector`
 - ✅ Specialized **Vector2** and **Vector3** classes
 - ✅ Chainable **mutating instance API**
@@ -140,6 +140,15 @@ Vector2.cross(a, b); // scalar in 2D
 
 ```ts
 Vector.distance(a, b);
+```
+
+### WebGL (float32)
+
+Vectors hold float64 like every JS number. Convert once where WebGL needs float32:
+
+```ts
+gl.uniform3fv(location, v.toFloat32());
+v.toFloat32(buffer, offset); // into an existing Float32Array, no allocation
 ```
 
 ---

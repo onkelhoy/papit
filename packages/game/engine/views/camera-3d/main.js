@@ -1,5 +1,8 @@
 import { Camera, GameEngine, GameObject, fps, orbit } from '@papit/game-engine';
 
+/** float32 scratch for matrix uploads, the matrices themselves are float64 */
+const UPLOAD = new Float32Array(16);
+
 const vertex = `#version 300 es
 uniform mat4 uModel;
 uniform mat4 uView;
@@ -53,9 +56,9 @@ class Cube extends GameObject {
     }
 
     render({ gl, camera }) {
-        gl.uniformMatrix4fv(this.uniforms.model, false, this.worldMatrix);
-        gl.uniformMatrix4fv(this.uniforms.view, false, camera.viewMatrix);
-        gl.uniformMatrix4fv(this.uniforms.projection, false, camera.projectionMatrix);
+        gl.uniformMatrix4fv(this.uniforms.model, false, this.worldMatrix.toFloat32(UPLOAD));
+        gl.uniformMatrix4fv(this.uniforms.view, false, camera.viewMatrix.toFloat32(UPLOAD));
+        gl.uniformMatrix4fv(this.uniforms.projection, false, camera.projectionMatrix.toFloat32(UPLOAD));
         gl.drawArrays(gl.TRIANGLES, 0, 36);
     }
 }
