@@ -1,5 +1,7 @@
 @import "@papit/theme";
 
+/* game page: no text selection, long-press menu or double-tap zoom */
+html { touch-action: manipulation; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 body { margin: 0; font-family: system-ui, sans-serif; overflow: hidden; }
 canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
 aside {
@@ -8,3 +10,10 @@ aside {
 }
 aside p { margin: 0 0 .5rem; }
 label { display: flex; gap: .5rem; align-items: center; margin-block: .4rem; }
+
+/* touch controls, only on touch screens */
+#controls { display: none; }
+@media (pointer: coarse) {
+    #controls { display: block; position: fixed; inset: auto 0 0 0; height: 40vh; }
+    aside { max-height: 50vh; overflow: auto; }
+}

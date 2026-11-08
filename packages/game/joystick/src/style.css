@@ -1,0 +1,80 @@
+:host {
+    --joystick-size: 6rem;
+    --joystick-stick-size: 66.7%;
+    --joystick-color: oklch(100% 0 0 / 0.18);
+    --joystick-border: oklch(100% 0 0 / 0.35);
+    --joystick-base-color: oklch(100% 0 0 / 0.28);
+    --joystick-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+
+    display: block;
+    position: relative;
+    min-height: calc(var(--joystick-size) * 1.5);
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+}
+
+#base {
+    --x: 25%;
+    --y: 70%;
+    --stick-x: 0;
+    --stick-y: 0;
+
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--joystick-size);
+    aspect-ratio: 1;
+    translate: -50% -50%;
+    border-radius: 50%;
+    border: 1px solid var(--joystick-border);
+    background: var(--joystick-grain), var(--joystick-base-color);
+    box-sizing: border-box;
+}
+
+#stick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: var(--joystick-stick-size);
+    aspect-ratio: 1;
+    border-radius: 50%;
+    border: 1px solid var(--joystick-border);
+    background: var(--joystick-grain), var(--joystick-color);
+    translate: calc(-50% + var(--stick-x) * var(--joystick-size) / 2) calc(-50% + var(--stick-y) * var(--joystick-size) / 2);
+    transition: translate 120ms ease-out;
+}
+
+#base[active] #stick {
+    transition: none;
+}
+
+:host(:not([mode="fixed"])) #base:not([active]) {
+    opacity: 0.5;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #stick {
+        transition: none;
+    }
+}
+
+::slotted(pap-joystick-button) {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    translate: -50% -50%;
+}
+
+:host([editable]) {
+    outline: 1px dashed var(--joystick-border);
+    background-image: repeating-linear-gradient(45deg, oklch(100% 0 0 / 0.06) 0 10px, transparent 10px 20px);
+}
+
+:host([editable]) #base,
+:host([editable]) ::slotted(pap-joystick-button) {
+    cursor: grab;
+    outline: 2px dashed var(--joystick-border);
+    outline-offset: 4px;
+}

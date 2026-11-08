@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joystick | experiment</title>
+
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css" />
+
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <h1>Joystick | experiment</h1>
+    <section>
+        <h2>Follow (default)</h2>
+        <p>Appears under the thumb and is dragged along when the thumb goes past the edge.</p>
+        <pap-codeblock>
+            <pap-joystick class="area"></pap-joystick>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Fixed</h2>
+        <pap-codeblock>
+            <pap-joystick class="area" mode="fixed"></pap-joystick>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Floating</h2>
+        <p>Appears under the thumb anywhere in the area.</p>
+        <pap-codeblock>
+            <pap-joystick class="area" mode="floating"></pap-joystick>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Buttons</h2>
+        <p>Every slotted <code>pap-joystick-button</code> is its own button, placed with <code>--x</code> / <code>--y</code>.</p>
+        <pap-codeblock>
+            <pap-joystick class="area" mode="fixed">
+                <pap-joystick-button>A</pap-joystick-button>
+                <pap-joystick-button style="--x: 65%; --y: 80%">B</pap-joystick-button>
+            </pap-joystick>
+        </pap-codeblock>
+    </section>
+    <section>
+        <h2>Editable</h2>
+        <p>With <code>editable</code> the stick and buttons can be dragged; <code>layout-change</code> gives the positions, <code>layout</code> restores them.</p>
+        <label><input type="checkbox" id="edit" checked /> editable</label>
+        <pap-codeblock>
+            <pap-joystick id="editable" class="area" mode="fixed" editable>
+                <pap-joystick-button name="jump">A</pap-joystick-button>
+            </pap-joystick>
+        </pap-codeblock>
+        <pre id="layout"></pre>
+    </section>
+    <section>
+        <h2>Reading input</h2>
+        <p>Read <code>x</code>, <code>y</code> and <code>strength</code> each frame.</p>
+        <output id="readout">x 0.00 · y 0.00 · strength 0.00</output>
+        <p>Last button: <output id="button">none</output></p>
+    </section>
+</body>
+
+</html>
