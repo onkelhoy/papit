@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irregular grid | preview</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <canvas>Your browser does not support HTML canvas</canvas>
+    <form>
+        <label>seed <input name="seed" value="town"></label>
+        <label>radius <input name="radius" type="number" min="1" max="12" value="5"></label>
+        <label>relax <input name="relax" type="range" min="0" max="200" value="50"></label>
+        <label>merge <input name="merge" type="range" min="0" max="1" step="0.05" value="1"></label>
+        <label><input name="chunks" type="checkbox"> chunks</label>
+        <p>hover a cell to see its neighbours, grey dots are fixed boundary vertices</p>
+    </form>
+</body>
+
+</html>

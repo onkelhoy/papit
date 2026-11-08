@@ -1,0 +1,80 @@
+{
+  "name": "@papit/marching-cubes",
+  "description": "Turns a scalar field into a smooth surface: marching squares in 2D and marching cubes in 3D, with cells you can warp. Reach for it for terrain, caves and blobby shapes.",
+  "keywords": [
+    "papit",
+    "node",
+    "typescript",
+    "marching-cubes",
+    "marching-squares",
+    "isosurface",
+    "voxel",
+    "terrain",
+    "procedural"
+  ],
+  "version": "0.0.1",
+  "scripts": {
+    "build": "npx @papit/build --error",
+    "watch": "tsc -w",
+    "start": "npm run build -- --dev && node ./lib/bundle.js",
+    "test": "node --test tests/**/*.test.js",
+    "test:only": "node --test --test-only tests/**/*.test.js",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/algorithms/marching-cubes",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/algorithms/marching-cubes"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "22.10.2",
+    "typescript": "5.9.3"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "node",
+    "main": "marching-cubes",
+    "components": {
+      "marching-cubes": {
+        "className": "MarchingCubes",
+        "htmlprefix": "pap"
+      }
+    }
+  }
+}

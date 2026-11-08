@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Structure | town</title>
+
+    <link rel="stylesheet" href="style.css" />
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <canvas>Your browser does not support HTML canvas</canvas>
+    <form>
+        <label>seed <input name="seed" value="town"></label>
+        <label>style
+            <select name="style">
+                <option value="city">city (blocks)</option>
+                <option value="farmland">farmland (flat plots, one crop per field)</option>
+                <option value="terrain">terrain (marching cubes)</option>
+            </select>
+        </label>
+        <label><input name="variants" type="checkbox" checked> roof colours (wfc: touching parts share a colour)</label>
+        <output name="info"></output>
+        <p>click to build, shift-click or right-click to remove. drag to orbit, wheel to zoom.</p>
+    </form>
+</body>
+
+</html>
