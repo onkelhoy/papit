@@ -1,0 +1,10 @@
+@import "@papit/theme";
+
+body { margin: 0; font-family: system-ui, sans-serif; overflow: hidden; }
+canvas { display: block; width: 100vw; height: 100vh; touch-action: none; }
+aside {
+    position: fixed; top: 1rem; left: 1rem; padding: .75rem 1rem; max-width: 18rem;
+    background: color-mix(in oklch, Canvas 85%, transparent); border-radius: .5rem;
+}
+aside p { margin: 0 0 .5rem; }
+label { display: flex; gap: .5rem; align-items: center; margin-block: .4rem; }

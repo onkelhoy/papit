@@ -43,14 +43,14 @@
     "registry": "https://registry.npmjs.org/"
   },
   "license": "LicenseRef-Papit-1.0",
-  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/algorithms/math/armature",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/armature",
   "bugs": {
     "url": "https://github.com/onkelhoy/papit/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/onkelhoy/papit.git",
-    "directory": "packages/algorithms/math/armature"
+    "directory": "packages/game/armature"
   },
   "sideEffects": false,
   "engines": {
