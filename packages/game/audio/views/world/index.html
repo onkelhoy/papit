@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio | 3D world</title>
+    <link rel="stylesheet" href="style.css" />
+    <script defer type="module" src="main.js"></script>
+</head>
+
+<body>
+    <canvas>Your browser does not support HTML canvas</canvas>
+    <aside>
+        <p>WASD to walk, drag to look, wheel to zoom. Click once to unlock sound.</p>
+        <p>state: <output id="state">locked</output>, biome: <output id="biome">-</output></p>
+        <label>fade <input id="seconds" type="range" min="0" max="8" step="0.1" value="2"> <output for="seconds">2</output>s</label>
+        <label>curve
+            <select id="curve">
+                <option>equal-power</option>
+                <option>linear</option>
+                <option>ease-in</option>
+                <option>ease-out</option>
+                <option>ease-in-out</option>
+            </select>
+        </label>
+        <label>master <input data-bus="master" type="range" min="0" max="1" step="0.01" value="1"></label>
+        <label>music <input data-bus="music" type="range" min="0" max="1" step="0.01" value="1"></label>
+        <label>ambience <input data-bus="ambience" type="range" min="0" max="1" step="0.01" value="1"></label>
+        <label>sfx <input data-bus="sfx" type="range" min="0" max="1" step="0.01" value="1"></label>
+        <pap-button id="sfx">play blip</pap-button>
+    </aside>
+</body>
+
+</html>

@@ -40,7 +40,7 @@ packages/web/          engines/web-component, design-system/{1-foundations,atoms
 ```
 `docs/` is outdated (#3), trust the code. Folders with only `lib/`/`.temp/` and no `package.json` are build leftovers.
 
-Package layout: `src/index.ts` (exports), `src/component.ts`, `src/types.ts`, `tests/`, `asset/`, `views/` (web demos), `README.md`, `package.json` (`papit.type` drives tooling).
+Package layout: `src/index.ts` (exports), `src/component.ts`, `src/types.ts`, `tests/`, `asset/`, `views/<demo>/{index.html,main.js,style.css,public/}` (demo files like images, audio and models go in that demo's `public/`, loaded as `public/x`; see `create` templates), `README.md`, `package.json` (`papit.type` drives tooling).
 
 ## Commands
 - Root: `npm run build`, `npm test`, `npm start`, `npm run create -- --type=… …` (new packages, never `npx papit-create`).

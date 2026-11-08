@@ -1,0 +1,4 @@
+body { font-family: system-ui, sans-serif; max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+section { margin-block: 1.5rem; }
+label { display: flex; gap: .5rem; align-items: center; margin-block: .5rem; }
+.row { display: flex; gap: .5rem; flex-wrap: wrap; margin-block: .5rem; }

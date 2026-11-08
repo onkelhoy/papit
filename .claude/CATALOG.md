@@ -90,7 +90,6 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `deep-merge`: recursive object merge
 - `vector`, `matrix`: fast math for games and graphics
 - `quaternion`: 3D rotations that compose and blend without gimbal lock
-- `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
 - intersection (`math/intersection`), cheapest first:
   - `box-intersection`: AABB overlap, point-in-box, ray vs box, 2D and 3D
   - `circle-intersection`: circle crossing, circle/sphere overlap, ray vs sphere
@@ -113,6 +112,8 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `engine`: 2D and 3D game engine
 - `game-shape`: circle, rectangle, line, polygon with draw and `support` (fits `@papit/gjk`)
 - `confetti`: confetti web component
+- `audio`: Web Audio mixer: buses, layered music, biome crossfades, 3D sound, iOS unlock
+- `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
 - `rigidbody`: deterministic 2D/3D physics world: bodies, shapes, contacts, impulse solver, sleeping, raycast/overlap
 - `game-mesh`: typed-array `Mesh`, `MeshBuilder` primitives (flat/smooth), WebGL2 `upload`, glTF 2.0 loader, skins to an `armature` rig, animation sampling
 
