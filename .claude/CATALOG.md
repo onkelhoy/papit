@@ -112,6 +112,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `engine`: 2D and 3D game engine
 - `game-shape`: circle, rectangle, line, polygon with draw and `support` (fits `@papit/gjk`)
 - `confetti`: confetti web component
+- `joystick`: touch joystick + buttons web component, fixed/floating, player-editable layout, values read per frame
 - `audio`: Web Audio mixer: buses, layered music, biome crossfades, 3D sound, iOS unlock
 - `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
 - `rigidbody`: deterministic 2D/3D physics world: bodies, shapes, contacts, impulse solver, sleeping, raycast/overlap

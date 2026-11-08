@@ -1,0 +1,24 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>joystick test</title>
+    <style>
+        body { margin: 0; }
+        pap-joystick { width: 400px; height: 300px; }
+    </style>
+
+    <script type="module" defer src="main.js"></script>
+</head>
+
+<body>
+    <pap-joystick data-testid="fixed" mode="fixed" style="--joystick-size: 100px"></pap-joystick>
+    <pap-joystick data-testid="floating" mode="floating" style="--joystick-size: 100px"></pap-joystick>
+    <pap-joystick data-testid="follow" style="--joystick-size: 100px"></pap-joystick>
+    <pap-joystick data-testid="editable" mode="fixed" editable style="--joystick-size: 100px">
+        <pap-joystick-button name="jump">A</pap-joystick-button>
+    </pap-joystick>
+</body>
+
+</html>

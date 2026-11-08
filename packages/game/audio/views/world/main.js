@@ -1,4 +1,5 @@
 import "@papit/button";
+import "@papit/joystick";
 import { Camera, GameEngine, GameObject, orbit } from "@papit/game-engine";
 import { AudioMixer } from "@papit/audio";
 import { beep, blip } from "../mixer/sounds.js";
@@ -100,14 +101,15 @@ class Player extends Box {
 
     update(dt) {
         const keys = keyboard;
-        const forward = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0);
-        const side = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0);
+        // keyboard plus the touch joystick (its y points down the screen)
+        const forward = (keys.has("w") ? 1 : 0) - (keys.has("s") ? 1 : 0) - joystick.y;
+        const side = (keys.has("d") ? 1 : 0) - (keys.has("a") ? 1 : 0) + joystick.x;
         if (forward === 0 && side === 0) return;
 
         // move relative to where the camera looks
         const yaw = layer.camera.rotation.y;
         const length = Math.hypot(forward, side);
-        const step = this.speed * dt / length;
+        const step = this.speed * dt / Math.max(length, 1);
         this.position.x += (-Math.sin(yaw) * forward + Math.cos(yaw) * side) * step;
         this.position.z += (-Math.cos(yaw) * forward - Math.sin(yaw) * side) * step;
         this.position.x = Math.min(Math.max(this.position.x, -29), 29);
@@ -174,6 +176,8 @@ const emitters = [
 const player = engine.add(new Player());
 layer.camera = new Camera({ controllers: [orbit({ target: player, distance: 8, pitch: .35, min: 3, max: 30 })] });
 
+const joystick = document.querySelector("#controls");
+
 // keyboard, kept to a set so the frame loop reads it without allocating
 const keyboard = new Set();
 addEventListener("keydown", event => keyboard.add(event.key.toLowerCase()));
@@ -213,6 +217,7 @@ state.value = mixer.state;
 mixer.addEventListener("statechange", () => state.value = mixer.state);
 seconds.addEventListener("input", () => seconds.nextElementSibling.value = seconds.value);
 document.querySelector("#sfx").addEventListener("click", () => mixer.play("blip", { bus: "sfx" }));
+document.querySelector("#blip").addEventListener("press", () => mixer.play("blip", { bus: "sfx" }));
 for (const slider of document.querySelectorAll("[data-bus]"))
 {
     const bus = slider.dataset.bus === "master" ? mixer.master : mixer.bus(slider.dataset.bus);
