@@ -1,0 +1,93 @@
+{
+  "name": "@papit/structure",
+  "description": "Builds structures from modules on an irregular grid: corner occupancy picks a module, which is warped into its cell. Reach for it for Townscaper-style towns, farmland or any modular world.",
+  "keywords": [
+    "papit",
+    "game",
+    "typescript",
+    "structure",
+    "procedural",
+    "townscaper",
+    "modular"
+  ],
+  "version": "0.0.1",
+  "scripts": {
+    "build": "npx @papit/build -- --error --ancestors",
+    "watch": "tsc -w",
+    "start": "npx @papit/server --info --live",
+    "test": "npx playwright test -c tests/playwright.config.ts",
+    "preversion": "papit-version",
+    "postversion": "papit-version",
+    "component": "npm create @papit -- --component",
+    "test:update-snapshots": "npx playwright test --update-snapshots -c tests/playwright.config.ts",
+    "test:chrome": "npm test -- --project=chromium"
+  },
+  "main": "./lib/bundle.js",
+  "types": "./lib/bundle.d.ts",
+  "type": "module",
+  "files": [
+    "asset/",
+    "lib/"
+  ],
+  "exports": {
+    ".": {
+      "import": "./lib/bundle.js",
+      "types": "./lib/bundle.d.ts"
+    }
+  },
+  "author": "henry",
+  "private": false,
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "license": "LicenseRef-Papit-1.0",
+  "homepage": "https://github.com/onkelhoy/papit/tree/main/packages/game/structure",
+  "bugs": {
+    "url": "https://github.com/onkelhoy/papit/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/onkelhoy/papit.git",
+    "directory": "packages/game/structure"
+  },
+  "sideEffects": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@papit/corner-lookup": "0.0.1",
+    "@papit/game-engine": "0.2.1",
+    "@papit/game-mesh": "0.0.1",
+    "@papit/irregular-grid": "0.0.1",
+    "@papit/marching-cubes": "0.0.1",
+    "@papit/random": "0.0.1",
+    "@papit/vector": "0.1.0",
+    "@papit/wave-function-collapse": "0.0.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "playwright": "1.64.1",
+    "typescript": "5.9.3",
+    "@papit/theme": "*",
+    "@papit/translator": "*",
+    "@papit/codeblock": "*",
+    "@papit/triangle-intersection": "0.0.2"
+  },
+  "browserslist": [
+    "defaults",
+    "not IE 11",
+    "not dead"
+  ],
+  "papit": {
+    "publish": true,
+    "type": "game",
+    "main": "structure",
+    "components": {
+      "structure": {
+        "className": "Structure",
+        "htmlprefix": "pap"
+      }
+    }
+  }
+}

@@ -88,6 +88,11 @@ Before building, look here. If a part looks or behaves like an existing one, com
 
 - `data-structure`: classic structures (graph, priority queue and more)
 - `deep-merge`: recursive object merge
+- `random`: seeded PRNG (sfc32), forked streams per chunk, weighted pick, shuffle, savable state
+- `irregular-grid`: seeded organic all-quad grid (hex, merge, subdivide, relax), full adjacency, tileable chunks
+- `corner-lookup`: generated marching squares/cubes case table, canonical case + rotation/mirror per pattern
+- `wave-function-collapse`: seeded wave function collapse over any graph (callbacks), region re-solve, conflict fallback
+- `marching-cubes`: scalar field to surface, marching squares (2D lines) and cubes (3D triangles), generated table, ambiguity modes, warp transform
 - `vector`, `matrix`: fast math for games and graphics
 - `quaternion`: 3D rotations that compose and blend without gimbal lock
 - intersection (`math/intersection`), cheapest first:
@@ -117,6 +122,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `armature`: bone rigs with forward and inverse kinematics, 3D and 2D
 - `rigidbody`: deterministic 2D/3D physics world: bodies, shapes, contacts, impulse solver, sleeping, raycast/overlap
 - `game-mesh`: typed-array `Mesh`, `MeshBuilder` primitives (flat/smooth), WebGL2 `upload`, glTF 2.0 loader, skins to an `armature` rig, animation sampling
+- `structure`: Townscaper-style modular worlds on an irregular grid: vertex occupancy, module library (blocks, marching cubes surface), wave-function-collapse sockets, per-chunk meshes, walkable/collision/tag data, `StructureObject` renderer
 
 ## Tests
 
