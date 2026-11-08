@@ -17,7 +17,7 @@ export class Layer2D extends Layer<CanvasRenderingContext2D> {
         return this.context;
     }
 
-    override place(matrix: Float32Array, frame: number) {
+    override place(matrix: ArrayLike<number>, frame: number) {
         super.place(matrix, frame);
 
         let m = matrix;
@@ -40,7 +40,7 @@ export class Layer2D extends Layer<CanvasRenderingContext2D> {
     }
 
     /** `center of the canvas * zoom * camera view`. */
-    private updateView(view: Float32Array, zoom: number) {
+    private updateView(view: ArrayLike<number>, zoom: number) {
         this.view.set(view);
         for (let column = 0; column < 4; column++)
         {

@@ -193,3 +193,36 @@ describe("@papit/quaternion", () => {
         });
     });
 });
+
+describe("float64 storage", () => {
+    it("a thousand small turns stay a unit quaternion to 1e-12", () => {
+        const q = Quaternion.identity;
+        const step = Quaternion.fromAxisAngle([1, 2, 3], 0.001);
+        for (let i = 0; i < 1000; i++) Quaternion.multiplyInto(q, step, q);
+        assert.ok(q instanceof Float64Array);
+        assert.ok(Math.abs(q.magnitude - 1) < 1e-12);
+        const expected = Quaternion.fromAxisAngle([1, 2, 3], 1);
+        for (let i = 0; i < 4; i++) assert.ok(Math.abs(q[i] - expected[i]) < 1e-12);
+    });
+
+    it("writeMatrix fills a Float32Array for WebGL", () => {
+        const out = Quaternion.identity.writeMatrix(new Float32Array(16), [1, 2, 3]);
+        assert.deepStrictEqual([...out.subarray(12)], [1, 2, 3, 1]);
+    });
+});
+
+describe("unrotate and integrate", () => {
+    it("unrotate undoes rotate", () => {
+        const q = Quaternion.fromAxisAngle([1, 2, 3], 0.7);
+        const p = q.unrotate(q.rotate([1, -2, 0.5]));
+        [1, -2, 0.5].forEach((v, i) => assert.ok(Math.abs(p[i] - v) < 1e-12));
+    });
+
+    it("integrate turns at the angular velocity", () => {
+        const q = Quaternion.identity;
+        for (let i = 0; i < 1000; i++) q.integrate(0, Math.PI, 0, 0.0005); // half a second at π rad/s
+        const expected = Quaternion.fromAxisAngle([0, 1, 0], Math.PI / 2);
+        for (let i = 0; i < 4; i++) assert.ok(Math.abs(q[i] - expected[i]) < 1e-5);
+        assert.ok(Math.abs(q.magnitude - 1) < 1e-12);
+    });
+});

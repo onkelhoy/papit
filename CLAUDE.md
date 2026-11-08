@@ -72,5 +72,6 @@ Stay on the current branch. Never create or switch branches on your own, the own
 3. **asset/**, present with what the package ships
 4. **README**, follows `papit-documentation`
 5. **package.json description**, clear and correctly spelled
+6. **views/**, a demo for web and game packages, and for any other package where seeing it run helps (intersection, webrtc)
 
 Done applies at the end of the work, not to each slice.

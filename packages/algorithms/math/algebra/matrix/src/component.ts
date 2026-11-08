@@ -2,7 +2,8 @@ import { Vector, Vector3, VectorValue } from "@papit/vector";
 import { isMatrixObject, isNestedArray, toMatrix } from "./helper";
 import type { Value, MatrixObject } from "./types";
 
-export class Matrix extends Float32Array {
+/** Column-major float64 matrix. Use `toFloat32` where WebGL needs float32. */
+export class Matrix extends Float64Array {
   rows: number = 0;
   cols: number = 0;
 
@@ -11,8 +12,8 @@ export class Matrix extends Float32Array {
   constructor(size: number, identity: boolean);
   constructor(rows: number, cols: number);
   constructor(value: number, rows: number, cols: number);
-  constructor(data: Float32Array | number[] | number[][]);
-  constructor(data: Float32Array | number[], rows: number, cols: number);
+  constructor(data: Float32Array | Float64Array | number[] | number[][]);
+  constructor(data: Float32Array | Float64Array | number[], rows: number, cols: number);
   constructor(a: Value, b?: number | boolean, c?: number) {
     const coerced = Matrix.Coerced(a, b, c);
 
@@ -42,7 +43,7 @@ export class Matrix extends Float32Array {
   public getRow(row: number) {
     if (row < 0 || row >= this.rows) throw new Error("out of boundary");
 
-    const columns = new Float32Array(this.cols);
+    const columns = new Float64Array(this.cols);
     for (let i = 0; i < this.cols; i++)
     {
       columns[i] = this[this.getIndex(row, i)];
@@ -53,7 +54,7 @@ export class Matrix extends Float32Array {
     if (col < 0 || col >= this.cols) throw new Error("out of boundary");
 
     const start = col * this.rows;
-    const rows = new Float32Array(this.rows);
+    const rows = new Float64Array(this.rows);
     for (let i = 0; i < this.rows; i++)
     {
       rows[i] = this[start + i];
@@ -103,7 +104,7 @@ export class Matrix extends Float32Array {
     const C = this.cols;
     const M = other.cols;
 
-    const out = new Float32Array(R * M);
+    const out = new Float64Array(R * M);
 
     // ---- COLUMN-MAJOR VERSION ----
     for (let c = 0; c < M; c++) // each output col
@@ -130,7 +131,7 @@ export class Matrix extends Float32Array {
     return this;
   }
   public transpose() {
-    const out = new Float32Array(this.length);
+    const out = new Float64Array(this.length);
 
     for (let r = 0; r < this.rows; r++)
       for (let c = 0; c < this.cols; c++)
@@ -145,20 +146,31 @@ export class Matrix extends Float32Array {
     return new (this.constructor as { new(values: Value): this })(this.slice(), this.rows, this.cols);
   }
 
-  slice(): Float32Array<ArrayBuffer>;
-  slice(start: number, end: number): Float32Array<ArrayBuffer>;
-  public slice(start?: number, end?: number): Float32Array<ArrayBuffer> {
+  slice(): Float64Array<ArrayBuffer>;
+  slice(start: number, end: number): Float64Array<ArrayBuffer>;
+  public slice(start?: number, end?: number): Float64Array<ArrayBuffer> {
     const s = start || 0;
     const e = end || this.length;
     const diff = e - s;
 
-    const data = new Float32Array(diff);
+    const data = new Float64Array(diff);
     for (let i = 0; i < diff; i++)
     {
       data[i] = this[i + s];
     }
 
     return data;
+  }
+
+  /**
+   * Copies into a float32 array for WebGL (`uniformMatrix4fv`), into `out` at `offset` when given (no allocation).
+   * Throws when `out` is too short.
+   */
+  public toFloat32(out?: Float32Array, offset = 0): Float32Array {
+    const target = out ?? new Float32Array(this.length);
+    if (target.length < offset + this.length) throw new RangeError("toFloat32: out is too short");
+    target.set(this, offset);
+    return target;
   }
 
   public print() {
@@ -256,8 +268,8 @@ export class MatrixN extends Matrix {
 
   constructor(size: number);
   constructor(data: number[]);
-  constructor(data: Float32Array);
-  constructor(value: number | number[] | Float32Array) {
+  constructor(data: Float32Array | Float64Array);
+  constructor(value: number | number[] | Float32Array | Float64Array) {
     let size = 1;
     if (typeof value === "number") size = Math.max(value, size);
     else 
@@ -289,16 +301,16 @@ export class MatrixN extends Matrix {
 
   public getTranslation() {
     const size = this.cols - 1;
-    const output = new Float32Array(size);
+    const output = new Float64Array(size);
     for (let i = 0; i < size; i++)
     {
       output[i] = this.get(i, size);
     }
     return output;
   }
-  public getScale(): Float32Array {
+  public getScale(): Float64Array {
     const dim = this.cols - 1;
-    const scale = new Float32Array(dim);
+    const scale = new Float64Array(dim);
 
     for (let j = 0; j < dim; j++)
     {
@@ -362,7 +374,7 @@ export class MatrixN extends Matrix {
     }
 
     // 4️⃣ invert translation using full rotation*scale inverse
-    const invTranslation = new Float32Array(dim);
+    const invTranslation = new Float64Array(dim);
     for (let i = 0; i < dim; i++)
     {
       let sum = 0;
@@ -382,10 +394,10 @@ export class MatrixN extends Matrix {
     return this;
   }
 
-  translate(values: number[] | Float32Array): this;
+  translate(values: number[] | Float32Array | Float64Array): this;
   translate(...values: number[]): this;
-  public translate(v: number | number[] | Float32Array, ...rest: number[]): this {
-    const values = Array.isArray(v) ? v : v instanceof Float32Array ? v : [v, ...rest];
+  public translate(v: number | number[] | Float32Array | Float64Array, ...rest: number[]): this {
+    const values = Array.isArray(v) ? v : ArrayBuffer.isView(v) ? v : [v, ...rest];
 
     if (values.length !== this.size - 1)
     {
@@ -422,10 +434,10 @@ export class MatrixN extends Matrix {
     return this.multiply(data);
   }
 
-  scale(values: number[] | Float32Array): this;
+  scale(values: number[] | Float32Array | Float64Array): this;
   scale(...values: number[]): this;
-  public scale(v: number | number[] | Float32Array, ...rest: number[]): this {
-    const values = Array.isArray(v) ? v : v instanceof Float32Array ? v : [v, ...rest];
+  public scale(v: number | number[] | Float32Array | Float64Array, ...rest: number[]): this {
+    const values = Array.isArray(v) ? v : ArrayBuffer.isView(v) ? v : [v, ...rest];
     const m = Matrix.identity(this.size);
 
     for (let i = 0; i < this.size - 1; i++)
@@ -469,16 +481,16 @@ export class MatrixN extends Matrix {
 
     return new this(mat as any).rotate(angle, axis) as InstanceType<T>;
   }
-  static override create(value: number | number[] | Float32Array) {
+  static override create(value: number | number[] | Float32Array | Float64Array) {
     return new this(value as any);
   }
 }
 
 export class Matrix3 extends MatrixN {
   constructor();
-  constructor(data: Float32Array);
+  constructor(data: Float32Array | Float64Array);
   constructor(data: number[]);
-  constructor(data: number | Float32Array | number[] = 3) {
+  constructor(data: number | Float32Array | Float64Array | number[] = 3) {
     super(data as any);
 
     this.cols = 3;
@@ -500,7 +512,7 @@ export class Matrix3 extends MatrixN {
     });
   }
 
-  static override create(value: number | number[] | Float32Array = 3) {
+  static override create(value: number | number[] | Float32Array | Float64Array = 3) {
     return new this(value as any);
   }
 
@@ -517,16 +529,16 @@ export class Matrix3 extends MatrixN {
 
 export class Matrix4 extends MatrixN {
   constructor();
-  constructor(data: Float32Array);
+  constructor(data: Float32Array | Float64Array);
   constructor(data: number[]);
-  constructor(data: number | Float32Array | number[] = 4) {
+  constructor(data: number | Float32Array | Float64Array | number[] = 4) {
     super(data as any);
 
     this.cols = 4;
     this.rows = 4;
   }
 
-  static override create(value: number | number[] | Float32Array = 4) {
+  static override create(value: number | number[] | Float32Array | Float64Array = 4) {
     return new this(value as any);
   }
 

@@ -54,10 +54,10 @@
   },
   "dependencies": {
     "@papit/box-intersection": "0.0.2",
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
-    "@papit/game-engine": "0.2.0",
+    "@papit/game-engine": "0.2.1",
     "@papit/game-shape": "0.0.5",
     "@papit/polygon": "0.0.2",
     "@papit/polygon-intersection": "0.0.2",

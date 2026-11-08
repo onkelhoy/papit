@@ -1,5 +1,6 @@
 // Internal GJK solver shared by gjk(), distance() and penetration().
 // All state lives in module scratch buffers so a query allocates nothing.
+import { Vector3 } from "@papit/vector";
 import type { Convex } from "./types";
 import { read, R, type Direction } from "./util";
 
@@ -24,7 +25,7 @@ export const L = new Float64Array(4);
 
 export const simplex = { count: 0, dimensions: 2 };
 
-const dir: Direction = { x: 0, y: 0, z: 0 };
+const dir: Direction = new Vector3(0, 0, 0);
 let any3D = false;
 
 /** Writes the support of A - B along (dx, dy, dz) into vertex `slot`. */

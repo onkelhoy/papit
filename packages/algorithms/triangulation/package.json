@@ -53,7 +53,7 @@
   },
   "dependencies": {
     "@papit/triangle-intersection": "0.0.2",
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
     "@papit/polygon": "0.0.2",

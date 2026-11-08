@@ -60,11 +60,11 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
     "@papit/circle-intersection": "0.0.2",
-    "@papit/game-engine": "0.2.0",
+    "@papit/game-engine": "0.2.1",
     "@papit/game-shape": "0.0.5",
     "@papit/theme": "*",
     "@types/node": "22.10.2",

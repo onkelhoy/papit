@@ -4,7 +4,7 @@ type Pretify<T> = {
   [K in keyof T]: T[K];
 } & {}
 
-type BasicData = number | Float32Array | number[];
+type BasicData = number | Float32Array | Float64Array | number[];
 export type Data = BasicData | number[][];
 export type MatrixObject = Pretify<Row & Col & { data: BasicData }>;
 export type Value = Data | MatrixObject;

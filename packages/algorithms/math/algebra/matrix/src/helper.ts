@@ -14,7 +14,7 @@ function extractFromMatrixObject(matrix: MatrixObject): { rows: number; cols: nu
     data: matrix.data,
   }
 }
-export function toMatrix(value: Value, _rows?: number, _cols?: number): { rows: number; cols: number; data: number[] | Float32Array } {
+export function toMatrix(value: Value, _rows?: number, _cols?: number): { rows: number; cols: number; data: number[] | Float32Array | Float64Array } {
   let cols = _cols ?? 0;
   let rows = _rows ?? 0;
 
@@ -29,7 +29,7 @@ export function toMatrix(value: Value, _rows?: number, _cols?: number): { rows: 
     value = extracted.data;
   }
 
-  // Case: Float32Array 
+  // Case: typed array 
   if (ArrayBuffer.isView(value))
   {
     // we SWAP as we are column-major 
@@ -55,7 +55,7 @@ export function toMatrix(value: Value, _rows?: number, _cols?: number): { rows: 
     {
       const rows = value.length;
       const cols = value[0].length;
-      const data = new Float32Array(rows * cols);
+      const data = new Float64Array(rows * cols);
 
       for (let c = 0; c < cols; c++)
       {

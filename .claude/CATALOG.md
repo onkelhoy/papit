@@ -113,6 +113,7 @@ Before building, look here. If a part looks or behaves like an existing one, com
 - `engine`: 2D and 3D game engine
 - `game-shape`: circle, rectangle, line, polygon with draw and `support` (fits `@papit/gjk`)
 - `confetti`: confetti web component
+- `rigidbody`: deterministic 2D/3D physics world: bodies, shapes, contacts, impulse solver, sleeping, raycast/overlap
 
 ## Tests
 

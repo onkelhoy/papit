@@ -21,7 +21,7 @@ export class Transform {
     private local = new Matrix4();
     private world = new Matrix4();
     private localVersion = 0;
-    private lastValues = new Float32Array(9).fill(NaN);
+    private lastValues = new Float64Array(9).fill(NaN);
     private lastLocalVersion = -1;
     private lastParent: Transform | null = null;
     private lastParentVersion = -1;

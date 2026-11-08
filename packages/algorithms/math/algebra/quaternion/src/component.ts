@@ -80,7 +80,7 @@ export class Quaternion extends Vector {
     }
 
     /** Rotates a 3D point in place and returns it. This has to be a unit quaternion. */
-    public rotate<T extends Float32Array | number[]>(point: T): T {
+    public rotate<T extends Float32Array | Float64Array | number[]>(point: T): T {
         const qx = this[0], qy = this[1], qz = this[2], qw = this[3];
         const x = point[0], y = point[1], z = point[2];
 
@@ -92,6 +92,28 @@ export class Quaternion extends Vector {
         point[1] = y + qw * cy + qz * cx - qx * cz;
         point[2] = z + qw * cz + qx * cy - qy * cx;
         return point;
+    }
+
+    /** Rotates a 3D point in place by the inverse of this rotation and returns it. This has to be a unit quaternion. */
+    public unrotate<T extends Float32Array | Float64Array | number[]>(point: T): T {
+        this.conjugate();
+        this.rotate(point);
+        this.conjugate();
+        return point;
+    }
+
+    /**
+     * Turns this by the angular velocity `(x, y, z)` in rad/s over `dt` seconds (first order), then normalizes.
+     * What a physics step does each frame.
+     */
+    public integrate(x: number, y: number, z: number, dt: number): this {
+        const h = 0.5 * dt;
+        const qx = this[0], qy = this[1], qz = this[2], qw = this[3];
+        this[0] = qx + h * (x * qw + y * qz - z * qy);
+        this[1] = qy + h * (y * qw + z * qx - x * qz);
+        this[2] = qz + h * (z * qw + x * qy - y * qx);
+        this[3] = qw + h * (-x * qx - y * qy - z * qz);
+        return this.normalize();
     }
 
     /** Moves this towards `target` the short way, normalized: 0 stays, 1 lands on it. Fast, a good fit for small steps. */
@@ -125,7 +147,7 @@ export class Quaternion extends Vector {
     }
 
     /** Writes this rotation and an optional position into a column-major 4x4 matrix. This has to be a unit quaternion. */
-    public writeMatrix<T extends Float32Array>(out: T, position?: Point): T {
+    public writeMatrix<T extends Float32Array | Float64Array>(out: T, position?: Point): T {
         const x = this[0], y = this[1], z = this[2], w = this[3];
 
         out[0] = 1 - 2 * (y * y + z * z);
@@ -167,7 +189,7 @@ export class Quaternion extends Vector {
     }
 
     /** Writes the Hamilton product `a * b`, which applies `b` first and then `a`. `out` can be `a` or `b`. */
-    static multiplyInto<T extends Float32Array>(out: T, a: Float32Array, b: Float32Array): T {
+    static multiplyInto<T extends Float32Array | Float64Array>(out: T, a: ArrayLike<number>, b: ArrayLike<number>): T {
         const ax = a[0], ay = a[1], az = a[2], aw = a[3];
         const bx = b[0], by = b[1], bz = b[2], bw = b[3];
 

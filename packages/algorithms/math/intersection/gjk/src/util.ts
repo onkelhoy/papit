@@ -1,8 +1,8 @@
-import type { VectorValue } from "@papit/vector";
+import type { Vector3, VectorValue } from "@papit/vector";
 import type { Convex, Shape } from "./types";
 
-/** The direction GJK passes to `support`. `z` is `0` for 2D queries. */
-export type Direction = { x: number; y: number; z: number };
+/** The direction GJK passes to `support`, a reused `Vector3`. `z` is `0` for 2D queries. */
+export type Direction = Vector3;
 
 /** Scratch for `read`: `[x, y, z, is3D]`. Overwritten on every call. */
 export const R = new Float64Array(4);

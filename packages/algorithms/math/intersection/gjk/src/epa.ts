@@ -199,7 +199,9 @@ function polytope(a: Convex, b: Convex) {
 
     // faces: [i, j, k, nx, ny, nz, distance] per face
     const faces: number[][] = [];
-    const addFace = (i: number, j: number, k: number) => {
+    // `orient` flips against the inner point; only the first tetrahedron needs it,
+    // faces from horizon edges already wind outwards and a flip there breaks the hull
+    const addFace = (i: number, j: number, k: number, orient = true) => {
         const abx = v[j * 3] - v[i * 3], aby = v[j * 3 + 1] - v[i * 3 + 1], abz = v[j * 3 + 2] - v[i * 3 + 2];
         const acx = v[k * 3] - v[i * 3], acy = v[k * 3 + 1] - v[i * 3 + 1], acz = v[k * 3 + 2] - v[i * 3 + 2];
         let fx = aby * acz - abz * acy, fy = abz * acx - abx * acz, fz = abx * acy - aby * acx;
@@ -210,7 +212,7 @@ function polytope(a: Convex, b: Convex) {
             return;
         }
         fx /= length; fy /= length; fz /= length;
-        if (fx * (v[i * 3] - cx) + fy * (v[i * 3 + 1] - cy) + fz * (v[i * 3 + 2] - cz) < 0)
+        if (orient && fx * (v[i * 3] - cx) + fy * (v[i * 3 + 1] - cy) + fz * (v[i * 3 + 2] - cz) < 0)
         {
             faces.push([i, k, j, -fx, -fy, -fz, -(fx * v[i * 3] + fy * v[i * 3 + 1] + fz * v[i * 3 + 2])]);
             return;
@@ -263,6 +265,6 @@ function polytope(a: Convex, b: Convex) {
 
         const index = v.length / 3;
         v.push(wx, wy, wz);
-        for (let s = 0; s < edges.length; s += 2) addFace(edges[s], edges[s + 1], index);
+        for (let s = 0; s < edges.length; s += 2) addFace(edges[s], edges[s + 1], index, false);
     }
 }

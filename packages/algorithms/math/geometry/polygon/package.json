@@ -52,9 +52,9 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/rectangle": "0.0.1",
+    "@papit/rectangle": "0.0.2",
     "@papit/triangulation": "0.0.2",
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "22.10.2",

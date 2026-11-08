@@ -59,10 +59,10 @@
     "node": ">=18"
   },
   "dependencies": {
-    "@papit/vector": "0.0.2"
+    "@papit/vector": "0.1.0"
   },
   "devDependencies": {
-    "@papit/game-engine": "0.2.0",
+    "@papit/game-engine": "0.2.1",
     "@papit/sat": "0.0.2",
     "@papit/theme": "*",
     "@types/node": "22.10.2",

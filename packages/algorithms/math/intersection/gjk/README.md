@@ -104,7 +104,8 @@ EPA on the final GJK simplex: polygon expansion in 2D, polytope expansion in 3D.
 
 ### Support helpers
 
-Each returns a `Convex`.
+Each returns a `Convex`. Its `support` answers in one reused `Vector2` / `Vector3` (no allocation per call),
+so copy the result if you keep it past the next call.
 
 | Function | Shape | Cost per support |
 | --- | --- | --- |
@@ -123,7 +124,7 @@ type Convex = { support(direction: VectorValue): VectorValue }
 type Shape = Convex | Convex[]
 ```
 
-`support` gets a `{ x, y, z }` direction (`z` is 0 in 2D) and returns the shape's furthest point along it: a `Vector2` / `Vector3`, `{ x, y, z? }` or `[x, y, z?]`. Points without `z` make the query 2D. `@papit/game-shape` shapes have `support` and fit.
+`support` gets a reused `Vector3` direction (`z` is 0 in 2D) and returns the shape's furthest point along it: a `Vector2` / `Vector3`, `{ x, y, z? }` or `[x, y, z?]`. Points without `z` make the query 2D. `@papit/game-shape` shapes have `support` and fit.
 
 # Design notes
 

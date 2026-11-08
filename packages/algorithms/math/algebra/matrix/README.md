@@ -58,7 +58,9 @@ All instance methods **mutate** the matrix and return `this` for chaining.
 
 ### `Matrix`
 
-General‑purpose **M×N matrix** backed by `Float32Array`.
+General‑purpose **M×N matrix** backed by `Float64Array` (JS numbers, no rounding).
+WebGL wants float32, so convert once at upload: `gl.uniformMatrix4fv(location, false, m.toFloat32())`,
+or `m.toFloat32(buffer, offset)` into an existing `Float32Array`.
 
 ```ts
 const m = new Matrix(2, 3); // 2 rows, 3 columns

@@ -934,3 +934,24 @@ describe('@papit/matrix unit tests', () => {
 
   });
 });
+
+describe("float64 storage", () => {
+    it("keeps full number precision", () => {
+        const m = new Matrix4().translate(0.1, 1e9 + 0.5, 1 / 3);
+        assert.ok(m instanceof Float64Array);
+        assert.deepStrictEqual([...m.getTranslation()], [0.1, 1e9 + 0.5, 1 / 3]);
+        assert.ok(m.slice() instanceof Float64Array);
+    });
+
+    it("toFloat32 copies into a new or given array", () => {
+        const m = new Matrix4().translate(0.1, 2, 3);
+        const fresh = m.toFloat32();
+        assert.ok(fresh instanceof Float32Array);
+        assert.strictEqual(fresh.length, 16);
+
+        const out = new Float32Array(32);
+        assert.strictEqual(m.toFloat32(out, 16), out, "no allocation");
+        assert.deepStrictEqual([...out.subarray(16)], [...m].map(Math.fround));
+        assert.throws(() => m.toFloat32(new Float32Array(8)), RangeError);
+    });
+});
